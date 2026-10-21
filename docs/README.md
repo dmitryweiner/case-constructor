@@ -7,3 +7,4 @@
 - [Ventilation, fan, wall mounting, label](extras.md)
 - [Export and printing](export.md)
 - [Presets and project files](presets.md)
+- [What is not in v1](limitations.md)

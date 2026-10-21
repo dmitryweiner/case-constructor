@@ -715,6 +715,12 @@ commit; new features get their `docs/` page in the same commit.
 
 ## 12. Deviations from the plan (recorded as they happen)
 
+Status: M0…M8 done. Open: question 2 (rails facing a side lid / rails and
+pin headers) and question 3 (insert taper) wait for printed tests; boards
+marked ≈ wait for measurements; Hebrew and Ukrainian texts got an agent
+review pass and wait for the user's.
+
+
 - **M0.** `shape.segments` is not in the state: the preview resolution is a
   constant in `main.ts` (12 per quarter arc); only the export resolution
   (`state.resolution`: 12 / 24 / 48 / 64) travels in a project file.
@@ -767,3 +773,9 @@ commit; new features get their `docs/` page in the same commit.
   face coordinates. Ears always sit on the left and right; `spacing` is for
   keyholes. Vents are dropped across the skirt band, around floor supports
   and inside port openings.
+- **M8.** The preview stays exact for every preset (≤ 250 ms), so nothing is
+  dropped from it. On a phone the view is centred above the settings sheet.
+  Slots with fully rounded ends are stadiums (hull of two circles): a
+  rounded rectangle kept a 0.02 mm straight piece and slivers. The
+  translation pass fixed Hebrew screw-head and keyhole terms and the
+  Ukrainian word for snaps (клямки).

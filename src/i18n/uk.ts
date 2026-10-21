@@ -62,7 +62,7 @@ export const uk: Record<Key, string> = {
   'lid.depth': 'Глибина кришки',
   'lid.depth.hint': '0 — пласка пластина; більше — кришка забирає стільки стінок, мм',
   'lid.fastening': 'Кріплення',
-  'fastening.snaps': 'засувки',
+  'fastening.snaps': 'клямки',
   'fastening.screws': 'гвинти',
   'lid.lipH': 'Висота спідниці',
   'lid.lipH.hint': 'наскільки спідниця кришки заходить у корпус, мм',
@@ -210,7 +210,7 @@ export const uk: Record<Key, string> = {
   'head.countersunk': 'потай',
   'lid.head.hint': 'пласко — головка лежить на кришці; цековка — гніздо під циліндричну головку; потай — конус 90° під потайну',
   'warn.postHitsBoard': 'Стійка гвинта кришки впирається в плату {board}.',
-  'progress.fastening': 'Засувки й стійки',
+  'progress.fastening': 'Клямки й стійки',
   'warn.postInOpening': "Стійка гвинта {n} стоїть на шляху отвору й прорізана ним.",
   'info.depthRaised': "Кришка забирає {d} мм стінок: лінія роз’єму проходить там, де закінчуються заокруглення.",
 
@@ -303,5 +303,5 @@ export const uk: Record<Key, string> = {
   'preset.cylinder-puck': "Кругла «шайба» датчика",
   'preset.cylinder-puck.note': "Круглий вузол LoRa: дисплей видно крізь кришку, вентиляція знизу, вушка",
   'preset.plain-box': "Проста коробка",
-  'preset.plain-box.note': "Порожня заокруглена коробка з пласкою кришкою на засувках",
+  'preset.plain-box.note': "Порожня заокруглена коробка з пласкою кришкою на клямках",
 };

@@ -162,23 +162,39 @@ freely; a temporary script that turns out useful becomes a permanent one.
 
 ## What costs what
 
-Measured on an M1 Mac in Node (`scripts/inspect.mjs`):
+Measured on an M1 Mac in Node (`scripts/inspect.mjs`; the worker in the
+browser is within ~10 % of it):
 
-| Build | Time |
-|---|---|
-| default box, 24 segments, top lid | ~60 ms |
-| box with fillets, side lid, 24 segments | ~140 ms |
-| cylinder with 5 mm fillet, 64 segments | ~670 ms (114k triangles in the body) |
-| preview in the browser (12 segments) | 10–35 ms in the worker |
-| export in the browser (24 segments), click to download | ~90 ms |
+| Build | Segments | Time | Triangles (body + lid) |
+|---|---|---|---|
+| default Pi 4 case (preview) | 12 | 75 ms | 6k |
+| default Pi 4 case (export) | 24 | 130 ms | 12k |
+| `pi4-desktop` preset (vents, posts, label) — preview | 12 | 250 ms | 20k |
+| `pi4-desktop` — export | 24 | 0.5 s | 44k |
+| `pi4-desktop` — finest export | 64 | 2.0 s | 150k |
+| `cylinder-puck` — finest export | 64 | 1.2 s | 130k |
 
-Decided at M1: the preview is the exact case (same pipeline as the export,
-12 segments per quarter arc), rebuilt 120 ms after the last edit. No
-approximate preview is needed.
+Decided at M1 and confirmed at M8: the preview is the exact case (the same
+pipeline as the export, 12 segments per quarter arc), rebuilt 120 ms after
+the last edit; even the heaviest preset stays under the 300 ms the plan set
+as the limit, so the preview never drops vents or the label. Vent slots and
+round holes are the bulk of the triangles.
 
 Golden tests pin volumes and triangle counts of a fixed set of states;
 regenerate knowingly: `UPDATE_GOLDEN=1 npx vitest run tests/golden.test.ts`.
 Add a state when a feature lands, never edit an old one.
+
+## Presets
+
+Built-in presets (`src/state/presets.ts`): `pi4-desktop`, `pi-zero-gpio`,
+`esp32-sensor-box`, `arduino-uno-box`, `cylinder-puck`, `plain-box`. Each is
+built by `tests/presetsBuild.test.ts` (closed, no slivers, no overlap, no
+layout warnings). Names and notes are dictionary keys `preset.<id>` and
+`preset.<id>.note`.
+
+## What is not in v1
+
+`docs/limitations.md` — decided omissions and known limits.
 
 ## Control ids
 
@@ -209,6 +225,8 @@ Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws`,
 `#lid_head_none|counterbore|countersunk` (screws only), `#lid_lipH`,
 `#lid_lipT`, `#lid_fit`.
 Export: `#tabBody`, `#tabLid`, `#tabBoth`, `#resolution`, `#exportBtn`.
+Mobile: on a narrow screen the view centres the case above the settings
+sheet (`scene.setBottomInset`).
 Top bar: `#presetBtn` (list `#presetList [data-preset="b:<id>"|"u:<name>"]`),
 `#saveBtn`, `#fileOpenBtn`, `#fileSaveBtn`, `#fileInput`, `#undoBtn`,
 `#redoBtn`, `#viewLid` (assembled / lifted / hidden), `#viewXray`,
