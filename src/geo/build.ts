@@ -15,6 +15,10 @@ import { outerSolid, shellSolid } from './shell';
 import type { Support } from './standoffs';
 import { rails, standoffs } from './standoffs';
 import { cuttersSolid } from './cut';
+import { postSpots } from './fastening';
+import { postSolids, snapSolids } from './lip';
+import { openingPolygon } from './opening';
+import { loftSlice } from './section';
 import { extraCutters } from './cutters';
 import { outerTopAt, portCutters } from './ports';
 import { applyAffine } from './surface';
@@ -33,6 +37,7 @@ export const BUILD_STAGES: readonly Message[] = [
   { code: 'progress.split' },
   { code: 'progress.supports' },
   { code: 'progress.lid' },
+  { code: 'progress.fastening' },
   { code: 'progress.cutouts' },
 ];
 
@@ -79,14 +84,35 @@ export function buildCase(
 
     onStage(BUILD_STAGES[3]);
     const outer = outerSolid(csg, scope, spec, segments);
-    const skirt = skirtSolid(csg, scope, spec, outer, frame, zp, lid, shape, segments);
-    if (skirt) lidSolid = scope.keep(lidSolid.add(skirt));
+    const top = outerTopAt(shape, dims, layout.console.frontH, layout.console.backH);
+    const cutters = [...portCutters(layout, shape), ...extraCutters(state.extraCuts, shape, dims, top)];
+    let skirt = skirtSolid(csg, scope, spec, outer, frame, zp, lid, shape, segments);
+    const opening = openingPolygon(spec, frame, zp, lid.lip.h, segments);
+
+    // Fastening: snap rods on the skirt and grooves in the body, or corner
+    // posts in the body with holes through the lid. The skirt steps aside
+    // for the posts.
+    onStage(BUILD_STAGES[4]);
+    if (lid.fastening === 'screws') {
+      const upper = loftSlice(spec.inner, spec.innerCut, frame, -plate - lid.fit, segments);
+      const posts = postSolids(csg, scope, postSpots(opening, lid, shape.wall), opening, upper, frame, zp, plate, lid, segments);
+      if (posts) {
+        if (skirt) skirt = scope.keep(skirt.subtract(posts.skirtClearance));
+        const material = scope.keep(scope.keep(posts.posts.intersect(outer)).subtract(lidSolid));
+        body = scope.keep(scope.keep(body.add(material)).subtract(posts.postHoles));
+        lidSolid = scope.keep(lidSolid.subtract(posts.lidHoles));
+      }
+      if (skirt) lidSolid = scope.keep(lidSolid.add(skirt));
+    } else {
+      if (skirt) lidSolid = scope.keep(lidSolid.add(skirt));
+      const snaps = snapSolids(csg, scope, opening, frame, zp, lid, shape.kind === 'cylinder', cutters, segments);
+      if (snaps.bumps) lidSolid = scope.keep(lidSolid.add(snaps.bumps));
+      if (snaps.grooves) body = scope.keep(body.subtract(snaps.grooves));
+    }
 
     // Openings last: through walls, skirt and plates of both parts alike, so
     // an opening on the parting plane is cut in both halves.
-    onStage(BUILD_STAGES[4]);
-    const top = outerTopAt(shape, dims, layout.console.frontH, layout.console.backH);
-    const cutters = [...portCutters(layout, shape), ...extraCutters(state.extraCuts, shape, dims, top)];
+    onStage(BUILD_STAGES[5]);
     const holes = cuttersSolid(csg, scope, cutters, segments);
     if (holes) {
       body = scope.keep(body.subtract(holes));

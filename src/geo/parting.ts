@@ -39,7 +39,13 @@ export function splitAtParting(scope: CsgScope, shell: Manifold, frame: FaceFram
 /** How far the skirt's web reaches up into the lid, bridging the fit gap. */
 const WEB_H = 1;
 /** Overlap of touching solids, so unions never meet on a coplanar face. */
-const OVERLAP = 0.01;
+const OVERLAP = 0.05;
+/**
+ * The web starts this far above the parting plane: exactly on it, its bottom
+ * would lie in the plane of the lid's ceiling, and a later boolean on the
+ * skirt (posts stepping aside) leaves slivers on the shared face.
+ */
+const WEB_LIFT = 0.02;
 
 function section(csg: CsgApi, scope: CsgScope, poly: Vec2[]): CrossSection | null {
   if (poly.length < 3) return null;
@@ -85,6 +91,8 @@ export function skirtSolid(
   const ringInner = offset(scope, opening, -lid.fit - lid.lip.t, circular);
   if (ringInner.isEmpty() || ringOuter.isEmpty()) return null;
   let ring = scope.keep(ringOuter.subtract(ringInner));
+  const webOuter = offset(scope, top, Math.min(wall / 2, 1), circular);
+  let webRing = scope.keep(webOuter.subtract(ringInner));
   if (frame.face !== 'top' && frame.face !== 'bottom') {
     // A side lid's skirt has no strip along the floor: there it would run
     // into the standoffs and rails, and three sides hold the lid as well.
@@ -94,10 +102,10 @@ export function skirtSolid(
     const above = low + lid.fit + lid.lip.t + 0.01;
     const floorBand = scope.keep(new csg.CrossSection([[[-1e4, -1e4], [1e4, -1e4], [1e4, above], [-1e4, above]]], 'Positive'));
     ring = scope.keep(ring.subtract(floorBand));
+    webRing = scope.keep(webRing.subtract(floorBand));
   }
   const prism = extrude(csg, scope, ring, zp - lid.lip.h, zp + OVERLAP);
-  const webOuter = offset(scope, top, Math.min(wall / 2, 1), circular);
-  const web = extrude(csg, scope, scope.keep(webOuter.subtract(ringInner)), zp, zp + WEB_H);
+  const web = extrude(csg, scope, webRing, zp + WEB_LIFT, zp + WEB_H);
   const skirt = transformSolid(scope, scope.keep(prism.add(web)), frame.fromFace);
   // the web must not poke through a thin, filleted outer surface
   return scope.keep(skirt.intersect(outer));

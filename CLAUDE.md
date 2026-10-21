@@ -53,7 +53,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   path.in.state=value` (repeatable; JSON values like `boards=[]` work),
   `--segments <n>`, `--overlap` (where the assembled lid and body share
   volume, piece by piece), `--levels` (horizontal face areas per z: a
-  zero-thickness membrane shows as equal up and down areas at one level).
+  zero-thickness membrane shows as equal up and down areas at one level),
+  `--degenerate` (where the zero-area triangles are). In zsh quote JSON
+  values: `--set 'boards=[]'`.
 - `scripts/lib/harness.mjs` — flags, a vite server on ports 5273 / 4273
   (not ClayForm's), console error collection, CPU throttle, browser locale.
   `CASE_BROWSER` overrides the chromium executable.
@@ -115,6 +117,20 @@ freely; a temporary script that turns out useful becomes a permanent one.
   face along the face normal (deeper on a cylinder's curve; a vertical column
   on the console's slope). All cutters are unioned and subtracted once from
   each part, after the skirt, so the skirt and both halves are cut alike.
+- Lid fastening (`opening.ts`, `fastening.ts` pure; `lip.ts` worker): the
+  opening polygon (convex intersection of the cavity sections at the plane
+  and `lip.h` below) carries the skirt, the snaps and the posts. Snap bump
+  and groove are the same rod (`CutterSpec`, round) grown by the fit. The
+  effective lid depth is at least the walls' rounded zone (`cornerZone`):
+  inside it the opening is narrower than the cavity below and a skirt hangs
+  free of the walls — snaps found that out. Snaps landing in an opening are
+  dropped; posts in an opening are reported.
+- Slivers come from coincident geometry, not from manifold: a rod axis on a
+  face (sink it), the web's bottom on the ceiling plane (lift it), two
+  stacked prisms of one outline (build one prism and clip it), a part
+  reaching `SPLIT_OFFSET` into the other part (stop short of the rim),
+  unsimplified clipper offsets. `inspect.mjs --degenerate` shows where;
+  `tests/fastening.test.ts` demands zero on every shape, face and fastening.
 - Print layout (`print.ts`): the body with its opening up, the lid on its
   outer face; every exported STL is in print orientation.
 - Visible text comes only from `src/i18n/` dictionaries; `en.ts` is the
@@ -158,7 +174,9 @@ Case card: `#case_kind_box|cylinder|console`, `#case_cornerR`, `#case_edgeR`,
 `#case_wall`, `#case_floor`, `#case_auto`, `#case_w`, `#case_diameter`,
 `#case_d`, `#case_h`, `#case_frontH`, `#case_backH`.
 Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws`,
-`#lid_lipH`, `#lid_lipT`, `#lid_fit`.
+`#lid_screw` (select), `#lid_hole_tap|insert|nut`,
+`#lid_head_none|counterbore|countersunk` (screws only), `#lid_lipH`,
+`#lid_lipT`, `#lid_fit`.
 Export: `#tabBody`, `#tabLid`, `#tabBoth`, `#resolution`, `#exportBtn`.
 Top bar: `#presetBtn` (list `#presetList [data-preset="b:<id>"|"u:<name>"]`),
 `#saveBtn`, `#fileOpenBtn`, `#fileSaveBtn`, `#fileInput`, `#undoBtn`,

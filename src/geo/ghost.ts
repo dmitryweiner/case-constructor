@@ -47,13 +47,12 @@ export function portBlock(board: PlacedBoard, port: PortDef): [number, number, n
   return [port.along - port.w / 2, Math.min(outer, inner), z0, port.along + port.w / 2, Math.max(outer, inner), z1];
 }
 
-/** One mesh per board: slab plus port blocks, in the case frame. */
-export function boardGhost(board: PlacedBoard): SurfaceMesh {
+/** A board's ghost: the PCB slab and its ports and parts as blocks, case frame. */
+export function boardGhost(board: PlacedBoard): { pcb: SurfaceMesh; ports: SurfaceMesh | null } {
   const { w, d, t } = board.def.size;
-  const parts = [boxMesh(board, 0, 0, 0, w, d, t)];
-  for (const port of board.def.ports) {
+  const blocks = board.def.ports.map((port) => {
     const [x0, y0, z0, x1, y1, z1] = portBlock(board, port);
-    parts.push(boxMesh(board, x0, y0, z0, x1, y1, z1));
-  }
-  return mergeMeshes(parts);
+    return boxMesh(board, x0, y0, z0, x1, y1, z1);
+  });
+  return { pcb: boxMesh(board, 0, 0, 0, w, d, t), ports: blocks.length > 0 ? mergeMeshes(blocks) : null };
 }

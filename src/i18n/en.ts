@@ -211,4 +211,17 @@ export const en = {
   'port.fpc': 'ribbon connector',
   'port.antenna': 'antenna connector',
   'port.generic': 'part',
+
+  // --- lid fastening ---
+  'lid.screw': 'Screw',
+  'lid.hole': 'Hole in the posts',
+  'lid.head': 'Head',
+  'head.none': 'flat',
+  'head.counterbore': 'counterbore',
+  'head.countersunk': 'countersunk',
+  'lid.head.hint': 'flat — the head sits on the lid; counterbore — a pocket for a pan head; countersunk — a 90° cone for a flat head',
+  'warn.postHitsBoard': 'A screw post of the lid runs into board {board}.',
+  'progress.fastening': 'Snaps and posts',
+  'warn.postInOpening': "Screw post {n} stands in the way of an opening and is cut by it.",
+  'info.depthRaised': "The lid takes {d} mm of the walls: the parting line runs where the rounded corners end.",
 };

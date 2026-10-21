@@ -134,3 +134,15 @@ export function extraCutters(cuts: readonly ExtraCut[], shape: ShapeState, dims:
     };
   });
 }
+
+/** Whether a point lies inside a cutter's prism, grown by `margin` across it. */
+export function cutterContains(cutter: CutterSpec, p: Vec3, margin = 0): boolean {
+  const d: Vec3 = [p[0] - cutter.origin[0], p[1] - cutter.origin[1], p[2] - cutter.origin[2]];
+  const dot = (v: Vec3): number => d[0] * v[0] + d[1] * v[1] + d[2] * v[2];
+  const s = dot(cutter.ez);
+  if (s < cutter.s0 - margin || s > cutter.s1 + margin) return false;
+  const a = dot(cutter.ex);
+  const b = dot(cutter.ey);
+  if (cutter.shape === 'round') return Math.hypot(a, b) <= cutter.w / 2 + margin;
+  return Math.abs(a) <= cutter.w / 2 + margin && Math.abs(b) <= cutter.h / 2 + margin;
+}

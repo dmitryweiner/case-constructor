@@ -202,4 +202,17 @@ export const ru: Record<Key, string> = {
   'port.fpc': 'шлейфовый разъём',
   'port.antenna': 'разъём антенны',
   'port.generic': 'деталь',
+
+  // --- lid fastening ---
+  'lid.screw': 'Винт',
+  'lid.hole': 'Отверстие в стойках',
+  'lid.head': 'Головка',
+  'head.none': 'плоско',
+  'head.counterbore': 'цековка',
+  'head.countersunk': 'потай',
+  'lid.head.hint': 'плоско — головка лежит на крышке; цековка — гнездо под цилиндрическую головку; потай — конус 90° под потайную',
+  'warn.postHitsBoard': 'Стойка винта крышки упирается в плату {board}.',
+  'progress.fastening': 'Защёлки и стойки',
+  'warn.postInOpening': "Стойка винта {n} стоит на пути отверстия и прорезана им.",
+  'info.depthRaised': "Крышка забирает {d} мм стенок: линия разъёма проходит там, где кончаются скругления.",
 };

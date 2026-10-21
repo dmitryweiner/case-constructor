@@ -202,4 +202,17 @@ export const uk: Record<Key, string> = {
   'port.fpc': 'шлейфовий роз’єм',
   'port.antenna': 'роз’єм антени',
   'port.generic': 'деталь',
+
+  // --- lid fastening ---
+  'lid.screw': 'Гвинт',
+  'lid.hole': 'Отвір у стійках',
+  'lid.head': 'Головка',
+  'head.none': 'пласко',
+  'head.counterbore': 'цековка',
+  'head.countersunk': 'потай',
+  'lid.head.hint': 'пласко — головка лежить на кришці; цековка — гніздо під циліндричну головку; потай — конус 90° під потайну',
+  'warn.postHitsBoard': 'Стійка гвинта кришки впирається в плату {board}.',
+  'progress.fastening': 'Засувки й стійки',
+  'warn.postInOpening': "Стійка гвинта {n} стоїть на шляху отвору й прорізана ним.",
+  'info.depthRaised': "Кришка забирає {d} мм стінок: лінія роз’єму проходить там, де закінчуються заокруглення.",
 };

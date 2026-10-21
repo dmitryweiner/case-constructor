@@ -75,6 +75,20 @@ const STATES: Record<string, AppState> = {
       { face: 'left', shape: 'round', x: 30, y: 15, w: 8 },
     ],
   }),
+  // M4: lid fastening
+  'screws-counterbore-top': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, fastening: 'screws', screw: { size: 'M3', hole: 'insert', head: 'counterbore' } },
+  }),
+  'screws-nut-countersunk-side': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, edgeR: 3, cornerR: 6 },
+    lid: { ...defaultState().lid, face: 'left', depth: 4, fastening: 'screws', screw: { size: 'M2.5', hole: 'nut', head: 'countersunk' } },
+  }),
+  'snaps-cylinder-fillet': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'cylinder', edgeR: 4 },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

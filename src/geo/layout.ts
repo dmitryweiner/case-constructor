@@ -13,10 +13,12 @@ import { boardOf } from '../boards/placement';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import { bossDiameter } from './fasteners';
+import { POST_LEN } from './fastening';
 import type { LidState } from './lidSpec';
 import type { Message } from './message';
 import type { ShapeState } from './shape';
-import { SIZE_MIN, SIZE_MAX, plateOf } from './shape';
+import { SIZE_MIN, SIZE_MAX, plateOf, shapeSpec } from './shape';
+import { effectiveRadii } from './loft';
 import type { Affine } from './surface';
 import { applyAffine } from './surface';
 
@@ -152,7 +154,9 @@ function union(rects: readonly Rect[]): Rect | null {
  * the band the lid skirt occupies along the walls.
  */
 export function sideMargin(shape: ShapeState, lid: LidState): number {
-  return Math.max(shape.margin.side, lid.fit + lid.lip.t + 0.3);
+  // a top or bottom lid on screws has a post in every vertical corner
+  const posts = lid.fastening === 'screws' && (lid.face === 'top' || lid.face === 'bottom') ? bossDiameter(lid.screw) + 0.5 : 0;
+  return Math.max(shape.margin.side, lid.fit + lid.lip.t + 0.3, posts);
 }
 
 /** Boards in the layout frame (before centring) — for placing a new one beside them. */
@@ -164,8 +168,13 @@ export function placeBoards(input: LayoutInput): PlacedBoard[] {
  * Extra room on the lid side of the cavity: a side lid with depth takes that
  * much of the floor, and supports belong on the body's floor (PLAN.md §3.5).
  */
-export function lidBand(lid: LidState): { x0: number; x1: number; y0: number; y1: number } {
-  const band = lid.depth > 0 ? lid.depth + 0.5 : 0;
+export function lidBand(lid: LidState, shape: ShapeState): { x0: number; x1: number; y0: number; y1: number } {
+  // screw posts reach POST_LEN (and a boss) into the body from the parting plane
+  const posts = lid.fastening === 'screws' ? POST_LEN + bossDiameter(lid.screw) : 0;
+  // the lid takes at least the rounded corners of the walls (effectiveLid)
+  const corner = shape.kind === 'cylinder' ? 0 : Math.max(0, shape.cornerR - shape.wall);
+  const depth = Math.max(lid.depth, corner);
+  const band = (depth > 0 ? depth + 0.5 : 0) + posts;
   return {
     x0: lid.face === 'left' ? band : 0,
     x1: lid.face === 'right' ? band : 0,
@@ -181,7 +190,7 @@ export function minimumDims(input: LayoutInput): Dims {
   const box = union(placed.map((board) => board.footprint));
   const margin = sideMargin(shape, input.lid);
   const top = Math.max(0, ...placed.map((board) => board.zTop - shape.floor));
-  const band = lidBand(input.lid);
+  const band = lidBand(input.lid, input.shape);
   let innerW = Math.max(INNER_MIN.w, box ? box.x1 - box.x0 + 2 * margin + band.x0 + band.x1 : 0);
   let innerD = Math.max(INNER_MIN.d, box ? box.y1 - box.y0 + 2 * margin + band.y0 + band.y1 : 0);
   const innerH = Math.max(INNER_MIN.h, placed.length > 0 ? top + shape.margin.top : 0);
@@ -217,7 +226,7 @@ export function caseLayout(input: LayoutInput): CaseLayout {
   const raw = place(input, 0, 0);
   const box = union(raw.map((board) => board.footprint));
   // centred in what is left of the cavity once the lid's band is taken off
-  const band = lidBand(input.lid);
+  const band = lidBand(input.lid, input.shape);
   const offsetX = box ? (dims.w + band.x0 - band.x1) / 2 - (box.x0 + box.x1) / 2 : 0;
   const offsetY = box ? (dims.d + band.y0 - band.y1) / 2 - (box.y0 + box.y1) / 2 : 0;
   const boards = place(input, offsetX, offsetY);
@@ -257,9 +266,25 @@ export function lidDepthMax(shape: ShapeState, lid: LidState, dims: Dims): numbe
   return Math.max(0, along - 2 * plate - lid.lip.h - 1);
 }
 
-/** The lid as built: depth clamped to what the case allows. */
+/**
+ * How deep the cavity keeps narrowing behind a face: its rounded corners
+ * (side faces) or its edge fillet (top and bottom). A parting plane inside
+ * that zone gives an opening narrower than the cavity just below it, and the
+ * skirt would hang free of the walls — no snap could grip anything.
+ */
+export function cornerZone(shape: ShapeState, face: string, dims: Dims): number {
+  const radii = effectiveRadii(shapeSpec(shape, dims).inner);
+  return face === 'top' || face === 'bottom' ? radii.edgeR : shape.kind === 'cylinder' ? 0 : radii.cornerR;
+}
+
+/**
+ * The lid as built: deep enough to take the rounded zone of the walls (the
+ * parting line runs where the straight walls begin), never deeper than the
+ * case allows.
+ */
 export function effectiveLid(shape: ShapeState, lid: LidState, dims: Dims): LidState {
-  return { ...lid, depth: Math.min(lid.depth, lidDepthMax(shape, lid, dims)) };
+  const depth = Math.max(lid.depth, cornerZone(shape, lid.face, dims));
+  return { ...lid, depth: Math.min(depth, lidDepthMax(shape, lid, dims)) };
 }
 
 function overlap(a: Rect, b: Rect): number {

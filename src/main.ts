@@ -21,6 +21,10 @@ import type { CutsCardHandle } from './ui/cutsCard';
 import { cutWarnings, outerTopAt, portCutters } from './geo/ports';
 import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
 import { effectiveLid } from './geo/layout';
+import { faceFrame as frameOf } from './geo/face';
+import { postCollisions, postSpots, postsInOpenings } from './geo/fastening';
+import { openingPolygon } from './geo/opening';
+import { plateOf, shapeSpec } from './geo/shape';
 import { setupAdjustmentButtons } from './ui/adjust';
 import { createProgress } from './ui/progress';
 import { renderPresetList } from './ui/presetList';
@@ -172,7 +176,7 @@ let generation = 0;
 /** The last preview from the worker, kept so view toggles redraw without a rebuild. */
 let lastParts: { body: SurfaceMesh; lid: SurfaceMesh; state: AppState } | null = null;
 /** Board ghosts of the current state — drawn at once, the case follows from the worker. */
-let ghosts: SurfaceMesh[] = [];
+let ghosts: ScenePart[] = [];
 /** Warnings the panel computes itself, before the worker answers. */
 let baseWarnings: string[] = [];
 
@@ -190,9 +194,23 @@ function refresh(): void {
   const shapeBuilt = { ...state.shape, console: layout.console };
   const top = outerTopAt(shapeBuilt, dims, layout.console.frontH, layout.console.backH);
   const cutters = [...portCutters(layout, shapeBuilt), ...extraCutters(state.extraCuts, shapeBuilt, dims, top)];
-  baseWarnings.push(...cutWarnings(layout, shapeBuilt, effectiveLid(shapeBuilt, state.lid, dims), cutters, state.extraCuts).map(tm));
+  const lidBuilt = effectiveLid(shapeBuilt, state.lid, dims);
+  if (lidBuilt.depth > state.lid.depth + 0.01) baseWarnings.push(t('info.depthRaised', { d: lidBuilt.depth.toFixed(1) }));
+  baseWarnings.push(...cutWarnings(layout, shapeBuilt, lidBuilt, cutters, state.extraCuts).map(tm));
+  if (lidBuilt.fastening === 'screws') {
+    const frame = frameOf(lidBuilt.face, dims);
+    const plate = plateOf(shapeBuilt, lidBuilt.face);
+    const zp = -(plate + lidBuilt.depth);
+    const opening = openingPolygon(shapeSpec(shapeBuilt, dims), frame, zp, lidBuilt.lip.h, 8);
+    const posts = postSpots(opening, lidBuilt, shapeBuilt.wall);
+    baseWarnings.push(...postCollisions(posts, frame, zp, plate, lidBuilt, layout.boards).map(tm));
+    baseWarnings.push(...postsInOpenings(posts, frame, zp, plate, lidBuilt, cutters).map(tm));
+  }
   showWarnings([]);
-  ghosts = layout.boards.map(boardGhost);
+  ghosts = layout.boards.flatMap((board): ScenePart[] => {
+    const ghost = boardGhost(board);
+    return [{ role: 'board', mesh: ghost.pcb }, ...(ghost.ports ? [{ role: 'port' as const, mesh: ghost.ports }] : [])];
+  });
   drawParts();
   renderPartList();
 
@@ -245,7 +263,7 @@ function drawParts(): void {
   }
   const mode = lidView();
   const parts: ScenePart[] = [{ role: 'body', mesh: body }];
-  if (viewBoards.checked) parts.push(...ghosts.map((mesh): ScenePart => ({ role: 'board', mesh })));
+  if (viewBoards.checked) parts.push(...ghosts);
   if (mode !== 'hidden') {
     const n = faceFrame(built.lid.face, dims).n;
     const lift = mode === 'lifted' ? LIFT_MM : 0;

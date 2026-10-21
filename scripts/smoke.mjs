@@ -167,6 +167,26 @@ await page.click('#case_kind_box');
 await page.click('#lid_face_top');
 await setRange('lid_depth', 0);
 
+// lid fastening: screws with every hole and head kind, then back to snaps
+label('fastening');
+await page.click('#lid_fastening_screws');
+await expectWatertight('fastening:screws');
+for (const hole of ['tap', 'insert', 'nut']) {
+  await page.click(`#lid_hole_${hole}`);
+  for (const head of ['none', 'counterbore', 'countersunk']) {
+    await page.click(`#lid_head_${head}`);
+    await expectWatertight(`fastening:${hole}:${head}`);
+  }
+}
+await page.click('#lid_face_left');
+await expectWatertight('fastening:screws:left');
+await page.click('#lid_face_top');
+await page.click('#lid_fastening_snaps');
+await setRange('case_edgeR', 4);
+await expectWatertight('fastening:snaps:fillet');
+if (!(await page.locator('#warnings').textContent()).includes('rounded corners end')) errors.push('[fastening] no note about the raised lid depth');
+await setRange('case_edgeR', 0);
+
 // each export mode with a real download
 for (const mode of ['body', 'lid', 'both']) {
   label(`export:${mode}`);

@@ -8,7 +8,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SurfaceMesh } from '../geo/surface';
 
-export type PartRole = 'body' | 'lid' | 'board';
+export type PartRole = 'body' | 'lid' | 'board' | 'port';
 
 export interface ScenePart {
   role: PartRole;
@@ -28,6 +28,7 @@ const COLORS: Record<PartRole, number> = {
   body: 0x8fa3b8,
   lid: 0xb8c6d4,
   board: 0x3fae6a,
+  port: 0xd9b45a,
 };
 /** Faces meeting at a sharper angle than this get a hard edge; rounded corners stay smooth. */
 const CREASE_ANGLE = (35 * Math.PI) / 180;
@@ -65,8 +66,13 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
   const materials: Record<PartRole, THREE.MeshStandardMaterial> = {
     body: new THREE.MeshStandardMaterial({ color: COLORS.body, metalness: 0.05, roughness: 0.6, side: THREE.DoubleSide }),
     lid: new THREE.MeshStandardMaterial({ color: COLORS.lid, metalness: 0.05, roughness: 0.6, side: THREE.DoubleSide }),
+    // Boards are drawn schematically and see-through, so they never read as
+    // part of the case: the PCB green, its connectors and parts amber.
     board: new THREE.MeshStandardMaterial({
-      color: COLORS.board, metalness: 0, roughness: 0.8, transparent: true, opacity: 0.75, depthWrite: false,
+      color: COLORS.board, metalness: 0, roughness: 0.8, transparent: true, opacity: 0.7, depthWrite: false,
+    }),
+    port: new THREE.MeshStandardMaterial({
+      color: COLORS.port, metalness: 0.2, roughness: 0.6, transparent: true, opacity: 0.6, depthWrite: false,
     }),
   };
 

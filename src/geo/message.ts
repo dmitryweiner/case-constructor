@@ -24,11 +24,15 @@ export type MessageCode =
   | 'warn.cutInCorner'
   | 'info.extraSplit'
   | 'warn.extraUnderSkirt'
+  // lid fastening
+  | 'warn.postHitsBoard'
+  | 'warn.postInOpening'
   // worker job stages
   | 'progress.loading'
   | 'progress.shell'
   | 'progress.split'
   | 'progress.supports'
+  | 'progress.fastening'
   | 'progress.cutouts'
   | 'progress.lid'
   | 'progress.check';

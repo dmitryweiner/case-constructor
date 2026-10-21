@@ -4,6 +4,7 @@ import type { Control } from './controls';
 import { FACES } from '../geo/face';
 import type { LidState } from '../geo/lidSpec';
 import { DEPTH_MAX, FASTENINGS, lidFaces } from '../geo/lidSpec';
+import { HEAD_KINDS, HOLE_KINDS, SCREW_SIZES } from '../geo/fasteners';
 import type { AppState } from '../state/schema';
 
 function lidOf(state: AppState, patch: Partial<LidState>): AppState {
@@ -11,6 +12,7 @@ function lidOf(state: AppState, patch: Partial<LidState>): AppState {
 }
 
 export function lidControls(): Control<AppState>[] {
+  const screws = (state: AppState): boolean => state.lid.fastening === 'screws';
   return [
     {
       kind: 'segmented', key: 'face', label: 'lid.face',
@@ -30,6 +32,24 @@ export function lidControls(): Control<AppState>[] {
       options: FASTENINGS.map((value) => ({ value, label: `fastening.${value}` as const })),
       get: (state) => state.lid.fastening,
       set: (state, value) => lidOf(state, { fastening: FASTENINGS.find((f) => f === value) ?? state.lid.fastening }),
+    },
+    {
+      kind: 'select', key: 'screw', label: 'lid.screw', when: screws,
+      options: SCREW_SIZES.map((size) => ({ value: size, text: size })),
+      get: (state) => state.lid.screw.size,
+      set: (state, value) => lidOf(state, { screw: { ...state.lid.screw, size: SCREW_SIZES.find((size) => size === value) ?? state.lid.screw.size } }),
+    },
+    {
+      kind: 'segmented', key: 'hole', label: 'lid.hole', hint: 'board.hole.hint', when: screws,
+      options: HOLE_KINDS.map((value) => ({ value, label: `hole.${value}` as const })),
+      get: (state) => state.lid.screw.hole,
+      set: (state, value) => lidOf(state, { screw: { ...state.lid.screw, hole: HOLE_KINDS.find((kind) => kind === value) ?? state.lid.screw.hole } }),
+    },
+    {
+      kind: 'segmented', key: 'head', label: 'lid.head', hint: 'lid.head.hint', when: screws,
+      options: HEAD_KINDS.map((value) => ({ value, label: `head.${value}` as const })),
+      get: (state) => state.lid.screw.head,
+      set: (state, value) => lidOf(state, { screw: { ...state.lid.screw, head: HEAD_KINDS.find((kind) => kind === value) ?? state.lid.screw.head } }),
     },
     {
       kind: 'range', key: 'lipH', label: 'lid.lipH', hint: 'lid.lipH.hint', min: 1.5, max: 10, step: 0.5,

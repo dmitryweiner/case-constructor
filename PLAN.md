@@ -750,3 +750,12 @@ commit; new features get their `docs/` page in the same commit.
   console. Face frames are used for user cuts. Top elements are vertical
   columns starting above the element. Extra warning codes for user cuts
   (`info.extraSplit`, `warn.extraUnderSkirt`).
+- **M4.** The effective lid depth is at least the walls' rounded zone (the
+  inner corner radius for a side lid, the inner edge fillet for a top or
+  bottom lid): with the parting plane inside it the skirt cannot touch the
+  walls and snaps grip nothing. Snaps that would land in a port opening are
+  dropped; posts in an opening get `warn.postInOpening`. Posts end 0.3 mm
+  below the body rim where they hug the walls and rise into a deep lid only
+  inside its narrowest section.
+- **M4.** Board ghosts: the PCB green and its ports amber, both see-through
+  (asked by the user).

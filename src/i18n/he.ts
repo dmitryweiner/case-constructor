@@ -203,4 +203,17 @@ export const he: Record<Key, string> = {
   'port.fpc': 'מחבר סרט',
   'port.antenna': 'מחבר אנטנה',
   'port.generic': 'רכיב',
+
+  // --- lid fastening ---
+  'lid.screw': 'בורג',
+  'lid.hole': 'חור במעמדים',
+  'lid.head': 'ראש',
+  'head.none': 'שטוח',
+  'head.counterbore': 'שקע',
+  'head.countersunk': 'שקוע',
+  'lid.head.hint': 'שטוח — הראש מונח על המכסה; שקע — כיס לראש עגול; שקוע — חרוט 90° לראש שקוע',
+  'warn.postHitsBoard': 'מעמד בורג של המכסה נתקל בלוח {board}.',
+  'progress.fastening': 'תפסים ומעמדים',
+  'warn.postInOpening': "מעמד בורג {n} עומד בדרכו של פתח ונחתך על ידו.",
+  'info.depthRaised': "המכסה לוקח {d} מ״מ מהדפנות: קו החלוקה עובר היכן שהפינות המעוגלות נגמרות.",
 };

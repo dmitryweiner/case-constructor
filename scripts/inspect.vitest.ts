@@ -22,6 +22,7 @@ interface Args {
   stl?: string;
   overlap?: string;
   levels?: string;
+  degenerate?: string;
   set?: string[];
 }
 
@@ -73,6 +74,21 @@ it('inspect', async () => {
     const r = validateMesh(mesh);
     console.log(`${id}: ${r.triangleCount} tri, ${r.degenerateTriangles} degenerate, watertight ${r.watertight}, `
       + `volume ${(r.volume / 1000).toFixed(2)} cm³, bbox ${r.bbox.min.map((v) => v.toFixed(2))} … ${r.bbox.max.map((v) => v.toFixed(2))}`);
+    if (args.degenerate) {
+      // zero-area triangles: where they are, grouped to a 0.5 mm grid
+      const spots = new Map<string, number>();
+      const p = mesh.positions;
+      for (let t = 0; t < mesh.indices.length; t += 3) {
+        const [a, b, c] = [mesh.indices[t] * 3, mesh.indices[t + 1] * 3, mesh.indices[t + 2] * 3];
+        const ab = [p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]];
+        const ac = [p[c] - p[a], p[c + 1] - p[a + 1], p[c + 2] - p[a + 2]];
+        const area = Math.hypot(ab[1] * ac[2] - ab[2] * ac[1], ab[2] * ac[0] - ab[0] * ac[2], ab[0] * ac[1] - ab[1] * ac[0]) / 2;
+        if (area >= 1e-12) continue;
+        const key = [p[a], p[a + 1], p[a + 2]].map((v) => (Math.round(v * 2) / 2).toFixed(1)).join(',');
+        spots.set(key, (spots.get(key) ?? 0) + 1);
+      }
+      for (const [key, count] of [...spots].slice(0, 20)) console.log(`  degenerate ×${count} at ${key}`);
+    }
     if (args.levels) {
       // horizontal faces by z level: up/down areas; a membrane shows as equal up and down at one level
       const levels = new Map<string, { up: number; down: number }>();

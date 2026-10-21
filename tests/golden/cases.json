@@ -1,8 +1,8 @@
 {
   "default-box": {
     "body": {
-      "triangles": 284,
-      "volume": 34222.53,
+      "triangles": 764,
+      "volume": 34161.28,
       "extents": [
         100,
         70,
@@ -10,8 +10,8 @@
       ]
     },
     "lid": {
-      "triangles": 678,
-      "volume": 15114.24,
+      "triangles": 1116,
+      "volume": 15164.3,
       "extents": [
         100,
         70,
@@ -21,48 +21,48 @@
   },
   "box-fillet": {
     "body": {
-      "triangles": 2300,
-      "volume": 32842.24,
+      "triangles": 1916,
+      "volume": 30583.44,
       "extents": [
         100,
         70,
-        32.99
+        29.99
       ]
     },
     "lid": {
-      "triangles": 1016,
-      "volume": 13518.14,
+      "triangles": 2456,
+      "volume": 16244.22,
       "extents": [
-        97.966,
-        67.966,
-        5
+        100,
+        70,
+        8
       ]
     }
   },
   "cylinder": {
     "body": {
-      "triangles": 1916,
-      "volume": 34066.29,
+      "triangles": 1724,
+      "volume": 33362.93,
       "extents": [
         100,
         100,
-        32.99
+        31.99
       ]
     },
     "lid": {
-      "triangles": 1122,
-      "volume": 16071.05,
+      "triangles": 1726,
+      "volume": 17133.46,
       "extents": [
-        99.639,
-        99.639,
-        5
+        100,
+        100,
+        6
       ]
     }
   },
   "console": {
     "body": {
-      "triangles": 284,
-      "volume": 31462.04,
+      "triangles": 764,
+      "volume": 31400.79,
       "extents": [
         100,
         70,
@@ -70,8 +70,8 @@
       ]
     },
     "lid": {
-      "triangles": 752,
-      "volume": 15114.24,
+      "triangles": 1116,
+      "volume": 15164.3,
       "extents": [
         100,
         70,
@@ -81,8 +81,8 @@
   },
   "bottom-lid": {
     "body": {
-      "triangles": 284,
-      "volume": 30955.24,
+      "triangles": 764,
+      "volume": 30893.99,
       "extents": [
         100,
         70,
@@ -90,8 +90,8 @@
       ]
     },
     "lid": {
-      "triangles": 826,
-      "volume": 18824.12,
+      "triangles": 1378,
+      "volume": 18872.9,
       "extents": [
         100,
         70,
@@ -101,8 +101,8 @@
   },
   "side-lid-deep": {
     "body": {
-      "triangles": 1436,
-      "volume": 37807.75,
+      "triangles": 1676,
+      "volume": 37777.12,
       "extents": [
         85.99,
         70,
@@ -110,8 +110,8 @@
       ]
     },
     "lid": {
-      "triangles": 1694,
-      "volume": 9934.9,
+      "triangles": 1898,
+      "volume": 9867.44,
       "extents": [
         17,
         70,
@@ -121,8 +121,8 @@
   },
   "pi4-default": {
     "body": {
-      "triangles": 1964,
-      "volume": 26446.9,
+      "triangles": 2384,
+      "volume": 26393.3,
       "extents": [
         97.9,
         66.5,
@@ -130,8 +130,8 @@
       ]
     },
     "lid": {
-      "triangles": 1542,
-      "volume": 12873.86,
+      "triangles": 1900,
+      "volume": 12917.66,
       "extents": [
         97.9,
         66.5,
@@ -141,8 +141,8 @@
   },
   "uno-nuts-bottom-lid": {
     "body": {
-      "triangles": 1320,
-      "volume": 20715.53,
+      "triangles": 1800,
+      "volume": 20654.28,
       "extents": [
         61.34,
         82.98,
@@ -150,8 +150,8 @@
       ]
     },
     "lid": {
-      "triangles": 1798,
-      "volume": 11961.77,
+      "triangles": 2310,
+      "volume": 12010.97,
       "extents": [
         61.34,
         82.98,
@@ -161,8 +161,8 @@
   },
   "esp32-rails-cylinder": {
     "body": {
-      "triangles": 472,
-      "volume": 19140.6,
+      "triangles": 808,
+      "volume": 19103.74,
       "extents": [
         72.192,
         72.192,
@@ -170,8 +170,8 @@
       ]
     },
     "lid": {
-      "triangles": 1210,
-      "volume": 8799.52,
+      "triangles": 1400,
+      "volume": 8827.23,
       "extents": [
         72.192,
         72.192,
@@ -181,8 +181,8 @@
   },
   "two-boards-inserts": {
     "body": {
-      "triangles": 2488,
-      "volume": 40945.12,
+      "triangles": 2908,
+      "volume": 40891.52,
       "extents": [
         155.2,
         66.5,
@@ -190,8 +190,8 @@
       ]
     },
     "lid": {
-      "triangles": 1974,
-      "volume": 20006.79,
+      "triangles": 2344,
+      "volume": 20050.59,
       "extents": [
         155.2,
         66.5,
@@ -201,8 +201,8 @@
   },
   "extra-cuts-console": {
     "body": {
-      "triangles": 2166,
-      "volume": 31338.85,
+      "triangles": 2646,
+      "volume": 31277.59,
       "extents": [
         97.9,
         66.5,
@@ -210,12 +210,72 @@
       ]
     },
     "lid": {
-      "triangles": 1296,
-      "volume": 14349.76,
+      "triangles": 1710,
+      "volume": 14399.82,
       "extents": [
         97.9,
         66.5,
         6
+      ]
+    }
+  },
+  "screws-counterbore-top": {
+    "body": {
+      "triangles": 4332,
+      "volume": 34193.24,
+      "extents": [
+        109.3,
+        77.9,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 2368,
+      "volume": 16728.42,
+      "extents": [
+        109.3,
+        77.9,
+        5
+      ]
+    }
+  },
+  "screws-nut-countersunk-side": {
+    "body": {
+      "triangles": 6004,
+      "volume": 42808.78,
+      "extents": [
+        116.8,
+        66.5,
+        28.4
+      ]
+    },
+    "lid": {
+      "triangles": 3004,
+      "volume": 4881.66,
+      "extents": [
+        9,
+        66.5,
+        28.4
+      ]
+    }
+  },
+  "snaps-cylinder-fillet": {
+    "body": {
+      "triangles": 3350,
+      "volume": 33540.3,
+      "extents": [
+        115.258,
+        115.258,
+        24.39
+      ]
+    },
+    "lid": {
+      "triangles": 2928,
+      "volume": 21628.89,
+      "extents": [
+        115.258,
+        115.258,
+        7
       ]
     }
   }

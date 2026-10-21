@@ -6,7 +6,7 @@ import type { CsgApi } from '../src/geo/csg';
 import { buildCase } from '../src/geo/build';
 import { faceFrame } from '../src/geo/face';
 import { lidFaces } from '../src/geo/lidSpec';
-import { caseDims } from '../src/geo/layout';
+import { caseDims, caseLayout, effectiveLid } from '../src/geo/layout';
 import { applyAffine, meshBounds } from '../src/geo/surface';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
@@ -83,7 +83,10 @@ describe('parting', () => {
     const p = built.lid.positions;
     for (let i = 0; i < p.length; i += 3) deepest = Math.min(deepest, applyAffine(frame.toFace, [p[i], p[i + 1], p[i + 2]])[2]);
     const plate = state.lid.face === 'top' || state.lid.face === 'bottom' ? state.shape.floor : state.shape.wall;
-    expect(deepest).toBeCloseTo(-(plate + depth + state.lid.lip.h), 3);
+    // the lid is at least as deep as the rounded zone of the walls
+    const built2 = effectiveLid({ ...state.shape, console: caseLayout(state).console }, state.lid, caseDims(state));
+    expect(built2.depth).toBeGreaterThanOrEqual(depth);
+    expect(deepest).toBeCloseTo(-(plate + built2.depth + state.lid.lip.h), 3);
   });
 
   it('a deep lid is clamped so the body keeps its plate and the skirt', () => {
