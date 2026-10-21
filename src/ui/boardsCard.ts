@@ -7,7 +7,8 @@ import type { Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';
 import type { BoardPlacement } from '../boards/placement';
-import { POSITION_MAX, ROTATIONS, Z_MAX, boardOf, minBoardZ } from '../boards/placement';
+import { POSITION_MAX, ROTATIONS, Z_MAX, boardOf, minBoardZ, portCut } from '../boards/placement';
+import { tDynamic } from '../i18n';
 import { HOLE_KINDS, SCREW_SIZES } from '../geo/fasteners';
 import type { AppState } from '../state/schema';
 
@@ -59,6 +60,23 @@ function boardControls(index: number): Control<AppState>[] {
   ];
 }
 
+/** One checkbox per port: cut an opening for it or not. */
+function portControls(index: number, state: AppState): Control<AppState>[] {
+  const def = boardOf(state.boards[index]);
+  return def.ports.map((port): Control<AppState> => ({
+    kind: 'check',
+    key: `cut_${port.id}`,
+    label: { text: `${tDynamic(`port.${port.type}`)} · ${port.id}` },
+    get: (current) => portCut(current.boards[index], port.id, port.cut),
+    set: (current, value) => {
+      const cuts = { ...current.boards[index].cuts };
+      if (value === port.cut) delete cuts[port.id];
+      else cuts[port.id] = value;
+      return patchBoard(current, index, { cuts });
+    },
+  }));
+}
+
 export interface BoardsCardHandle {
   sync(state: AppState): void;
 }
@@ -96,8 +114,18 @@ export function renderBoardsCard(
       if (def.mount.kind === 'rails') box.append(make('p', 'board-note', t('board.rails')));
       const controls = make('div');
       box.append(controls);
+      const ports = portControls(index, state);
+      let portRows: ControlsHandle<AppState> | null = null;
+      if (ports.length > 0) {
+        const title = make('p', 'sub-title', t('board.ports'));
+        title.title = t('board.ports.hint');
+        const list = make('div', 'port-list');
+        box.append(title, list);
+        portRows = renderControls(list, ports, read, onChange, `board${index}`);
+      }
       container.append(box);
-      return renderControls(controls, boardControls(index), read, onChange, `board${index}`);
+      const main = renderControls(controls, boardControls(index), read, onChange, `board${index}`);
+      return { sync: (current: AppState) => { main.sync(current); portRows?.sync(current); } };
     });
     if (state.boards.length === 0) container.append(make('p', 'board-note', t('boards.empty')));
   }

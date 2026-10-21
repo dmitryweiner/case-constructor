@@ -121,8 +121,8 @@
   },
   "pi4-default": {
     "body": {
-      "triangles": 796,
-      "volume": 28664.11,
+      "triangles": 1964,
+      "volume": 26446.9,
       "extents": [
         97.9,
         66.5,
@@ -130,8 +130,8 @@
       ]
     },
     "lid": {
-      "triangles": 690,
-      "volume": 14094.4,
+      "triangles": 1542,
+      "volume": 12873.86,
       "extents": [
         97.9,
         66.5,
@@ -141,8 +141,8 @@
   },
   "uno-nuts-bottom-lid": {
     "body": {
-      "triangles": 284,
-      "volume": 22042.29,
+      "triangles": 1320,
+      "volume": 20715.53,
       "extents": [
         61.34,
         82.98,
@@ -161,8 +161,8 @@
   },
   "esp32-rails-cylinder": {
     "body": {
-      "triangles": 316,
-      "volume": 19274.29,
+      "triangles": 472,
+      "volume": 19140.6,
       "extents": [
         72.192,
         72.192,
@@ -170,8 +170,8 @@
       ]
     },
     "lid": {
-      "triangles": 726,
-      "volume": 8890.29,
+      "triangles": 1210,
+      "volume": 8799.52,
       "extents": [
         72.192,
         72.192,
@@ -181,8 +181,8 @@
   },
   "two-boards-inserts": {
     "body": {
-      "triangles": 1244,
-      "volume": 43537.4,
+      "triangles": 2488,
+      "volume": 40945.12,
       "extents": [
         155.2,
         66.5,
@@ -190,12 +190,32 @@
       ]
     },
     "lid": {
-      "triangles": 678,
-      "volume": 22130.15,
+      "triangles": 1974,
+      "volume": 20006.79,
       "extents": [
         155.2,
         66.5,
         5
+      ]
+    }
+  },
+  "extra-cuts-console": {
+    "body": {
+      "triangles": 2166,
+      "volume": 31338.85,
+      "extents": [
+        97.9,
+        66.5,
+        45.275
+      ]
+    },
+    "lid": {
+      "triangles": 1296,
+      "volume": 14349.76,
+      "extents": [
+        97.9,
+        66.5,
+        6
       ]
     }
   }

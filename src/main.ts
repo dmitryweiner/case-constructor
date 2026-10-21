@@ -16,6 +16,11 @@ import { lidControls } from './ui/lidCard';
 import { renderBoardsCard } from './ui/boardsCard';
 import type { BoardsCardHandle } from './ui/boardsCard';
 import { renderBoardList } from './ui/boardPicker';
+import { addCut, renderCutsCard } from './ui/cutsCard';
+import type { CutsCardHandle } from './ui/cutsCard';
+import { cutWarnings, outerTopAt, portCutters } from './geo/ports';
+import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
+import { effectiveLid } from './geo/layout';
 import { setupAdjustmentButtons } from './ui/adjust';
 import { createProgress } from './ui/progress';
 import { renderPresetList } from './ui/presetList';
@@ -68,6 +73,8 @@ const boardPickerClose = el('boardPickerClose', HTMLButtonElement);
 const boardSearch = el('boardSearch', HTMLInputElement);
 const boardList = el('boardList', HTMLDivElement);
 const viewBoards = el('viewBoards', HTMLInputElement);
+const cutCards = el('cutCards', HTMLDivElement);
+const cutAdd = el('cutAdd', HTMLButtonElement);
 const lidParams = el('lidParams', HTMLDivElement);
 const resolutionSel = el('resolution', HTMLSelectElement);
 const exportBtn = el('exportBtn', HTMLButtonElement);
@@ -112,10 +119,12 @@ setupAdjustmentButtons(panel);
 let caseRows: ControlsHandle<AppState>;
 let lidRows: ControlsHandle<AppState>;
 let boardRows: BoardsCardHandle;
+let cutRows: CutsCardHandle;
 
 function renderPanel(): void {
   caseRows = renderControls(caseParams, caseControls(), () => state, (next) => applyState(next), 'case');
   boardRows = renderBoardsCard(boardCards, () => state, (next) => applyState(next));
+  cutRows = renderCutsCard(cutCards, () => state, (next) => applyState(next));
   lidRows = renderControls(lidParams, lidControls(), () => state, (next) => applyState(next), 'lid');
 }
 renderPanel();
@@ -132,6 +141,8 @@ function syncPanel(): void {
   boardRows.sync(state);
   lidRows.sync(state);
   boardAdd.disabled = state.boards.length >= MAX_BOARDS;
+  cutRows.sync(state);
+  cutAdd.disabled = state.extraCuts.length >= MAX_EXTRA_CUTS;
   for (const [mode, tab] of Object.entries(tabs)) tab.setAttribute('aria-selected', String(mode === state.exportMode));
   resolutionSel.value = String(state.resolution);
   updateHistoryButtons();
@@ -176,6 +187,10 @@ function refresh(): void {
   const depthMax = lidDepthMax(state.shape, state.lid, dims);
   if (state.lid.depth > depthMax) baseWarnings.push(t('warn.depthClamped', { max: depthMax.toFixed(1) }));
   baseWarnings.push(...collisions(layout).map(tm));
+  const shapeBuilt = { ...state.shape, console: layout.console };
+  const top = outerTopAt(shapeBuilt, dims, layout.console.frontH, layout.console.backH);
+  const cutters = [...portCutters(layout, shapeBuilt), ...extraCutters(state.extraCuts, shapeBuilt, dims, top)];
+  baseWarnings.push(...cutWarnings(layout, shapeBuilt, effectiveLid(shapeBuilt, state.lid, dims), cutters, state.extraCuts).map(tm));
   showWarnings([]);
   ghosts = layout.boards.map(boardGhost);
   drawParts();
@@ -303,6 +318,7 @@ function addBoard(def: BoardDef): void {
 }
 
 boardAdd.addEventListener('click', openPicker);
+cutAdd.addEventListener('click', () => applyState(addCut(state)));
 boardPickerClose.addEventListener('click', closePicker);
 boardPicker.addEventListener('click', (event) => {
   if (event.target === boardPicker) closePicker();

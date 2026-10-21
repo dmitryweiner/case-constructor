@@ -64,6 +64,17 @@ const STATES: Record<string, AppState> = {
       { board: 'heltec-wifi-lora-32-v3', x: 95, y: 10 },
     ],
   }),
+  // M3: openings
+  'extra-cuts-console': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'console' },
+    lid: { ...defaultState().lid, face: 'bottom' },
+    boards: [{ board: 'raspberry-pi-4b', cuts: { gpio: false } }],
+    extraCuts: [
+      { face: 'top', shape: 'rect', x: 40, y: 30, w: 20, h: 10, r: 2 },
+      { face: 'left', shape: 'round', x: 30, y: 15, w: 8 },
+    ],
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

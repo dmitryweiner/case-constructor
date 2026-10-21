@@ -744,3 +744,9 @@ commit; new features get their `docs/` page in the same commit.
 - **M2.** Open question 2 (rails facing a side lid) stays open; rails grip
   1.5 mm. The ESP32-DevKitC's soldered headers sit within the grip zone —
   noted in docs/boards.md, to be settled with a printed test.
+- **M3.** Port cutouts are channels along each port's own edge normal from
+  the connector face outwards, not 2D shapes projected onto a face frame: the
+  same code serves the box, the cylinder (no `sideFrameAt` needed) and the
+  console. Face frames are used for user cuts. Top elements are vertical
+  columns starting above the element. Extra warning codes for user cuts
+  (`info.extraSplit`, `warn.extraUnderSkirt`).

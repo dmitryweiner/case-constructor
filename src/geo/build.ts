@@ -14,6 +14,9 @@ import { plateOf, shapeSpec } from './shape';
 import { outerSolid, shellSolid } from './shell';
 import type { Support } from './standoffs';
 import { rails, standoffs } from './standoffs';
+import { cuttersSolid } from './cut';
+import { extraCutters } from './cutters';
+import { outerTopAt, portCutters } from './ports';
 import { applyAffine } from './surface';
 import type { SurfaceMesh } from './surface';
 import type { AppState } from '../state/schema';
@@ -30,6 +33,7 @@ export const BUILD_STAGES: readonly Message[] = [
   { code: 'progress.split' },
   { code: 'progress.supports' },
   { code: 'progress.lid' },
+  { code: 'progress.cutouts' },
 ];
 
 export function buildCase(
@@ -77,6 +81,17 @@ export function buildCase(
     const outer = outerSolid(csg, scope, spec, segments);
     const skirt = skirtSolid(csg, scope, spec, outer, frame, zp, lid, shape, segments);
     if (skirt) lidSolid = scope.keep(lidSolid.add(skirt));
+
+    // Openings last: through walls, skirt and plates of both parts alike, so
+    // an opening on the parting plane is cut in both halves.
+    onStage(BUILD_STAGES[4]);
+    const top = outerTopAt(shape, dims, layout.console.frontH, layout.console.backH);
+    const cutters = [...portCutters(layout, shape), ...extraCutters(state.extraCuts, shape, dims, top)];
+    const holes = cuttersSolid(csg, scope, cutters, segments);
+    if (holes) {
+      body = scope.keep(body.subtract(holes));
+      lidSolid = scope.keep(lidSolid.subtract(holes));
+    }
 
     return { body: fromManifold(body), lid: fromManifold(lidSolid), dims };
   } finally {

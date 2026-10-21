@@ -787,3 +787,14 @@ input[type='text'] {
   font-size: 11.5px;
   font-variant-numeric: tabular-nums;
 }
+
+.sub-title {
+  margin: 8px 0 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.port-list .row {
+  margin: 2px 0;
+}

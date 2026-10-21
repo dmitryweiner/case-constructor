@@ -9,6 +9,8 @@ import { defaultShape, sanitizeShape } from '../geo/shape';
 import type { BoardPlacement } from '../boards/placement';
 import { defaultPlacement, sanitizePlacements } from '../boards/placement';
 import { catalogBoard, CATALOG } from '../boards/catalog';
+import type { ExtraCut } from '../geo/cutters';
+import { sanitizeExtraCuts } from '../geo/cutters';
 import type { LidState } from '../geo/lidSpec';
 import { defaultLid, sanitizeLid } from '../geo/lidSpec';
 
@@ -23,6 +25,8 @@ export interface AppState {
   shape: ShapeState;
   boards: BoardPlacement[];
   lid: LidState;
+  /** user-defined openings on any face */
+  extraCuts: ExtraCut[];
   exportMode: ExportMode;
   /** segments per quarter arc for the export build */
   resolution: number;
@@ -36,6 +40,7 @@ export function defaultState(): AppState {
     shape: defaultShape(),
     boards: [defaultPlacement(catalogBoard('raspberry-pi-4b') ?? CATALOG[0])],
     lid: defaultLid(),
+    extraCuts: [],
     exportMode: 'both',
     resolution: 24,
   };
@@ -56,6 +61,7 @@ export function sanitizeState(raw: unknown): AppState {
     shape,
     boards: sanitizePlacements(Reflect.get(r, 'boards')),
     lid: sanitizeLid(Reflect.get(r, 'lid'), shape.kind),
+    extraCuts: sanitizeExtraCuts(Reflect.get(r, 'extraCuts'), shape.kind),
     exportMode: isExportMode(exportMode) ? exportMode : d.exportMode,
     resolution: typeof resolution === 'number' && RESOLUTIONS.includes(resolution) ? resolution : d.resolution,
   };

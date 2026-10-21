@@ -15,9 +15,16 @@ import { t } from '../i18n';
  */
 type Visibility<T> = (state: T) => boolean;
 
+/** A label: a dictionary key, or ready text when there is nothing to translate (a port id). */
+export type Label = Key | { text: string };
+
+function labelText(label: Label): string {
+  return typeof label === 'string' ? t(label) : label.text;
+}
+
 interface Common<T> {
   key: string;
-  label: Key;
+  label: Label;
   hint?: Key;
   when?: Visibility<T>;
   /** shown but not editable (e.g. a size computed from the boards) */
@@ -107,7 +114,7 @@ export function renderControls<T>(
   for (const control of controls) {
     const id = `${idPrefix}_${control.key}`;
     const row = make(control.kind === 'segmented' ? 'div' : 'label', 'row');
-    const name = make('span', 'row-label', t(control.label));
+    const name = make('span', 'row-label', labelText(control.label));
     if (control.hint) name.title = t(control.hint);
     row.append(name);
     let setDisabled: (off: boolean) => void = () => {};

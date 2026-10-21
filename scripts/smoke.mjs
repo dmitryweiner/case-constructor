@@ -117,6 +117,21 @@ for (const id of catalog) {
     await expectWatertight(`board:${id}:insert:90`);
   }
 }
+label('ports');
+await page.click('#board0_remove');
+await page.click('#boardAdd');
+await page.click('#boardList [data-board="raspberry-pi-4b"]');
+await page.uncheck('#board0_cut_ethernet');
+await expectWatertight('ports:ethernet-off');
+await page.check('#board0_cut_ethernet');
+label('openings');
+await page.click('#cutAdd');
+await page.click('#cut0_shape_round');
+await setRange('cut0_d', 8);
+await expectWatertight('openings:round');
+await page.selectOption('#cut0_face', 'top');
+await expectWatertight('openings:top');
+await page.click('#cut0_remove');
 label('boards:search');
 await page.click('#boardAdd');
 await page.fill('#boardSearch', 'heltec');

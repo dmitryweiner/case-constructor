@@ -17,11 +17,19 @@ export type MessageCode =
   // layout checks (layout)
   | 'warn.boardsOverlap'
   | 'warn.standoffHitsBoard'
+  // cutouts (ports)
+  | 'warn.portFar'
+  | 'info.cutSplit'
+  | 'warn.cutUnderSkirt'
+  | 'warn.cutInCorner'
+  | 'info.extraSplit'
+  | 'warn.extraUnderSkirt'
   // worker job stages
   | 'progress.loading'
   | 'progress.shell'
   | 'progress.split'
   | 'progress.supports'
+  | 'progress.cutouts'
   | 'progress.lid'
   | 'progress.check';
 
