@@ -6,6 +6,9 @@
 
 import type { ShapeState } from '../geo/shape';
 import { defaultShape, sanitizeShape } from '../geo/shape';
+import type { BoardPlacement } from '../boards/placement';
+import { defaultPlacement, sanitizePlacements } from '../boards/placement';
+import { catalogBoard, CATALOG } from '../boards/catalog';
 import type { LidState } from '../geo/lidSpec';
 import { defaultLid, sanitizeLid } from '../geo/lidSpec';
 
@@ -18,6 +21,7 @@ export type ExportMode = (typeof EXPORT_MODES)[number];
 export interface AppState {
   version: number;
   shape: ShapeState;
+  boards: BoardPlacement[];
   lid: LidState;
   exportMode: ExportMode;
   /** segments per quarter arc for the export build */
@@ -30,6 +34,7 @@ export function defaultState(): AppState {
   return {
     version: STATE_VERSION,
     shape: defaultShape(),
+    boards: [defaultPlacement(catalogBoard('raspberry-pi-4b') ?? CATALOG[0])],
     lid: defaultLid(),
     exportMode: 'both',
     resolution: 24,
@@ -49,6 +54,7 @@ export function sanitizeState(raw: unknown): AppState {
   return {
     version: STATE_VERSION,
     shape,
+    boards: sanitizePlacements(Reflect.get(r, 'boards')),
     lid: sanitizeLid(Reflect.get(r, 'lid'), shape.kind),
     exportMode: isExportMode(exportMode) ? exportMode : d.exportMode,
     resolution: typeof resolution === 'number' && RESOLUTIONS.includes(resolution) ? resolution : d.resolution,

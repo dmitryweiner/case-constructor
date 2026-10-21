@@ -93,6 +93,45 @@ for (const id of ranges) {
 }
 await expectWatertight('slider-extremes');
 
+// boards: every catalog board from the picker, hole kinds, rotation, removal
+label('boards');
+const catalog = await page.evaluate(async () => {
+  document.querySelector('#boardAdd').click();
+  await new Promise((r) => setTimeout(r, 50));
+  const ids = [...document.querySelectorAll('#boardList [data-board]')].map((n) => n.dataset.board);
+  document.querySelector('#boardPickerClose').click();
+  return ids;
+});
+if (catalog.length < 4) errors.push(`[boards] picker lists ${catalog.length} boards`);
+for (const id of catalog) {
+  label(`board:${id}`);
+  await page.click('#board0_remove');
+  await page.click('#boardAdd');
+  await page.click(`#boardList [data-board="${id}"]`);
+  await expectWatertight(`board:${id}`);
+  if (await page.locator('#board0_hole_nut').isVisible()) {
+    await page.click('#board0_hole_nut');
+    await expectWatertight(`board:${id}:nut`);
+    await page.click('#board0_hole_insert');
+    await page.click('#board0_rot_90');
+    await expectWatertight(`board:${id}:insert:90`);
+  }
+}
+label('boards:search');
+await page.click('#boardAdd');
+await page.fill('#boardSearch', 'heltec');
+const found = await page.locator('#boardList [data-board]').count();
+if (found !== 1) errors.push(`[boards:search] "heltec" finds ${found}`);
+await page.click('#boardList [data-board]');
+await expectWatertight('boards:two');
+label('boards:overlap');
+await setRange('board1_x', 0);
+await page.waitForTimeout(100);
+if (!(await page.locator('#warnings').textContent()).includes('overlap')) errors.push('[boards:overlap] no warning');
+await page.click('#board1_remove');
+await page.click('#board0_remove');
+await expectWatertight('boards:none');
+
 // each lid face (the console has no lid on its slope, the cylinder only top and bottom)
 label('lid-faces');
 await page.click('#presetBtn');

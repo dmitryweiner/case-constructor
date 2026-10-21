@@ -1,0 +1,19 @@
+{
+  "id": "heltec-wifi-lora-32-v3",
+  "name": "Heltec WiFi LoRa 32 V3",
+  "vendor": "Heltec",
+  "kind": "mcu",
+  "size": { "w": 50.2, "d": 25.5, "t": 1.2 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
+  "topHeight": 5,
+  "bottomHeight": 1.5,
+  "ports": [
+    { "id": "usb-c", "type": "usb-c", "edge": "left", "along": 12.75, "protrude": 0.8 },
+    { "id": "display", "type": "display", "edge": "top", "x": 31.3, "y": 13.3, "w": 27.3, "d": 14.4, "h": 5 },
+    { "id": "prg", "type": "button", "edge": "top", "x": 4.6, "y": 20.7, "w": 2.9, "d": 2.9, "shape": "rect" },
+    { "id": "rst", "type": "button", "edge": "top", "x": 4.6, "y": 4.75, "w": 2.9, "d": 2.9, "shape": "rect" },
+    { "id": "lora-antenna", "type": "antenna", "edge": "top", "x": 49, "y": 12.7 }
+  ],
+  "source": "https://resource.heltec.cn/download/WiFi_LoRa_32_V3/HTIT-WB32LA_V3.2.pdf",
+  "verified": true
+}

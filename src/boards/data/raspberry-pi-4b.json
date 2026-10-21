@@ -1,0 +1,36 @@
+{
+  "id": "raspberry-pi-4b",
+  "name": "Raspberry Pi 4 Model B",
+  "vendor": "Raspberry Pi",
+  "kind": "sbc",
+  "size": { "w": 85, "d": 56, "t": 1.4 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.5, "y": 3.5, "d": 2.7 },
+      { "x": 61.5, "y": 3.5, "d": 2.7 },
+      { "x": 3.5, "y": 52.5, "d": 2.7 },
+      { "x": 61.5, "y": 52.5, "d": 2.7 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 16,
+  "bottomHeight": 2,
+  "ports": [
+    { "id": "usb-c", "type": "usb-c", "edge": "front", "along": 11.2, "h": 3.2, "protrude": 1.3 },
+    { "id": "hdmi-0", "type": "micro-hdmi", "edge": "front", "along": 26, "protrude": 1.2 },
+    { "id": "hdmi-1", "type": "micro-hdmi", "edge": "front", "along": 39.5, "protrude": 1.2 },
+    { "id": "audio", "type": "audio-3.5", "edge": "front", "along": 54, "protrude": 2.5 },
+    { "id": "usb-2", "type": "usb-a", "edge": "right", "along": 9, "w": 13.2, "h": 16, "d": 17.5, "protrude": 2.4 },
+    { "id": "usb-3", "type": "usb-a", "edge": "right", "along": 27, "w": 13.2, "h": 16, "d": 17.5, "protrude": 2.4 },
+    { "id": "ethernet", "type": "rj45", "edge": "right", "along": 45.75, "w": 15.5, "h": 13.5, "protrude": 2.9 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 28, "z": -2.9, "protrude": 2 },
+    { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 32.5, "y": 52.5, "w": 51, "d": 5, "h": 8.5 },
+    { "id": "csi", "type": "fpc", "edge": "top", "x": 46.5, "y": 11.5, "w": 3, "d": 22.5, "h": 5.5 },
+    { "id": "dsi", "type": "fpc", "edge": "top", "x": 4, "y": 28, "w": 3.7, "d": 22.2, "h": 5.5 },
+    { "id": "pwr-led", "type": "led", "edge": "top", "x": 1, "y": 8, "d": 1.6 },
+    { "id": "act-led", "type": "led", "edge": "top", "x": 1, "y": 12, "d": 1.6 }
+  ],
+  "source": "https://datasheets.raspberrypi.com/rpi4/raspberry-pi-4-mechanical-drawing.pdf",
+  "verified": true
+}

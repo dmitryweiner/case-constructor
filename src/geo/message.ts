@@ -14,10 +14,14 @@ export type MessageCode =
   | 'mesh.inverted'
   | 'mesh.degenerate'
   | 'mesh.tooLarge'
+  // layout checks (layout)
+  | 'warn.boardsOverlap'
+  | 'warn.standoffHitsBoard'
   // worker job stages
   | 'progress.loading'
   | 'progress.shell'
   | 'progress.split'
+  | 'progress.supports'
   | 'progress.lid'
   | 'progress.check';
 

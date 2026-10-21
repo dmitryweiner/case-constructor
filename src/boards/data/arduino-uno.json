@@ -1,0 +1,31 @@
+{
+  "id": "arduino-uno",
+  "name": "Arduino Uno R3 / R4",
+  "vendor": "Arduino",
+  "kind": "mcu",
+  "size": { "w": 68.58, "d": 53.34, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 13.97, "y": 2.54, "d": 3.2 },
+      { "x": 15.24, "y": 50.8, "d": 3.2 },
+      { "x": 66.04, "y": 7.62, "d": 3.2 },
+      { "x": 66.04, "y": 35.56, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 11,
+  "bottomHeight": 2,
+  "ports": [
+    { "id": "usb", "type": "usb-b", "edge": "left", "along": 37.9, "w": 12, "h": 11, "protrude": 6.4 },
+    { "id": "power", "type": "dc-jack-5.5", "edge": "left", "along": 7.5, "protrude": 1.4 },
+    { "id": "digital-high", "type": "header-1xN", "edge": "top", "x": 29.2, "y": 50.8, "w": 25.4, "d": 2.5, "h": 8.5, "cut": true },
+    { "id": "digital-low", "type": "header-1xN", "edge": "top", "x": 53.6, "y": 50.8, "w": 20.3, "d": 2.5, "h": 8.5, "cut": true },
+    { "id": "power-header", "type": "header-1xN", "edge": "top", "x": 36.8, "y": 2.54, "w": 20.3, "d": 2.5, "h": 8.5, "cut": true },
+    { "id": "analog", "type": "header-1xN", "edge": "top", "x": 57.2, "y": 2.54, "w": 15.2, "d": 2.5, "h": 8.5, "cut": true },
+    { "id": "reset", "type": "button", "edge": "top", "x": 6.5, "y": 49.6, "w": 6, "d": 6, "h": 3.5, "shape": "rect" },
+    { "id": "icsp", "type": "header-1xN", "edge": "top", "x": 64, "y": 27.3, "w": 5, "d": 7.5, "h": 8.5 }
+  ],
+  "source": "https://docs.arduino.cc/resources/datasheets/A000066-datasheet.pdf",
+  "verified": false
+}

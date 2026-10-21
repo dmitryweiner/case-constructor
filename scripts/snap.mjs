@@ -23,6 +23,8 @@
 //   --width / --height    window size
 //   --preview             production build instead of the dev server
 //   --url <path>          shoot any server path (the icon, an asset)
+//   --eval <js>           evaluate an expression in the page after the shot and print it
+//                         (dev builds expose window.__case: state(), parts(), ghosts())
 
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -30,7 +32,7 @@ import { parseArgs, openApp } from './lib/harness.mjs';
 
 const flags = parseArgs(
   process.argv.slice(2),
-  ['out', 'preset', 'wait', 'width', 'height', 'url', 'clip', 'orbit', 'lang'],
+  ['out', 'preset', 'wait', 'width', 'height', 'url', 'clip', 'orbit', 'lang', 'eval'],
   ['set', 'check', 'uncheck', 'click', 'upload'],
 );
 
@@ -144,6 +146,12 @@ if (clip) {
   await target.screenshot({ path: out });
 }
 
+const evalExpr = flags.get('eval');
+const evalResult = evalExpr ? await page.evaluate((expr) => {
+  // eslint-disable-next-line no-eval
+  const value = (0, eval)(expr);
+  return JSON.stringify(value, null, 1);
+}, evalExpr) : null;
 const status = await page.locator('#status').textContent();
 const audit = (await page.locator('#audit').textContent()).trim();
 const warnings = (await page.locator('#warnings').textContent()).trim();
@@ -152,6 +160,7 @@ await app.close();
 
 console.log(`snap → ${out}`);
 console.log(`status: ${status}`);
+if (evalResult !== null) console.log(`eval: ${evalResult}`);
 console.log(`audit: ${audit}`);
 if (warnings) console.log(`warnings: ${warnings}`);
 if (blockers) console.log(`blockers: ${blockers}`);

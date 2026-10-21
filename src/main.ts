@@ -13,6 +13,9 @@ import { renderControls } from './ui/controls';
 import type { ControlsHandle } from './ui/controls';
 import { caseControls } from './ui/caseCard';
 import { lidControls } from './ui/lidCard';
+import { renderBoardsCard } from './ui/boardsCard';
+import type { BoardsCardHandle } from './ui/boardsCard';
+import { renderBoardList } from './ui/boardPicker';
 import { setupAdjustmentButtons } from './ui/adjust';
 import { createProgress } from './ui/progress';
 import { renderPresetList } from './ui/presetList';
@@ -21,7 +24,10 @@ import { applyStaticText } from './ui/staticText';
 import { ENDONYMS, LANGS, initLang, isLang, lang, onLangChange, setLang, t, tDynamic, tm, autoPresetPrefixes } from './i18n';
 import type { Key } from './i18n';
 import { faceFrame } from './geo/face';
-import { caseDims, lidDepthMax } from './geo/layout';
+import { caseDims, caseLayout, collisions, lidDepthMax, placeBoards } from './geo/layout';
+import { boardGhost } from './geo/ghost';
+import { MAX_BOARDS, NEW_BOARD_GAP, defaultPlacement } from './boards/placement';
+import type { BoardDef } from './boards/schema';
 import { bodyForPrint, lidForPrint, printLayout } from './geo/print';
 import type { SurfaceMesh } from './geo/surface';
 import { mergeMeshes } from './geo/surface';
@@ -55,6 +61,13 @@ applyStaticText(document);
 const view = el('view', HTMLCanvasElement);
 const panel = el('panel', HTMLElement);
 const caseParams = el('caseParams', HTMLDivElement);
+const boardCards = el('boardCards', HTMLDivElement);
+const boardAdd = el('boardAdd', HTMLButtonElement);
+const boardPicker = el('boardPicker', HTMLDivElement);
+const boardPickerClose = el('boardPickerClose', HTMLButtonElement);
+const boardSearch = el('boardSearch', HTMLInputElement);
+const boardList = el('boardList', HTMLDivElement);
+const viewBoards = el('viewBoards', HTMLInputElement);
 const lidParams = el('lidParams', HTMLDivElement);
 const resolutionSel = el('resolution', HTMLSelectElement);
 const exportBtn = el('exportBtn', HTMLButtonElement);
@@ -98,9 +111,11 @@ setupAdjustmentButtons(panel);
 
 let caseRows: ControlsHandle<AppState>;
 let lidRows: ControlsHandle<AppState>;
+let boardRows: BoardsCardHandle;
 
 function renderPanel(): void {
   caseRows = renderControls(caseParams, caseControls(), () => state, (next) => applyState(next), 'case');
+  boardRows = renderBoardsCard(boardCards, () => state, (next) => applyState(next));
   lidRows = renderControls(lidParams, lidControls(), () => state, (next) => applyState(next), 'lid');
 }
 renderPanel();
@@ -114,7 +129,9 @@ function applyState(next: AppState, record = true): void {
 
 function syncPanel(): void {
   caseRows.sync(state);
+  boardRows.sync(state);
   lidRows.sync(state);
+  boardAdd.disabled = state.boards.length >= MAX_BOARDS;
   for (const [mode, tab] of Object.entries(tabs)) tab.setAttribute('aria-selected', String(mode === state.exportMode));
   resolutionSel.value = String(state.resolution);
   updateHistoryButtons();
@@ -143,19 +160,25 @@ let previewTimer: ReturnType<typeof setTimeout> | null = null;
 let generation = 0;
 /** The last preview from the worker, kept so view toggles redraw without a rebuild. */
 let lastParts: { body: SurfaceMesh; lid: SurfaceMesh; state: AppState } | null = null;
+/** Board ghosts of the current state — drawn at once, the case follows from the worker. */
+let ghosts: SurfaceMesh[] = [];
 /** Warnings the panel computes itself, before the worker answers. */
 let baseWarnings: string[] = [];
 
 function refresh(): void {
   generation++;
   const stamp = generation;
-  const dims = caseDims(state.shape);
+  const layout = caseLayout(state);
+  const { dims } = layout;
   statusEl.textContent = t('status.size', { w: Math.round(dims.w), d: Math.round(dims.d), h: Math.round(dims.h) });
 
   baseWarnings = [];
   const depthMax = lidDepthMax(state.shape, state.lid, dims);
   if (state.lid.depth > depthMax) baseWarnings.push(t('warn.depthClamped', { max: depthMax.toFixed(1) }));
+  baseWarnings.push(...collisions(layout).map(tm));
   showWarnings([]);
+  ghosts = layout.boards.map(boardGhost);
+  drawParts();
   renderPartList();
 
   auditEl.textContent = t('audit.building');
@@ -199,7 +222,7 @@ function partById(parts: JobPart[], id: JobPart['id']): JobPart {
 function drawParts(): void {
   if (!lastParts) return;
   const { body, lid, state: built } = lastParts;
-  const dims = caseDims(built.shape);
+  const dims = caseDims(built);
   if (built.exportMode === 'both') {
     const [printedBody, printedLid] = printLayout(body, lid, built.lid.face, dims);
     scene.setParts([{ role: 'body', mesh: printedBody }, { role: 'lid', mesh: printedLid }]);
@@ -207,6 +230,7 @@ function drawParts(): void {
   }
   const mode = lidView();
   const parts: ScenePart[] = [{ role: 'body', mesh: body }];
+  if (viewBoards.checked) parts.push(...ghosts.map((mesh): ScenePart => ({ role: 'board', mesh })));
   if (mode !== 'hidden') {
     const n = faceFrame(built.lid.face, dims).n;
     const lift = mode === 'lifted' ? LIFT_MM : 0;
@@ -255,6 +279,38 @@ function message(error: unknown): string {
 }
 
 viewLid.addEventListener('change', drawParts);
+viewBoards.addEventListener('change', drawParts);
+
+// --- board picker ---
+
+function openPicker(): void {
+  boardSearch.value = '';
+  renderBoardList(boardList, '', addBoard);
+  boardPicker.hidden = false;
+  boardSearch.focus();
+}
+
+function closePicker(): void {
+  boardPicker.hidden = true;
+}
+
+/** A new board goes to the right of the ones already placed. */
+function addBoard(def: BoardDef): void {
+  closePicker();
+  const placed = placeBoards(state);
+  const x = placed.length > 0 ? Math.max(...placed.map((board) => board.footprint.x1)) + NEW_BOARD_GAP + 3 : 0;
+  applyState({ ...state, boards: [...state.boards, defaultPlacement(def, Math.round(x), 0)] });
+}
+
+boardAdd.addEventListener('click', openPicker);
+boardPickerClose.addEventListener('click', closePicker);
+boardPicker.addEventListener('click', (event) => {
+  if (event.target === boardPicker) closePicker();
+});
+boardSearch.addEventListener('input', () => renderBoardList(boardList, boardSearch.value, addBoard));
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !boardPicker.hidden) closePicker();
+});
 viewXray.addEventListener('change', () => scene.setXray(viewXray.checked));
 
 // --- export ---
@@ -296,7 +352,7 @@ async function runExport(): Promise<void> {
       return;
     }
     blockersEl.textContent = '';
-    const dims = caseDims(requested.shape);
+    const dims = caseDims(requested);
     const face = requested.lid.face;
     const body = toMesh(partById(result.parts, 'body'));
     const lid = toMesh(partById(result.parts, 'lid'));
@@ -532,5 +588,14 @@ onLangChange(() => {
   progress.refresh();
   syncPanel();
 });
+
+// Dev builds only: a handle for scripts/snap.mjs --eval to look at what is drawn.
+if (import.meta.env.DEV) {
+  Reflect.set(window, '__case', {
+    state: () => state,
+    parts: () => lastParts,
+    ghosts: () => ghosts,
+  });
+}
 
 applyState(state, false);

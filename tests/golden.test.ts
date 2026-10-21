@@ -27,18 +27,43 @@ interface PartEntry {
 
 type Entry = Record<'body' | 'lid', PartEntry>;
 
+/** The M0 base: no boards, the manual 100 × 70 × 35 size. */
+function base(): AppState {
+  const state = defaultState();
+  return { ...state, boards: [], shape: { ...state.shape, auto: false, size: { w: 100, d: 70, h: 35 } } };
+}
+
 function variant(patch: (base: AppState) => unknown): AppState {
-  return sanitizeState(patch(defaultState()));
+  return sanitizeState(patch(base()));
 }
 
 /** The fixed set; add a state when a feature lands, never edit an old one. */
 const STATES: Record<string, AppState> = {
-  'default-box': defaultState(),
+  'default-box': base(),
   'box-fillet': variant((s) => ({ ...s, shape: { ...s.shape, cornerR: 8, edgeR: 5 } })),
   'cylinder': variant((s) => ({ ...s, shape: { ...s.shape, kind: 'cylinder', edgeR: 3 } })),
   'console': variant((s) => ({ ...s, shape: { ...s.shape, kind: 'console' }, lid: { ...s.lid, face: 'bottom' } })),
   'bottom-lid': variant((s) => ({ ...s, lid: { ...s.lid, face: 'bottom', depth: 5 } })),
   'side-lid-deep': variant((s) => ({ ...s, shape: { ...s.shape, edgeR: 3 }, lid: { ...s.lid, face: 'right', depth: 12 } })),
+  // M2: boards
+  'pi4-default': defaultState(),
+  'uno-nuts-bottom-lid': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'arduino-uno', z: 6, rot: 90, mount: { size: 'M3', hole: 'nut' } }],
+    lid: { ...defaultState().lid, face: 'bottom' },
+  }),
+  'esp32-rails-cylinder': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'cylinder' },
+    boards: [{ board: 'esp32-devkitc-v4' }],
+  }),
+  'two-boards-inserts': sanitizeState({
+    ...defaultState(),
+    boards: [
+      { board: 'raspberry-pi-4b', mount: { size: 'M2.5', hole: 'insert' } },
+      { board: 'heltec-wifi-lora-32-v3', x: 95, y: 10 },
+    ],
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

@@ -2,16 +2,16 @@
   "default-box": {
     "body": {
       "triangles": 284,
-      "volume": 34229.06,
+      "volume": 34222.53,
       "extents": [
         100,
         70,
-        33
+        32.99
       ]
     },
     "lid": {
-      "triangles": 844,
-      "volume": 15107.71,
+      "triangles": 678,
+      "volume": 15114.24,
       "extents": [
         100,
         70,
@@ -22,19 +22,19 @@
   "box-fillet": {
     "body": {
       "triangles": 2300,
-      "volume": 32854.31,
+      "volume": 32842.24,
       "extents": [
         100,
         70,
-        33
+        32.99
       ]
     },
     "lid": {
-      "triangles": 1176,
-      "volume": 13506.07,
+      "triangles": 1016,
+      "volume": 13518.14,
       "extents": [
-        97.95,
-        67.95,
+        97.966,
+        67.966,
         5
       ]
     }
@@ -42,19 +42,19 @@
   "cylinder": {
     "body": {
       "triangles": 1916,
-      "volume": 34074.65,
+      "volume": 34066.29,
       "extents": [
         100,
         100,
-        33
+        32.99
       ]
     },
     "lid": {
-      "triangles": 1202,
-      "volume": 16062.69,
+      "triangles": 1122,
+      "volume": 16071.05,
       "extents": [
-        99.633,
-        99.633,
+        99.639,
+        99.639,
         5
       ]
     }
@@ -62,16 +62,16 @@
   "console": {
     "body": {
       "triangles": 284,
-      "volume": 31468.57,
+      "volume": 31462.04,
       "extents": [
         100,
         70,
-        38
+        37.99
       ]
     },
     "lid": {
-      "triangles": 780,
-      "volume": 15107.71,
+      "triangles": 752,
+      "volume": 15114.24,
       "extents": [
         100,
         70,
@@ -82,16 +82,16 @@
   "bottom-lid": {
     "body": {
       "triangles": 284,
-      "volume": 30961.78,
+      "volume": 30955.24,
       "extents": [
         100,
         70,
-        28
+        27.99
       ]
     },
     "lid": {
-      "triangles": 964,
-      "volume": 18817.58,
+      "triangles": 826,
+      "volume": 18824.12,
       "extents": [
         100,
         70,
@@ -102,20 +102,100 @@
   "side-lid-deep": {
     "body": {
       "triangles": 1436,
-      "volume": 37811.72,
+      "volume": 37807.75,
       "extents": [
-        86,
+        85.99,
         70,
         35
       ]
     },
     "lid": {
-      "triangles": 1802,
-      "volume": 10166.31,
+      "triangles": 1694,
+      "volume": 9934.9,
       "extents": [
         17,
         70,
         35
+      ]
+    }
+  },
+  "pi4-default": {
+    "body": {
+      "triangles": 796,
+      "volume": 28664.11,
+      "extents": [
+        97.9,
+        66.5,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 690,
+      "volume": 14094.4,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "uno-nuts-bottom-lid": {
+    "body": {
+      "triangles": 284,
+      "volume": 22042.29,
+      "extents": [
+        61.34,
+        82.98,
+        23.59
+      ]
+    },
+    "lid": {
+      "triangles": 1798,
+      "volume": 11961.77,
+      "extents": [
+        61.34,
+        82.98,
+        8
+      ]
+    }
+  },
+  "esp32-rails-cylinder": {
+    "body": {
+      "triangles": 316,
+      "volume": 19274.29,
+      "extents": [
+        72.192,
+        72.192,
+        19.59
+      ]
+    },
+    "lid": {
+      "triangles": 726,
+      "volume": 8890.29,
+      "extents": [
+        72.192,
+        72.192,
+        5
+      ]
+    }
+  },
+  "two-boards-inserts": {
+    "body": {
+      "triangles": 1244,
+      "volume": 43537.4,
+      "extents": [
+        155.2,
+        66.5,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 678,
+      "volume": 22130.15,
+      "extents": [
+        155.2,
+        66.5,
+        5
       ]
     }
   }

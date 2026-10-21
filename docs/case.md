@@ -16,7 +16,11 @@
 | Width, Depth, Height | 20–400 mm | 100 × 70 × 35 | the **outer** size |
 | Front / back height | 10–400 mm | 20 / 40 | console only |
 
-**Size from boards** — the smallest case that fits everything inside. With it
-off, the case takes your size but never shrinks below that minimum; the
-sliders show the size the case is actually built at. (Boards arrive in a
-later version; until then the minimum is a small empty cavity.)
+**Size from boards** (on by default) — the smallest case that fits every
+board with its protruding ports and rails, plus the margins: 2 mm from the
+boards to the walls (more if the lid skirt needs it) and 3 mm from the
+tallest part to the ceiling. With it off, the case takes your size but never
+shrinks below that minimum; the sliders show the size the case is actually
+built at. A cylinder is sized to hold the boards' diagonal; a console raises
+both heights together until its slope clears the boards. With no boards the
+minimum is a small empty cavity.

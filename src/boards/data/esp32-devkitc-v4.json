@@ -1,0 +1,19 @@
+{
+  "id": "esp32-devkitc-v4",
+  "name": "ESP32-DevKitC V4",
+  "vendor": "Espressif",
+  "kind": "mcu",
+  "size": { "w": 54.4, "d": 27.9, "t": 1.6 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2.5", "rails": "long" },
+  "topHeight": 3.5,
+  "bottomHeight": 8.5,
+  "ports": [
+    { "id": "usb", "type": "micro-usb", "edge": "left", "along": 13.95, "protrude": 1.7 },
+    { "id": "en", "type": "button", "edge": "top", "x": 3.6, "y": 22.1, "w": 3, "d": 3, "shape": "rect" },
+    { "id": "boot", "type": "button", "edge": "top", "x": 3.6, "y": 5.6, "w": 3, "d": 3, "shape": "rect" },
+    { "id": "power-led", "type": "led", "edge": "top", "x": 13, "y": 22 },
+    { "id": "module", "type": "generic", "edge": "top", "x": 41.6, "y": 13.95, "w": 25.5, "d": 18, "h": 3.1 }
+  ],
+  "source": "https://docs.espressif.com/projects/esp-idf/en/stable/esp32/hw-reference/esp32/get-started-devkitc.html",
+  "verified": false
+}

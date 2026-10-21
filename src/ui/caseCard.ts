@@ -20,7 +20,7 @@ function sizeControl(key: string, dim: Dim, label: 'param.sizeW' | 'param.sizeD'
   return {
     kind: 'range', key, label, min: SIZE_MIN, max: SIZE_MAX, step: 1, when,
     disabled: (state) => state.shape.auto,
-    get: (state) => Math.round(caseDims(state.shape)[dim]),
+    get: (state) => Math.round(caseDims(state)[dim]),
     set: (state, value) => shapeOf(state, { size: { ...state.shape.size, [dim]: value } }),
   };
 }
@@ -62,7 +62,7 @@ export function caseControls(): Control<AppState>[] {
       kind: 'check', key: 'auto', label: 'param.auto', hint: 'param.auto.hint',
       get: (state) => state.shape.auto,
       // switching auto off starts from the size the case has now, not from a stale manual one
-      set: (state, value) => shapeOf(state, value ? { auto: true } : { auto: false, size: caseDims(state.shape) }),
+      set: (state, value) => shapeOf(state, value ? { auto: true } : { auto: false, size: caseDims(state) }),
     },
     sizeControl('w', 'w', 'param.sizeW', (state) => kind(state) !== 'cylinder'),
     sizeControl('diameter', 'w', 'param.diameter', (state) => kind(state) === 'cylinder'),

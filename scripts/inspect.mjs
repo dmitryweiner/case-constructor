@@ -8,6 +8,8 @@
 //   node scripts/inspect.mjs --set shape.kind=cylinder --set lid.face=bottom --set lid.depth=6
 //   node scripts/inspect.mjs --file my-case.json --stl shots/parts
 //   node scripts/inspect.mjs --state '{"shape":{"edgeR":5}}'
+//   node scripts/inspect.mjs --set lid.face=back --overlap   # where lid and body intersect
+//   node scripts/inspect.mjs --levels    # horizontal face areas per z: a membrane has equal up and down
 //
 // --set takes a dotted path into AppState; numbers and true/false are parsed.
 

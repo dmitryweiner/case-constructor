@@ -50,7 +50,10 @@ freely; a temporary script that turns out useful becomes a permanent one.
   module resolution) and reports per part: triangles, degenerate triangles,
   watertight, volume, bbox, stage timings; `--stl <dir>` writes the raw parts.
   Flags: `--preset`, `--file <json>`, `--state '<json>'`, `--set
-  path.in.state=value` (repeatable), `--segments <n>`.
+  path.in.state=value` (repeatable; JSON values like `boards=[]` work),
+  `--segments <n>`, `--overlap` (where the assembled lid and body share
+  volume, piece by piece), `--levels` (horizontal face areas per z: a
+  zero-thickness membrane shows as equal up and down areas at one level).
 - `scripts/lib/harness.mjs` — flags, a vite server on ports 5273 / 4273
   (not ClayForm's), console error collection, CPU throttle, browser locale.
   `CASE_BROWSER` overrides the chromium executable.
@@ -85,6 +88,25 @@ freely; a temporary script that turns out useful becomes a permanent one.
 - Every face has a rigid frame (`face.ts`): z along the outward normal, the
   face at z = 0, (u, v) as seen from outside. The lid is "the part beyond a
   plane at `plate + depth`" in that frame.
+- **Never split on a face.** With a flat lid the parting plane is the cavity
+  ceiling, and a split there left the body a zero-thickness membrane over
+  its opening: watertight, right volume, invisible to every check — and a
+  slicer prints a closed box. The cut goes `SPLIT_OFFSET` (0.01 mm) into the
+  body; `tests/parting.test.ts` hunts membranes on every shape and face.
+- Boards (`src/boards/`): catalog entries are JSON validated strictly by
+  `tests/boards.test.ts`; placements live in the layout frame and the whole
+  layout is centred in the cavity (`geo/layout.ts`, `caseLayout`). The main
+  thread and the worker compute the same layout, so board ghosts
+  (`geo/ghost.ts`, no CSG) line up with the worker's case.
+- Supports (`geo/standoffs.ts`) go to the part that owns the floor under
+  them (the lid when the floor is the lid), minus whatever of them would
+  enter the other part; holes are drilled after the union. A deep side lid
+  gets a band of extra cavity on its side (`lidBand`) so supports stay on the
+  body's floor. A side lid's skirt has no floor strip (it would hit the
+  supports); its cut starts at the opening's real lowest point, which an
+  edge fillet lifts above the floor.
+- Nut slots point towards the board's centre: pointing outwards they cut the
+  wall next to a corner standoff.
 - Print layout (`print.ts`): the body with its opening up, the lid on its
   outer face; every exported STL is in print orientation.
 - Visible text comes only from `src/i18n/` dictionaries; `en.ts` is the
@@ -117,6 +139,10 @@ Add a state when a feature lands, never edit an old one.
 
 ## Control ids
 
+Boards: `#boardAdd` opens `#boardPicker` (`#boardSearch`, rows
+`#boardList [data-board="<id>"]`, `#boardPickerClose`); per board
+`#board<i>_x|_y|_z`, `#board<i>_rot_0|90|180|270`, `#board<i>_screw`,
+`#board<i>_hole_tap|insert|nut`, `#board<i>_remove`. Top bar: `#viewBoards`.
 Case card: `#case_kind_box|cylinder|console`, `#case_cornerR`, `#case_edgeR`,
 `#case_wall`, `#case_floor`, `#case_auto`, `#case_w`, `#case_diameter`,
 `#case_d`, `#case_h`, `#case_frontH`, `#case_backH`.

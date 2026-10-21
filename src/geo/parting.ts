@@ -21,9 +21,18 @@ export function partingZ(plate: number, depth: number): number {
   return -(plate + depth);
 }
 
+/**
+ * How far into the body the cut actually goes. With a flat lid the parting
+ * plane IS the cavity ceiling, and a split on a face leaves the body a
+ * zero-thickness membrane over its opening (watertight, so no check sees it
+ * — a slicer would print a closed box). Cutting a hair lower keeps the body
+ * open; the lid gets a 0.01 mm rim it does not mind.
+ */
+export const SPLIT_OFFSET = 0.01;
+
 export function splitAtParting(scope: CsgScope, shell: Manifold, frame: FaceFrame, zp: number): Parted {
   // z' = n·p + t_z, so the plane z' = zp is n·p = zp − t_z
-  const [lid, body] = splitByPlane(scope, shell, frame.n, zp - frame.toFace[11]);
+  const [lid, body] = splitByPlane(scope, shell, frame.n, zp - SPLIT_OFFSET - frame.toFace[11]);
   return { body, lid };
 }
 
@@ -52,6 +61,8 @@ function offset(scope: CsgScope, outline: CrossSection, delta: number, circular:
  * the plane that ties it to the lid's own walls (with a deep lid the ring
  * alone would float a fit away from them).
  *
+ * A side lid's ring leaves out its floor strip (see below).
+ *
  * The ring follows the intersection of the cavity sections at both ends of
  * the skirt. The cavity is convex, so every section in between contains that
  * intersection: the skirt fits all the way down, and a straight prism never
@@ -60,17 +71,30 @@ function offset(scope: CsgScope, outline: CrossSection, delta: number, circular:
  */
 export function skirtSolid(
   csg: CsgApi, scope: CsgScope, spec: ShapeSpec, outer: Manifold, frame: FaceFrame,
-  zp: number, lid: LidState, wall: number, segments: number,
+  zp: number, lid: LidState, shape: { wall: number; floor: number }, segments: number,
 ): Manifold | null {
-  const top = section(csg, scope, loftSlice(spec.inner, spec.innerCut, frame, zp, segments));
-  const bottom = section(csg, scope, loftSlice(spec.inner, spec.innerCut, frame, zp - lid.lip.h, segments));
+  const { wall } = shape;
+  const topPoly = loftSlice(spec.inner, spec.innerCut, frame, zp, segments);
+  const bottomPoly = loftSlice(spec.inner, spec.innerCut, frame, zp - lid.lip.h, segments);
+  const top = section(csg, scope, topPoly);
+  const bottom = section(csg, scope, bottomPoly);
   if (!top || !bottom) return null;
   const opening = scope.keep(top.intersect(bottom));
   const circular = Math.max(16, segments * 4);
   const ringOuter = offset(scope, opening, -lid.fit, circular);
   const ringInner = offset(scope, opening, -lid.fit - lid.lip.t, circular);
   if (ringInner.isEmpty() || ringOuter.isEmpty()) return null;
-  const ring = scope.keep(ringOuter.subtract(ringInner));
+  let ring = scope.keep(ringOuter.subtract(ringInner));
+  if (frame.face !== 'top' && frame.face !== 'bottom') {
+    // A side lid's skirt has no strip along the floor: there it would run
+    // into the standoffs and rails, and three sides hold the lid as well.
+    // In a side frame v is the case z.
+    // the opening's lowest point: above the floor where a fillet rounds it
+    const low = Math.max(shape.floor, ...[topPoly, bottomPoly].map((poly) => Math.min(...poly.map((p) => p[1]))));
+    const above = low + lid.fit + lid.lip.t + 0.01;
+    const floorBand = scope.keep(new csg.CrossSection([[[-1e4, -1e4], [1e4, -1e4], [1e4, above], [-1e4, above]]], 'Positive'));
+    ring = scope.keep(ring.subtract(floorBand));
+  }
   const prism = extrude(csg, scope, ring, zp - lid.lip.h, zp + OVERLAP);
   const webOuter = offset(scope, top, Math.min(wall / 2, 1), circular);
   const web = extrude(csg, scope, scope.keep(webOuter.subtract(ringInner)), zp, zp + WEB_H);

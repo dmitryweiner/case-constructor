@@ -44,7 +44,7 @@ export function defaultShape(): ShapeState {
     edgeR: 0,
     wall: 2,
     floor: 2,
-    auto: false,
+    auto: true,
     size: { w: 100, d: 70, h: 35 },
     margin: { side: 2, top: 3 },
     console: { frontH: 20, backH: 40 },
@@ -63,7 +63,8 @@ function rec(x: unknown): Record<string, unknown> {
 
 export function clampNum(x: unknown, min: number, max: number, fallback: number): number {
   const value = typeof x === 'number' && Number.isFinite(x) ? x : fallback;
-  return Math.min(max, Math.max(min, value));
+  // + 0 turns -0 into 0: JSON would, and the sanitizer must be idempotent through a file
+  return Math.min(max, Math.max(min, value)) + 0;
 }
 
 export function sanitizeShape(raw: unknown): ShapeState {

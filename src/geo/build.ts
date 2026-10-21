@@ -3,14 +3,18 @@
 // matters and is commented where it does.
 
 import type { CsgApi } from './csg';
-import { CsgScope, fromManifold } from './csg';
+import type { Manifold } from 'manifold-3d';
+import { CsgScope, fromManifold, unionAll } from './csg';
 import type { Dims } from './face';
 import { faceFrame } from './face';
-import { caseDims, effectiveLid } from './layout';
+import { caseLayout, effectiveLid } from './layout';
 import type { Message } from './message';
 import { partingZ, skirtSolid, splitAtParting } from './parting';
 import { plateOf, shapeSpec } from './shape';
 import { outerSolid, shellSolid } from './shell';
+import type { Support } from './standoffs';
+import { rails, standoffs } from './standoffs';
+import { applyAffine } from './surface';
 import type { SurfaceMesh } from './surface';
 import type { AppState } from '../state/schema';
 
@@ -24,6 +28,7 @@ export interface CaseBuild {
 export const BUILD_STAGES: readonly Message[] = [
   { code: 'progress.shell' },
   { code: 'progress.split' },
+  { code: 'progress.supports' },
   { code: 'progress.lid' },
 ];
 
@@ -32,8 +37,10 @@ export function buildCase(
 ): CaseBuild {
   const scope = new CsgScope();
   try {
-    const { shape } = state;
-    const dims = caseDims(shape);
+    const layout = caseLayout(state);
+    const { dims } = layout;
+    // the console's heights may have been raised to clear the boards
+    const shape = { ...state.shape, console: layout.console };
     const spec = shapeSpec(shape, dims);
     const lid = effectiveLid(shape, state.lid, dims);
     const frame = faceFrame(lid.face, dims);
@@ -45,15 +52,47 @@ export function buildCase(
 
     onStage(BUILD_STAGES[1]);
     const parted = splitAtParting(scope, shell, frame, zp);
-
-    onStage(BUILD_STAGES[2]);
+    let body = parted.body;
     let lidSolid = parted.lid;
+
+    // Supports go on whichever part owns the floor under them — the body,
+    // or the lid when the floor is the lid. After the split, so the parting
+    // plane never cuts a standoff; before any cutout, so a vent under a
+    // standoff does not open it.
+    onStage(BUILD_STAGES[2]);
+    const supports: Support[] = layout.boards.flatMap((board) => (board.def.mount.kind === 'holes'
+      ? standoffs(csg, scope, board, shape.floor, segments)
+      : rails(csg, scope, board, shape.floor)));
+    // The owner is the part under the support's base; whatever of it reaches
+    // into the other part's material (a deep side lid over a manually placed
+    // board) is cut away, so the parts never overlap.
+    const onLid = (support: Support): boolean => applyAffine(frame.toFace, support.base)[2] > zp;
+    const forLid = supports.filter(onLid);
+    const forBody = supports.filter((support) => !onLid(support));
+    const rawBody = body;
+    body = attach(csg, scope, body, forBody, lidSolid);
+    lidSolid = attach(csg, scope, lidSolid, forLid, rawBody);
+
+    onStage(BUILD_STAGES[3]);
     const outer = outerSolid(csg, scope, spec, segments);
-    const skirt = skirtSolid(csg, scope, spec, outer, frame, zp, lid, shape.wall, segments);
+    const skirt = skirtSolid(csg, scope, spec, outer, frame, zp, lid, shape, segments);
     if (skirt) lidSolid = scope.keep(lidSolid.add(skirt));
 
-    return { body: fromManifold(parted.body), lid: fromManifold(lidSolid), dims };
+    return { body: fromManifold(body), lid: fromManifold(lidSolid), dims };
   } finally {
     scope.dispose();
   }
+}
+
+/**
+ * Unions the supports' material with a part — minus whatever of it would
+ * enter the other part — then drills their holes.
+ */
+function attach(csg: CsgApi, scope: CsgScope, part: Manifold, supports: readonly Support[], other: Manifold): Manifold {
+  if (supports.length === 0) return part;
+  const material = scope.keep(unionAll(csg, scope, supports.map((support) => support.material)).subtract(other));
+  const grown = scope.keep(part.add(material));
+  const holes = supports.flatMap((support) => (support.holes ? [support.holes] : []));
+  if (holes.length === 0) return grown;
+  return scope.keep(grown.subtract(unionAll(csg, scope, holes)));
 }

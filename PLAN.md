@@ -730,3 +730,17 @@ commit; new features get their `docs/` page in the same commit.
 - **M0.** `geo/bytes.ts` is not copied — nothing needs base64 without a
   share link. The skirt section comes from the loft formula (`section.ts`)
   rather than a mesh slice.
+- **M2.** Default state: a Raspberry Pi 4B with "Size from boards" on.
+- **M2.** A side lid's skirt leaves out its floor strip (it would hit the
+  standoffs and rails); the band along the lid side of the floor is added to
+  the cavity when the lid has depth (`lidBand`), so supports stay on the
+  body. Supports are assigned to the part owning the floor under them and
+  trimmed by the other part, not split by the plane.
+- **M2.** Nut slots point towards the board's centre, not outwards (an
+  outward slot cuts the wall by a corner standoff). The nut bore is a
+  clearance hole (d + 0.4), not a tap hole: the screw must reach the nut.
+- **M2.** The split runs 0.01 mm into the body (`SPLIT_OFFSET`): splitting
+  exactly on the cavity ceiling left a zero-thickness membrane.
+- **M2.** Open question 2 (rails facing a side lid) stays open; rails grip
+  1.5 mm. The ESP32-DevKitC's soldered headers sit within the grip zone —
+  noted in docs/boards.md, to be settled with a printed test.
