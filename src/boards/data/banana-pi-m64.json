@@ -1,0 +1,192 @@
+{
+  "id": "banana-pi-m64",
+  "name": "Banana Pi BPI-M64",
+  "vendor": "Banana Pi",
+  "kind": "sbc",
+  "size": {
+    "w": 91.4,
+    "d": 59.9,
+    "t": 1.6
+  },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      {
+        "x": 2.8,
+        "y": 8.08,
+        "d": 3
+      },
+      {
+        "x": 88.64,
+        "y": 2.79,
+        "d": 3
+      },
+      {
+        "x": 2.8,
+        "y": 57.15,
+        "d": 3
+      },
+      {
+        "x": 88.64,
+        "y": 57.15,
+        "d": 3
+      }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 16,
+  "bottomHeight": 6,
+  "ports": [
+    {
+      "id": "micro-usb",
+      "type": "micro-usb",
+      "edge": "front",
+      "along": 5.8,
+      "protrude": 1.69
+    },
+    {
+      "id": "hdmi",
+      "type": "hdmi",
+      "edge": "front",
+      "along": 48.27,
+      "protrude": 2.54
+    },
+    {
+      "id": "fel-button",
+      "type": "switch",
+      "edge": "front",
+      "along": 73.61,
+      "w": 4.8,
+      "protrude": 0
+    },
+    {
+      "id": "ethernet",
+      "type": "rj45",
+      "edge": "right",
+      "along": 18.71,
+      "w": 15.5,
+      "protrude": 4.53
+    },
+    {
+      "id": "usb",
+      "type": "usb-a",
+      "edge": "right",
+      "along": 38.04,
+      "w": 14.4,
+      "h": 16,
+      "d": 17.35,
+      "protrude": 4.5
+    },
+    {
+      "id": "audio",
+      "type": "audio-3.5",
+      "edge": "right",
+      "along": 50.36,
+      "protrude": 2
+    },
+    {
+      "id": "dc-in",
+      "type": "dc-jack-5.5",
+      "edge": "left",
+      "along": 15.35,
+      "w": 8,
+      "h": 6.5,
+      "d": 13.3,
+      "protrude": 1.7
+    },
+    {
+      "id": "microsd",
+      "type": "microsd",
+      "edge": "left",
+      "along": 31.32,
+      "z": -3.1,
+      "protrude": 0.36
+    },
+    {
+      "id": "reset-button",
+      "type": "switch",
+      "edge": "left",
+      "along": 44.32,
+      "w": 4.8,
+      "protrude": 1.16
+    },
+    {
+      "id": "power-button",
+      "type": "switch",
+      "edge": "left",
+      "along": 50.86,
+      "w": 4.8,
+      "protrude": 1.16
+    },
+    {
+      "id": "gpio",
+      "type": "header-2x20",
+      "edge": "top",
+      "x": 38.56,
+      "y": 56.34,
+      "w": 50.8,
+      "d": 5.08,
+      "h": 8.5
+    },
+    {
+      "id": "uart",
+      "type": "header-1xN",
+      "edge": "top",
+      "x": 81.23,
+      "y": 2.86,
+      "w": 7.62,
+      "d": 2.54
+    },
+    {
+      "id": "camera",
+      "type": "fpc",
+      "edge": "top",
+      "x": 4.72,
+      "y": 30.86,
+      "w": 6.92,
+      "d": 17
+    },
+    {
+      "id": "dsi",
+      "type": "fpc",
+      "edge": "top",
+      "x": 66.82,
+      "y": 14.07,
+      "w": 4.1,
+      "d": 25.31
+    },
+    {
+      "id": "ir",
+      "type": "generic",
+      "edge": "top",
+      "x": 81.49,
+      "y": 57.23,
+      "w": 6.8,
+      "d": 5.2,
+      "cut": true
+    },
+    {
+      "id": "led-r",
+      "type": "led",
+      "edge": "top",
+      "x": 72.53,
+      "y": 56.58
+    },
+    {
+      "id": "led-g",
+      "type": "led",
+      "edge": "top",
+      "x": 74.69,
+      "y": 56.58
+    },
+    {
+      "id": "led-b",
+      "type": "led",
+      "edge": "top",
+      "x": 76.98,
+      "y": 56.58
+    }
+  ],
+  "source": "https://drive.google.com/drive/folders/0B4PAo2nW2Kfnfkd0QmxaU3F2bHBWdkFiS09vT3VoZkVyNW93OXFjM0dHRVdGazhRWmFzZDQ",
+  "verified": false
+}
