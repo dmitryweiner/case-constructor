@@ -68,9 +68,45 @@ headers or mount the board another way. This is open for a printed test
 
 ## Catalog
 
+"Checked" means the outline, holes and connectors were transcribed from the
+vendor's drawing; **≈** means some of it comes from the vendor's
+specification or a typical layout and waits for a measurement (the picker
+shows the same mark). New boards: the add-board skill
+(`.claude/skills/add-board/SKILL.md`).
+
 | Board | Vendor | Size, mm | Mount | Source | Checked |
 |---|---|---|---|---|---|
-| Raspberry Pi 4 Model B | Raspberry Pi | 85 × 56 | 4 × M2.5 | [drawing](https://datasheets.raspberrypi.com/rpi4/raspberry-pi-4-mechanical-drawing.pdf) | yes |
-| ESP32-DevKitC V4 | Espressif | 54.4 × 27.9 | rails | [guide](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/hw-reference/esp32/get-started-devkitc.html) | ≈ |
-| Arduino Uno R3 / R4 | Arduino | 68.58 × 53.34 | 4 × M3 | [datasheet](https://docs.arduino.cc/resources/datasheets/A000066-datasheet.pdf) | ≈ |
-| Heltec WiFi LoRa 32 V3 | Heltec | 50.2 × 25.5 | rails | [datasheet](https://resource.heltec.cn/download/WiFi_LoRa_32_V3/HTIT-WB32LA_V3.2.pdf) | yes |
+| Raspberry Pi 3 Model A+ | Raspberry Pi | 65 × 56 | 4 × M2.5 | [source](https://datasheets.raspberrypi.com/rpi3/raspberry-pi-3-a-plus-mechanical-drawing.pdf) | yes |
+| Raspberry Pi 3 Model B+ | Raspberry Pi | 85 × 56 | 4 × M2.5 | [source](https://datasheets.raspberrypi.com/rpi3/raspberry-pi-3-b-plus-mechanical-drawing.pdf) | yes |
+| Raspberry Pi 4 Model B | Raspberry Pi | 85 × 56 | 4 × M2.5 | [source](https://datasheets.raspberrypi.com/rpi4/raspberry-pi-4-mechanical-drawing.pdf) | yes |
+| Raspberry Pi 5 | Raspberry Pi | 85 × 56 | 4 × M2.5 | [source](https://datasheets.raspberrypi.com/rpi5/raspberry-pi-5-mechanical-drawing.pdf) | yes |
+| Raspberry Pi Pico / Pico W | Raspberry Pi | 21 × 51 | 4 × M2 | [source](https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf) | yes |
+| Raspberry Pi Zero 2 W / Zero W | Raspberry Pi | 65 × 30 | 4 × M2.5 | [source](https://datasheets.raspberrypi.com/rpizero2/raspberry-pi-zero-2-w-mechanical-drawing.pdf) | yes |
+| Banana Pi BPI-M2 Zero | Banana Pi | 65 × 30 | 4 × M2.5 | [source](https://wiki.banana-pi.org/Banana_Pi_BPI-M2_ZERO) | ≈ |
+| Banana Pi BPI-M5 | Banana Pi | 85 × 56 | 4 × M2.5 | [source](https://wiki.banana-pi.org/Banana_Pi_BPI-M5) | ≈ |
+| Orange Pi 3 LTS | Orange Pi | 85 × 56 | 4 × M2.5 | [source](https://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/orange-pi-3-LTS.html) | ≈ |
+| Orange Pi 5 | Orange Pi | 100 × 62 | 4 × M2.5 | [source](https://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-5.html) | ≈ |
+| Orange Pi Zero 2W | Orange Pi | 65 × 30 | 4 × M2.5 | [source](https://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-Zero-2W.html) | ≈ |
+| Orange Pi Zero 3 | Orange Pi | 50 × 55 | 4 × M2.5 | [source](https://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-Zero-3.html) | ≈ |
+| Radxa ROCK 3A | Radxa | 85 × 54 | 4 × M2.5 | [source](https://dl.radxa.com/rock3/docs/hw/3a/radxa_rock_3a_v1310_2d_dxf.zip) | ≈ |
+| Radxa ROCK 4 SE | Radxa | 85 × 54 | 4 × M2.5 | [source](https://docs.radxa.com/en/rock4/rock4se) | ≈ |
+| Radxa ROCK 5B | Radxa | 100.2 × 74.25 | 6 × M2.5 | [source](https://dl.radxa.com/rock5/5b/docs/hw/radxa_rock5b_v141_dimension_20220728_pdf.zip) | ≈ |
+| Radxa ZERO 3W | Radxa | 65 × 30 | 4 × M2.5 | [source](https://dl.radxa.com/zero3/docs/hw/3w/radxa_zero_3w_2d_dxf.zip) | ≈ |
+| Repka Pi 3 | Repka Pi | 85 × 56 | 4 × M2.5 | [source](https://repka-pi.ru/) | ≈ |
+| Repka Pi 4 | Repka Pi | 85 × 56 | 4 × M2.5 | [source](https://repka-pi.ru/) | ≈ |
+| Walnut Pi 1B | Walnut Pi | 85 × 56 | 4 × M2.5 | [source](https://www.walnutpi.com/) | ≈ |
+| ESP32-C3-DevKitM-1 | Espressif | 25.4 × 44.3 | rails (long) | [source](https://dl.espressif.com/dl/schematics/DIMENSION_ESP32-C3-DEVKITM-1_V1_20200915AA.pdf) | yes |
+| ESP32-CAM (AI-Thinker) | Espressif | 27 × 40.5 | rails (long) | [source](https://docs.ai-thinker.com/en/esp32-cam) | ≈ |
+| ESP32-DevKitC V4 | Espressif | 54.4 × 27.9 | rails (long) | [source](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/hw-reference/esp32/get-started-devkitc.html) | ≈ |
+| ESP32-S3-DevKitC-1 | Espressif | 25.4 × 62.74 | rails (long) | [source](https://dl.espressif.com/dl/schematics/esp_idf/DXF_ESP32-S3-DevKitC-1_V1.1_20220429.pdf) | yes |
+| Wemos D1 mini (ESP8266 / ESP32) | Espressif | 34.2 × 25.6 | rails (short) | [source](https://www.wemos.cc/en/latest/d1/d1_mini.html) | ≈ |
+| Arduino Leonardo | Arduino | 68.58 × 53.34 | 4 × M3 | [source](https://docs.arduino.cc/hardware/leonardo/) | ≈ |
+| Arduino Mega 2560 | Arduino | 101.6 × 53.34 | 6 × M3 | [source](https://docs.arduino.cc/resources/datasheets/A000067-datasheet.pdf) | ≈ |
+| Arduino Micro | Arduino | 48 × 18 | rails (long) | [source](https://docs.arduino.cc/hardware/micro/) | ≈ |
+| Arduino Nano / Nano Every | Arduino | 43.18 × 17.78 | rails (long) | [source](https://docs.arduino.cc/resources/datasheets/ABX00028-datasheet.pdf) | yes |
+| Arduino Pro Mini | Arduino | 33 × 18 | rails (long) | [source](https://docs.arduino.cc/retired/boards/arduino-pro-mini/) | ≈ |
+| Arduino Uno R3 / R4 | Arduino | 68.58 × 53.34 | 4 × M3 | [source](https://docs.arduino.cc/resources/datasheets/A000066-datasheet.pdf) | ≈ |
+| Heltec WiFi LoRa 32 V3 | Heltec | 50.2 × 25.5 | rails (long) | [source](https://resource.heltec.cn/download/WiFi_LoRa_32_V3/HTIT-WB32LA_V3.2.pdf) | yes |
+| Heltec Wireless Stick Lite V3 | Heltec | 58.08 × 22.6 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Stick_Lite_V3/HTIT-WSL_V3(Rev1.1).pdf) | yes |
+| Heltec Wireless Stick V3 | Heltec | 58.08 × 22.6 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Stick_V3/HTIT-WS_V3(Rev1.0).pdf) | yes |
+| Heltec Wireless Tracker | Heltec | 63.64 × 28 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Tracker/Wireless%20Tracker1.1.pdf) | yes |

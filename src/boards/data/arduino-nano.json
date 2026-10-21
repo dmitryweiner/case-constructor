@@ -1,0 +1,16 @@
+{
+  "id": "arduino-nano",
+  "name": "Arduino Nano / Nano Every",
+  "vendor": "Arduino",
+  "kind": "mcu",
+  "size": { "w": 43.18, "d": 17.78, "t": 1.6 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
+  "topHeight": 4.5,
+  "bottomHeight": 8.5,
+  "ports": [
+    { "id": "usb", "type": "mini-usb", "edge": "left", "along": 8.89, "protrude": 1 },
+    { "id": "reset", "type": "button", "edge": "top", "x": 21.6, "y": 8.89, "w": 3, "d": 3, "shape": "rect" }
+  ],
+  "source": "https://docs.arduino.cc/resources/datasheets/ABX00028-datasheet.pdf",
+  "verified": true
+}

@@ -1,0 +1,35 @@
+{
+  "id": "raspberry-pi-3b-plus",
+  "name": "Raspberry Pi 3 Model B+",
+  "vendor": "Raspberry Pi",
+  "kind": "sbc",
+  "size": { "w": 85, "d": 56, "t": 1.4 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.5, "y": 3.5, "d": 2.7 },
+      { "x": 61.5, "y": 3.5, "d": 2.7 },
+      { "x": 3.5, "y": 52.5, "d": 2.7 },
+      { "x": 61.5, "y": 52.5, "d": 2.7 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 16,
+  "bottomHeight": 2,
+  "ports": [
+    { "id": "power", "type": "micro-usb", "edge": "front", "along": 10.6, "protrude": 1 },
+    { "id": "hdmi", "type": "hdmi", "edge": "front", "along": 32, "h": 6.5, "protrude": 1 },
+    { "id": "audio", "type": "audio-3.5", "edge": "front", "along": 53.5, "protrude": 2.5 },
+    { "id": "ethernet", "type": "rj45", "edge": "right", "along": 10.25, "w": 15.5, "protrude": 2.3 },
+    { "id": "usb-1", "type": "usb-a", "edge": "right", "along": 29, "w": 13.2, "h": 16, "d": 17.5, "protrude": 2.3 },
+    { "id": "usb-2", "type": "usb-a", "edge": "right", "along": 47, "w": 13.2, "h": 16, "d": 17.5, "protrude": 2.3 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 28, "z": -2.9, "protrude": 2 },
+    { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 32.5, "y": 52.5, "w": 51, "d": 5, "h": 8.5 },
+    { "id": "csi", "type": "fpc", "edge": "top", "x": 45, "y": 11.5, "w": 3, "d": 22.5, "h": 5.5 },
+    { "id": "dsi", "type": "fpc", "edge": "top", "x": 4, "y": 28, "w": 3.7, "d": 22.2, "h": 5.5 },
+    { "id": "pwr-led", "type": "led", "edge": "top", "x": 1, "y": 7.5, "d": 1.6 },
+    { "id": "act-led", "type": "led", "edge": "top", "x": 1, "y": 10.5, "d": 1.6 }
+  ],
+  "source": "https://datasheets.raspberrypi.com/rpi3/raspberry-pi-3-b-plus-mechanical-drawing.pdf",
+  "verified": true
+}

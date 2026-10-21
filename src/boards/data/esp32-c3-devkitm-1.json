@@ -1,0 +1,19 @@
+{
+  "id": "esp32-c3-devkitm-1",
+  "name": "ESP32-C3-DevKitM-1",
+  "vendor": "Espressif",
+  "kind": "mcu",
+  "size": { "w": 25.4, "d": 44.3, "t": 1.6 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
+  "topHeight": 3.5,
+  "bottomHeight": 8.5,
+  "ports": [
+    { "id": "usb", "type": "micro-usb", "edge": "front", "along": 12.7, "protrude": 0.8 },
+    { "id": "boot", "type": "button", "edge": "top", "x": 5.4, "y": 2.6, "w": 3, "d": 3, "shape": "rect" },
+    { "id": "reset", "type": "button", "edge": "top", "x": 20.3, "y": 2.6, "w": 3, "d": 3, "shape": "rect" },
+    { "id": "rgb-led", "type": "led", "edge": "top", "x": 19, "y": 21.8, "d": 2 },
+    { "id": "module", "type": "generic", "edge": "top", "x": 12.7, "y": 37.5, "w": 13.2, "d": 13.6, "h": 2.4 }
+  ],
+  "source": "https://dl.espressif.com/dl/schematics/DIMENSION_ESP32-C3-DEVKITM-1_V1_20200915AA.pdf",
+  "verified": true
+}

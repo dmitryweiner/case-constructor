@@ -1,0 +1,20 @@
+{
+  "id": "heltec-wireless-tracker",
+  "name": "Heltec Wireless Tracker",
+  "vendor": "Heltec",
+  "kind": "mcu",
+  "size": { "w": 63.64, "d": 28, "t": 1.6 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
+  "topHeight": 7,
+  "bottomHeight": 6.5,
+  "ports": [
+    { "id": "usb-c", "type": "usb-c", "edge": "left", "along": 14, "protrude": 2.2 },
+    { "id": "display", "type": "display", "edge": "top", "x": 27, "y": 13.6, "w": 23, "d": 14, "h": 3 },
+    { "id": "gnss-antenna", "type": "generic", "edge": "top", "x": 53, "y": 14.3, "w": 20, "d": 18, "h": 7 },
+    { "id": "prg", "type": "button", "edge": "top", "x": 4.5, "y": 22.5, "w": 3, "d": 3, "shape": "rect" },
+    { "id": "rst", "type": "button", "edge": "top", "x": 4.5, "y": 7.3, "w": 3, "d": 3, "shape": "rect" },
+    { "id": "lora-antenna", "type": "antenna", "edge": "top", "x": 22.3, "y": 25 }
+  ],
+  "source": "https://resource.heltec.cn/download/Wireless_Tracker/Wireless%20Tracker1.1.pdf",
+  "verified": true
+}

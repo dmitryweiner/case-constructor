@@ -1,0 +1,16 @@
+{
+  "id": "arduino-micro",
+  "name": "Arduino Micro",
+  "vendor": "Arduino",
+  "kind": "mcu",
+  "size": { "w": 48, "d": 18, "t": 1.6 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
+  "topHeight": 4,
+  "bottomHeight": 8.5,
+  "ports": [
+    { "id": "usb", "type": "micro-usb", "edge": "left", "along": 9, "protrude": 1 },
+    { "id": "reset", "type": "button", "edge": "top", "x": 38, "y": 9, "w": 3, "d": 3, "shape": "rect" }
+  ],
+  "source": "https://docs.arduino.cc/hardware/micro/",
+  "verified": false
+}

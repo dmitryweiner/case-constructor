@@ -1,0 +1,17 @@
+{
+  "id": "wemos-d1-mini",
+  "name": "Wemos D1 mini (ESP8266 / ESP32)",
+  "vendor": "Espressif",
+  "kind": "mcu",
+  "size": { "w": 34.2, "d": 25.6, "t": 1.2 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "short" },
+  "topHeight": 4,
+  "bottomHeight": 8.5,
+  "ports": [
+    { "id": "usb", "type": "micro-usb", "edge": "left", "along": 12.8, "protrude": 1 },
+    { "id": "reset", "type": "switch", "edge": "front", "along": 3, "w": 4, "h": 2.5, "protrude": 0.5 },
+    { "id": "module", "type": "generic", "edge": "top", "x": 22, "y": 12.8, "w": 16, "d": 24, "h": 3.2 }
+  ],
+  "source": "https://www.wemos.cc/en/latest/d1/d1_mini.html",
+  "verified": false
+}

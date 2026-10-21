@@ -56,6 +56,14 @@ freely; a temporary script that turns out useful becomes a permanent one.
   zero-thickness membrane shows as equal up and down areas at one level),
   `--degenerate` (where the zero-area triangles are). In zsh quote JSON
   values: `--set 'boards=[]'`.
+- `scripts/board.mjs` — catalog tools: `--check` validates every board file
+  (readable list of problems; `npm run boards:check` adds the vitest
+  suite), `--svg <id> [--png]` draws the board's top view with holes, ports
+  and their coordinates to compare against the drawing.
+- `scripts/dxf.mjs <file.dxf>` — extents and circles of a vendor DXF (hole
+  candidates, relative to the outline's corner), `--png` renders it,
+  `--min/--max` filter circle diameters. Blocks (INSERT) are not expanded.
+- Adding a board: the skill `.claude/skills/add-board/SKILL.md`.
 - `scripts/lib/harness.mjs` — flags, a vite server on ports 5273 / 4273
   (not ClayForm's), console error collection, CPU throttle, browser locale.
   `CASE_BROWSER` overrides the chromium executable.
@@ -109,6 +117,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   edge fillet lifts above the floor.
 - Nut slots point towards the board's centre: pointing outwards they cut the
   wall next to a corner standoff.
+- Cutters get a few microns of different growth each (`cut.ts`,
+  `JITTER_MM`): a row of headers or a vent grid shares planes, and a union
+  of prisms with coplanar faces leaves slivers (the Mega found it).
 - Openings (`cutters.ts`, `ports.ts`, `cut.ts`): every opening is a prism
   along an axis. An edge port is a channel from the connector's face outwards
   along the edge normal — one rule for flat, round and sloped walls, and

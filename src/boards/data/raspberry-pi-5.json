@@ -1,0 +1,35 @@
+{
+  "id": "raspberry-pi-5",
+  "name": "Raspberry Pi 5",
+  "vendor": "Raspberry Pi",
+  "kind": "sbc",
+  "size": { "w": 85, "d": 56, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.5, "y": 3.5, "d": 2.7 },
+      { "x": 61.5, "y": 3.5, "d": 2.7 },
+      { "x": 3.5, "y": 52.5, "d": 2.7 },
+      { "x": 61.5, "y": 52.5, "d": 2.7 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 16,
+  "bottomHeight": 2,
+  "ports": [
+    { "id": "usb-c", "type": "usb-c", "edge": "front", "along": 11.2, "protrude": 1.3 },
+    { "id": "hdmi-0", "type": "micro-hdmi", "edge": "front", "along": 25.8, "protrude": 1.2 },
+    { "id": "hdmi-1", "type": "micro-hdmi", "edge": "front", "along": 39.2, "protrude": 1.2 },
+    { "id": "ethernet", "type": "rj45", "edge": "right", "along": 10.2, "w": 15.5, "protrude": 3 },
+    { "id": "usb-2", "type": "usb-a", "edge": "right", "along": 29.1, "w": 13.2, "h": 16, "d": 17.5, "protrude": 2.4 },
+    { "id": "usb-3", "type": "usb-a", "edge": "right", "along": 47, "w": 13.2, "h": 16, "d": 17.5, "protrude": 2.4 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 28, "z": -3.1, "protrude": 2 },
+    { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 32.5, "y": 52.5, "w": 51, "d": 5, "h": 8.5 },
+    { "id": "cam-disp-0", "type": "fpc", "edge": "top", "x": 48.6, "y": 10.2, "w": 2.6, "d": 12.7, "h": 4 },
+    { "id": "cam-disp-1", "type": "fpc", "edge": "top", "x": 55, "y": 10.2, "w": 2.6, "d": 12.7, "h": 4 },
+    { "id": "pcie", "type": "fpc", "edge": "top", "x": 1.8, "y": 29.4, "w": 3.5, "d": 11.4, "h": 4 },
+    { "id": "power-button", "type": "button", "edge": "top", "x": 1.5, "y": 13.3, "w": 3, "d": 4, "shape": "rect" }
+  ],
+  "source": "https://datasheets.raspberrypi.com/rpi5/raspberry-pi-5-mechanical-drawing.pdf",
+  "verified": true
+}

@@ -1,0 +1,19 @@
+{
+  "id": "heltec-wireless-stick-v3",
+  "name": "Heltec Wireless Stick V3",
+  "vendor": "Heltec",
+  "kind": "mcu",
+  "size": { "w": 58.08, "d": 22.6, "t": 1.6 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
+  "topHeight": 3.5,
+  "bottomHeight": 2,
+  "ports": [
+    { "id": "usb-c", "type": "usb-c", "edge": "left", "along": 11.3, "protrude": 1.5 },
+    { "id": "display", "type": "display", "edge": "top", "x": 42.5, "y": 12.9, "w": 15, "d": 8.8, "h": 2 },
+    { "id": "prg", "type": "button", "edge": "top", "x": 3.2, "y": 20.6, "w": 3, "d": 2.5, "shape": "rect" },
+    { "id": "rst", "type": "button", "edge": "top", "x": 3.2, "y": 2, "w": 3, "d": 2.5, "shape": "rect" },
+    { "id": "antenna", "type": "antenna", "edge": "top", "x": 55, "y": 11.3, "w": 4, "d": 10 }
+  ],
+  "source": "https://resource.heltec.cn/download/Wireless_Stick_V3/HTIT-WS_V3(Rev1.0).pdf",
+  "verified": true
+}

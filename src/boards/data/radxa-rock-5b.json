@@ -1,0 +1,121 @@
+{
+  "id": "radxa-rock-5b",
+  "name": "Radxa ROCK 5B",
+  "vendor": "Radxa",
+  "kind": "sbc",
+  "size": {
+    "w": 100.2,
+    "d": 74.25,
+    "t": 1.6
+  },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      {
+        "x": 3.8,
+        "y": 70.2,
+        "d": 2.7
+      },
+      {
+        "x": 61.85,
+        "y": 70.2,
+        "d": 2.7
+      },
+      {
+        "x": 96.95,
+        "y": 70.2,
+        "d": 2.7
+      },
+      {
+        "x": 3.8,
+        "y": 21.15,
+        "d": 2.7
+      },
+      {
+        "x": 61.85,
+        "y": 21.15,
+        "d": 2.7
+      },
+      {
+        "x": 96.95,
+        "y": 21.15,
+        "d": 2.7
+      }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 16,
+  "bottomHeight": 4,
+  "ports": [
+    {
+      "id": "usb-c",
+      "type": "usb-c",
+      "edge": "front",
+      "along": 6,
+      "protrude": 1
+    },
+    {
+      "id": "hdmi-in",
+      "type": "micro-hdmi",
+      "edge": "front",
+      "along": 15.9,
+      "protrude": 1
+    },
+    {
+      "id": "usb-3",
+      "type": "usb-a",
+      "edge": "front",
+      "along": 24.3,
+      "w": 13.2,
+      "h": 16,
+      "d": 17.5,
+      "protrude": 1.5
+    },
+    {
+      "id": "usb-2",
+      "type": "usb-a",
+      "edge": "front",
+      "along": 37.2,
+      "w": 13.2,
+      "h": 16,
+      "d": 17.5,
+      "protrude": 1.5
+    },
+    {
+      "id": "hdmi-0",
+      "type": "hdmi",
+      "edge": "front",
+      "along": 52.5,
+      "h": 6.5,
+      "protrude": 1
+    },
+    {
+      "id": "hdmi-1",
+      "type": "hdmi",
+      "edge": "front",
+      "along": 71.8,
+      "h": 6.5,
+      "protrude": 1
+    },
+    {
+      "id": "ethernet",
+      "type": "rj45",
+      "edge": "front",
+      "along": 89.9,
+      "w": 16,
+      "protrude": 2.4
+    },
+    {
+      "id": "gpio",
+      "type": "header-2x20",
+      "edge": "top",
+      "x": 32.8,
+      "y": 70.2,
+      "w": 51,
+      "d": 5,
+      "h": 8.5
+    }
+  ],
+  "source": "https://dl.radxa.com/rock5/5b/docs/hw/radxa_rock5b_v141_dimension_20220728_pdf.zip",
+  "verified": false
+}

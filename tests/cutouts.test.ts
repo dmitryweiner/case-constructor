@@ -14,6 +14,8 @@ import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import { applyAffine } from '../src/geo/surface';
 import { FACES, faceFrame } from '../src/geo/face';
+import { CATALOG } from '../src/boards/catalog';
+import { validateMesh } from '../src/geo/validate';
 
 let csg: CsgApi;
 beforeAll(async () => {
@@ -111,5 +113,18 @@ describe('user openings', () => {
     const p = cutter.origin.map((v, k) => v - cutter.ez[k] * plate / 2);
     expect(solidAt(parts, p[0], p[1], p[2])).toBe(false);
     for (const part of parts) part.delete();
+  });
+});
+
+describe('every catalog board', () => {
+  it.each(CATALOG.map((board) => [board.id]))('%s: a closed, sliver-free case with every edge port open', (board) => {
+    const state = sanitizeState({ ...defaultState(), boards: [{ board }] });
+    const built = buildCase(csg, state, 8);
+    for (const mesh of [built.body, built.lid]) {
+      const report = validateMesh(mesh);
+      expect(report.watertight).toBe(true);
+      expect(report.degenerateTriangles).toBe(0);
+    }
+    if (caseLayout(state).boards[0].def.ports.some((port) => port.edge !== 'top' && port.cut)) expectEdgePortsOpen(state);
   });
 });

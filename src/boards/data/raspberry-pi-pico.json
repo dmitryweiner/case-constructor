@@ -1,0 +1,26 @@
+{
+  "id": "raspberry-pi-pico",
+  "name": "Raspberry Pi Pico / Pico W",
+  "vendor": "Raspberry Pi",
+  "kind": "mcu",
+  "size": { "w": 21, "d": 51, "t": 1 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 4.8, "y": 2, "d": 2.1 },
+      { "x": 16.2, "y": 2, "d": 2.1 },
+      { "x": 4.8, "y": 49, "d": 2.1 },
+      { "x": 16.2, "y": 49, "d": 2.1 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 3,
+  "bottomHeight": 1,
+  "ports": [
+    { "id": "usb", "type": "micro-usb", "edge": "back", "along": 10.5, "protrude": 1.3 },
+    { "id": "bootsel", "type": "button", "edge": "top", "x": 6.9, "y": 39.3, "w": 3.5, "d": 4.5, "shape": "rect", "cut": false },
+    { "id": "led", "type": "led", "edge": "top", "x": 16.5, "y": 45.5, "d": 1.2 }
+  ],
+  "source": "https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf",
+  "verified": true
+}

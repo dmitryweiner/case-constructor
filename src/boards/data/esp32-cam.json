@@ -1,0 +1,18 @@
+{
+  "id": "esp32-cam",
+  "name": "ESP32-CAM (AI-Thinker)",
+  "vendor": "Espressif",
+  "kind": "mcu",
+  "size": { "w": 27, "d": 40.5, "t": 1.2 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
+  "topHeight": 6,
+  "bottomHeight": 8.5,
+  "ports": [
+    { "id": "microsd", "type": "microsd", "edge": "front", "along": 13.5, "z": 0, "protrude": 1 },
+    { "id": "camera", "type": "generic", "edge": "top", "x": 13.5, "y": 27, "w": 8.5, "h": 6, "shape": "round", "cut": true },
+    { "id": "flash", "type": "led", "edge": "top", "x": 13.5, "y": 6, "d": 3 },
+    { "id": "antenna", "type": "antenna", "edge": "top", "x": 4, "y": 37.5 }
+  ],
+  "source": "https://docs.ai-thinker.com/en/esp32-cam",
+  "verified": false
+}

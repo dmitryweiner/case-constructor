@@ -27,8 +27,18 @@ export function cutterSolid(csg: CsgApi, scope: CsgScope, cutter: CutterSpec, se
   return transformSolid(scope, prism, place);
 }
 
+/**
+ * A few microns more per cutter, different for each: neighbouring cutters
+ * often share a plane (a row of headers, a grid of vents), and a union of
+ * prisms with coplanar faces leaves slivers. Nobody prints 0.01 mm.
+ */
+const JITTER_MM = 0.002;
+
 /** All cutters as one solid, or null when there are none. */
 export function cuttersSolid(csg: CsgApi, scope: CsgScope, cutters: readonly CutterSpec[], segments: number): Manifold | null {
   if (cutters.length === 0) return null;
-  return unionAll(csg, scope, cutters.map((cutter) => cutterSolid(csg, scope, cutter, segments)));
+  return unionAll(csg, scope, cutters.map((cutter, index) => {
+    const grow = JITTER_MM * ((index % 5) + 1);
+    return cutterSolid(csg, scope, { ...cutter, w: cutter.w + grow, h: cutter.h + grow, s1: cutter.s1 + grow }, segments);
+  }));
 }

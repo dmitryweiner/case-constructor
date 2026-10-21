@@ -122,7 +122,7 @@
   "pi4-default": {
     "body": {
       "triangles": 2384,
-      "volume": 26393.3,
+      "volume": 26391.42,
       "extents": [
         97.9,
         66.5,
@@ -130,8 +130,8 @@
       ]
     },
     "lid": {
-      "triangles": 1900,
-      "volume": 12917.66,
+      "triangles": 1916,
+      "volume": 12915.81,
       "extents": [
         97.9,
         66.5,
@@ -142,7 +142,7 @@
   "uno-nuts-bottom-lid": {
     "body": {
       "triangles": 1800,
-      "volume": 20654.28,
+      "volume": 20652.53,
       "extents": [
         61.34,
         82.98,
@@ -162,7 +162,7 @@
   "esp32-rails-cylinder": {
     "body": {
       "triangles": 808,
-      "volume": 19103.74,
+      "volume": 19103.67,
       "extents": [
         72.192,
         72.192,
@@ -171,7 +171,7 @@
     },
     "lid": {
       "triangles": 1400,
-      "volume": 8827.23,
+      "volume": 8826.98,
       "extents": [
         72.192,
         72.192,
@@ -182,7 +182,7 @@
   "two-boards-inserts": {
     "body": {
       "triangles": 2908,
-      "volume": 40891.52,
+      "volume": 40889.07,
       "extents": [
         155.2,
         66.5,
@@ -190,8 +190,8 @@
       ]
     },
     "lid": {
-      "triangles": 2344,
-      "volume": 20050.59,
+      "triangles": 2360,
+      "volume": 20047.79,
       "extents": [
         155.2,
         66.5,
@@ -201,8 +201,8 @@
   },
   "extra-cuts-console": {
     "body": {
-      "triangles": 2646,
-      "volume": 31277.59,
+      "triangles": 2648,
+      "volume": 31273.6,
       "extents": [
         97.9,
         66.5,
@@ -211,7 +211,7 @@
     },
     "lid": {
       "triangles": 1710,
-      "volume": 14399.82,
+      "volume": 14399.76,
       "extents": [
         97.9,
         66.5,
@@ -222,7 +222,7 @@
   "screws-counterbore-top": {
     "body": {
       "triangles": 4332,
-      "volume": 34193.24,
+      "volume": 34191.36,
       "extents": [
         109.3,
         77.9,
@@ -230,8 +230,8 @@
       ]
     },
     "lid": {
-      "triangles": 2368,
-      "volume": 16728.42,
+      "triangles": 2384,
+      "volume": 16726.57,
       "extents": [
         109.3,
         77.9,
@@ -241,8 +241,8 @@
   },
   "screws-nut-countersunk-side": {
     "body": {
-      "triangles": 6004,
-      "volume": 42808.78,
+      "triangles": 6012,
+      "volume": 42805.38,
       "extents": [
         116.8,
         66.5,
@@ -251,7 +251,7 @@
     },
     "lid": {
       "triangles": 3004,
-      "volume": 4881.66,
+      "volume": 4881.45,
       "extents": [
         9,
         66.5,
@@ -262,7 +262,7 @@
   "snaps-cylinder-fillet": {
     "body": {
       "triangles": 3350,
-      "volume": 33540.3,
+      "volume": 33538.5,
       "extents": [
         115.258,
         115.258,
@@ -270,8 +270,8 @@
       ]
     },
     "lid": {
-      "triangles": 2928,
-      "volume": 21628.89,
+      "triangles": 2948,
+      "volume": 21626.8,
       "extents": [
         115.258,
         115.258,
@@ -281,8 +281,8 @@
   },
   "vents-fan-ears": {
     "body": {
-      "triangles": 9884,
-      "volume": 22723.82,
+      "triangles": 9882,
+      "volume": 22706.25,
       "extents": [
         113.9,
         66.5,
@@ -290,8 +290,8 @@
       ]
     },
     "lid": {
-      "triangles": 2486,
-      "volume": 11733.38,
+      "triangles": 2502,
+      "volume": 11730.76,
       "extents": [
         97.9,
         66.5,
@@ -302,7 +302,7 @@
   "slots-keyholes-bottom-lid": {
     "body": {
       "triangles": 15154,
-      "volume": 22162.43,
+      "volume": 22148.56,
       "extents": [
         97.9,
         66.5,
@@ -311,7 +311,7 @@
     },
     "lid": {
       "triangles": 1710,
-      "volume": 14399.82,
+      "volume": 14399.76,
       "extents": [
         97.9,
         66.5,
