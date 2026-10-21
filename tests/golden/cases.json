@@ -301,8 +301,8 @@
   },
   "slots-keyholes-bottom-lid": {
     "body": {
-      "triangles": 15154,
-      "volume": 22148.56,
+      "triangles": 14490,
+      "volume": 22152.41,
       "extents": [
         97.9,
         66.5,

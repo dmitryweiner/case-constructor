@@ -123,8 +123,6 @@ export const ru: Record<Key, string> = {
   'presets.delete.confirm': 'Удалить?',
   'presets.prompt': 'Название пресета',
   'presets.auto': 'Корпус {n}',
-  'preset.plain-box': 'Простая коробка',
-  'preset.plain-box.note': 'Скруглённая коробка с плоской крышкой на защёлках',
 
   // --- boards ---
   'panel.boards': 'Платы',
@@ -292,4 +290,18 @@ export const ru: Record<Key, string> = {
   'warn.keyholeNearStandoff': 'Замочная скважина рядом со стойкой — разнесите их.',
   'warn.labelTooBig': 'Надпись выходит за плоскую часть крышки.',
   'progress.extras': 'Ушки и надпись',
+
+  // --- built-in presets ---
+  'preset.pi4-desktop': "Корпус Pi 4 для стола",
+  'preset.pi4-desktop.note': "Вентиляция с двух сторон, крышка на четырёх винтах в термовставки, надпись",
+  'preset.pi-zero-gpio': "Pi Zero с доступом к GPIO",
+  'preset.pi-zero-gpio.note': "Плоский корпус, 40-контактный разъём открыт через крышку",
+  'preset.esp32-sensor-box': "Коробка датчика на ESP32",
+  'preset.esp32-sensor-box.note': "Соты, замочные скважины для стены, плата вставляется в направляющие",
+  'preset.arduino-uno-box': "Коробка для Arduino Uno",
+  'preset.arduino-uno-box.note': "Разъёмы открыты под провода, крышка на винтах M3",
+  'preset.cylinder-puck': "Круглая «шайба» датчика",
+  'preset.cylinder-puck.note': "Круглый узел LoRa: дисплей виден через крышку, вентиляция снизу, ушки",
+  'preset.plain-box': "Простая коробка",
+  'preset.plain-box.note': "Пустая скруглённая коробка с плоской крышкой на защёлках",
 };

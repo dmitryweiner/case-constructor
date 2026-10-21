@@ -213,7 +213,7 @@ export function ventCuts(vents: VentState, shape: ShapeState, dims: Dims, lidFac
           cuts.push({
             face, shape: 'rect',
             x: (region.u0 + region.u1) / 2 + x, y: (region.v0 + region.v1) / 2 + y,
-            w: alongU ? long : vents.size, h: alongU ? vents.size : long, r: vents.size / 2 - 0.01,
+            w: alongU ? long : vents.size, h: alongU ? vents.size : long, r: vents.size / 2,
           });
         }
       }
@@ -276,7 +276,7 @@ export function keyholeCuts(mount: WallMountState, dims: Dims, lid: LidState): E
     const y = extent.h / 2 - length / 2;
     cuts.push({ face, shape: 'round', x, y, w: head, h: head, r: 0 });
     // the slot runs up from the head hole (for the back wall: up when hanging)
-    cuts.push({ face, shape: 'rect', x, y: y + length / 2, w: slot, h: length, r: slot / 2 - 0.01 });
+    cuts.push({ face, shape: 'rect', x, y: y + length / 2, w: slot, h: length, r: slot / 2 });
   }
   return cuts;
 }

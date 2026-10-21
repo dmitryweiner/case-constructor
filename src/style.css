@@ -512,7 +512,8 @@ input[type='text'] {
   }
 
   #topbar .tb-btn {
-    padding: 4px 7px;
+    padding: 3px 5px;
+    font-size: 13px;
   }
 
   #presetBtn {
@@ -536,6 +537,22 @@ input[type='text'] {
 
   #langField {
     order: -1;
+  }
+
+  /* the view toggles fit the second line with the buttons */
+  .tb-field {
+    gap: 3px;
+    font-size: 11px;
+  }
+
+  #langField span.lang-globe,
+  .tb-field > span[data-i18n='view.lid'] {
+    display: none;
+  }
+
+  #topbar select {
+    max-width: 120px;
+    padding: 3px 4px;
   }
 
   #topbar::after {
@@ -571,7 +588,7 @@ input[type='text'] {
     position: absolute;
     inset: auto 0 0 0;
     width: 100%;
-    max-height: 70vh;
+    max-height: 58vh;
     border-top: 1px solid var(--line);
     border-radius: 14px 14px 0 0;
     box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.55);

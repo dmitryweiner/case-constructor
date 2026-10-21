@@ -123,8 +123,6 @@ export const uk: Record<Key, string> = {
   'presets.delete.confirm': 'Видалити?',
   'presets.prompt': 'Назва пресета',
   'presets.auto': 'Корпус {n}',
-  'preset.plain-box': 'Проста коробка',
-  'preset.plain-box.note': 'Заокруглена коробка з пласкою кришкою на засувках',
 
   // --- boards ---
   'panel.boards': 'Плати',
@@ -292,4 +290,18 @@ export const uk: Record<Key, string> = {
   'warn.keyholeNearStandoff': 'Замкова шпарина поруч зі стійкою — рознесіть їх.',
   'warn.labelTooBig': 'Напис виходить за пласку частину кришки.',
   'progress.extras': 'Вушка й напис',
+
+  // --- built-in presets ---
+  'preset.pi4-desktop': "Корпус Pi 4 для столу",
+  'preset.pi4-desktop.note': "Вентиляція з двох боків, кришка на чотирьох гвинтах у термовставки, напис",
+  'preset.pi-zero-gpio': "Pi Zero з доступом до GPIO",
+  'preset.pi-zero-gpio.note': "Плаский корпус, 40-контактний роз’єм відкритий крізь кришку",
+  'preset.esp32-sensor-box': "Коробка датчика на ESP32",
+  'preset.esp32-sensor-box.note': "Стільники, замкові шпарини для стіни, плата вставляється в напрямні",
+  'preset.arduino-uno-box': "Коробка для Arduino Uno",
+  'preset.arduino-uno-box.note': "Роз’єми відкриті під дроти, кришка на гвинтах M3",
+  'preset.cylinder-puck': "Кругла «шайба» датчика",
+  'preset.cylinder-puck.note': "Круглий вузол LoRa: дисплей видно крізь кришку, вентиляція знизу, вушка",
+  'preset.plain-box': "Проста коробка",
+  'preset.plain-box.note': "Порожня заокруглена коробка з пласкою кришкою на засувках",
 };

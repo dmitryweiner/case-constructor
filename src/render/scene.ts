@@ -20,6 +20,11 @@ export interface ScenePart {
 export interface SceneHandle {
   setParts(parts: ScenePart[]): void;
   setXray(on: boolean): void;
+  /**
+   * Pixels at the bottom of the canvas hidden by something on top (the
+   * mobile settings sheet): the picture is centred in what is left.
+   */
+  setBottomInset(px: number): void;
   dispose(): void;
 }
 
@@ -82,6 +87,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
 
   const objects: THREE.Mesh[] = [];
   let disposed = false;
+  let bottomInset = 0;
   /** size of the model at the last camera fit — so a zoom set by the mouse survives edits */
   let fittedRadius = 0;
 
@@ -93,8 +99,16 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
     if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
-      camera.updateProjectionMatrix();
+      applyInset(w, h);
     }
+  }
+
+  /** A taller virtual frame whose lower part we show: its centre lands above the inset. */
+  function applyInset(w: number, h: number): void {
+    const inset = Math.min(bottomInset, h * 0.8);
+    if (inset > 0) camera.setViewOffset(w, h + inset, 0, inset, w, h);
+    else camera.clearViewOffset();
+    camera.updateProjectionMatrix();
   }
 
   function frame(): void {
@@ -170,6 +184,11 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
         material.depthWrite = !on;
         material.needsUpdate = true;
       }
+    },
+
+    setBottomInset(px: number): void {
+      bottomInset = Math.max(0, px);
+      applyInset(canvas.clientWidth, canvas.clientHeight);
     },
 
     dispose(): void {

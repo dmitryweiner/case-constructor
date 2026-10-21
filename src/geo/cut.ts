@@ -2,7 +2,7 @@
 // only. Cutters are unioned first and subtracted once per part: thirty small
 // differences cost far more than one big one.
 
-import type { Manifold } from 'manifold-3d';
+import type { CrossSection, Manifold } from 'manifold-3d';
 import type { CsgApi, CsgScope } from './csg';
 import { extrude, transformSolid, unionAll } from './csg';
 import type { CutterSpec } from './cutters';
@@ -10,12 +10,21 @@ import type { Affine } from './surface';
 
 export function cutterSolid(csg: CsgApi, scope: CsgScope, cutter: CutterSpec, segments: number): Manifold {
   const circular = Math.max(16, segments * 4);
-  let section;
+  let section: CrossSection;
   if (cutter.shape === 'round') {
     section = scope.keep(csg.CrossSection.circle(cutter.w / 2, circular));
   } else if (cutter.shape === 'hex') {
     // w across the flats: circumradius w / √3
     section = scope.keep(csg.CrossSection.circle(cutter.w / Math.sqrt(3), 6));
+  } else if (cutter.r >= Math.min(cutter.w, cutter.h) / 2 - 0.05) {
+    // fully rounded ends: a stadium, the hull of two circles — a rounded
+    // rectangle would keep a hair-thin straight piece there, and slivers
+    const radius = Math.min(cutter.w, cutter.h) / 2;
+    const half = Math.max(cutter.w, cutter.h) / 2 - radius;
+    const alongW = cutter.w >= cutter.h;
+    const circle = (c: number): CrossSection => scope.keep(scope.keep(csg.CrossSection.circle(radius, circular))
+      .translate(alongW ? [c, 0] : [0, c]));
+    section = scope.keep(csg.CrossSection.hull([circle(-half), circle(half)]));
   } else {
     const r = Math.max(0, Math.min(cutter.r, cutter.w / 2 - 0.01, cutter.h / 2 - 0.01));
     const core = scope.keep(csg.CrossSection.square([cutter.w - 2 * r, cutter.h - 2 * r], true));

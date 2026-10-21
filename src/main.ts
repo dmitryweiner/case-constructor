@@ -624,11 +624,17 @@ window.addEventListener('keydown', (event) => {
 const panelBtn = el('panelBtn', HTMLButtonElement);
 const panelBackdrop = el('panelBackdrop', HTMLDivElement);
 
+const narrow = window.matchMedia('(max-width: 760px)');
+
 function setPanelOpen(open: boolean): void {
   panel.classList.toggle('open', open);
   panelBackdrop.hidden = !open;
   panelBtn.hidden = open;
+  // on a phone the sheet covers the lower part of the view: centre the case above it
+  scene.setBottomInset(open && narrow.matches ? panel.offsetHeight : 0);
 }
+
+narrow.addEventListener('change', () => setPanelOpen(panel.classList.contains('open')));
 
 panelBtn.addEventListener('click', () => setPanelOpen(true));
 panelBackdrop.addEventListener('click', () => setPanelOpen(false));

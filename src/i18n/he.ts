@@ -124,8 +124,6 @@ export const he: Record<Key, string> = {
   'presets.delete.confirm': 'למחוק?',
   'presets.prompt': 'שם התבנית',
   'presets.auto': 'מארז {n}',
-  'preset.plain-box': 'קופסה פשוטה',
-  'preset.plain-box.note': 'קופסה מעוגלת עם מכסה שטוח על תפסים',
 
   // --- boards ---
   'panel.boards': 'לוחות',
@@ -293,4 +291,18 @@ export const he: Record<Key, string> = {
   'warn.keyholeNearStandoff': 'חור מפתח נמצא ליד מעמד — הרחיקו ביניהם.',
   'warn.labelTooBig': 'הכיתוב חורג מהחלק השטוח של המכסה.',
   'progress.extras': 'אוזניים וכיתוב',
+
+  // --- built-in presets ---
+  'preset.pi4-desktop': "מארז שולחני ל־Pi 4",
+  'preset.pi4-desktop.note': "אוורור משני צדדים, מכסה על ארבעה ברגים לתותבים, כיתוב",
+  'preset.pi-zero-gpio': "Pi Zero עם גישה ל־GPIO",
+  'preset.pi-zero-gpio.note': "מארז שטוח, מחבר 40 הפינים פתוח דרך המכסה",
+  'preset.esp32-sensor-box': "קופסת חיישן ESP32",
+  'preset.esp32-sensor-box.note': "חורי משושים, חורי מפתח לקיר, הלוח מחליק למסילות",
+  'preset.arduino-uno-box': "קופסה ל־Arduino Uno",
+  'preset.arduino-uno-box.note': "המחברים פתוחים לחוטים, מכסה על ברגי M3",
+  'preset.cylinder-puck': "דסקית חיישן עגולה",
+  'preset.cylinder-puck.note': "צומת LoRa עגול: התצוגה נראית דרך המכסה, אוורור מלמטה, אוזניים",
+  'preset.plain-box': "קופסה פשוטה",
+  'preset.plain-box.note': "קופסה מעוגלת ריקה עם מכסה שטוח על תפסים",
 };

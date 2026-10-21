@@ -7,9 +7,11 @@ printing.
 
 **Live:** https://dmitryweiner.github.io/case-constructor/
 
-Work in progress — see [PLAN.md](PLAN.md) for the roadmap (boards from a
-catalog, port cutouts, standoffs, snaps and screws, vents, fan seats, wall
-mounts, labels).
+![A Raspberry Pi 4 desktop case with the lid lifted](docs/img/pi4-desktop.png)
+
+| | |
+|---|---|
+| ![A round LoRa puck](docs/img/cylinder-puck.png) | ![Body and lid laid out for printing](docs/img/print-layout.png) |
 
 ## Features so far
 
