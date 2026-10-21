@@ -9,6 +9,8 @@ import { t } from '../i18n';
 import type { BoardPlacement } from '../boards/placement';
 import { POSITION_MAX, ROTATIONS, Z_MAX, boardOf, minBoardZ, portCut } from '../boards/placement';
 import { tDynamic } from '../i18n';
+import type { CustomEditorHandle } from './customBoard';
+import { customSignature, renderCustomEditor } from './customBoard';
 import { HOLE_KINDS, SCREW_SIZES } from '../geo/fasteners';
 import type { AppState } from '../state/schema';
 
@@ -81,8 +83,14 @@ export interface BoardsCardHandle {
   sync(state: AppState): void;
 }
 
+/** What the card's layout depends on; a change rebuilds it (a value edit does not). */
+function signatureOf(state: AppState): string {
+  return state.boards.map((board) => (board.board === 'custom' ? `custom:${customSignature(boardOf(board))}` : board.board)).join('|');
+}
+
 export function renderBoardsCard(
   container: HTMLElement, read: () => AppState, onChange: (next: AppState) => void,
+  download: (text: string, name: string) => void,
 ): BoardsCardHandle {
   let handles: ControlsHandle<AppState>[] = [];
   let signature = '';
@@ -114,6 +122,15 @@ export function renderBoardsCard(
       if (def.mount.kind === 'rails') box.append(make('p', 'board-note', t('board.rails')));
       const controls = make('div');
       box.append(controls);
+      let editor: CustomEditorHandle | null = null;
+      if (placement.board === 'custom') {
+        const details = make('details', 'custom-details');
+        details.open = true;
+        details.id = `board${index}_editor`;
+        details.append(make('summary', undefined, t('custom.edit')));
+        box.append(details);
+        editor = renderCustomEditor(details, index, read, onChange, download);
+      }
       const ports = portControls(index, state);
       let portRows: ControlsHandle<AppState> | null = null;
       if (ports.length > 0) {
@@ -125,13 +142,19 @@ export function renderBoardsCard(
       }
       container.append(box);
       const main = renderControls(controls, boardControls(index), read, onChange, `board${index}`);
-      return { sync: (current: AppState) => { main.sync(current); portRows?.sync(current); } };
+      return {
+        sync: (current: AppState) => {
+          main.sync(current);
+          portRows?.sync(current);
+          editor?.sync(boardOf(current.boards[index]));
+        },
+      };
     });
     if (state.boards.length === 0) container.append(make('p', 'board-note', t('boards.empty')));
   }
 
   function sync(state: AppState): void {
-    const next = state.boards.map((board) => board.board).join('|');
+    const next = signatureOf(state);
     if (next !== signature) {
       signature = next;
       build(state);
@@ -139,7 +162,7 @@ export function renderBoardsCard(
     for (const handle of handles) handle.sync(state);
   }
 
-  signature = read().boards.map((board) => board.board).join('|');
+  signature = signatureOf(read());
   build(read());
   return { sync };
 }

@@ -798,3 +798,75 @@ input[type='text'] {
 .port-list .row {
   margin: 2px 0;
 }
+
+/* --- Custom board editor --- */
+
+.button-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.button-row .tb-btn {
+  flex: 1;
+}
+
+.custom-details summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 12px;
+  margin: 6px 0 2px;
+}
+
+.table-row {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  margin: 3px 0;
+}
+
+.table-row > select {
+  flex: 1;
+}
+
+.table-head span {
+  flex: 1;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.table-row .cell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+input.num {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-row > input.num {
+  width: auto;
+}
+
+.row-del {
+  flex: none;
+  padding: 2px 7px;
+}
+
+.port-edit {
+  border-top: 1px solid var(--line);
+  padding-top: 4px;
+  margin-top: 4px;
+}

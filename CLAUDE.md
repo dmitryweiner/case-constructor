@@ -168,6 +168,11 @@ Boards: `#boardAdd` opens `#boardPicker` (`#boardSearch`, rows
 `#board<i>_x|_y|_z`, `#board<i>_rot_0|90|180|270`, `#board<i>_screw`,
 `#board<i>_hole_tap|insert|nut`, `#board<i>_remove`, port toggles
 `#board<i>_cut_<portId>`. Top bar: `#viewBoards`.
+Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHeight|_bottomHeight`,
+`#board<i>_custom_mount` (select), `_rails`, `_screw`, holes `_hole<h>_x|_y|_d|_remove`,
+`_hole_add`, ports `_port<p>_type|_edge` (selects), `_port<p>_<field>`, `_port<p>_remove`,
+`_port_add`, `_save`. The card rebuilds only when a custom board's structure changes
+(`customSignature`), so a number input keeps its focus while typing.
 Openings: `#cutAdd`; per cut `#cut<i>_face` (select), `#cut<i>_shape_rect|round`,
 `#cut<i>_x|_y|_w|_d|_h|_r` (`_d` is the diameter of a round cut), `#cut<i>_remove`.
 Case card: `#case_kind_box|cylinder|console`, `#case_cornerR`, `#case_edgeR`,

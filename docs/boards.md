@@ -17,6 +17,26 @@ Each board has:
 Up to 8 boards; boards that overlap, or a standoff that runs into another
 board, are reported under the export button.
 
+## Your own board
+
+**+ Custom board** adds a board you describe yourself; its card gets an
+editor:
+
+- name, width, depth and thickness of the PCB, the tallest part above and
+  below it;
+- **Held by** — mounting holes (with the screw size and a table of holes:
+  X, Y from the board's lower-left corner in its top view, Ø) or rails
+  (along the long or the short edges);
+- **Ports and parts** — a type (USB-C, HDMI, display, button, …; sizes come
+  from the type) and where it is: on an edge (front, back, left, right — Along
+  is the centre along that edge from its start, Z its bottom above the PCB,
+  W × H its size, Out how far it sticks out) or on top (X, Y of its centre,
+  W × D × H);
+- **Save as catalog JSON** downloads the board in the catalog's format —
+  keep it, or contribute it to the catalog (`.claude/skills/add-board`).
+
+The custom board is part of the project and travels with the project file.
+
 ## Standoffs
 
 A board with mounting holes stands on a standoff per hole. The standoff

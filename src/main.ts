@@ -16,6 +16,7 @@ import { lidControls } from './ui/lidCard';
 import { renderBoardsCard } from './ui/boardsCard';
 import type { BoardsCardHandle } from './ui/boardsCard';
 import { renderBoardList } from './ui/boardPicker';
+import { defaultCustomBoard } from './ui/customBoard';
 import { addCut, renderCutsCard } from './ui/cutsCard';
 import type { CutsCardHandle } from './ui/cutsCard';
 import { cutWarnings, outerTopAt, portCutters } from './geo/ports';
@@ -72,6 +73,7 @@ const panel = el('panel', HTMLElement);
 const caseParams = el('caseParams', HTMLDivElement);
 const boardCards = el('boardCards', HTMLDivElement);
 const boardAdd = el('boardAdd', HTMLButtonElement);
+const boardCustom = el('boardCustom', HTMLButtonElement);
 const boardPicker = el('boardPicker', HTMLDivElement);
 const boardPickerClose = el('boardPickerClose', HTMLButtonElement);
 const boardSearch = el('boardSearch', HTMLInputElement);
@@ -127,7 +129,8 @@ let cutRows: CutsCardHandle;
 
 function renderPanel(): void {
   caseRows = renderControls(caseParams, caseControls(), () => state, (next) => applyState(next), 'case');
-  boardRows = renderBoardsCard(boardCards, () => state, (next) => applyState(next));
+  boardRows = renderBoardsCard(boardCards, () => state, (next) => applyState(next),
+    (text, name) => download(text, name, 'application/json'));
   cutRows = renderCutsCard(cutCards, () => state, (next) => applyState(next));
   lidRows = renderControls(lidParams, lidControls(), () => state, (next) => applyState(next), 'lid');
 }
@@ -145,6 +148,7 @@ function syncPanel(): void {
   boardRows.sync(state);
   lidRows.sync(state);
   boardAdd.disabled = state.boards.length >= MAX_BOARDS;
+  boardCustom.disabled = boardAdd.disabled;
   cutRows.sync(state);
   cutAdd.disabled = state.extraCuts.length >= MAX_EXTRA_CUTS;
   for (const [mode, tab] of Object.entries(tabs)) tab.setAttribute('aria-selected', String(mode === state.exportMode));
@@ -336,6 +340,12 @@ function addBoard(def: BoardDef): void {
 }
 
 boardAdd.addEventListener('click', openPicker);
+boardCustom.addEventListener('click', () => {
+  const placed = placeBoards(state);
+  const x = placed.length > 0 ? Math.max(...placed.map((board) => board.footprint.x1)) + NEW_BOARD_GAP + 3 : 0;
+  const custom = defaultCustomBoard();
+  applyState({ ...state, boards: [...state.boards, { ...defaultPlacement(custom, Math.round(x), 0), board: 'custom', custom }] });
+});
 cutAdd.addEventListener('click', () => applyState(addCut(state)));
 boardPickerClose.addEventListener('click', closePicker);
 boardPicker.addEventListener('click', (event) => {
