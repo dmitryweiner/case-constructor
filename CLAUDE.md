@@ -104,9 +104,16 @@ Measured on an M1 Mac in Node (`scripts/inspect.mjs`):
 | default box, 24 segments, top lid | ~60 ms |
 | box with fillets, side lid, 24 segments | ~140 ms |
 | cylinder with 5 mm fillet, 64 segments | ~670 ms (114k triangles in the body) |
-| preview in the browser (12 segments) | 10–30 ms |
+| preview in the browser (12 segments) | 10–35 ms in the worker |
+| export in the browser (24 segments), click to download | ~90 ms |
 
-The preview is therefore the exact case, rebuilt 120 ms after the last edit.
+Decided at M1: the preview is the exact case (same pipeline as the export,
+12 segments per quarter arc), rebuilt 120 ms after the last edit. No
+approximate preview is needed.
+
+Golden tests pin volumes and triangle counts of a fixed set of states;
+regenerate knowingly: `UPDATE_GOLDEN=1 npx vitest run tests/golden.test.ts`.
+Add a state when a feature lands, never edit an old one.
 
 ## Control ids
 

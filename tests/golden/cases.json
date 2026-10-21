@@ -1,0 +1,122 @@
+{
+  "default-box": {
+    "body": {
+      "triangles": 284,
+      "volume": 34229.06,
+      "extents": [
+        100,
+        70,
+        33
+      ]
+    },
+    "lid": {
+      "triangles": 844,
+      "volume": 15107.71,
+      "extents": [
+        100,
+        70,
+        5
+      ]
+    }
+  },
+  "box-fillet": {
+    "body": {
+      "triangles": 2300,
+      "volume": 32854.31,
+      "extents": [
+        100,
+        70,
+        33
+      ]
+    },
+    "lid": {
+      "triangles": 1176,
+      "volume": 13506.07,
+      "extents": [
+        97.95,
+        67.95,
+        5
+      ]
+    }
+  },
+  "cylinder": {
+    "body": {
+      "triangles": 1916,
+      "volume": 34074.65,
+      "extents": [
+        100,
+        100,
+        33
+      ]
+    },
+    "lid": {
+      "triangles": 1202,
+      "volume": 16062.69,
+      "extents": [
+        99.633,
+        99.633,
+        5
+      ]
+    }
+  },
+  "console": {
+    "body": {
+      "triangles": 284,
+      "volume": 31468.57,
+      "extents": [
+        100,
+        70,
+        38
+      ]
+    },
+    "lid": {
+      "triangles": 780,
+      "volume": 15107.71,
+      "extents": [
+        100,
+        70,
+        5
+      ]
+    }
+  },
+  "bottom-lid": {
+    "body": {
+      "triangles": 284,
+      "volume": 30961.78,
+      "extents": [
+        100,
+        70,
+        28
+      ]
+    },
+    "lid": {
+      "triangles": 964,
+      "volume": 18817.58,
+      "extents": [
+        100,
+        70,
+        10
+      ]
+    }
+  },
+  "side-lid-deep": {
+    "body": {
+      "triangles": 1436,
+      "volume": 37811.72,
+      "extents": [
+        86,
+        70,
+        35
+      ]
+    },
+    "lid": {
+      "triangles": 1802,
+      "volume": 10166.31,
+      "extents": [
+        17,
+        70,
+        35
+      ]
+    }
+  }
+}

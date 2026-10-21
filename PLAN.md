@@ -697,9 +697,10 @@ commit; new features get their `docs/` page in the same commit.
 
 ## 11. Open questions (resolve while building, none block M0)
 
-1. Manifold cost of `edgeR` lofts at high segment counts on the cylinder —
+1. ~~Manifold cost of `edgeR` lofts at high segment counts on the cylinder —
    if export at 64 segments per quarter is slow, cap the export resolution
-   per shape.
+   per shape.~~ Resolved at M1: a cylinder with a 5 mm fillet at 64 segments
+   builds in ~0.7 s (114k triangles); no cap.
 2. Rails for a board whose chosen edge pair faces the lid (side lid):
    slide-in along the rails may be the better assembly; decide at M2 with a
    printed test.
