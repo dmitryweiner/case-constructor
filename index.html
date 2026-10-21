@@ -19,22 +19,6 @@
         <button id="undoBtn" class="tb-btn" data-i18n-title="topbar.undo.title" title="Undo (Ctrl/Cmd+Z)" disabled>↩️</button>
         <button id="redoBtn" class="tb-btn" data-i18n-title="topbar.redo.title" title="Redo (Ctrl/Cmd+Shift+Z)" disabled>↪️</button>
         <span class="tb-spacer"></span>
-        <label class="tb-field" data-i18n-title="view.lid.title" title="How the lid is shown">
-          <span data-i18n="view.lid">Lid</span>
-          <select id="viewLid">
-            <option value="assembled" data-i18n="view.lid.assembled">closed</option>
-            <option value="lifted" data-i18n="view.lid.lifted">lifted</option>
-            <option value="hidden" data-i18n="view.lid.hidden">hidden</option>
-          </select>
-        </label>
-        <label class="tb-field" data-i18n-title="view.boards.title" title="Show the boards inside">
-          <input type="checkbox" id="viewBoards" checked />
-          <span data-i18n="view.boards">Boards</span>
-        </label>
-        <label class="tb-field" data-i18n-title="view.xray.title" title="See through the walls">
-          <input type="checkbox" id="viewXray" />
-          <span data-i18n="view.xray">X-ray</span>
-        </label>
         <button id="panelBtn" class="tb-btn" data-i18n="topbar.panel" data-i18n-title="topbar.panel.title" title="Settings" hidden>⚙ Settings</button>
         <label class="tb-field" id="langField" data-i18n-title="lang.label" title="Language">
           <span class="lang-globe" aria-hidden="true">🌐</span>
@@ -75,12 +59,23 @@
             <div id="extraMounting"></div>
           </section>
 
-          <section class="card">
-            <h2 data-i18n="panel.export">STL export</h2>
+          <section class="card" id="exportCard">
+            <h2 data-i18n="panel.export">View and export</h2>
+            <p class="tabs-caption" data-i18n="show.what">Parts</p>
             <div class="tabs" role="tablist">
+              <button class="tab" id="tabBoth" role="tab" aria-selected="true" data-i18n="export.tab.both" data-i18n-title="export.tab.both.title">Both</button>
               <button class="tab" id="tabBody" role="tab" aria-selected="false" data-i18n="export.tab.body" data-i18n-title="export.tab.body.title">Body</button>
               <button class="tab" id="tabLid" role="tab" aria-selected="false" data-i18n="export.tab.lid" data-i18n-title="export.tab.lid.title">Lid</button>
-              <button class="tab" id="tabBoth" role="tab" aria-selected="true" data-i18n="export.tab.both" data-i18n-title="export.tab.both.title">Both</button>
+            </div>
+            <p class="tabs-caption" data-i18n="show.how">View</p>
+            <div class="tabs" role="radiogroup" data-i18n-title="view.mode.title">
+              <button class="tab" id="viewExploded" role="radio" aria-checked="true" data-i18n="view.exploded" data-i18n-title="view.exploded.title">exploded</button>
+              <button class="tab" id="viewAssembled" role="radio" aria-checked="false" data-i18n="view.assembled" data-i18n-title="view.assembled.title">assembled</button>
+              <button class="tab" id="viewPrint" role="radio" aria-checked="false" data-i18n="view.print" data-i18n-title="view.print.title">print layout</button>
+            </div>
+            <div class="view-checks">
+              <label class="check-inline" data-i18n-title="view.boards.title"><input type="checkbox" id="viewBoards" checked /> <span data-i18n="view.boards">Boards</span></label>
+              <label class="check-inline" data-i18n-title="view.xray.title"><input type="checkbox" id="viewXray" /> <span data-i18n="view.xray">X-ray</span></label>
             </div>
             <label class="row">
               <span class="row-label" data-i18n="panel.resolution" data-i18n-title="panel.resolution.hint">Resolution</span>
@@ -96,6 +91,7 @@
         </aside>
         <main id="viewWrap">
           <canvas id="view"></canvas>
+          <button id="viewCaption" type="button" aria-live="polite" data-i18n-title="caption.title"></button>
           <div id="presets" hidden>
             <div id="presetsBox" role="dialog" aria-labelledby="presetsTitle">
               <button id="presetsClose" class="panel-close" type="button" data-i18n-title="presets.close.title" data-i18n-aria="presets.close" title="Close (Esc)" aria-label="Close">✕</button>

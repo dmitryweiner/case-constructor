@@ -150,8 +150,16 @@ freely; a temporary script that turns out useful becomes a permanent one.
   (`ui/labelRaster.ts`, fonts in `public/fonts`, loaded lazily) and sent with
   each job (`CsgJob.label`); the worker unions the raster's row runs into a
   CrossSection and extrudes it on the lid face.
+- View and export live in one card: the parts tab decides what is shown and
+  exported (Both — default and first; Body with its boards; the Lid alone,
+  put down on the grid), the view row decides how (exploded — default,
+  assembled, print layout as in the STL), and a caption over the canvas says
+  it in words. Before, the export tab silently switched the view to the
+  print layout, and the review found the view toggles "did nothing".
 - Print layout (`print.ts`): the body with its opening up, the lid on its
-  outer face; every exported STL is in print orientation.
+  outer face; every exported STL is in print orientation. A console with a
+  bottom lid lies on its slope instead (opening up it would stand on an
+  edge).
 - Visible text comes only from `src/i18n/` dictionaries; `en.ts` is the
   reference and gives `Key`. The core and the worker speak in message codes
   (`geo/message.ts`). A test fails on any Cyrillic or Hebrew in a string
@@ -224,10 +232,14 @@ Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws`,
 `#lid_screw` (select), `#lid_hole_tap|insert|nut`,
 `#lid_head_none|counterbore|countersunk` (screws only), `#lid_lipH`,
 `#lid_lipT`, `#lid_fit`.
-Export: `#tabBody`, `#tabLid`, `#tabBoth`, `#resolution`, `#exportBtn`.
+View and export card (`#exportCard`): parts `#tabBoth` (first, default),
+`#tabBody`, `#tabLid`; view `#viewExploded` (default), `#viewAssembled`,
+`#viewPrint`; `#viewBoards`, `#viewXray`; `#resolution`, `#exportBtn`. The
+caption over the canvas `#viewCaption` says what is shown and scrolls to the
+card. Dev builds: `window.__case.drawn()` lists the roles drawn last.
 Mobile: on a narrow screen the view centres the case above the settings
 sheet (`scene.setBottomInset`).
 Top bar: `#presetBtn` (list `#presetList [data-preset="b:<id>"|"u:<name>"]`),
 `#saveBtn`, `#fileOpenBtn`, `#fileSaveBtn`, `#fileInput`, `#undoBtn`,
-`#redoBtn`, `#viewLid` (assembled / lifted / hidden), `#viewXray`,
+`#redoBtn`,
 `#langSel`, `#panelBtn`, `#panelBackdrop`.

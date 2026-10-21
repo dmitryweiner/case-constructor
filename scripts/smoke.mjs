@@ -291,14 +291,41 @@ if (!(await page.locator('#blockers').textContent()).includes('not a Case Constr
   errors.push('[file] a foreign JSON was not refused');
 }
 
-// view toggles
+// view modes and export tabs: what is drawn follows both
 label('view');
-await page.selectOption('#viewLid', 'lifted');
-await page.selectOption('#viewLid', 'hidden');
+await page.click('#presetBtn');
+await page.click('#presetList [data-preset="b:pi4-desktop"]');
+await expectWatertight('view:preset');
+const drawn = async () => {
+  await page.waitForTimeout(150);
+  return (await page.evaluate(() => window.__case.drawn())).join(',');
+};
+const tabOrder = await page.$$eval('.tabs .tab', (nodes) => nodes.map((n) => n.id));
+if (tabOrder[0] !== 'tabBoth') errors.push(`[view] the first export tab is ${tabOrder[0]}`);
+await page.click('#tabBoth');
+await page.click('#viewExploded');
+if (!/body.*board.*lid/.test(await drawn())) errors.push(`[view] exploded/both draws ${await drawn()}`);
+await page.click('#viewAssembled');
+if (!/body.*board.*lid/.test(await drawn())) errors.push(`[view] assembled/both draws ${await drawn()}`);
+await page.click('#tabLid');
+await expectWatertight('view:lid');
+if ((await drawn()) !== 'lid') errors.push(`[view] the Lid tab draws ${await drawn()}`);
+await page.click('#tabBody');
+await expectWatertight('view:body');
+if ((await drawn()).includes('lid') || !(await drawn()).includes('board')) errors.push(`[view] the Body tab draws ${await drawn()}`);
+await page.uncheck('#viewBoards');
+if ((await drawn()).includes('board')) errors.push('[view] the boards toggle does nothing');
+await page.check('#viewBoards');
+await page.click('#tabBoth');
+await page.click('#viewPrint');
+await expectWatertight('view:print');
+if ((await drawn()) !== 'body,lid') errors.push(`[view] the print layout draws ${await drawn()}`);
+if (!(await page.locator('#viewCaption').textContent()).includes('print layout')) errors.push('[view] the caption does not say print layout');
+if (!(await page.locator('#viewBoards').isDisabled())) errors.push('[view] the boards toggle is live in the print layout');
 await page.check('#viewXray');
 await page.waitForTimeout(100);
-await page.selectOption('#viewLid', 'assembled');
 await page.uncheck('#viewXray');
+await page.click('#viewExploded');
 
 // languages: switch through all four, the choice is remembered
 label('lang');

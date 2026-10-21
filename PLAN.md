@@ -779,3 +779,7 @@ review pass and wait for the user's.
   rounded rectangle kept a 0.02 mm straight piece and slivers. The
   translation pass fixed Hebrew screw-head and keyhole terms and the
   Ukrainian word for snaps (клямки).
+- **Review after M8.** The view controls moved from the top bar into the
+  export card ("View and export"), with a caption over the canvas saying what
+  is shown; Both is the first tab. A console with a bottom lid prints lying
+  on its slope.

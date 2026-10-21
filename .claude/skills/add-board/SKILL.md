@@ -85,7 +85,7 @@ the user to look as well.
 
 ```bash
 node scripts/snap.mjs --out shots/<id>-case.png --click '#board0_remove' --click '#boardAdd' \
-  --click '[data-board="<id>"]' --click '#tabBody' --set viewLid=lifted --view
+  --click '[data-board="<id>"]' --click '#tabBody' --view
 ```
 
 Every enabled port must open its wall; no warnings you cannot explain.

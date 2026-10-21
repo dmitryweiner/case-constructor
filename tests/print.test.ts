@@ -29,3 +29,27 @@ describe('print layout', () => {
     expect(meshBounds(lid).min[0]).toBeCloseTo(meshBounds(body).max[0] + PRINT_GAP_MM);
   });
 });
+
+describe('console with a bottom lid', () => {
+  it('lies on its slope: a large flat face on the bed, not an edge', async () => {
+    const { initCSG } = await import('../src/geo/csg');
+    const { buildCase } = await import('../src/geo/build');
+    const { caseLayout } = await import('../src/geo/layout');
+    const { defaultState, sanitizeState } = await import('../src/state/schema');
+    const csg = await initCSG();
+    const state = sanitizeState({ ...defaultState(), boards: [], shape: { ...defaultState().shape, kind: 'console' }, lid: { ...defaultState().lid, face: 'bottom' } });
+    const layout = caseLayout(state);
+    const built = buildCase(csg, state, 8);
+    const shape = { kind: state.shape.kind, console: layout.console };
+    const placed = bodyForPrint(built.body, 'bottom', layout.dims, shape);
+    // area of the faces lying on the bed
+    const p = placed.positions;
+    let area = 0;
+    for (let t = 0; t < placed.indices.length; t += 3) {
+      const [a, b, c] = [placed.indices[t] * 3, placed.indices[t + 1] * 3, placed.indices[t + 2] * 3];
+      if (Math.max(p[a + 2], p[b + 2], p[c + 2]) > 1e-3) continue;
+      area += Math.abs((p[b] - p[a]) * (p[c + 1] - p[a + 1]) - (p[b + 1] - p[a + 1]) * (p[c] - p[a])) / 2;
+    }
+    expect(area).toBeGreaterThan(0.8 * layout.dims.w * layout.dims.d);
+  });
+});

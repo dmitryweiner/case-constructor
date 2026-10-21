@@ -46,7 +46,7 @@ import { MAX_BOARDS, NEW_BOARD_GAP, defaultPlacement } from './boards/placement'
 import type { BoardDef } from './boards/schema';
 import { bodyForPrint, lidForPrint, printLayout } from './geo/print';
 import type { SurfaceMesh } from './geo/surface';
-import { mergeMeshes } from './geo/surface';
+import { meshBounds, mergeMeshes } from './geo/surface';
 import { encodeSTL } from './geo/stl';
 import { assessExport, validateMesh } from './geo/validate';
 import type { AppState, ExportMode } from './state/schema';
@@ -65,10 +65,10 @@ const PREVIEW_SEGMENTS = 12;
 const PREVIEW_DELAY_MS = 120;
 /** Quiet time before a change becomes an undo step: a slider drag is one action. */
 const HISTORY_DELAY_MS = 500;
-/** How far a "lifted" lid floats off the case, mm. */
+/** How far the lid floats off the case in the exploded view, mm. */
 const LIFT_MM = 30;
 
-type LidView = 'assembled' | 'lifted' | 'hidden';
+type ViewMode = 'exploded' | 'assembled' | 'print';
 
 // The language comes before any rendering: the panel is built in it.
 initLang();
@@ -107,7 +107,15 @@ const fileSaveBtn = el('fileSaveBtn', HTMLButtonElement);
 const fileInput = el('fileInput', HTMLInputElement);
 const undoBtn = el('undoBtn', HTMLButtonElement);
 const redoBtn = el('redoBtn', HTMLButtonElement);
-const viewLid = el('viewLid', HTMLSelectElement);
+const viewButtons: Record<ViewMode, HTMLButtonElement> = {
+  exploded: el('viewExploded', HTMLButtonElement),
+  assembled: el('viewAssembled', HTMLButtonElement),
+  print: el('viewPrint', HTMLButtonElement),
+};
+const viewCaption = el('viewCaption', HTMLButtonElement);
+const exportCard = el('exportCard', HTMLElement);
+/** How the case is shown — a view setting, not part of the project. */
+let viewMode: ViewMode = 'exploded';
 const viewXray = el('viewXray', HTMLInputElement);
 const langSel = el('langSel', HTMLSelectElement);
 const tabs: Record<ExportMode, HTMLButtonElement> = {
@@ -163,6 +171,7 @@ function syncPanel(): void {
   extraRows.sync(state);
   cutAdd.disabled = state.extraCuts.length >= MAX_EXTRA_CUTS;
   for (const [mode, tab] of Object.entries(tabs)) tab.setAttribute('aria-selected', String(mode === state.exportMode));
+  syncView();
   resolutionSel.value = String(state.resolution);
   updateHistoryButtons();
   refresh();
@@ -281,30 +290,73 @@ function partById(parts: JobPart[], id: JobPart['id']): JobPart {
   return found;
 }
 
-/** Draws the last preview the way the view toggles and the export tab ask. */
+/**
+ * Draws the last preview. The view mode (top bar) decides how — exploded,
+ * assembled, or laid out as in the STL; the export tab decides what — both
+ * parts, the body with its boards, or the lid alone.
+ */
 function drawParts(): void {
   if (!lastParts) return;
   const { body, lid, state: built } = lastParts;
-  const dims = caseDims(built);
-  if (built.exportMode === 'both') {
-    const [printedBody, printedLid] = printLayout(body, lid, built.lid.face, dims);
-    scene.setParts([{ role: 'body', mesh: printedBody }, { role: 'lid', mesh: printedLid }]);
+  const layout = caseLayout(built);
+  const { dims } = layout;
+  const showBody = built.exportMode !== 'lid';
+  const showLid = built.exportMode !== 'body';
+  const mode = currentView();
+  if (mode === 'print') {
+    const shape = { kind: built.shape.kind, console: layout.console };
+    const face = built.lid.face;
+    const parts: ScenePart[] = built.exportMode === 'both'
+      ? printLayout(body, lid, face, dims, shape).map((mesh, i): ScenePart => ({ role: i === 0 ? 'body' : 'lid', mesh }))
+      : showBody
+        ? [{ role: 'body', mesh: bodyForPrint(body, face, dims, shape) }]
+        : [{ role: 'lid', mesh: lidForPrint(lid, face, dims) }];
+    show(parts);
     return;
   }
-  const mode = lidView();
-  const parts: ScenePart[] = [{ role: 'body', mesh: body }];
-  if (viewBoards.checked) parts.push(...ghosts);
-  if (mode !== 'hidden') {
-    const n = faceFrame(built.lid.face, dims).n;
-    const lift = mode === 'lifted' ? LIFT_MM : 0;
-    parts.push({ role: 'lid', mesh: lid, offset: [n[0] * lift, n[1] * lift, n[2] * lift] });
+  const parts: ScenePart[] = [];
+  if (showBody) {
+    parts.push({ role: 'body', mesh: body });
+    if (viewBoards.checked) parts.push(...ghosts);
   }
+  if (showLid && showBody) {
+    const n = faceFrame(built.lid.face, dims).n;
+    const lift = mode === 'exploded' ? LIFT_MM : 0;
+    parts.push({ role: 'lid', mesh: lid, offset: [n[0] * lift, n[1] * lift, n[2] * lift] });
+  } else if (showLid) {
+    // the lid alone, as it sits on the case, put down on the grid
+    parts.push({ role: 'lid', mesh: lid, offset: [0, 0, -meshBounds(lid).min[2]] });
+  }
+  show(parts);
+}
+
+/** Roles of what was drawn last — for the smoke (window.__case.drawn()). */
+let drawnRoles: string[] = [];
+
+function show(parts: ScenePart[]): void {
+  drawnRoles = parts.map((part) => part.role);
   scene.setParts(parts);
 }
 
-function lidView(): LidView {
-  const value = viewLid.value;
-  return value === 'lifted' || value === 'hidden' ? value : 'assembled';
+function currentView(): ViewMode {
+  return viewMode;
+}
+
+/** The caption over the view: which parts, how, and whether boards are in. */
+function describeView(state: AppState): string {
+  const what = t(state.exportMode === 'both' ? 'caption.both' : state.exportMode === 'body' ? 'caption.body' : 'caption.lid');
+  if (viewMode === 'print') return `${what} · ${t('caption.print')}`;
+  const boards = state.exportMode !== 'lid' && viewBoards.checked && state.boards.length > 0 ? ` · ${t('caption.withBoards')}` : '';
+  // one part alone: exploded or assembled says nothing about it
+  if (state.exportMode !== 'both') return `${what}${boards}`;
+  return `${what} · ${t(viewMode === 'exploded' ? 'view.exploded' : 'view.assembled')}${boards}`;
+}
+
+function syncView(): void {
+  for (const [mode, button] of Object.entries(viewButtons)) button.setAttribute('aria-checked', String(mode === viewMode));
+  // boards are not printed: the toggle means nothing in the print layout
+  viewBoards.disabled = viewMode === 'print';
+  viewCaption.textContent = describeView(state);
 }
 
 /** Verdict over both parts: closed, and nothing that would block the export. */
@@ -341,8 +393,21 @@ function message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-viewLid.addEventListener('change', drawParts);
-viewBoards.addEventListener('change', drawParts);
+for (const [mode, button] of Object.entries(viewButtons)) {
+  button.addEventListener('click', () => {
+    viewMode = mode === 'assembled' || mode === 'print' ? mode : 'exploded';
+    syncView();
+    drawParts();
+  });
+}
+viewCaption.addEventListener('click', () => {
+  setPanelOpen(true);
+  exportCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+viewBoards.addEventListener('change', () => {
+  syncView();
+  drawParts();
+});
 
 // --- board picker ---
 
@@ -426,11 +491,13 @@ async function runExport(): Promise<void> {
     const face = requested.lid.face;
     const body = toMesh(partById(result.parts, 'body'));
     const lid = toMesh(partById(result.parts, 'lid'));
+    const layout = caseLayout(requested);
+    const shape = { kind: requested.shape.kind, console: layout.console };
     const mesh = requested.exportMode === 'body'
-      ? bodyForPrint(body, face, dims)
+      ? bodyForPrint(body, face, dims, shape)
       : requested.exportMode === 'lid'
         ? lidForPrint(lid, face, dims)
-        : mergeMeshes(printLayout(body, lid, face, dims));
+        : mergeMeshes(printLayout(body, lid, face, dims, shape));
     download(encodeSTL(mesh, { name: requested.exportMode }), `case-constructor-${requested.exportMode}.stl`);
   } catch (error) {
     blockersEl.textContent = t('error.export', { error: message(error) });
@@ -671,6 +738,7 @@ if (import.meta.env.DEV) {
     state: () => state,
     parts: () => lastParts,
     ghosts: () => ghosts,
+    drawn: () => drawnRoles,
   });
 }
 
