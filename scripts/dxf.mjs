@@ -6,12 +6,19 @@
 //   node scripts/dxf.mjs board.dxf                      # extents and circles
 //   node scripts/dxf.mjs board.dxf --png shots/x.png    # and a picture
 //   node scripts/dxf.mjs board.dxf --min 2 --max 4      # only circles of that diameter
+//   node scripts/dxf.mjs board.dxf --layers             # entity counts per layer
+//   node scripts/dxf.mjs board.dxf --layer L --boxes    # bounding box of every polyline
+//                                                       # (component outlines: where a connector is)
+//   node scripts/dxf.mjs board.dxf --origin x,y         # origin in drawing coordinates
 //
 // Coordinates are printed relative to the lower-left corner of the extents
 // of the LINE/ARC/POLYLINE entities (the board outline, usually), which is
 // the board frame's origin when the drawing is a top view. Some vendors ship
 // only the drill layer: then the extents are those of the circles — the
-// hole pattern is still right, the origin is not the board corner.
+// hole pattern is still right, the origin is not the board corner. A panel
+// drawing (the board with break-off rails) has extents larger than the board:
+// pass the board corner with --origin. Old-style POLYLINE/VERTEX entities
+// (Allegro exports) are read like LWPOLYLINE; bulges are drawn straight.
 
 import { readFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -19,9 +26,9 @@ import { chromium } from 'playwright';
 import { parseArgs } from './lib/harness.mjs';
 
 const file = process.argv[2];
-const flags = parseArgs(process.argv.slice(3), ['png', 'min', 'max', 'layer']);
+const flags = parseArgs(process.argv.slice(3), ['png', 'min', 'max', 'layer', 'origin']);
 if (!file) {
-  console.error('usage: node scripts/dxf.mjs <file.dxf> [--png out.png] [--min d] [--max d] [--layer name]');
+  console.error('usage: node scripts/dxf.mjs <file.dxf> [--png out.png] [--min d] [--max d] [--layer name] [--layers] [--boxes] [--origin x,y]');
   process.exit(2);
 }
 
@@ -48,6 +55,26 @@ for (const [code, value] of pairs) {
 const num = (e, code, index = 0) => Number(e.codes.filter(([c]) => c === code)[index]?.[1] ?? NaN);
 const layerOf = (e) => e.codes.find(([c]) => c === 8)?.[1] ?? '';
 const layer = flags.get('layer');
+
+// old-style POLYLINE: the vertices follow as VERTEX entities up to SEQEND
+for (let i = 0; i < entities.length; i++) {
+  const e = entities[i];
+  if (e.type !== 'POLYLINE') continue;
+  e.vertices = [];
+  while (entities[i + 1] && entities[i + 1].type === 'VERTEX') e.vertices.push(entities.splice(i + 1, 1)[0]);
+  if (entities[i + 1]?.type === 'SEQEND') entities.splice(i + 1, 1);
+}
+
+if (flags.has('layers')) {
+  const counts = new Map();
+  for (const e of entities) {
+    const key = `${layerOf(e)}\t${e.type}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  for (const [key, n] of [...counts].sort()) console.log(`${key}\t${n}`);
+  process.exit(0);
+}
+
 const shapes = [];
 for (const e of entities) {
   if (layer && layerOf(e) !== layer) continue;
@@ -59,6 +86,9 @@ for (const e of entities) {
     const ys = e.codes.filter(([c]) => c === 20).map(([, v]) => Number(v));
     const closed = (num(e, 70) & 1) === 1;
     shapes.push({ kind: 'poly', pts: xs.map((x, i) => [x, ys[i]]), closed });
+  } else if (e.type === 'POLYLINE') {
+    const pts = e.vertices.map((v) => [num(v, 10), num(v, 20)]);
+    shapes.push({ kind: 'poly', pts, closed: (num(e, 70) & 1) === 1 });
   }
 }
 
@@ -76,6 +106,11 @@ for (const s of shapes) {
 if (!Number.isFinite(x0)) for (const s of shapes) if (s.kind === 'circle') { grow(s.x - s.r, s.y - s.r); grow(s.x + s.r, s.y + s.r); }
 
 const round = (v) => Math.round(v * 100) / 100;
+const origin = flags.get('origin');
+if (origin) {
+  const [ox, oy] = String(origin).split(',').map(Number);
+  x1 -= x0 - ox; y1 -= y0 - oy; x0 = ox; y0 = oy;
+}
 if (!Number.isFinite(x0)) {
   // entities inside BLOCKS (INSERT) are not expanded; export the drawing exploded
   console.log(`${shapes.length} drawable entities: nothing to show (blocks are not expanded — explode them in a CAD tool)`);
@@ -92,6 +127,24 @@ for (const c of circles) {
   if (seen.has(key)) continue;
   seen.add(key);
   console.log(`circle Ø${round(2 * c.r)} at ${round(c.x - x0)}, ${round(c.y - y0)}`);
+}
+
+// --boxes: every polyline's bounding box (relative to the origin), the larger
+// side within --min/--max, biggest first
+if (flags.has('boxes')) {
+  const boxes = shapes.filter((sh) => sh.kind === 'poly' && sh.pts.length > 1).map((sh) => {
+    const bx = sh.pts.map(([x]) => x - x0);
+    const by = sh.pts.map(([, y]) => y - y0);
+    const b = { x0: Math.min(...bx), x1: Math.max(...bx), y0: Math.min(...by), y1: Math.max(...by) };
+    return { ...b, size: Math.max(b.x1 - b.x0, b.y1 - b.y0) };
+  }).filter((b) => b.size >= min && b.size <= max).sort((a, b) => b.size - a.size);
+  const keys = new Set();
+  for (const b of boxes) {
+    const line = `box x ${round(b.x0)}…${round(b.x1)}  y ${round(b.y0)}…${round(b.y1)}  (${round(b.x1 - b.x0)} × ${round(b.y1 - b.y0)}, centre ${round((b.x0 + b.x1) / 2)}, ${round((b.y0 + b.y1) / 2)})`;
+    if (keys.has(line)) continue;
+    keys.add(line);
+    console.log(line);
+  }
 }
 
 const png = flags.get('png');

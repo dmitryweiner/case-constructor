@@ -71,7 +71,12 @@ freely; a temporary script that turns out useful becomes a permanent one.
   and their coordinates to compare against the drawing.
 - `scripts/dxf.mjs <file.dxf>` — extents and circles of a vendor DXF (hole
   candidates, relative to the outline's corner), `--png` renders it,
-  `--min/--max` filter circle diameters. Blocks (INSERT) are not expanded.
+  `--min/--max` filter circle diameters (and box sizes), `--layer` picks a
+  layer, `--layers` counts entities per layer, `--boxes` prints every
+  polyline's bounding box (component outlines: where a connector is),
+  `--origin x,y` sets the board corner when the drawing is a panel with
+  rails. Old-style POLYLINE/VERTEX (Allegro) is read; blocks (INSERT) are
+  not expanded.
 - Adding a board: the skill `.claude/skills/add-board/SKILL.md`.
 - `scripts/lib/harness.mjs` — flags, a vite server on ports 5273 / 4273
   (not ClayForm's), console error collection, CPU throttle, browser locale.
