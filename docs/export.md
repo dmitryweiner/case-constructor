@@ -21,7 +21,14 @@ Below the button the panel shows the outer size, the mesh check (a
 watertight mesh is required) and any warnings. Export is blocked only by a
 broken mesh, an empty part or a part larger than 400 mm.
 
-**View**: *exploded* (default) — the lid lifted off the case; *assembled* —
-closed; *print layout* — the parts as they go into the STL. *Boards* — show
-the boards (off in the print layout: they are not printed); *X-ray* — see
-through the walls.
+**View** — only the choices that mean something for the parts shown:
+
+- **Both**: *exploded* (default) — the lid lifted off the case; *assembled* —
+  closed; *print layout* — the parts as they go into the STL.
+- **Body**: *assembled* or *print layout* (a body alone has nothing to
+  explode).
+- **Lid**: no choice — the lid is shown as it sits on the case, put down on
+  the grid.
+
+*Boards* — show the boards (off in the print layout: they are not printed;
+hidden for the lid alone); *X-ray* — see through the walls.

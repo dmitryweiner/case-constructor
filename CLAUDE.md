@@ -154,8 +154,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   exported (Both — default and first; Body with its boards; the Lid alone,
   put down on the grid), the view row decides how (exploded — default,
   assembled, print layout as in the STL), and a caption over the canvas says
-  it in words. Before, the export tab silently switched the view to the
-  print layout, and the review found the view toggles "did nothing".
+  it in words. Only meaningful choices are offered (`effectiveView`): Both —
+  all three; Body — assembled and print layout; Lid — none (and no Boards).
+  The chosen mode is kept, so Both brings exploded back. Before, the export
+  tab silently switched the view to the print layout, and the review found
+  the view toggles "did nothing".
 - Print layout (`print.ts`): the body with its opening up, the lid on its
   outer face; every exported STL is in print orientation. A console with a
   bottom lid lies on its slope instead (opening up it would stand on an

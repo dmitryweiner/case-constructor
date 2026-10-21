@@ -67,14 +67,16 @@
               <button class="tab" id="tabBody" role="tab" aria-selected="false" data-i18n="export.tab.body" data-i18n-title="export.tab.body.title">Body</button>
               <button class="tab" id="tabLid" role="tab" aria-selected="false" data-i18n="export.tab.lid" data-i18n-title="export.tab.lid.title">Lid</button>
             </div>
+            <div id="viewRow">
             <p class="tabs-caption" data-i18n="show.how">View</p>
             <div class="tabs" role="radiogroup" data-i18n-title="view.mode.title">
               <button class="tab" id="viewExploded" role="radio" aria-checked="true" data-i18n="view.exploded" data-i18n-title="view.exploded.title">exploded</button>
               <button class="tab" id="viewAssembled" role="radio" aria-checked="false" data-i18n="view.assembled" data-i18n-title="view.assembled.title">assembled</button>
               <button class="tab" id="viewPrint" role="radio" aria-checked="false" data-i18n="view.print" data-i18n-title="view.print.title">print layout</button>
             </div>
+            </div>
             <div class="view-checks">
-              <label class="check-inline" data-i18n-title="view.boards.title"><input type="checkbox" id="viewBoards" checked /> <span data-i18n="view.boards">Boards</span></label>
+              <label class="check-inline" id="viewBoardsLabel" data-i18n-title="view.boards.title"><input type="checkbox" id="viewBoards" checked /> <span data-i18n="view.boards">Boards</span></label>
               <label class="check-inline" data-i18n-title="view.xray.title"><input type="checkbox" id="viewXray" /> <span data-i18n="view.xray">X-ray</span></label>
             </div>
             <label class="row">

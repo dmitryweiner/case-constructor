@@ -113,6 +113,8 @@ const viewButtons: Record<ViewMode, HTMLButtonElement> = {
   print: el('viewPrint', HTMLButtonElement),
 };
 const viewCaption = el('viewCaption', HTMLButtonElement);
+const viewRow = el('viewRow', HTMLDivElement);
+const viewBoardsLabel = el('viewBoardsLabel', HTMLLabelElement);
 const exportCard = el('exportCard', HTMLElement);
 /** How the case is shown — a view setting, not part of the project. */
 let viewMode: ViewMode = 'exploded';
@@ -291,9 +293,10 @@ function partById(parts: JobPart[], id: JobPart['id']): JobPart {
 }
 
 /**
- * Draws the last preview. The view mode (top bar) decides how — exploded,
- * assembled, or laid out as in the STL; the export tab decides what — both
- * parts, the body with its boards, or the lid alone.
+ * Draws the last preview. The parts tab decides what — both parts, the body
+ * with its boards, or the lid alone; the view decides how — exploded,
+ * assembled, or laid out as in the STL (as far as it means anything for the
+ * parts shown: see `effectiveView`).
  */
 function drawParts(): void {
   if (!lastParts) return;
@@ -302,15 +305,13 @@ function drawParts(): void {
   const { dims } = layout;
   const showBody = built.exportMode !== 'lid';
   const showLid = built.exportMode !== 'body';
-  const mode = currentView();
+  const mode = effectiveView(built.exportMode);
   if (mode === 'print') {
     const shape = { kind: built.shape.kind, console: layout.console };
     const face = built.lid.face;
     const parts: ScenePart[] = built.exportMode === 'both'
       ? printLayout(body, lid, face, dims, shape).map((mesh, i): ScenePart => ({ role: i === 0 ? 'body' : 'lid', mesh }))
-      : showBody
-        ? [{ role: 'body', mesh: bodyForPrint(body, face, dims, shape) }]
-        : [{ role: 'lid', mesh: lidForPrint(lid, face, dims) }];
+      : [{ role: 'body', mesh: bodyForPrint(body, face, dims, shape) }];
     show(parts);
     return;
   }
@@ -338,24 +339,41 @@ function show(parts: ScenePart[]): void {
   scene.setParts(parts);
 }
 
-function currentView(): ViewMode {
+/**
+ * The view as it applies to the parts shown. Both parts: any of the three.
+ * The body alone: exploded is the same as assembled. The lid alone: no
+ * choice at all — it is shown as it sits on the case, put down on the grid.
+ * The chosen mode is kept, so going back to Both brings exploded back.
+ */
+function effectiveView(parts: ExportMode): ViewMode {
+  if (parts === 'lid') return 'assembled';
+  if (parts === 'body' && viewMode === 'exploded') return 'assembled';
   return viewMode;
 }
 
 /** The caption over the view: which parts, how, and whether boards are in. */
 function describeView(state: AppState): string {
-  const what = t(state.exportMode === 'both' ? 'caption.both' : state.exportMode === 'body' ? 'caption.body' : 'caption.lid');
-  if (viewMode === 'print') return `${what} · ${t('caption.print')}`;
-  const boards = state.exportMode !== 'lid' && viewBoards.checked && state.boards.length > 0 ? ` · ${t('caption.withBoards')}` : '';
-  // one part alone: exploded or assembled says nothing about it
-  if (state.exportMode !== 'both') return `${what}${boards}`;
-  return `${what} · ${t(viewMode === 'exploded' ? 'view.exploded' : 'view.assembled')}${boards}`;
+  const parts = state.exportMode;
+  const what = t(parts === 'both' ? 'caption.both' : parts === 'body' ? 'caption.body' : 'caption.lid');
+  const view = effectiveView(parts);
+  if (parts === 'lid') return what;
+  if (view === 'print') return `${what} · ${t('caption.print')}`;
+  const boards = viewBoards.checked && state.boards.length > 0 ? ` · ${t('caption.withBoards')}` : '';
+  // the body alone has nothing to explode
+  if (parts === 'body') return `${what}${boards}`;
+  return `${what} · ${t(view === 'exploded' ? 'view.exploded' : 'view.assembled')}${boards}`;
 }
 
 function syncView(): void {
-  for (const [mode, button] of Object.entries(viewButtons)) button.setAttribute('aria-checked', String(mode === viewMode));
+  const parts = state.exportMode;
+  const view = effectiveView(parts);
+  for (const [mode, button] of Object.entries(viewButtons)) button.setAttribute('aria-checked', String(mode === view));
+  // only the choices that change something for the parts shown
+  viewRow.hidden = parts === 'lid';
+  viewButtons.exploded.hidden = parts !== 'both';
+  viewBoardsLabel.hidden = parts === 'lid';
   // boards are not printed: the toggle means nothing in the print layout
-  viewBoards.disabled = viewMode === 'print';
+  viewBoards.disabled = view === 'print';
   viewCaption.textContent = describeView(state);
 }
 
