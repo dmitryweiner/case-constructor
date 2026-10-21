@@ -34,18 +34,27 @@ every cycle that is tokens thrown away. Reusable plumbing lives in
 freely; a temporary script that turns out useful becomes a permanent one.
 
 - `scripts/smoke.mjs` — browser smoke: every shape, slider extremes, every
-  lid face, cylinder/console lid restrictions, export of each mode with a real
+  catalog board from the picker (with nut/insert holes and a rotation), port
+  toggles, user openings, the custom board editor and its catalog JSON,
+  board search and overlap warnings, every lid face, cylinder/console lid
+  restrictions, snaps and screws with every hole and head kind, vents, fan,
+  keyholes, ears, a label in a real font, export of each mode with a real
   download (times printed), undo/redo, user preset through a reload, project
-  file round trip and a foreign JSON refused, view toggles, all four
-  languages (switch, memory, a fresh `he-IL` browser keeps the panel on the
-  left), the mobile sheet. Browser in `en-US`. Flags: `--preview`,
-  `--shots <dir>`.
+  file round trip and a foreign JSON refused, the view modes per parts tab
+  and the caption, all four languages (switch, memory, a fresh `he-IL`
+  browser keeps the panel on the left), the mobile sheet. Browser in
+  `en-US`. Flags: `--preview`, `--shots <dir>`.
 - `scripts/snap.mjs` — a spot screenshot in a given state; prints status,
   audit, warnings and blockers. Waits for the worker's build. Flags: `--out`
   (required), `--preset <id>`, `--lang en|ru|uk|he`, `--set <id>=<value>`,
   `--check <id>`, `--uncheck <id>`, `--click <selector>`, `--upload
   <id>=<path>` (in command-line order), `--view`, `--clip x,y,w,h`, `--orbit
-  dx,dy`, `--url <path>`, `--wait <ms>`, `--width/--height`, `--preview`.
+  dx,dy`, `--url <path>`, `--wait <ms>`, `--width/--height`, `--preview`,
+  `--eval '<js>'` (prints a page expression; dev builds expose
+  `window.__case.state() / parts() / ghosts() / drawn()` — the meshes and
+  the roles actually drawn). A picture can lie (an open box seen from above
+  looks closed under flat light): check the mesh with `--eval` or
+  `inspect.mjs --levels` before believing an image.
 - `scripts/inspect.mjs` — builds a case in Node (through vitest, so the same
   module resolution) and reports per part: triangles, degenerate triangles,
   watertight, volume, bbox, stage timings; `--stl <dir>` writes the raw parts.
@@ -213,7 +222,7 @@ Boards: `#boardAdd` opens `#boardPicker` (`#boardSearch`, rows
 `#boardList [data-board="<id>"]`, `#boardPickerClose`); per board
 `#board<i>_x|_y|_z`, `#board<i>_rot_0|90|180|270`, `#board<i>_screw`,
 `#board<i>_hole_tap|insert|nut`, `#board<i>_remove`, port toggles
-`#board<i>_cut_<portId>`. Top bar: `#viewBoards`.
+`#board<i>_cut_<portId>`.
 Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHeight|_bottomHeight`,
 `#board<i>_custom_mount` (select), `_rails`, `_screw`, holes `_hole<h>_x|_y|_d|_remove`,
 `_hole_add`, ports `_port<p>_type|_edge` (selects), `_port<p>_<field>`, `_port<p>_remove`,

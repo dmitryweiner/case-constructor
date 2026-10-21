@@ -8,5 +8,16 @@
   and nothing changes.
 - ↩️ / ↪️ undo and redo (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z).
 
+Built-in presets:
+
+| Preset | What it shows |
+|---|---|
+| Pi 4 desktop case | a Raspberry Pi 4 with vents on two sides, the lid on four screws into heat-set inserts, a label |
+| Pi Zero with GPIO access | a flat case for the Zero 2 W with the 40-pin header open through the lid |
+| ESP32 sensor box | an ESP32-DevKitC in rails, hexagon vents front and back, keyholes for the wall, a raised label |
+| Arduino Uno box | the headers open for jumper wires, the lid on M3 screws |
+| Cylinder sensor puck | a round LoRa node (Heltec WiFi LoRa 32 V3): the display shows through the lid, vents below, ears |
+| Plain box | an empty rounded box with a flat lid on snaps |
+
 The interface language (🌐) is remembered by the browser and is not part of
 a project file.

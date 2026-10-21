@@ -13,7 +13,7 @@ printing.
 |---|---|
 | ![A round LoRa puck](docs/img/cylinder-puck.png) | ![Body and lid laid out for printing](docs/img/print-layout.png) |
 
-## Features so far
+## Features
 
 - Box with rounded corners and edge fillets, cylinder, console with a sloped
   top, sized automatically around the boards.
@@ -21,14 +21,16 @@ printing.
   Pi, Walnut Pi, Espressif ESP32, Arduino, Heltec — or your own board, on
   standoffs with tap, heat-set insert or nut holes, or held by grooved rails.
 - Openings for every connector, your own cutouts, ventilation, a fan seat.
-- A lid on any face, on snaps or screws; wall mounting; a label on the lid.
 - A lid on any face (the cylinder: top or bottom; the console: any face but
   the slope), flat or taking part of the walls, with a skirt and a printing
-  clearance.
-- Exact preview: the same CSG pipeline as the export, in a web worker.
+  clearance, on snaps or screws; wall mounting; a label on the lid.
+- Exact preview: the same CSG pipeline as the export, in a web worker; the
+  boards drawn schematically inside, the case exploded, assembled or laid out
+  for printing, with a caption saying what is shown.
 - STL export of the body, the lid, or both in one file, already oriented for
   printing.
-- Presets in the browser, project files (JSON), undo/redo.
+- Built-in presets, your own presets in the browser, project files (JSON),
+  undo/redo.
 - English, Russian, Ukrainian, Hebrew.
 
 User documentation: [docs/](docs/README.md).
