@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#15181c" />
+    <title>Case Constructor — 3D-printable enclosures for boards</title>
+  </head>
+  <body>
+    <div id="app">
+      <header id="topbar">
+        <span id="brand">Case Constructor</span>
+        <button id="presetBtn" class="tb-btn preset-btn" data-i18n="topbar.presets" data-i18n-title="topbar.presets.title" title="Built-in and saved presets">Presets…</button>
+        <button id="saveBtn" class="tb-btn" data-i18n-title="topbar.save.title" title="Save as a preset">💾</button>
+        <button id="fileOpenBtn" class="tb-btn" data-i18n-title="topbar.fileOpen.title" title="Open a project file (or drop the file onto the window)">📂</button>
+        <button id="fileSaveBtn" class="tb-btn" data-i18n-title="topbar.fileSave.title" title="Save the project to a file">⬇️</button>
+        <input type="file" id="fileInput" accept=".json,application/json" hidden />
+        <button id="undoBtn" class="tb-btn" data-i18n-title="topbar.undo.title" title="Undo (Ctrl/Cmd+Z)" disabled>↩️</button>
+        <button id="redoBtn" class="tb-btn" data-i18n-title="topbar.redo.title" title="Redo (Ctrl/Cmd+Shift+Z)" disabled>↪️</button>
+        <span class="tb-spacer"></span>
+        <label class="tb-field" data-i18n-title="view.lid.title" title="How the lid is shown">
+          <span data-i18n="view.lid">Lid</span>
+          <select id="viewLid">
+            <option value="assembled" data-i18n="view.lid.assembled">closed</option>
+            <option value="lifted" data-i18n="view.lid.lifted">lifted</option>
+            <option value="hidden" data-i18n="view.lid.hidden">hidden</option>
+          </select>
+        </label>
+        <label class="tb-field" data-i18n-title="view.xray.title" title="See through the walls">
+          <input type="checkbox" id="viewXray" />
+          <span data-i18n="view.xray">X-ray</span>
+        </label>
+        <button id="panelBtn" class="tb-btn" data-i18n="topbar.panel" data-i18n-title="topbar.panel.title" title="Settings" hidden>⚙ Settings</button>
+        <label class="tb-field" id="langField" data-i18n-title="lang.label" title="Language">
+          <span class="lang-globe" aria-hidden="true">🌐</span>
+          <select id="langSel" data-i18n-aria="lang.label" aria-label="Language"></select>
+        </label>
+      </header>
+      <div id="content">
+        <div id="panelBackdrop"></div>
+        <aside id="panel" class="open">
+          <section class="card">
+            <h2 data-i18n="panel.case">Case</h2>
+            <div id="caseParams"></div>
+          </section>
+
+          <section class="card">
+            <h2 data-i18n="panel.lid">Lid</h2>
+            <div id="lidParams"></div>
+          </section>
+
+          <section class="card">
+            <h2 data-i18n="panel.export">STL export</h2>
+            <div class="tabs" role="tablist">
+              <button class="tab" id="tabBody" role="tab" aria-selected="false" data-i18n="export.tab.body" data-i18n-title="export.tab.body.title">Body</button>
+              <button class="tab" id="tabLid" role="tab" aria-selected="false" data-i18n="export.tab.lid" data-i18n-title="export.tab.lid.title">Lid</button>
+              <button class="tab" id="tabBoth" role="tab" aria-selected="true" data-i18n="export.tab.both" data-i18n-title="export.tab.both.title">Both</button>
+            </div>
+            <label class="row">
+              <span class="row-label" data-i18n="panel.resolution" data-i18n-title="panel.resolution.hint">Resolution</span>
+              <select id="resolution"></select>
+            </label>
+            <ul id="partList" class="part-list"></ul>
+            <button id="exportBtn" class="tb-btn primary wide" data-i18n="export.button">Export STL</button>
+            <p id="status"></p>
+            <p id="audit"></p>
+            <p id="warnings"></p>
+            <p id="blockers" class="blockers"></p>
+          </section>
+        </aside>
+        <main id="viewWrap">
+          <canvas id="view"></canvas>
+          <div id="presets" hidden>
+            <div id="presetsBox" role="dialog" aria-labelledby="presetsTitle">
+              <button id="presetsClose" class="panel-close" type="button" data-i18n-title="presets.close.title" data-i18n-aria="presets.close" title="Close (Esc)" aria-label="Close">✕</button>
+              <h2 id="presetsTitle" data-i18n="presets.title">Presets</h2>
+              <div id="presetList"></div>
+            </div>
+          </div>
+          <div id="progressWrap" hidden>
+            <div id="progressBar"><div id="progressFill"></div></div>
+            <span id="progressLabel"></span>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

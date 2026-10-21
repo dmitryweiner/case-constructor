@@ -1,0 +1,27 @@
+// Messages from the core and the worker to the user travel as a code plus
+// parameters, never as a phrase. The core does not know the language (nor
+// does the worker: the language may change mid-job); the UI turns the code
+// into text (`tm` in src/i18n). Every code must be a dictionary key — `tm`
+// makes tsc check that.
+
+export type MessageCode =
+  // mesh checks before export (validate)
+  | 'mesh.nonFinite'
+  | 'mesh.badIndices'
+  | 'mesh.empty'
+  | 'mesh.flat'
+  | 'mesh.open'
+  | 'mesh.inverted'
+  | 'mesh.degenerate'
+  | 'mesh.tooLarge'
+  // worker job stages
+  | 'progress.loading'
+  | 'progress.shell'
+  | 'progress.split'
+  | 'progress.lid'
+  | 'progress.check';
+
+export interface Message {
+  code: MessageCode;
+  params?: Readonly<Record<string, string | number>>;
+}

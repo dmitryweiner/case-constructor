@@ -1,0 +1,536 @@
+// Entry point: state → worker → renderer and panel.
+//
+// Every solid of a case comes out of a boolean, so the main thread builds no
+// geometry at all: it sends the state to the CSG worker after a short pause
+// (PREVIEW_DELAY_MS) and draws what comes back. The preview is the exact
+// case at a coarser arc resolution — the same pipeline that goes to the STL.
+
+import './style.css';
+import { el, make } from './ui/dom';
+import { createScene } from './render/scene';
+import type { ScenePart } from './render/scene';
+import { renderControls } from './ui/controls';
+import type { ControlsHandle } from './ui/controls';
+import { caseControls } from './ui/caseCard';
+import { lidControls } from './ui/lidCard';
+import { setupAdjustmentButtons } from './ui/adjust';
+import { createProgress } from './ui/progress';
+import { renderPresetList } from './ui/presetList';
+import type { PresetRow } from './ui/presetList';
+import { applyStaticText } from './ui/staticText';
+import { ENDONYMS, LANGS, initLang, isLang, lang, onLangChange, setLang, t, tDynamic, tm, autoPresetPrefixes } from './i18n';
+import type { Key } from './i18n';
+import { faceFrame } from './geo/face';
+import { caseDims, lidDepthMax } from './geo/layout';
+import { bodyForPrint, lidForPrint, printLayout } from './geo/print';
+import type { SurfaceMesh } from './geo/surface';
+import { mergeMeshes } from './geo/surface';
+import { encodeSTL } from './geo/stl';
+import { assessExport, validateMesh } from './geo/validate';
+import type { AppState, ExportMode } from './state/schema';
+import { defaultState, sanitizeState, RESOLUTIONS } from './state/schema';
+import { PRESETS, presetById } from './state/presets';
+import { encodePresetFile, decodePresetFile, presetFileName } from './state/presetFile';
+import type { UserPreset } from './state/userPresets';
+import { loadUserPresets, saveUserPresets, nextPresetNumber } from './state/userPresets';
+import { History } from './state/history';
+import type { JobPart } from './worker/protocol';
+import { CsgClient } from './worker/client';
+
+/** Segments per quarter arc in the preview. */
+const PREVIEW_SEGMENTS = 12;
+/** Pause after the last edit before the worker rebuilds the case. */
+const PREVIEW_DELAY_MS = 120;
+/** Quiet time before a change becomes an undo step: a slider drag is one action. */
+const HISTORY_DELAY_MS = 500;
+/** How far a "lifted" lid floats off the case, mm. */
+const LIFT_MM = 30;
+
+type LidView = 'assembled' | 'lifted' | 'hidden';
+
+// The language comes before any rendering: the panel is built in it.
+initLang();
+applyStaticText(document);
+
+const view = el('view', HTMLCanvasElement);
+const panel = el('panel', HTMLElement);
+const caseParams = el('caseParams', HTMLDivElement);
+const lidParams = el('lidParams', HTMLDivElement);
+const resolutionSel = el('resolution', HTMLSelectElement);
+const exportBtn = el('exportBtn', HTMLButtonElement);
+const partList = el('partList', HTMLUListElement);
+const statusEl = el('status', HTMLParagraphElement);
+const auditEl = el('audit', HTMLParagraphElement);
+const warningsEl = el('warnings', HTMLParagraphElement);
+const blockersEl = el('blockers', HTMLParagraphElement);
+const presetBtn = el('presetBtn', HTMLButtonElement);
+const presetsPanel = el('presets', HTMLDivElement);
+const presetsClose = el('presetsClose', HTMLButtonElement);
+const presetList = el('presetList', HTMLDivElement);
+const saveBtn = el('saveBtn', HTMLButtonElement);
+const fileOpenBtn = el('fileOpenBtn', HTMLButtonElement);
+const fileSaveBtn = el('fileSaveBtn', HTMLButtonElement);
+const fileInput = el('fileInput', HTMLInputElement);
+const undoBtn = el('undoBtn', HTMLButtonElement);
+const redoBtn = el('redoBtn', HTMLButtonElement);
+const viewLid = el('viewLid', HTMLSelectElement);
+const viewXray = el('viewXray', HTMLInputElement);
+const langSel = el('langSel', HTMLSelectElement);
+const tabs: Record<ExportMode, HTMLButtonElement> = {
+  body: el('tabBody', HTMLButtonElement),
+  lid: el('tabLid', HTMLButtonElement),
+  both: el('tabBoth', HTMLButtonElement),
+};
+const progress = createProgress({
+  wrap: el('progressWrap', HTMLDivElement),
+  fill: el('progressFill', HTMLDivElement),
+  label: el('progressLabel', HTMLSpanElement),
+});
+
+const scene = createScene(view);
+const csg = new CsgClient();
+const history = new History<AppState>(defaultState());
+let state: AppState = history.value;
+
+setupAdjustmentButtons(panel);
+
+// --- the panel: built at startup and again on every language switch ---
+
+let caseRows: ControlsHandle<AppState>;
+let lidRows: ControlsHandle<AppState>;
+
+function renderPanel(): void {
+  caseRows = renderControls(caseParams, caseControls(), () => state, (next) => applyState(next), 'case');
+  lidRows = renderControls(lidParams, lidControls(), () => state, (next) => applyState(next), 'lid');
+}
+renderPanel();
+
+function applyState(next: AppState, record = true): void {
+  state = sanitizeState(next);
+  if (record) rememberLater(state);
+  else history.replace(state);
+  syncPanel();
+}
+
+function syncPanel(): void {
+  caseRows.sync(state);
+  lidRows.sync(state);
+  for (const [mode, tab] of Object.entries(tabs)) tab.setAttribute('aria-selected', String(mode === state.exportMode));
+  resolutionSel.value = String(state.resolution);
+  updateHistoryButtons();
+  refresh();
+}
+
+let historyTimer: ReturnType<typeof setTimeout> | null = null;
+
+function rememberLater(next: AppState): void {
+  if (historyTimer) clearTimeout(historyTimer);
+  historyTimer = setTimeout(() => {
+    history.push(next);
+    updateHistoryButtons();
+  }, HISTORY_DELAY_MS);
+}
+
+function updateHistoryButtons(): void {
+  undoBtn.disabled = !history.canUndo;
+  redoBtn.disabled = !history.canRedo;
+}
+
+// --- preview ---
+
+let previewTimer: ReturnType<typeof setTimeout> | null = null;
+/** Grows with every rebuild: a late answer from an old build must not overwrite a fresh one. */
+let generation = 0;
+/** The last preview from the worker, kept so view toggles redraw without a rebuild. */
+let lastParts: { body: SurfaceMesh; lid: SurfaceMesh; state: AppState } | null = null;
+/** Warnings the panel computes itself, before the worker answers. */
+let baseWarnings: string[] = [];
+
+function refresh(): void {
+  generation++;
+  const stamp = generation;
+  const dims = caseDims(state.shape);
+  statusEl.textContent = t('status.size', { w: Math.round(dims.w), d: Math.round(dims.d), h: Math.round(dims.h) });
+
+  baseWarnings = [];
+  const depthMax = lidDepthMax(state.shape, state.lid, dims);
+  if (state.lid.depth > depthMax) baseWarnings.push(t('warn.depthClamped', { max: depthMax.toFixed(1) }));
+  showWarnings([]);
+  renderPartList();
+
+  auditEl.textContent = t('audit.building');
+  if (previewTimer) clearTimeout(previewTimer);
+  previewTimer = setTimeout(() => void showPreview(stamp), PREVIEW_DELAY_MS);
+}
+
+function showWarnings(extra: string[]): void {
+  const all = [...baseWarnings, ...extra];
+  warningsEl.textContent = all.length > 1 ? [t('status.warnings', { n: all.length }), ...all].join('\n') : all.join('\n');
+}
+
+async function showPreview(stamp: number): Promise<void> {
+  const requested = state;
+  try {
+    const result = await progress.track(
+      (onProgress) => csg.run({ kind: 'preview', state: requested, segments: PREVIEW_SEGMENTS }, onProgress),
+      { label: 'progress.preview' },
+    );
+    if (!result || stamp !== generation) return;
+    const body = toMesh(partById(result.parts, 'body'));
+    const lid = toMesh(partById(result.parts, 'lid'));
+    lastParts = { body, lid, state: requested };
+    drawParts();
+    audit([body, lid], result.ms);
+  } catch (error) {
+    if (stamp !== generation) return;
+    auditEl.textContent = '';
+    blockersEl.textContent = t('error.build', { error: message(error) });
+    exportBtn.disabled = true;
+  }
+}
+
+function partById(parts: JobPart[], id: JobPart['id']): JobPart {
+  const found = parts.find((part) => part.id === id);
+  if (!found) throw new Error(`the worker sent no ${id}`);
+  return found;
+}
+
+/** Draws the last preview the way the view toggles and the export tab ask. */
+function drawParts(): void {
+  if (!lastParts) return;
+  const { body, lid, state: built } = lastParts;
+  const dims = caseDims(built.shape);
+  if (built.exportMode === 'both') {
+    const [printedBody, printedLid] = printLayout(body, lid, built.lid.face, dims);
+    scene.setParts([{ role: 'body', mesh: printedBody }, { role: 'lid', mesh: printedLid }]);
+    return;
+  }
+  const mode = lidView();
+  const parts: ScenePart[] = [{ role: 'body', mesh: body }];
+  if (mode !== 'hidden') {
+    const n = faceFrame(built.lid.face, dims).n;
+    const lift = mode === 'lifted' ? LIFT_MM : 0;
+    parts.push({ role: 'lid', mesh: lid, offset: [n[0] * lift, n[1] * lift, n[2] * lift] });
+  }
+  scene.setParts(parts);
+}
+
+function lidView(): LidView {
+  const value = viewLid.value;
+  return value === 'lifted' || value === 'hidden' ? value : 'assembled';
+}
+
+/** Verdict over both parts: closed, and nothing that would block the export. */
+function audit(meshes: SurfaceMesh[], ms: number): void {
+  const reports = meshes.map((mesh) => validateMesh(mesh));
+  const assessments = reports.map((report) => assessExport(report, true));
+  const triangles = reports.reduce((sum, report) => sum + report.triangleCount, 0);
+  const blocking = assessments.flatMap((assessment) => assessment.blocking);
+  auditEl.textContent = reports.every((report) => report.watertight)
+    ? t('audit.watertight', { k: (triangles / 1000).toFixed(1), ms: Math.round(ms) })
+    : t('audit.open');
+  showWarnings(assessments.flatMap((assessment) => assessment.warnings).map(tm));
+  blockersEl.textContent = blocking.map(tm).join('\n');
+  exportBtn.disabled = blocking.length > 0;
+}
+
+function renderPartList(): void {
+  const rows: [Key, string][] = state.exportMode === 'both'
+    ? [['part.both', '']]
+    : [[state.exportMode === 'body' ? 'part.body' : 'part.lid', '']];
+  partList.replaceChildren(...rows.map(([key, note]) => {
+    const item = make('li');
+    item.append(make('span', 'part-name', t(key)));
+    if (note) item.append(make('span', 'part-note', note));
+    return item;
+  }));
+}
+
+function toMesh(part: JobPart): SurfaceMesh {
+  return { positions: part.positions, indices: part.indices, normals: part.normals };
+}
+
+function message(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+viewLid.addEventListener('change', drawParts);
+viewXray.addEventListener('change', () => scene.setXray(viewXray.checked));
+
+// --- export ---
+
+for (const [mode, tab] of Object.entries(tabs)) {
+  tab.addEventListener('click', () => {
+    const exportMode = mode === 'body' || mode === 'lid' ? mode : 'both';
+    applyState({ ...state, exportMode });
+  });
+}
+
+for (const value of RESOLUTIONS) {
+  const option = document.createElement('option');
+  option.value = String(value);
+  option.textContent = String(value);
+  resolutionSel.append(option);
+}
+resolutionSel.addEventListener('change', () => {
+  applyState({ ...state, resolution: Number(resolutionSel.value) });
+});
+
+exportBtn.addEventListener('click', () => {
+  void runExport();
+});
+
+async function runExport(): Promise<void> {
+  const requested = state;
+  exportBtn.disabled = true;
+  exportBtn.textContent = t('export.busy');
+  try {
+    const result = await progress.track(
+      (onProgress) => csg.run({ kind: 'export', state: requested }, onProgress),
+      { label: 'progress.export', delayMs: 0 },
+    );
+    if (!result) return;
+    const blocking = result.parts.flatMap((part) => part.blocking);
+    if (blocking.length > 0) {
+      blockersEl.textContent = blocking.map(tm).join('\n');
+      return;
+    }
+    blockersEl.textContent = '';
+    const dims = caseDims(requested.shape);
+    const face = requested.lid.face;
+    const body = toMesh(partById(result.parts, 'body'));
+    const lid = toMesh(partById(result.parts, 'lid'));
+    const mesh = requested.exportMode === 'body'
+      ? bodyForPrint(body, face, dims)
+      : requested.exportMode === 'lid'
+        ? lidForPrint(lid, face, dims)
+        : mergeMeshes(printLayout(body, lid, face, dims));
+    download(encodeSTL(mesh, { name: requested.exportMode }), `case-constructor-${requested.exportMode}.stl`);
+  } catch (error) {
+    blockersEl.textContent = t('error.export', { error: message(error) });
+  } finally {
+    exportBtn.textContent = t('export.button');
+    exportBtn.disabled = false;
+  }
+}
+
+function download(data: BlobPart, filename: string, type = 'model/stl'): void {
+  const url = URL.createObjectURL(new Blob([data], { type }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+// --- presets ---
+
+let userPresets: UserPreset[] = loadUserPresets();
+/** Name of the last opened preset — the suggestion when saving to a file. */
+let presetName = '';
+/** Which preset is open: 'b:<id>', 'u:<name>' or empty — the list highlights it. */
+let presetRef = '';
+
+function builtinName(id: string): string {
+  return tDynamic(`preset.${id}`);
+}
+
+function presetRows(): PresetRow[] {
+  return [
+    ...userPresets.map((preset) => ({ ref: `u:${preset.name}`, name: preset.name, mine: true })),
+    ...PRESETS.map((preset) => ({
+      ref: `b:${preset.id}`,
+      name: builtinName(preset.id),
+      note: tDynamic(`preset.${preset.id}.note`),
+      mine: false,
+    })),
+  ];
+}
+
+function setPresetRef(ref: string, name: string): void {
+  presetRef = ref;
+  presetName = name;
+  presetBtn.textContent = name || t('topbar.presets');
+  if (!presetsPanel.hidden) renderPresets();
+}
+
+function autoPresetName(): string {
+  return t('presets.auto', { n: nextPresetNumber(userPresets, autoPresetPrefixes()) });
+}
+
+function renderPresets(): void {
+  renderPresetList(presetList, presetRows(), presetRef, { onPick: openPreset, onDelete: deletePreset });
+}
+
+function openPresets(): void {
+  renderPresets();
+  presetsPanel.hidden = false;
+}
+
+function closePresets(): void {
+  presetsPanel.hidden = true;
+}
+
+function openPreset(ref: string): void {
+  closePresets();
+  const name = ref.slice(2);
+  if (ref.startsWith('b:')) {
+    const preset = presetById(name);
+    if (!preset) return;
+    applyState(preset.build());
+    setPresetRef(ref, builtinName(name));
+  } else {
+    const preset = userPresets.find((item) => item.name === name);
+    if (!preset) return;
+    applyState(preset.state);
+    setPresetRef(ref, name);
+  }
+}
+
+function deletePreset(ref: string): void {
+  const name = ref.slice(2);
+  const next = userPresets.filter((item) => item.name !== name);
+  if (!saveUserPresets(next)) {
+    blockersEl.textContent = t('error.presetDelete');
+    return;
+  }
+  userPresets = next;
+  if (presetRef === ref) setPresetRef('', '');
+  renderPresets();
+}
+
+presetBtn.addEventListener('click', () => {
+  if (presetsPanel.hidden) openPresets();
+  else closePresets();
+});
+presetsClose.addEventListener('click', closePresets);
+presetsPanel.addEventListener('click', (event) => {
+  if (event.target === presetsPanel) closePresets();
+});
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !presetsPanel.hidden) closePresets();
+});
+
+saveBtn.addEventListener('click', () => {
+  const name = prompt(t('presets.prompt'), autoPresetName())?.trim();
+  if (!name) return;
+  userPresets = [...userPresets.filter((item) => item.name !== name), { name, state }];
+  if (saveUserPresets(userPresets)) {
+    setPresetRef(`u:${name}`, name);
+    flash(saveBtn, '✓');
+  } else {
+    blockersEl.textContent = t('error.presetSave');
+  }
+});
+
+// --- project file ---
+
+fileSaveBtn.addEventListener('click', () => {
+  const name = prompt(t('presets.prompt'), presetName || autoPresetName())?.trim();
+  if (!name) return;
+  download(encodePresetFile(name, state), presetFileName(name), 'application/json');
+  setPresetRef(presetRef, name);
+  flash(fileSaveBtn, '✓');
+});
+
+fileOpenBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => {
+  const file = fileInput.files?.[0];
+  fileInput.value = '';
+  if (file) void openPresetFile(file);
+});
+
+document.addEventListener('dragover', (event) => {
+  if (event.dataTransfer?.types.includes('Files')) event.preventDefault();
+});
+document.addEventListener('drop', (event) => {
+  const file = event.dataTransfer?.files[0];
+  if (!file) return;
+  event.preventDefault();
+  void openPresetFile(file);
+});
+
+/** An opened file applies like any state but does not join "Mine": that is a separate 💾. */
+async function openPresetFile(file: File): Promise<void> {
+  const decoded = decodePresetFile(await file.text().catch(() => ''));
+  if (!decoded) {
+    blockersEl.textContent = t('error.notPreset', { name: file.name });
+    return;
+  }
+  applyState(decoded.state);
+  setPresetRef('', decoded.name);
+  flash(fileOpenBtn, '✓');
+}
+
+function flash(button: HTMLButtonElement, mark: string): void {
+  const original = button.textContent;
+  button.textContent = mark;
+  setTimeout(() => {
+    button.textContent = original;
+  }, 900);
+}
+
+// --- undo / redo ---
+
+undoBtn.addEventListener('click', () => stepHistory('undo'));
+redoBtn.addEventListener('click', () => stepHistory('redo'));
+
+function stepHistory(direction: 'undo' | 'redo'): void {
+  // a pending batch becomes an entry first, or undo would skip it
+  if (historyTimer) {
+    clearTimeout(historyTimer);
+    historyTimer = null;
+    history.push(state);
+  }
+  const restored = direction === 'undo' ? history.undo() : history.redo();
+  if (restored) applyState(restored, false);
+}
+
+window.addEventListener('keydown', (event) => {
+  if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'z') return;
+  if (event.target instanceof HTMLInputElement && event.target.type === 'text') return;
+  event.preventDefault();
+  stepHistory(event.shiftKey ? 'redo' : 'undo');
+});
+
+// --- mobile panel ---
+
+const panelBtn = el('panelBtn', HTMLButtonElement);
+const panelBackdrop = el('panelBackdrop', HTMLDivElement);
+
+function setPanelOpen(open: boolean): void {
+  panel.classList.toggle('open', open);
+  panelBackdrop.hidden = !open;
+  panelBtn.hidden = open;
+}
+
+panelBtn.addEventListener('click', () => setPanelOpen(true));
+panelBackdrop.addEventListener('click', () => setPanelOpen(false));
+setPanelOpen(true);
+
+// --- language ---
+
+for (const code of LANGS) {
+  const option = document.createElement('option');
+  option.value = code;
+  option.textContent = ENDONYMS[code];
+  langSel.append(option);
+}
+langSel.value = lang();
+langSel.addEventListener('change', () => {
+  if (isLang(langSel.value)) setLang(langSel.value);
+});
+
+onLangChange(() => {
+  applyStaticText(document);
+  langSel.value = lang();
+  const scroll = panel.scrollTop;
+  renderPanel();
+  panel.scrollTop = scroll;
+  setPresetRef(presetRef, presetRef.startsWith('b:') ? builtinName(presetRef.slice(2)) : presetName);
+  exportBtn.textContent = t('export.button');
+  progress.refresh();
+  syncPanel();
+});
+
+applyState(state, false);
