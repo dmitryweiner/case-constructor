@@ -17,7 +17,7 @@ printing.
 
 - Box with rounded corners and edge fillets, cylinder, console with a sloped
   top, sized automatically around the boards.
-- A catalog of 34 boards — Raspberry Pi, Banana Pi, Orange Pi, Radxa, Repka
+- A catalog of 35 boards — Raspberry Pi, Banana Pi, Orange Pi, Radxa, Repka
   Pi, Walnut Pi, Espressif ESP32, Arduino, Heltec — or your own board, on
   standoffs with tap, heat-set insert or nut holes, or held by grooved rails.
 - Openings for every connector, your own cutouts, ventilation, a fan seat.

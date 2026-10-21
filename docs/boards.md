@@ -85,6 +85,7 @@ shows the same mark). New boards: the add-board skill
 | Banana Pi BPI-M2 Zero | Banana Pi | 65 × 30 | 4 × M2.5 | [source](https://wiki.banana-pi.org/Banana_Pi_BPI-M2_ZERO) | ≈ |
 | Banana Pi BPI-M5 | Banana Pi | 85 × 56 | 4 × M2.5 | [source](https://wiki.banana-pi.org/Banana_Pi_BPI-M5) | ≈ |
 | Orange Pi 3 LTS | Orange Pi | 85 × 56 | 4 × M2.5 | [source](https://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/orange-pi-3-LTS.html) | ≈ |
+| Orange Pi 4 Pro | Orange Pi | 89.06 × 56 | 4 × M2.5 | [source](https://drive.google.com/drive/folders/1eb7S3xMriPHYjE6dfLSS5q-cSjVXvbQw) | ≈ |
 | Orange Pi 5 | Orange Pi | 100 × 62 | 4 × M2.5 | [source](https://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-5.html) | ≈ |
 | Orange Pi Zero 2W | Orange Pi | 65 × 30 | 4 × M2.5 | [source](https://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-Zero-2W.html) | ≈ |
 | Orange Pi Zero 3 | Orange Pi | 50 × 55 | 4 × M2.5 | [source](https://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-Zero-3.html) | ≈ |
