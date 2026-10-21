@@ -16,7 +16,8 @@ import { clampNum, plateOf } from './shape';
 import type { Vec3 } from './surface';
 import { applyAffine } from './surface';
 
-export type CutShape = 'rect' | 'round';
+/** A hexagon has `w` across its flats. */
+export type CutShape = 'rect' | 'round' | 'hex';
 
 export interface CutterSpec {
   /** a point on the axis at s = 0, case frame */
@@ -108,7 +109,7 @@ export function extraCutters(cuts: readonly ExtraCut[], shape: ShapeState, dims:
   return cuts.map((cut, index): CutterSpec => {
     const plate = plateOf(shape, cut.face);
     const frame = faceFrame(cut.face, dims);
-    const common = { shape: cut.shape, w: cut.w, h: cut.shape === 'round' ? cut.w : cut.h, r: cut.r, source: { kind: 'extra' as const, index } };
+    const common = { shape: cut.shape, w: cut.w, h: cut.shape === 'rect' ? cut.h : cut.w, r: cut.r, source: { kind: 'extra' as const, index } };
     if (shape.kind === 'console' && cut.face === 'top') {
       const [x, y] = [cut.x, cut.y];
       const top = slopeTop(x, y);
@@ -143,6 +144,6 @@ export function cutterContains(cutter: CutterSpec, p: Vec3, margin = 0): boolean
   if (s < cutter.s0 - margin || s > cutter.s1 + margin) return false;
   const a = dot(cutter.ex);
   const b = dot(cutter.ey);
-  if (cutter.shape === 'round') return Math.hypot(a, b) <= cutter.w / 2 + margin;
+  if (cutter.shape !== 'rect') return Math.hypot(a, b) <= cutter.w / 2 + margin;
   return Math.abs(a) <= cutter.w / 2 + margin && Math.abs(b) <= cutter.h / 2 + margin;
 }

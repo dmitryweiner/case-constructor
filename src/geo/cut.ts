@@ -13,6 +13,9 @@ export function cutterSolid(csg: CsgApi, scope: CsgScope, cutter: CutterSpec, se
   let section;
   if (cutter.shape === 'round') {
     section = scope.keep(csg.CrossSection.circle(cutter.w / 2, circular));
+  } else if (cutter.shape === 'hex') {
+    // w across the flats: circumradius w / √3
+    section = scope.keep(csg.CrossSection.circle(cutter.w / Math.sqrt(3), 6));
   } else {
     const r = Math.max(0, Math.min(cutter.r, cutter.w / 2 - 0.01, cutter.h / 2 - 0.01));
     const core = scope.keep(csg.CrossSection.square([cutter.w - 2 * r, cutter.h - 2 * r], true));

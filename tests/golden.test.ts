@@ -89,6 +89,19 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     shape: { ...defaultState().shape, kind: 'cylinder', edgeR: 4 },
   }),
+  // M6: extras (the label needs fonts and is covered by tests/extras.test.ts)
+  'vents-fan-ears': sanitizeState({
+    ...defaultState(),
+    vents: { on: true, faces: ['left', 'bottom'], pattern: 'hex', size: 3, pitch: 5 },
+    fan: { on: true, face: 'top', size: 30 },
+    wallMount: { kind: 'ears' },
+  }),
+  'slots-keyholes-bottom-lid': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, face: 'bottom' },
+    vents: { on: true, faces: ['right', 'top'], pattern: 'slots', along: 'x' },
+    wallMount: { kind: 'keyholes', spacing: 50 },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

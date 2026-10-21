@@ -278,5 +278,45 @@
         7
       ]
     }
+  },
+  "vents-fan-ears": {
+    "body": {
+      "triangles": 9884,
+      "volume": 22723.82,
+      "extents": [
+        113.9,
+        66.5,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 2486,
+      "volume": 11733.38,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "slots-keyholes-bottom-lid": {
+    "body": {
+      "triangles": 15154,
+      "volume": 22162.43,
+      "extents": [
+        97.9,
+        66.5,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 1710,
+      "volume": 14399.82,
+      "extents": [
+        97.9,
+        66.5,
+        6
+      ]
+    }
   }
 }

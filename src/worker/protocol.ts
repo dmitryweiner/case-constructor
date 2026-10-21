@@ -7,14 +7,23 @@
 
 import type { AppState } from '../state/schema';
 import type { Message } from '../geo/message';
+import type { LabelRaster } from '../geo/label';
 
 /**
  * A job. A preview builds the exact case at preview resolution; an export
  * builds it at `state.resolution` and checks every part.
  */
-export type CsgJob =
+export type CsgJob = (
   | { kind: 'preview'; state: AppState; segments: number }
-  | { kind: 'export'; state: AppState };
+  | { kind: 'export'; state: AppState }
+) & {
+  /**
+   * The label's text as a raster: fonts live in the main thread, so it draws
+   * the text; the raster is derived from the state, not part of it, and the
+   * worker checks only its shape (`sanitizeLabelRaster`).
+   */
+  label?: LabelRaster | null;
+};
 
 export type PartId = 'body' | 'lid';
 

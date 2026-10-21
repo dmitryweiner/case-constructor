@@ -21,6 +21,10 @@ import { openingPolygon } from './opening';
 import { loftSlice } from './section';
 import { extraCutters } from './cutters';
 import { outerTopAt, portCutters } from './ports';
+import { earSpecs, extrasCutters } from './extras';
+import { earSolids, labelSolid } from './extrasSolids';
+import type { LabelRaster } from './label';
+import { labelPlacement } from './label';
 import { applyAffine } from './surface';
 import type { SurfaceMesh } from './surface';
 import type { AppState } from '../state/schema';
@@ -39,10 +43,11 @@ export const BUILD_STAGES: readonly Message[] = [
   { code: 'progress.lid' },
   { code: 'progress.fastening' },
   { code: 'progress.cutouts' },
+  { code: 'progress.extras' },
 ];
 
 export function buildCase(
-  csg: CsgApi, state: AppState, segments: number, onStage: (stage: Message) => void = () => {},
+  csg: CsgApi, state: AppState, segments: number, onStage: (stage: Message) => void = () => {}, label: LabelRaster | null = null,
 ): CaseBuild {
   const scope = new CsgScope();
   try {
@@ -85,7 +90,12 @@ export function buildCase(
     onStage(BUILD_STAGES[3]);
     const outer = outerSolid(csg, scope, spec, segments);
     const top = outerTopAt(shape, dims, layout.console.frontH, layout.console.backH);
-    const cutters = [...portCutters(layout, shape), ...extraCutters(state.extraCuts, shape, dims, top)];
+    const ports = portCutters(layout, shape);
+    const cutters = [
+      ...ports,
+      ...extraCutters(state.extraCuts, shape, dims, top),
+      ...extrasCutters(state, shape, layout, lid, top, ports),
+    ];
     let skirt = skirtSolid(csg, scope, spec, outer, frame, zp, lid, shape, segments);
     const opening = openingPolygon(spec, frame, zp, lid.lip.h, segments);
 
@@ -117,6 +127,23 @@ export function buildCase(
     if (holes) {
       body = scope.keep(body.subtract(holes));
       lidSolid = scope.keep(lidSolid.subtract(holes));
+    }
+
+    // Additive extras: ears on the part that owns the floor, the label on the lid.
+    onStage(BUILD_STAGES[6]);
+    const ears = earSolids(csg, scope, earSpecs(state.wallMount, dims), shape.floor, segments);
+    if (ears) {
+      const floorOnLid = applyAffine(frame.toFace, [dims.w / 2, dims.d / 2, shape.floor / 2])[2] > zp;
+      const material = scope.keep(ears.material.subtract(floorOnLid ? body : lidSolid));
+      if (floorOnLid) lidSolid = scope.keep(scope.keep(lidSolid.add(material)).subtract(ears.holes));
+      else body = scope.keep(scope.keep(body.add(material)).subtract(ears.holes));
+    }
+    if (state.label.on && label) {
+      const place = labelPlacement(state.label, label, lid.face, dims);
+      // an engraving never goes through the plate
+      const depth = state.label.raised ? state.label.depth : Math.min(state.label.depth, plate - 0.6);
+      const relief = labelSolid(csg, scope, state.label, label, frame, place, depth);
+      if (relief) lidSolid = scope.keep(state.label.raised ? lidSolid.add(relief) : lidSolid.subtract(relief));
     }
 
     return { body: fromManifold(body), lid: fromManifold(lidSolid), dims };

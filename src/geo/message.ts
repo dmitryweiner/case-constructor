@@ -27,6 +27,10 @@ export type MessageCode =
   // lid fastening
   | 'warn.postHitsBoard'
   | 'warn.postInOpening'
+  // extras
+  | 'warn.fanTooBig'
+  | 'warn.keyholeNearStandoff'
+  | 'warn.labelTooBig'
   // worker job stages
   | 'progress.loading'
   | 'progress.shell'
@@ -34,6 +38,7 @@ export type MessageCode =
   | 'progress.supports'
   | 'progress.fastening'
   | 'progress.cutouts'
+  | 'progress.extras'
   | 'progress.lid'
   | 'progress.check';
 

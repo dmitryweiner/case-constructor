@@ -707,8 +707,9 @@ commit; new features get their `docs/` page in the same commit.
 3. Whether the heat-set insert hole should get a slight taper (some inserts
    want 0.1–0.2 mm larger at the mouth); check against a printed sample at
    M4.
-4. Hebrew font for the label: Rubik covers Hebrew; whether a second Hebrew
-   face is worth 50 KB — decide at M6.
+4. ~~Hebrew font for the label: Rubik covers Hebrew; whether a second Hebrew
+   face is worth 50 KB — decide at M6.~~ Resolved at M6: Rubik's Hebrew subset
+   is 5 KB; no second face — Oswald falls back to Rubik for Hebrew letters.
 
 ---
 
@@ -759,3 +760,10 @@ commit; new features get their `docs/` page in the same commit.
   inside its narrowest section.
 - **M4.** Board ghosts: the PCB green and its ports amber, both see-through
   (asked by the user).
+- **M6.** The label is not a height-map relief (`geo/bottom.ts` is not
+  copied): the raster's row runs are unioned into a CrossSection and
+  extruded — exact, and no grid. Fan and label positions are offsets from
+  the face's centre (they survive a change of size); user cuts keep absolute
+  face coordinates. Ears always sit on the left and right; `spacing` is for
+  keyholes. Vents are dropped across the skirt band, around floor supports
+  and inside port openings.

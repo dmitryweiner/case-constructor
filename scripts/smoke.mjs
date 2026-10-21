@@ -211,6 +211,36 @@ await expectWatertight('fastening:snaps:fillet');
 if (!(await page.locator('#warnings').textContent()).includes('rounded corners end')) errors.push('[fastening] no note about the raised lid depth');
 await setRange('case_edgeR', 0);
 
+// extras: vents of every pattern, a fan, both wall mounts, a label in a real font
+label('extras');
+await page.check('#on_vents');
+for (const pattern of ['slots', 'hex', 'round']) {
+  await page.click(`#vents_pattern_${pattern}`);
+  await expectWatertight(`vents:${pattern}`);
+}
+await page.check('#vents_face_bottom');
+await page.check('#on_fan');
+await page.selectOption('#fan_face', 'top');
+await page.click('#fan_size_30');
+await expectWatertight('fan');
+await page.click('#mount_kind_keyholes');
+await expectWatertight('keyholes');
+await page.click('#mount_kind_ears');
+await expectWatertight('ears');
+const trianglesBefore = await page.evaluate(() => window.__case.parts()?.lid.indices.length ?? 0);
+await page.check('#on_label');
+await page.fill('#label_text', 'Hello שלום Привет');
+await page.waitForTimeout(1500);
+await expectWatertight('label');
+const trianglesAfter = await page.evaluate(() => window.__case.parts()?.lid.indices.length ?? 0);
+if (!flags.has('preview') && trianglesAfter <= trianglesBefore) errors.push('[label] the lid did not change');
+await page.check('#label_raised');
+await expectWatertight('label:raised');
+await page.uncheck('#on_label');
+await page.uncheck('#on_vents');
+await page.uncheck('#on_fan');
+await page.click('#mount_kind_none');
+
 // each export mode with a real download
 for (const mode of ['body', 'lid', 'both']) {
   label(`export:${mode}`);

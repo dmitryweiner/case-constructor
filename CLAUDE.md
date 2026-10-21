@@ -131,6 +131,14 @@ freely; a temporary script that turns out useful becomes a permanent one.
   reaching `SPLIT_OFFSET` into the other part (stop short of the rim),
   unsimplified clipper offsets. `inspect.mjs --degenerate` shows where;
   `tests/fastening.test.ts` demands zero on every shape, face and fastening.
+- Extras (`extras.ts` pure, `extrasSolids.ts` worker): vents, the fan seat
+  and keyholes are ExtraCuts on faces and go through `extraCutters` (curved
+  walls and the console's slope come for free); vents are thinned out of the
+  skirt band, away from floor supports and port openings. Ears and the label
+  are additive. The label is rasterised in the main thread
+  (`ui/labelRaster.ts`, fonts in `public/fonts`, loaded lazily) and sent with
+  each job (`CsgJob.label`); the worker unions the raster's row runs into a
+  CrossSection and extrudes it on the lid face.
 - Print layout (`print.ts`): the body with its opening up, the lid on its
   outer face; every exported STL is in print orientation.
 - Visible text comes only from `src/i18n/` dictionaries; `en.ts` is the
@@ -173,6 +181,13 @@ Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHei
 `_hole_add`, ports `_port<p>_type|_edge` (selects), `_port<p>_<field>`, `_port<p>_remove`,
 `_port_add`, `_save`. The card rebuilds only when a custom board's structure changes
 (`customSignature`), so a number input keeps its focus while typing.
+Extras: toggled cards `#on_vents`, `#on_fan`, `#on_label`; vents
+`#vents_face_<face>` (checkboxes), `#vents_pattern_slots|hex|round`,
+`#vents_along_x|y`, `#vents_size|_pitch|_margin`; fan `#fan_face` (select),
+`#fan_size_25…60`, `#fan_x|_y|_screwD`; wall mount
+`#mount_kind_none|keyholes|ears`, `#mount_spacing`, `#mount_screwD`; label
+`#label_text`, `#label_font`, `#label_size`, `#label_raised`, `#label_depth`,
+`#label_x|_y|_angle`.
 Openings: `#cutAdd`; per cut `#cut<i>_face` (select), `#cut<i>_shape_rect|round`,
 `#cut<i>_x|_y|_w|_d|_h|_r` (`_d` is the diameter of a round cut), `#cut<i>_remove`.
 Case card: `#case_kind_box|cylinder|console`, `#case_cornerR`, `#case_edgeR`,

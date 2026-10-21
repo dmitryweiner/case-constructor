@@ -11,6 +11,7 @@ import type { SurfaceMesh } from '../geo/surface';
 import { meshBounds } from '../geo/surface';
 import { assessExport, validateMesh } from '../geo/validate';
 import { sanitizeState } from '../state/schema';
+import { sanitizeLabelRaster } from '../geo/label';
 import type { CsgJob, JobPart, PartId, WorkerIn, WorkerOut } from './protocol';
 
 /**
@@ -54,7 +55,7 @@ function run(csg: CsgApi, jobId: number, job: CsgJob): JobPart[] {
   const stage = (label: Message): void => {
     send({ type: 'progress', jobId, step: step++, total, label });
   };
-  const built = buildCase(csg, state, segments, stage);
+  const built = buildCase(csg, state, segments, stage, sanitizeLabelRaster(job.label));
   if (exporting) stage({ code: 'progress.check' });
   return [
     part('body', built.body, exporting),

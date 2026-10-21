@@ -11,6 +11,10 @@ import { defaultPlacement, sanitizePlacements } from '../boards/placement';
 import { catalogBoard, CATALOG } from '../boards/catalog';
 import type { ExtraCut } from '../geo/cutters';
 import { sanitizeExtraCuts } from '../geo/cutters';
+import type { FanState, LabelState, VentState, WallMountState } from '../geo/extras';
+import {
+  defaultFan, defaultLabel, defaultVents, defaultWallMount, sanitizeFan, sanitizeLabel, sanitizeVents, sanitizeWallMount,
+} from '../geo/extras';
 import type { LidState } from '../geo/lidSpec';
 import { defaultLid, sanitizeLid } from '../geo/lidSpec';
 
@@ -27,6 +31,10 @@ export interface AppState {
   lid: LidState;
   /** user-defined openings on any face */
   extraCuts: ExtraCut[];
+  vents: VentState;
+  fan: FanState;
+  wallMount: WallMountState;
+  label: LabelState;
   exportMode: ExportMode;
   /** segments per quarter arc for the export build */
   resolution: number;
@@ -41,6 +49,10 @@ export function defaultState(): AppState {
     boards: [defaultPlacement(catalogBoard('raspberry-pi-4b') ?? CATALOG[0])],
     lid: defaultLid(),
     extraCuts: [],
+    vents: defaultVents(),
+    fan: defaultFan(),
+    wallMount: defaultWallMount(),
+    label: defaultLabel(),
     exportMode: 'both',
     resolution: 24,
   };
@@ -62,6 +74,10 @@ export function sanitizeState(raw: unknown): AppState {
     boards: sanitizePlacements(Reflect.get(r, 'boards')),
     lid: sanitizeLid(Reflect.get(r, 'lid'), shape.kind),
     extraCuts: sanitizeExtraCuts(Reflect.get(r, 'extraCuts'), shape.kind),
+    vents: sanitizeVents(Reflect.get(r, 'vents')),
+    fan: sanitizeFan(Reflect.get(r, 'fan')),
+    wallMount: sanitizeWallMount(Reflect.get(r, 'wallMount')),
+    label: sanitizeLabel(Reflect.get(r, 'label')),
     exportMode: isExportMode(exportMode) ? exportMode : d.exportMode,
     resolution: typeof resolution === 'number' && RESOLUTIONS.includes(resolution) ? resolution : d.resolution,
   };

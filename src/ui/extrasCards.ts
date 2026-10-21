@@ -1,0 +1,176 @@
+// Cards of the extras: vents and the fan seat (in Openings), the wall mount
+// and the label (in Mounting and label). Vents, fan and label are toggled
+// cards; the wall mount is a choice with "none".
+
+import type { CardHandle } from './card';
+import { createCard } from './card';
+import type { Control, ControlsHandle } from './controls';
+import { renderControls } from './controls';
+import { make } from './dom';
+import { FACES } from '../geo/face';
+import type { FanState, LabelState, VentState, WallMountState } from '../geo/extras';
+import { FAN_SIZES, LABEL_FONTS, LABEL_MAX_CHARS, MOUNT_KINDS, VENT_PATTERNS } from '../geo/extras';
+import { LABEL_FONT_FILES } from './fonts';
+import type { AppState } from '../state/schema';
+
+const vents = (state: AppState, patch: Partial<VentState>): AppState => ({ ...state, vents: { ...state.vents, ...patch } });
+const fan = (state: AppState, patch: Partial<FanState>): AppState => ({ ...state, fan: { ...state.fan, ...patch } });
+const mount = (state: AppState, patch: Partial<WallMountState>): AppState => ({ ...state, wallMount: { ...state.wallMount, ...patch } });
+const label = (state: AppState, patch: Partial<LabelState>): AppState => ({ ...state, label: { ...state.label, ...patch } });
+
+function ventControls(): Control<AppState>[] {
+  return [
+    ...FACES.map((face): Control<AppState> => ({
+      kind: 'check', key: `face_${face}`, label: `face.${face}`,
+      get: (state) => state.vents.faces.includes(face),
+      set: (state, on) => vents(state, { faces: on ? [...state.vents.faces, face] : state.vents.faces.filter((f) => f !== face) }),
+    })),
+    {
+      kind: 'segmented', key: 'pattern', label: 'vents.pattern',
+      options: VENT_PATTERNS.map((value) => ({ value, label: `vents.${value}` as const })),
+      get: (state) => state.vents.pattern,
+      set: (state, value) => vents(state, { pattern: VENT_PATTERNS.find((p) => p === value) ?? state.vents.pattern }),
+    },
+    {
+      kind: 'segmented', key: 'along', label: 'vents.along', when: (state) => state.vents.pattern === 'slots',
+      options: [{ value: 'x', label: 'vents.horizontal' }, { value: 'y', label: 'vents.vertical' }],
+      get: (state) => state.vents.along,
+      set: (state, value) => vents(state, { along: value === 'x' ? 'x' : 'y' }),
+    },
+    {
+      kind: 'range', key: 'size', label: 'vents.size', hint: 'vents.size.hint', min: 1, max: 10, step: 0.5,
+      get: (state) => state.vents.size, set: (state, value) => vents(state, { size: value }),
+    },
+    {
+      kind: 'range', key: 'pitch', label: 'vents.pitch', hint: 'vents.pitch.hint', min: 2, max: 30, step: 0.5,
+      get: (state) => state.vents.pitch, set: (state, value) => vents(state, { pitch: value }),
+    },
+    {
+      kind: 'range', key: 'margin', label: 'vents.margin', hint: 'vents.margin.hint', min: 1, max: 40, step: 0.5,
+      get: (state) => state.vents.margin, set: (state, value) => vents(state, { margin: value }),
+    },
+  ];
+}
+
+function fanControls(): Control<AppState>[] {
+  return [
+    {
+      kind: 'select', key: 'face', label: 'cut.face',
+      options: FACES.map((value) => ({ value, label: `face.${value}` as const })),
+      get: (state) => state.fan.face,
+      set: (state, value) => fan(state, { face: FACES.find((f) => f === value) ?? state.fan.face }),
+    },
+    {
+      kind: 'segmented', key: 'size', label: 'fan.size',
+      options: FAN_SIZES.map((size) => ({ value: String(size), text: `${size}` })),
+      get: (state) => String(state.fan.size),
+      set: (state, value) => fan(state, { size: FAN_SIZES.find((size) => String(size) === value) ?? state.fan.size }),
+    },
+    {
+      kind: 'range', key: 'x', label: 'fan.x', hint: 'fan.xy.hint', min: -100, max: 100, step: 0.5,
+      get: (state) => state.fan.x, set: (state, value) => fan(state, { x: value }),
+    },
+    {
+      kind: 'range', key: 'y', label: 'fan.y', hint: 'fan.xy.hint', min: -100, max: 100, step: 0.5,
+      get: (state) => state.fan.y, set: (state, value) => fan(state, { y: value }),
+    },
+    {
+      kind: 'range', key: 'screwD', label: 'fan.screwD', min: 2, max: 5, step: 0.1,
+      get: (state) => state.fan.screwD, set: (state, value) => fan(state, { screwD: value }),
+    },
+  ];
+}
+
+function mountControls(): Control<AppState>[] {
+  return [
+    {
+      kind: 'segmented', key: 'kind', label: 'mount.kind',
+      options: MOUNT_KINDS.map((value) => ({ value, label: `mount.${value}` as const })),
+      get: (state) => state.wallMount.kind,
+      set: (state, value) => mount(state, { kind: MOUNT_KINDS.find((k) => k === value) ?? state.wallMount.kind }),
+    },
+    {
+      kind: 'range', key: 'spacing', label: 'mount.spacing', min: 10, max: 300, step: 1,
+      when: (state) => state.wallMount.kind === 'keyholes',
+      get: (state) => state.wallMount.spacing, set: (state, value) => mount(state, { spacing: value }),
+    },
+    {
+      kind: 'range', key: 'screwD', label: 'mount.screwD', hint: 'mount.screwD.hint', min: 2.5, max: 6, step: 0.1,
+      when: (state) => state.wallMount.kind !== 'none',
+      get: (state) => state.wallMount.screwD, set: (state, value) => mount(state, { screwD: value }),
+    },
+  ];
+}
+
+function labelControls(): Control<AppState>[] {
+  return [
+    {
+      kind: 'text', key: 'text', label: 'label.text', placeholder: 'label.text.placeholder', maxLength: LABEL_MAX_CHARS,
+      get: (state) => state.label.text, set: (state, value) => label(state, { text: value }),
+    },
+    {
+      kind: 'select', key: 'font', label: 'label.font',
+      options: LABEL_FONTS.map((font) => ({ value: font, text: LABEL_FONT_FILES[font].label })),
+      get: (state) => state.label.font,
+      set: (state, value) => label(state, { font: LABEL_FONTS.find((f) => f === value) ?? state.label.font }),
+    },
+    {
+      kind: 'range', key: 'size', label: 'label.size', hint: 'label.size.hint', min: 3, max: 30, step: 0.5,
+      get: (state) => state.label.sizeMm, set: (state, value) => label(state, { sizeMm: value }),
+    },
+    {
+      kind: 'check', key: 'raised', label: 'label.raised', hint: 'label.raised.hint',
+      get: (state) => state.label.raised, set: (state, value) => label(state, { raised: value }),
+    },
+    {
+      kind: 'range', key: 'depth', label: 'label.depth', min: 0.4, max: 1.5, step: 0.1,
+      get: (state) => state.label.depth, set: (state, value) => label(state, { depth: value }),
+    },
+    {
+      kind: 'range', key: 'x', label: 'fan.x', hint: 'label.xy.hint', min: -100, max: 100, step: 0.5,
+      get: (state) => state.label.x, set: (state, value) => label(state, { x: value }),
+    },
+    {
+      kind: 'range', key: 'y', label: 'fan.y', hint: 'label.xy.hint', min: -100, max: 100, step: 0.5,
+      get: (state) => state.label.y, set: (state, value) => label(state, { y: value }),
+    },
+    {
+      kind: 'range', key: 'angle', label: 'label.angle', min: -180, max: 180, step: 1,
+      get: (state) => state.label.angle, set: (state, value) => label(state, { angle: value }),
+    },
+  ];
+}
+
+export interface ExtrasHandle {
+  sync(state: AppState): void;
+}
+
+export function renderExtras(
+  openings: HTMLElement, mounting: HTMLElement, read: () => AppState, onChange: (next: AppState) => void,
+): ExtrasHandle {
+  openings.replaceChildren();
+  mounting.replaceChildren();
+  const cards: { card: CardHandle; on: (state: AppState) => boolean; rows: ControlsHandle<AppState> }[] = [];
+  const toggled = (
+    container: HTMLElement, id: string, title: 'panel.vents' | 'panel.fan' | 'panel.label',
+    on: (state: AppState) => boolean, set: (state: AppState, value: boolean) => AppState, controls: Control<AppState>[],
+  ): void => {
+    const card = createCard(container, { id, title, enabled: on(read()), onToggle: (value) => onChange(set(read(), value)) });
+    cards.push({ card, on, rows: renderControls(card.body, controls, read, onChange, id) });
+  };
+  toggled(openings, 'vents', 'panel.vents', (s) => s.vents.on, (s, v) => vents(s, { on: v }), ventControls());
+  toggled(openings, 'fan', 'panel.fan', (s) => s.fan.on, (s, v) => fan(s, { on: v }), fanControls());
+  const mountBox = make('div');
+  mounting.append(mountBox);
+  const mountRows = renderControls(mountBox, mountControls(), read, onChange, 'mount');
+  toggled(mounting, 'label', 'panel.label', (s) => s.label.on, (s, v) => label(s, { on: v }), labelControls());
+  return {
+    sync(state: AppState): void {
+      for (const { card, on, rows } of cards) {
+        card.setEnabled(on(state));
+        rows.sync(state);
+      }
+      mountRows.sync(state);
+    },
+  };
+}

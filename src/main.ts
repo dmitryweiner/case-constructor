@@ -18,6 +18,12 @@ import type { BoardsCardHandle } from './ui/boardsCard';
 import { renderBoardList } from './ui/boardPicker';
 import { defaultCustomBoard } from './ui/customBoard';
 import { addCut, renderCutsCard } from './ui/cutsCard';
+import { renderExtras } from './ui/extrasCards';
+import type { ExtrasHandle } from './ui/extrasCards';
+import { labelRaster } from './ui/labelRaster';
+import type { LabelRaster } from './geo/label';
+import { labelPlacement } from './geo/label';
+import { extrasWarnings, flatRegion } from './geo/extras';
 import type { CutsCardHandle } from './ui/cutsCard';
 import { cutWarnings, outerTopAt, portCutters } from './geo/ports';
 import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
@@ -80,6 +86,8 @@ const boardSearch = el('boardSearch', HTMLInputElement);
 const boardList = el('boardList', HTMLDivElement);
 const viewBoards = el('viewBoards', HTMLInputElement);
 const cutCards = el('cutCards', HTMLDivElement);
+const extraOpenings = el('extraOpenings', HTMLDivElement);
+const extraMounting = el('extraMounting', HTMLDivElement);
 const cutAdd = el('cutAdd', HTMLButtonElement);
 const lidParams = el('lidParams', HTMLDivElement);
 const resolutionSel = el('resolution', HTMLSelectElement);
@@ -126,12 +134,14 @@ let caseRows: ControlsHandle<AppState>;
 let lidRows: ControlsHandle<AppState>;
 let boardRows: BoardsCardHandle;
 let cutRows: CutsCardHandle;
+let extraRows: ExtrasHandle;
 
 function renderPanel(): void {
   caseRows = renderControls(caseParams, caseControls(), () => state, (next) => applyState(next), 'case');
   boardRows = renderBoardsCard(boardCards, () => state, (next) => applyState(next),
     (text, name) => download(text, name, 'application/json'));
   cutRows = renderCutsCard(cutCards, () => state, (next) => applyState(next));
+  extraRows = renderExtras(extraOpenings, extraMounting, () => state, (next) => applyState(next));
   lidRows = renderControls(lidParams, lidControls(), () => state, (next) => applyState(next), 'lid');
 }
 renderPanel();
@@ -150,6 +160,7 @@ function syncPanel(): void {
   boardAdd.disabled = state.boards.length >= MAX_BOARDS;
   boardCustom.disabled = boardAdd.disabled;
   cutRows.sync(state);
+  extraRows.sync(state);
   cutAdd.disabled = state.extraCuts.length >= MAX_EXTRA_CUTS;
   for (const [mode, tab] of Object.entries(tabs)) tab.setAttribute('aria-selected', String(mode === state.exportMode));
   resolutionSel.value = String(state.resolution);
@@ -179,6 +190,8 @@ let previewTimer: ReturnType<typeof setTimeout> | null = null;
 let generation = 0;
 /** The last preview from the worker, kept so view toggles redraw without a rebuild. */
 let lastParts: { body: SurfaceMesh; lid: SurfaceMesh; state: AppState } | null = null;
+/** The label's raster for the current state — the worker gets it with every job. */
+let currentLabel: LabelRaster | null = null;
 /** Board ghosts of the current state — drawn at once, the case follows from the worker. */
 let ghosts: ScenePart[] = [];
 /** Warnings the panel computes itself, before the worker answers. */
@@ -192,6 +205,7 @@ function refresh(): void {
   statusEl.textContent = t('status.size', { w: Math.round(dims.w), d: Math.round(dims.d), h: Math.round(dims.h) });
 
   baseWarnings = [];
+  currentLabel = labelRaster(state.label, () => refresh());
   const depthMax = lidDepthMax(state.shape, state.lid, dims);
   if (state.lid.depth > depthMax) baseWarnings.push(t('warn.depthClamped', { max: depthMax.toFixed(1) }));
   baseWarnings.push(...collisions(layout).map(tm));
@@ -209,6 +223,18 @@ function refresh(): void {
     const posts = postSpots(opening, lidBuilt, shapeBuilt.wall);
     baseWarnings.push(...postCollisions(posts, frame, zp, plate, lidBuilt, layout.boards).map(tm));
     baseWarnings.push(...postsInOpenings(posts, frame, zp, plate, lidBuilt, cutters).map(tm));
+  }
+  baseWarnings.push(...extrasWarnings(state, shapeBuilt, layout, lidBuilt).map(tm));
+  if (currentLabel) {
+    const place = labelPlacement(state.label, currentLabel, lidBuilt.face, dims);
+    const region = flatRegion(shapeBuilt, dims, lidBuilt.face, 0);
+    const reach = Math.hypot(place.w, place.h) / 2;
+    const turned = Math.abs(Math.sin((state.label.angle * Math.PI) / 180));
+    const hw = place.w / 2 * (1 - turned) + reach * turned;
+    const hh = place.h / 2 * (1 - turned) + reach * turned;
+    if (place.u - hw < region.u0 || place.u + hw > region.u1 || place.v - hh < region.v0 || place.v + hh > region.v1) {
+      baseWarnings.push(tm({ code: 'warn.labelTooBig' }));
+    }
   }
   showWarnings([]);
   ghosts = layout.boards.flatMap((board): ScenePart[] => {
@@ -232,7 +258,7 @@ async function showPreview(stamp: number): Promise<void> {
   const requested = state;
   try {
     const result = await progress.track(
-      (onProgress) => csg.run({ kind: 'preview', state: requested, segments: PREVIEW_SEGMENTS }, onProgress),
+      (onProgress) => csg.run({ kind: 'preview', state: requested, segments: PREVIEW_SEGMENTS, label: currentLabel }, onProgress),
       { label: 'progress.preview' },
     );
     if (!result || stamp !== generation) return;
@@ -386,7 +412,7 @@ async function runExport(): Promise<void> {
   exportBtn.textContent = t('export.busy');
   try {
     const result = await progress.track(
-      (onProgress) => csg.run({ kind: 'export', state: requested }, onProgress),
+      (onProgress) => csg.run({ kind: 'export', state: requested, label: currentLabel }, onProgress),
       { label: 'progress.export', delayMs: 0 },
     );
     if (!result) return;
