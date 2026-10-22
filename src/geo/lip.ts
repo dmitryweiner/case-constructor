@@ -1,6 +1,6 @@
-// Lid fastening solids: snap rods and grooves, screw posts with their holes,
-// the holes and head seats in the lid plate. Worker only; the positions come
-// from fastening.ts.
+// Lid fastening solids: snap rods and grooves, posts with their screw holes
+// or magnet pockets, the holes and head seats in the lid plate or its magnet
+// bosses. Worker only; the positions come from fastening.ts.
 
 import type { CrossSection, Manifold } from 'manifold-3d';
 import type { CsgApi, CsgScope } from './csg';
@@ -10,7 +10,7 @@ import type { CutterSpec } from './cutters';
 import type { FaceFrame } from './face';
 import { NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE } from './fasteners';
 import type { PostSpot } from './fastening';
-import { POST_LEN, snapSpots } from './fastening';
+import { POST_LEN, magnetPockets, snapSpots } from './fastening';
 import type { LidState } from './lidSpec';
 import type { Vec2 } from './section';
 import { bounds2, convexIntersect } from './opening';
@@ -48,7 +48,9 @@ export interface PostParts {
   posts: Manifold;
   /** holes in the posts, case frame */
   postHoles: Manifold;
-  /** through holes and head seats in the lid, case frame */
+  /** magnets: bosses under the lid plate, added before `lidHoles`; case frame */
+  lidBosses: Manifold | null;
+  /** through holes and head seats in the lid, or its magnet pockets, case frame */
   lidHoles: Manifold;
   /** where the skirt must step aside for the posts, case frame */
   skirtClearance: Manifold;
@@ -61,7 +63,9 @@ export function postSolids(
   if (spots.length === 0) return null;
   const n = Math.max(16, segments * 4);
   const dims = SCREWS[lid.screw.size];
-  const top = -plate - lid.fit;
+  const magnets = lid.fastening === 'magnets' ? magnetPockets(lid, plate) : null;
+  // a magnet post stops a fit below the lid's boss
+  const top = magnets ? magnets.postTop : -plate - lid.fit;
   // offsets are simplified: clipper leaves near-duplicate arc vertices that become slivers
   const grow = (section: CrossSection, delta: number): CrossSection =>
     scope.keep(scope.keep(section.offset(delta, 'Round', 2, n)).simplify(1e-3));
@@ -72,6 +76,7 @@ export function postSolids(
   const posts: Manifold[] = [];
   const postHoles: Manifold[] = [];
   const lidHoles: Manifold[] = [];
+  const lidBosses: Manifold[] = [];
   const clearance: Manifold[] = [];
   for (const spot of spots) {
     const outline = [...circlePoints(spot.centre, spot.r, n), spot.anchor];
@@ -80,7 +85,10 @@ export function postSolids(
     // The part filled out to the walls ends just below the body's rim (the
     // body is cut SPLIT_OFFSET below the plane): reaching the plane it would
     // poke into the lid's walls, and trimming that leaves a sliver step.
-    const lowerTop = Math.min(zp - SPLIT_OFFSET - POST_STEP, top);
+    // A magnet post ends below the rim: its corner fill stops POST_STEP under
+    // its top all the same, or the top face meets the outer corner's edge on
+    // the diagonal and leaves zero-area triangles there.
+    const lowerTop = Math.min(zp - SPLIT_OFFSET - POST_STEP, magnets ? top - POST_STEP : top);
     const reach = Math.hypot(spot.centre[0] - spot.anchor[0], spot.centre[1] - spot.anchor[1]) + spot.r;
     // One prism for the whole post, then clipped: everything below the rim
     // level, and above it only what keeps a fit from the lid's walls. Two
@@ -101,6 +109,17 @@ export function postSolids(
     // the hole the screw goes into, down from the post's top
     const c = spot.centre;
     const depth = Math.min(POST_LEN - 1, top - bottom - 1);
+    if (magnets) {
+      // pockets as deep as the magnet, a 0.5 mm chamfer at the mouth guides it in
+      const { r, h, lidBossH, lidMouth } = magnets;
+      postHoles.push(column(csg, scope, c, r, top - h, top + EPS, n));
+      postHoles.push(column(csg, scope, c, r, top - 0.5, top + EPS, n, r + 0.5 + EPS));
+      // the lid's boss: the post's round part, from the pocket's mouth into the plate
+      if (lidBossH > 0) lidBosses.push(column(csg, scope, c, spot.r, lidMouth, -plate + 0.5, n));
+      lidHoles.push(column(csg, scope, c, r, lidMouth - EPS, lidMouth + h, n));
+      lidHoles.push(column(csg, scope, c, r + 0.5 + EPS, lidMouth - EPS, lidMouth + 0.5, n, r));
+      continue;
+    }
     if (lid.screw.hole === 'insert') {
       const ri = dims.insert / 2;
       const insertDepth = Math.min(dims.insertLen, depth);
@@ -140,6 +159,7 @@ export function postSolids(
   return {
     posts: toCase(unionAll(csg, scope, posts)),
     postHoles: toCase(unionAll(csg, scope, postHoles)),
+    lidBosses: lidBosses.length > 0 ? toCase(unionAll(csg, scope, lidBosses)) : null,
     lidHoles: toCase(unionAll(csg, scope, lidHoles)),
     skirtClearance: toCase(unionAll(csg, scope, clearance)),
   };

@@ -100,16 +100,18 @@ export function buildCase(
     const opening = openingPolygon(spec, frame, zp, lid.lip.h, segments);
 
     // Fastening: snap rods on the skirt and grooves in the body, or corner
-    // posts in the body with holes through the lid. The skirt steps aside
+    // posts in the body with holes through the lid (screws) or pockets
+    // facing pockets in the lid's bosses (magnets). The skirt steps aside
     // for the posts.
     onStage(BUILD_STAGES[4]);
-    if (lid.fastening === 'screws') {
+    if (lid.fastening !== 'snaps') {
       const upper = loftSlice(spec.inner, spec.innerCut, frame, -plate - lid.fit, segments);
       const posts = postSolids(csg, scope, postSpots(opening, lid, shape.wall), opening, upper, frame, zp, plate, lid, segments);
       if (posts) {
         if (skirt) skirt = scope.keep(skirt.subtract(posts.skirtClearance));
         const material = scope.keep(scope.keep(posts.posts.intersect(outer)).subtract(lidSolid));
         body = scope.keep(scope.keep(body.add(material)).subtract(posts.postHoles));
+        if (posts.lidBosses) lidSolid = scope.keep(lidSolid.add(posts.lidBosses));
         lidSolid = scope.keep(lidSolid.subtract(posts.lidHoles));
       }
       if (skirt) lidSolid = scope.keep(lidSolid.add(skirt));

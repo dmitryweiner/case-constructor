@@ -3,12 +3,12 @@
 
 import type { Face } from './face';
 import { isFace } from './face';
-import type { FastenerSpec } from './fasteners';
-import { defaultFastener, sanitizeFastener } from './fasteners';
+import type { FastenerSpec, MagnetSize } from './fasteners';
+import { BOSS_MIN_D, BOSS_WALL, MAGNETS, bossDiameter, defaultFastener, isMagnetSize, sanitizeFastener } from './fasteners';
 import type { ShapeKind } from './shape';
 import { clampNum } from './shape';
 
-export const FASTENINGS = ['snaps', 'screws'] as const;
+export const FASTENINGS = ['snaps', 'screws', 'magnets'] as const;
 export type Fastening = (typeof FASTENINGS)[number];
 
 export interface LidState {
@@ -17,6 +17,8 @@ export interface LidState {
   depth: number;
   fastening: Fastening;
   screw: FastenerSpec;
+  /** magnets: the disc size and what its pocket adds to its diameter, mm */
+  magnet: { size: MagnetSize; fit: number };
   /** skirt height and thickness */
   lip: { h: number; t: number };
   /** printing clearance between the skirt and the walls */
@@ -31,6 +33,7 @@ export function defaultLid(): LidState {
     depth: 0,
     fastening: 'snaps',
     screw: { ...defaultFastener('M3'), head: 'counterbore' },
+    magnet: { size: '6x3', fit: 0.2 },
     lip: { h: 3, t: 1.2 },
     fit: 0.2,
   };
@@ -54,16 +57,29 @@ export function sanitizeLid(raw: unknown, kind: ShapeKind): LidState {
   const lip: unknown = Reflect.get(r, 'lip');
   const lipRec = typeof lip === 'object' && lip !== null ? lip : {};
   const fastening: unknown = Reflect.get(r, 'fastening');
+  const magnet: unknown = Reflect.get(r, 'magnet');
+  const magnetRec = typeof magnet === 'object' && magnet !== null ? magnet : {};
+  const magnetSize: unknown = Reflect.get(magnetRec, 'size');
   const allowed = lidFaces(kind);
   return {
     face: isFace(face) && allowed.includes(face) ? face : allowed[0],
     depth: clampNum(Reflect.get(r, 'depth'), 0, DEPTH_MAX, d.depth),
     fastening: isFastening(fastening) ? fastening : d.fastening,
     screw: sanitizeFastener(Reflect.get(r, 'screw'), d.screw),
+    magnet: {
+      size: isMagnetSize(magnetSize) ? magnetSize : d.magnet.size,
+      fit: clampNum(Reflect.get(magnetRec, 'fit'), 0, 0.5, d.magnet.fit),
+    },
     lip: {
       h: clampNum(Reflect.get(lipRec, 'h'), 1.5, 10, d.lip.h),
       t: clampNum(Reflect.get(lipRec, 't'), 0.8, 4, d.lip.t),
     },
     fit: clampNum(Reflect.get(r, 'fit'), 0, 0.6, d.fit),
   };
+}
+
+/** Outer diameter of a corner post: around the screw's hole, or around a magnet's pocket. */
+export function postDiameter(lid: LidState): number {
+  if (lid.fastening !== 'magnets') return bossDiameter(lid.screw);
+  return Math.max(BOSS_MIN_D, MAGNETS[lid.magnet.size].d + lid.magnet.fit + 2 * BOSS_WALL);
 }

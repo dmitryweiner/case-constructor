@@ -226,7 +226,7 @@ function refresh(): void {
   const lidBuilt = effectiveLid(shapeBuilt, state.lid, dims);
   if (lidBuilt.depth > state.lid.depth + 0.01) baseWarnings.push(t('info.depthRaised', { d: lidBuilt.depth.toFixed(1) }));
   baseWarnings.push(...cutWarnings(layout, shapeBuilt, lidBuilt, cutters, state.extraCuts).map(tm));
-  if (lidBuilt.fastening === 'screws') {
+  if (lidBuilt.fastening !== 'snaps') {
     const frame = frameOf(lidBuilt.face, dims);
     const plate = plateOf(shapeBuilt, lidBuilt.face);
     const zp = -(plate + lidBuilt.depth);

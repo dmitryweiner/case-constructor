@@ -10,16 +10,18 @@ import { caseLayout, effectiveLid } from '../src/geo/layout';
 import { faceFrame } from '../src/geo/face';
 import { lidFaces } from '../src/geo/lidSpec';
 import { openingPolygon } from '../src/geo/opening';
-import { POST_LEN, SNAP_R, postCollisions, postSpots, postsInOpenings, snapSpots } from '../src/geo/fastening';
+import { MAGNET_SKIN, POST_LEN, SNAP_R, magnetPockets, postCollisions, postSpots, postsInOpenings, snapSpots } from '../src/geo/fastening';
 import { portCutters } from '../src/geo/ports';
 import { cutterContains } from '../src/geo/cutters';
-import { SCREWS } from '../src/geo/fasteners';
+import { MAGNETS, SCREWS } from '../src/geo/fasteners';
+import { sanitizeLid } from '../src/geo/lidSpec';
 import { plateOf, shapeSpec } from '../src/geo/shape';
 import { validateMesh } from '../src/geo/validate';
 import { applyAffine } from '../src/geo/surface';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import type { ShapeKind } from '../src/geo/shape';
+import type { Fastening } from '../src/geo/lidSpec';
 
 let csg: CsgApi;
 beforeAll(async () => {
@@ -36,7 +38,7 @@ function solidAt(part: Manifold, p: readonly number[]): boolean {
 }
 
 /** Mechanics are tested on an empty case: ports cutting through a snap or post are a separate matter. */
-function stateFor(kind: ShapeKind, face: string, fastening: 'snaps' | 'screws', extra: Record<string, unknown> = {}, boards = false): AppState {
+function stateFor(kind: ShapeKind, face: string, fastening: Fastening, extra: Record<string, unknown> = {}, boards = false): AppState {
   const base = defaultState();
   return sanitizeState({
     ...base,
@@ -58,9 +60,9 @@ function lidGeometry(state: AppState) {
   return { layout, shape, lid, frame, plate, zp, opening };
 }
 
-const VARIANTS: [ShapeKind, string, 'snaps' | 'screws'][] = [];
+const VARIANTS: [ShapeKind, string, Fastening][] = [];
 for (const kind of ['box', 'cylinder', 'console'] as const) {
-  for (const face of lidFaces(kind)) for (const fastening of ['snaps', 'screws'] as const) VARIANTS.push([kind, face, fastening]);
+  for (const face of lidFaces(kind)) for (const fastening of ['snaps', 'screws', 'magnets'] as const) VARIANTS.push([kind, face, fastening]);
 }
 
 describe('fastening variants', () => {
@@ -156,6 +158,58 @@ describe('screw posts', () => {
     const board = { ...g.layout.boards[0], outline: { x0: 1, y0: 1, x1: 50, y1: 50 } };
     const spots = postSpots(g.opening, g.lid, 2);
     expect(postCollisions(spots, g.frame, g.zp, g.plate, g.lid, [board]).map((m) => m.code)).toContain('warn.postHitsBoard');
+  });
+});
+
+describe('magnets', () => {
+  it('a lid from an old file holds on snaps or screws as before and gets the default magnet', () => {
+    const lid = sanitizeLid({ face: 'top', fastening: 'screws' }, 'box');
+    expect(lid.fastening).toBe('screws');
+    expect(lid.magnet).toEqual({ size: '6x3', fit: 0.2 });
+    expect(sanitizeLid({ fastening: 'magnets', magnet: { size: '9x9', fit: 3 } }, 'box').magnet).toEqual({ size: '6x3', fit: 0.5 });
+  });
+
+  it.each([['box', 'top', '6x3'], ['box', 'right', '8x2'], ['cylinder', 'top', '10x3'], ['console', 'back', '5x2'], ['box', 'bottom', '6x2']] as const)(
+    '%s, lid %s, %s: a pocket in every post and one facing it in the lid, flush, the lid closed over it',
+    (kind, face, size) => {
+      const state = stateFor(kind, face, 'magnets', { magnet: { size, fit: 0.2 } });
+      const g = lidGeometry(state);
+      const spots = postSpots(g.opening, g.lid, state.shape.wall);
+      expect(spots).toHaveLength(4);
+      const pockets = magnetPockets(g.lid, g.plate);
+      const magnet = MAGNETS[size];
+      expect(pockets.r).toBeCloseTo((magnet.d + 0.2) / 2);
+      // a magnet sits flush: its pocket is as deep as it is high; the faces meet across the fit
+      expect(pockets.lidMouth - pockets.postTop).toBeCloseTo(g.lid.fit);
+      // the lid keeps a skin over its pocket
+      expect(pockets.lidMouth + magnet.h).toBeCloseTo(Math.min(-MAGNET_SKIN, -g.plate + magnet.h));
+      const built = buildCase(csg, state, 8);
+      const body = toManifold(csg, built.body);
+      const lid = toManifold(csg, built.lid);
+      const at = (u: number, v: number, z: number) => applyAffine(g.frame.fromFace, [u, v, z]);
+      for (const spot of spots) {
+        const [u, v] = spot.centre;
+        const inward = Math.sign(g.opening.reduce((sum, p) => sum + p[0], 0) / g.opening.length - u) || 1;
+        expect(solidAt(body, at(u, v, pockets.postTop - magnet.h / 2)), 'post pocket').toBe(false);
+        expect(solidAt(body, at(u, v, pockets.postTop - magnet.h - 0.3)), 'post pocket bottom').toBe(true);
+        expect(solidAt(body, at(u + inward * (pockets.r + 0.6), v, pockets.postTop - magnet.h + 0.3)), 'post wall').toBe(true);
+        expect(solidAt(lid, at(u, v, pockets.lidMouth + magnet.h / 2)), 'lid pocket').toBe(false);
+        expect(solidAt(lid, at(u, v, -0.3)), 'lid skin').toBe(true);
+        expect(solidAt(lid, at(u + inward * (pockets.r + 0.6), v, pockets.lidMouth + magnet.h - 0.3)), 'lid boss').toBe(true);
+      }
+      body.delete();
+      lid.delete();
+    },
+  );
+
+  it('magnet posts are thicker than screw posts, and the auto size makes room for them', () => {
+    const base = defaultState();
+    const screws = caseLayout(sanitizeState({ ...base, lid: { ...base.lid, fastening: 'screws' } })).dims;
+    const magnets = caseLayout(sanitizeState({ ...base, lid: { ...base.lid, fastening: 'magnets', magnet: { size: '10x3', fit: 0.2 } } })).dims;
+    expect(magnets.w).toBeGreaterThan(screws.w);
+    const g = lidGeometry(sanitizeState({ ...base, lid: { ...base.lid, fastening: 'magnets', magnet: { size: '10x3', fit: 0.2 } } }));
+    const spots = postSpots(g.opening, g.lid, base.shape.wall);
+    expect(postCollisions(spots, g.frame, g.zp, g.plate, g.lid, g.layout.boards)).toEqual([]);
   });
 });
 

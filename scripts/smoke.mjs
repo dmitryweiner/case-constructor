@@ -228,6 +228,14 @@ for (const hole of ['tap', 'insert', 'nut']) {
 await page.click('#lid_face_left');
 await expectWatertight('fastening:screws:left');
 await page.click('#lid_face_top');
+await page.click('#lid_fastening_magnets');
+if (await page.locator('#lid_hole_tap').isVisible()) errors.push('[fastening] magnets offer screw holes');
+await page.selectOption('#lid_magnet', '8x2');
+await setRange('lid_magnetFit', 0.3);
+await expectWatertight('fastening:magnets');
+await page.click('#lid_face_bottom');
+await expectWatertight('fastening:magnets:bottom');
+await page.click('#lid_face_top');
 await page.click('#lid_fastening_snaps');
 await setRange('case_edgeR', 4);
 await expectWatertight('fastening:snaps:fillet');

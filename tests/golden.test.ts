@@ -102,6 +102,11 @@ const STATES: Record<string, AppState> = {
     vents: { on: true, faces: ['right', 'top'], pattern: 'slots', along: 'x' },
     wallMount: { kind: 'keyholes', spacing: 50 },
   }),
+  // I8: magnets, a lid boss under a thin plate (PLAN-IMPROVEMENTS.md)
+  'magnets-top': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, fastening: 'magnets', magnet: { size: '8x3', fit: 0.2 } },
+  }),
   // I6: closed keyholes, pads and feet (PLAN-IMPROVEMENTS.md)
   'closed-keyholes-feet': sanitizeState({
     ...defaultState(),

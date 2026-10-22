@@ -43,6 +43,24 @@ export const SCREWS: Readonly<Record<ScrewSize, ScrewDims>> = {
   'M4': { d: 4, tap: 3.5, insert: 5.6, insertLen: 6, nutAF: 7.0, nutH: 3.2, headD: 7.0, headH: 2.6 },
 };
 
+/** Disc magnets for the lid, diameter × height. */
+export const MAGNET_SIZES = ['5x2', '6x2', '6x3', '8x2', '8x3', '10x2', '10x3'] as const;
+export type MagnetSize = (typeof MAGNET_SIZES)[number];
+
+export const MAGNETS: Readonly<Record<MagnetSize, { d: number; h: number }>> = {
+  '5x2': { d: 5, h: 2 },
+  '6x2': { d: 6, h: 2 },
+  '6x3': { d: 6, h: 3 },
+  '8x2': { d: 8, h: 2 },
+  '8x3': { d: 8, h: 3 },
+  '10x2': { d: 10, h: 2 },
+  '10x3': { d: 10, h: 3 },
+};
+
+export function isMagnetSize(value: unknown): value is MagnetSize {
+  return typeof value === 'string' && MAGNET_SIZES.some((size) => size === value);
+}
+
 /** Wall around any hole in a standoff or post. */
 export const BOSS_WALL = 1.6;
 /** Smallest standoff or post diameter. */

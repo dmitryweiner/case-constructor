@@ -10,6 +10,11 @@
 // the corner as fits, filled out to the corner walls — from `POST_LEN` below
 // the parting plane up to the lid plate (less the fit), with a 45° taper
 // under it so it prints without support.
+//
+// Magnets: the same posts, each with an open pocket a disc magnet is pressed
+// into, flush with the post's top; the lid gets a boss with a pocket facing
+// it where its plate is too thin for one. The post stops a fit below the
+// boss. Pressed in, not melted in: neodymium loses its strength above ~80 °C.
 
 import type { CutterSpec } from './cutters';
 import { cutterContains } from './cutters';
@@ -17,8 +22,9 @@ import type { PlacedBoard } from './layout';
 import type { Message } from './message';
 import type { FaceFrame } from './face';
 import type { LidState } from './lidSpec';
+import { postDiameter } from './lidSpec';
 import type { Vec2 } from './section';
-import { bossDiameter } from './fasteners';
+import { MAGNETS } from './fasteners';
 import { boundaryHit, bounds2 } from './opening';
 import type { Vec3 } from './surface';
 import { applyAffine, rotateVec } from './surface';
@@ -37,6 +43,22 @@ export const SNAP_FROM_END = 1.5;
 export const SNAP_TWO_FROM = 40;
 /** How far a screw post reaches below the parting plane (above its taper). */
 export const POST_LEN = 8;
+
+/** Plastic left between a magnet in the lid and the lid's outer face, mm. */
+export const MAGNET_SKIN = 0.6;
+
+/**
+ * Magnet pockets in the lid's face frame (z = 0 on the outer face, the
+ * plate's inner face at −plate): the pocket radius, how far the lid's boss
+ * reaches below its plate, the lid pocket's mouth and the post's top — a
+ * fit apart, so the magnets' faces meet across the parting gap.
+ */
+export function magnetPockets(lid: LidState, plate: number): { r: number; h: number; lidBossH: number; lidMouth: number; postTop: number } {
+  const magnet = MAGNETS[lid.magnet.size];
+  const lidBossH = Math.max(0, magnet.h + MAGNET_SKIN - plate);
+  const lidMouth = -plate - lidBossH;
+  return { r: (magnet.d + lid.magnet.fit) / 2, h: magnet.h, lidBossH, lidMouth, postTop: lidMouth - lid.fit };
+}
 
 export interface SnapSpot {
   bump: CutterSpec;
@@ -141,7 +163,7 @@ function insideDistance(poly: readonly Vec2[], p: Vec2): number {
  */
 export function postSpots(opening: readonly Vec2[], lid: LidState, wall: number): PostSpot[] {
   if (opening.length < 3) return [];
-  const r = bossDiameter(lid.screw) / 2;
+  const r = postDiameter(lid) / 2;
   const box = bounds2(opening);
   const cx = (box.u0 + box.u1) / 2;
   const cy = (box.v0 + box.v1) / 2;

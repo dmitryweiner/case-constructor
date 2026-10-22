@@ -319,6 +319,26 @@
       ]
     }
   },
+  "magnets-top": {
+    "body": {
+      "triangles": 3828,
+      "volume": 41605.56,
+      "extents": [
+        117.7,
+        86.3,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 2656,
+      "volume": 20233.69,
+      "extents": [
+        117.7,
+        86.3,
+        5
+      ]
+    }
+  },
   "closed-keyholes-feet": {
     "body": {
       "triangles": 3712,

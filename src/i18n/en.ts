@@ -67,6 +67,7 @@ export const en = {
   'lid.fastening': 'Fastening',
   'fastening.snaps': 'snaps',
   'fastening.screws': 'screws',
+  'fastening.magnets': "magnets",
   'lid.lipH': 'Skirt height',
   'lid.lipH.hint': 'how far the lid skirt drops into the body, mm',
   'lid.lipT': 'Skirt thickness',
@@ -345,4 +346,8 @@ export const en = {
   'warn.keyholeOffFlat': "A keyhole pad or foot runs onto the rounded edge — change the spacing or the case size.",
   'warn.keyholeClosedRound': "A round wall has no flat place for closed keyholes: they go through.",
   'warn.keyholePadsOnBed': "The keyhole pads and feet stand out of the bottom, which prints on the bed: the floor between them needs supports.",
+  'lid.magnet': "Magnet, mm",
+  'lid.magnet.hint': "disc magnet, diameter × height. Press them in after printing (a drop of glue if loose), each pair attracting: mark one face of every magnet before inserting. Not melted in — neodymium loses its strength above ~80 °C",
+  'lid.magnetFit': "Magnet fit",
+  'lid.magnetFit.hint': "added to the magnet's diameter for its pocket, mm",
 };

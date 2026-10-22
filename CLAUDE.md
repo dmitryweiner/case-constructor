@@ -154,7 +154,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   effective lid depth is at least the walls' rounded zone (`cornerZone`):
   inside it the opening is narrower than the cavity below and a skirt hangs
   free of the walls — snaps found that out. Snaps landing in an opening are
-  dropped; posts in an opening are reported.
+  dropped; posts in an opening are reported. Magnets use the screw posts
+  (`postDiameter`), a pocket in each and a facing one in the lid
+  (`magnetPockets`); a magnet post stops a fit below the lid's boss, and its
+  corner fill stops `POST_STEP` below its top — reaching it, the top face met
+  the outer corner's edge on the diagonal: slivers.
 - Slivers come from coincident geometry, not from manifold: a rod axis on a
   face (sink it), the web's bottom on the ceiling plane (lift it), two
   stacked prisms of one outline (build one prism and clip it), a part
@@ -259,8 +263,9 @@ Openings: `#cutAdd`; per cut `#cut<i>_face` (select), `#cut<i>_shape_rect|round`
 Case card: `#case_kind_box|cylinder|console`, `#case_cornerR`, `#case_edgeR`,
 `#case_wall`, `#case_floor`, `#case_auto`, `#case_w`, `#case_diameter`,
 `#case_d`, `#case_h`, `#case_frontH`, `#case_backH`.
-Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws`,
-`#lid_screw` (select), `#lid_hole_tap|insert|nut`,
+Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets`,
+`#lid_screw` (select), `#lid_hole_tap|insert|nut`, `#lid_magnet` (select),
+`#lid_magnetFit` (magnets only),
 `#lid_head_none|counterbore|countersunk` (screws only), `#lid_lipH`,
 `#lid_lipT`, `#lid_fit`.
 View and export card (`#exportCard`): parts `#tabBoth` (first, default),

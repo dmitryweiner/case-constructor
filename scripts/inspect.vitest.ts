@@ -77,6 +77,7 @@ it('inspect', async () => {
     if (args.degenerate) {
       // zero-area triangles: where they are, grouped to a 0.5 mm grid
       const spots = new Map<string, number>();
+      const exact: string[] = [];
       const p = mesh.positions;
       for (let t = 0; t < mesh.indices.length; t += 3) {
         const [a, b, c] = [mesh.indices[t] * 3, mesh.indices[t + 1] * 3, mesh.indices[t + 2] * 3];
@@ -86,8 +87,11 @@ it('inspect', async () => {
         if (area >= 1e-12) continue;
         const key = [p[a], p[a + 1], p[a + 2]].map((v) => (Math.round(v * 2) / 2).toFixed(1)).join(',');
         spots.set(key, (spots.get(key) ?? 0) + 1);
+        // the first few in full: which vertices collapse, and along what
+        if (exact.length < 6) exact.push([a, b, c].map((i) => `(${[p[i], p[i + 1], p[i + 2]].map((v) => v.toFixed(4)).join(', ')})`).join(' '));
       }
       for (const [key, count] of [...spots].slice(0, 20)) console.log(`  degenerate ×${count} at ${key}`);
+      for (const line of exact) console.log(`    ${line}`);
     }
     if (args.levels) {
       // horizontal faces by z level: up/down areas; a membrane shows as equal up and down at one level

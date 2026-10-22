@@ -15,6 +15,7 @@ import { faceFrame } from './face';
 import { bossDiameter } from './fasteners';
 import { POST_LEN } from './fastening';
 import type { LidState } from './lidSpec';
+import { postDiameter } from './lidSpec';
 import type { Message } from './message';
 import type { ShapeState } from './shape';
 import { SIZE_MIN, SIZE_MAX, plateOf, shapeSpec } from './shape';
@@ -154,8 +155,8 @@ function union(rects: readonly Rect[]): Rect | null {
  * the band the lid skirt occupies along the walls.
  */
 export function sideMargin(shape: ShapeState, lid: LidState): number {
-  // a top or bottom lid on screws has a post in every vertical corner
-  const posts = lid.fastening === 'screws' && (lid.face === 'top' || lid.face === 'bottom') ? bossDiameter(lid.screw) + 0.5 : 0;
+  // a top or bottom lid on screws or magnets has a post in every vertical corner
+  const posts = lid.fastening !== 'snaps' && (lid.face === 'top' || lid.face === 'bottom') ? postDiameter(lid) + 0.5 : 0;
   return Math.max(shape.margin.side, lid.fit + lid.lip.t + 0.3, posts);
 }
 
@@ -169,8 +170,8 @@ export function placeBoards(input: LayoutInput): PlacedBoard[] {
  * much of the floor, and supports belong on the body's floor (PLAN.md §3.5).
  */
 export function lidBand(lid: LidState, shape: ShapeState): { x0: number; x1: number; y0: number; y1: number } {
-  // screw posts reach POST_LEN (and a boss) into the body from the parting plane
-  const posts = lid.fastening === 'screws' ? POST_LEN + bossDiameter(lid.screw) : 0;
+  // posts reach POST_LEN (and a boss) into the body from the parting plane
+  const posts = lid.fastening !== 'snaps' ? POST_LEN + postDiameter(lid) : 0;
   // the lid takes at least the rounded corners of the walls (effectiveLid)
   const corner = shape.kind === 'cylinder' ? 0 : Math.max(0, shape.cornerR - shape.wall);
   const depth = Math.max(lid.depth, corner);

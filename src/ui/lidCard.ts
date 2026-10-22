@@ -4,7 +4,7 @@ import type { Control } from './controls';
 import { FACES } from '../geo/face';
 import type { LidState } from '../geo/lidSpec';
 import { DEPTH_MAX, FASTENINGS, lidFaces } from '../geo/lidSpec';
-import { HEAD_KINDS, HOLE_KINDS, SCREW_SIZES } from '../geo/fasteners';
+import { HEAD_KINDS, HOLE_KINDS, MAGNETS, MAGNET_SIZES, SCREW_SIZES } from '../geo/fasteners';
 import type { AppState } from '../state/schema';
 
 function lidOf(state: AppState, patch: Partial<LidState>): AppState {
@@ -13,6 +13,7 @@ function lidOf(state: AppState, patch: Partial<LidState>): AppState {
 
 export function lidControls(): Control<AppState>[] {
   const screws = (state: AppState): boolean => state.lid.fastening === 'screws';
+  const magnets = (state: AppState): boolean => state.lid.fastening === 'magnets';
   return [
     {
       kind: 'segmented', key: 'face', label: 'lid.face',
@@ -50,6 +51,17 @@ export function lidControls(): Control<AppState>[] {
       options: HEAD_KINDS.map((value) => ({ value, label: `head.${value}` as const })),
       get: (state) => state.lid.screw.head,
       set: (state, value) => lidOf(state, { screw: { ...state.lid.screw, head: HEAD_KINDS.find((kind) => kind === value) ?? state.lid.screw.head } }),
+    },
+    {
+      kind: 'select', key: 'magnet', label: 'lid.magnet', hint: 'lid.magnet.hint', when: magnets,
+      options: MAGNET_SIZES.map((size) => ({ value: size, text: `${MAGNETS[size].d} × ${MAGNETS[size].h}` })),
+      get: (state) => state.lid.magnet.size,
+      set: (state, value) => lidOf(state, { magnet: { ...state.lid.magnet, size: MAGNET_SIZES.find((size) => size === value) ?? state.lid.magnet.size } }),
+    },
+    {
+      kind: 'range', key: 'magnetFit', label: 'lid.magnetFit', hint: 'lid.magnetFit.hint', when: magnets, min: 0, max: 0.5, step: 0.05,
+      get: (state) => state.lid.magnet.fit,
+      set: (state, value) => lidOf(state, { magnet: { ...state.lid.magnet, fit: value } }),
     },
     {
       kind: 'range', key: 'lipH', label: 'lid.lipH', hint: 'lid.lipH.hint', min: 1.5, max: 10, step: 0.5,
