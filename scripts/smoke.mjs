@@ -50,6 +50,12 @@ async function setRange(id, value) {
   await page.waitForTimeout(40);
 }
 
+/** Roles drawn last (dev builds): 'body,board,…,lid'. */
+async function drawn() {
+  await page.waitForTimeout(150);
+  return (await page.evaluate(() => window.__case.drawn())).join(',');
+}
+
 /** Exports the current mode and checks the downloaded STL is a sane binary file. */
 async function exportStl(step) {
   const started = Date.now();
@@ -236,6 +242,22 @@ await expectWatertight('fastening:magnets');
 await page.click('#lid_face_bottom');
 await expectWatertight('fastening:magnets:bottom');
 await page.click('#lid_face_top');
+label('fastening:printed');
+await page.click('#lid_fastening_printed');
+await page.selectOption('#lid_thread', 'P8');
+await setRange('lid_threadFit', 0.25);
+await expectWatertight('fastening:printed');
+if (!(await drawn()).includes('screw')) errors.push(`[printed] the screws are not drawn: ${await drawn()}`);
+await page.click('#tabLid');
+// the tab redraws from the last preview, which may still be on its way
+await page.waitForFunction(() => window.__case.drawn().join(',') === 'lid,screw', null, { timeout: 5000 }).catch(() => {});
+const lidTab = await drawn();
+if (lidTab !== 'lid,screw') errors.push(`[printed] the Lid tab draws ${lidTab}`);
+await exportStl('printed:lid');
+await page.click('#tabBoth');
+await page.click('#lid_face_right');
+await expectWatertight('fastening:printed:right');
+await page.click('#lid_face_top');
 await page.click('#lid_fastening_snaps');
 await setRange('case_edgeR', 4);
 await expectWatertight('fastening:snaps:fillet');
@@ -331,10 +353,6 @@ label('view');
 await page.click('#presetBtn');
 await page.click('#presetList [data-preset="b:pi4-desktop"]');
 await expectWatertight('view:preset');
-const drawn = async () => {
-  await page.waitForTimeout(150);
-  return (await page.evaluate(() => window.__case.drawn())).join(',');
-};
 const tabOrder = await page.$$eval('.tabs .tab', (nodes) => nodes.map((n) => n.id));
 if (tabOrder[0] !== 'tabBoth') errors.push(`[view] the first export tab is ${tabOrder[0]}`);
 await page.click('#tabBoth');

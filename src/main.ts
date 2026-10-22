@@ -40,13 +40,15 @@ import { applyStaticText } from './ui/staticText';
 import { ENDONYMS, LANGS, initLang, isLang, lang, onLangChange, setLang, t, tDynamic, tm, autoPresetPrefixes } from './i18n';
 import type { Key } from './i18n';
 import { faceFrame } from './geo/face';
+import type { Dims, Face } from './geo/face';
+import type { PrintShape } from './geo/print';
 import { caseDims, caseLayout, collisions, lidDepthMax, placeBoards } from './geo/layout';
 import { boardGhost } from './geo/ghost';
 import { MAX_BOARDS, NEW_BOARD_GAP, defaultPlacement } from './boards/placement';
 import type { BoardDef } from './boards/schema';
-import { bodyForPrint, lidForPrint, printLayout } from './geo/print';
+import { bodyForPrint, lidWithScrews, printLayout, screwsForPrint, screwsInCase, PRINT_GAP_MM } from './geo/print';
 import type { SurfaceMesh } from './geo/surface';
-import { mergeMeshes } from './geo/surface';
+import { meshBounds, mergeMeshes } from './geo/surface';
 import { encodeSTL } from './geo/stl';
 import { assessExport, validateMesh } from './geo/validate';
 import type { AppState, ExportMode } from './state/schema';
@@ -200,7 +202,7 @@ let previewTimer: ReturnType<typeof setTimeout> | null = null;
 /** Grows with every rebuild: a late answer from an old build must not overwrite a fresh one. */
 let generation = 0;
 /** The last preview from the worker, kept so view toggles redraw without a rebuild. */
-let lastParts: { body: SurfaceMesh; lid: SurfaceMesh; state: AppState } | null = null;
+let lastParts: { body: SurfaceMesh; lid: SurfaceMesh; screw: SurfaceMesh | null; state: AppState } | null = null;
 /** The label's raster for the current state — the worker gets it with every job. */
 let currentLabel: LabelRaster | null = null;
 /** Board ghosts of the current state — drawn at once, the case follows from the worker. */
@@ -227,13 +229,9 @@ function refresh(): void {
   if (lidBuilt.depth > state.lid.depth + 0.01) baseWarnings.push(t('info.depthRaised', { d: lidBuilt.depth.toFixed(1) }));
   baseWarnings.push(...cutWarnings(layout, shapeBuilt, lidBuilt, cutters, state.extraCuts).map(tm));
   if (lidBuilt.fastening !== 'snaps') {
-    const frame = frameOf(lidBuilt.face, dims);
-    const plate = plateOf(shapeBuilt, lidBuilt.face);
-    const zp = -(plate + lidBuilt.depth);
-    const opening = openingPolygon(shapeSpec(shapeBuilt, dims), frame, zp, lidBuilt.lip.h, 8);
-    const posts = postSpots(opening, lidBuilt, shapeBuilt.wall);
-    baseWarnings.push(...postCollisions(posts, frame, zp, plate, lidBuilt, layout.boards).map(tm));
-    baseWarnings.push(...postsInOpenings(posts, frame, zp, plate, lidBuilt, cutters).map(tm));
+    const { frame, plate, zp, spots } = lidPosts(state);
+    baseWarnings.push(...postCollisions(spots, frame, zp, plate, lidBuilt, layout.boards).map(tm));
+    baseWarnings.push(...postsInOpenings(spots, frame, zp, plate, lidBuilt, cutters).map(tm));
   }
   baseWarnings.push(...extrasWarnings(state, shapeBuilt, layout, lidBuilt).map(tm));
   if (currentLabel) {
@@ -275,15 +273,39 @@ async function showPreview(stamp: number): Promise<void> {
     if (!result || stamp !== generation) return;
     const body = toMesh(partById(result.parts, 'body'));
     const lid = toMesh(partById(result.parts, 'lid'));
-    lastParts = { body, lid, state: requested };
+    const screwPart = result.parts.find((part) => part.id === 'screw');
+    const screw = screwPart ? toMesh(screwPart) : null;
+    lastParts = { body, lid, screw, state: requested };
     drawParts();
-    audit([body, lid], result.ms);
+    audit(screw ? [body, lid, screw] : [body, lid], result.ms);
   } catch (error) {
     if (stamp !== generation) return;
     auditEl.textContent = '';
     blockersEl.textContent = t('error.build', { error: message(error) });
     exportBtn.disabled = true;
   }
+}
+
+/** Body, lid and printed screws on the bed, left to right — the view and the STL of Both. */
+function bothForPrint(
+  body: SurfaceMesh, lid: SurfaceMesh, screw: SurfaceMesh | null, count: number, face: Face, dims: Dims, shape: PrintShape,
+): SurfaceMesh[] {
+  const parts = printLayout(body, lid, face, dims, shape);
+  const screws = screw ? screwsForPrint(screw, count, meshBounds(parts[1]).max[0] + PRINT_GAP_MM) : null;
+  return screws ? [...parts, screws] : parts;
+}
+
+/** The lid's corner posts as the worker builds them (in the lid's face frame) — for warnings and the printed screws. */
+function lidPosts(current: AppState) {
+  const layout = caseLayout(current);
+  const { dims } = layout;
+  const shape = { ...current.shape, console: layout.console };
+  const lid = effectiveLid(shape, current.lid, dims);
+  const frame = frameOf(lid.face, dims);
+  const plate = plateOf(shape, lid.face);
+  const zp = -(plate + lid.depth);
+  const opening = openingPolygon(shapeSpec(shape, dims), frame, zp, lid.lip.h, 8);
+  return { frame, plate, zp, spots: lid.fastening === 'snaps' ? [] : postSpots(opening, lid, shape.wall) };
 }
 
 function partById(parts: JobPart[], id: JobPart['id']): JobPart {
@@ -300,19 +322,22 @@ function partById(parts: JobPart[], id: JobPart['id']): JobPart {
  */
 function drawParts(): void {
   if (!lastParts) return;
-  const { body, lid, state: built } = lastParts;
+  const { body, lid, screw, state: built } = lastParts;
   const layout = caseLayout(built);
   const { dims } = layout;
   const showBody = built.exportMode !== 'lid';
   const showLid = built.exportMode !== 'body';
   const mode = effectiveView(built.exportMode);
+  const posts = screw ? lidPosts(built).spots.map((spot) => spot.centre) : [];
   if (mode === 'print') {
     const shape = { kind: built.shape.kind, console: layout.console };
     const face = built.lid.face;
+    const roles = (meshes: SurfaceMesh[], first: ScenePart['role'][]): ScenePart[] =>
+      meshes.map((mesh, i): ScenePart => ({ role: first[i] ?? 'screw', mesh }));
     const parts: ScenePart[] = built.exportMode === 'both'
-      ? printLayout(body, lid, face, dims, shape).map((mesh, i): ScenePart => ({ role: i === 0 ? 'body' : 'lid', mesh }))
+      ? roles(bothForPrint(body, lid, screw, posts.length, face, dims, shape), ['body', 'lid'])
       : built.exportMode === 'lid'
-        ? [{ role: 'lid', mesh: lidForPrint(lid, face, dims) }]
+        ? roles(lidWithScrews(lid, screw, posts.length, face, dims), ['lid'])
         : [{ role: 'body', mesh: bodyForPrint(body, face, dims, shape) }];
     show(parts);
     return;
@@ -326,6 +351,9 @@ function drawParts(): void {
     const n = faceFrame(built.lid.face, dims).n;
     const lift = mode === 'exploded' ? LIFT_MM : 0;
     parts.push({ role: 'lid', mesh: lid, offset: [n[0] * lift, n[1] * lift, n[2] * lift] });
+    // printed screws in their holes; exploded, they hover over the lifted lid
+    const screws = screw ? screwsInCase(screw, posts, built.lid.face, dims, 2 * lift) : null;
+    if (screws) parts.push({ role: 'screw', mesh: screws });
   }
   show(parts);
 }
@@ -511,13 +539,17 @@ async function runExport(): Promise<void> {
     const face = requested.lid.face;
     const body = toMesh(partById(result.parts, 'body'));
     const lid = toMesh(partById(result.parts, 'lid'));
+    const screwPart = result.parts.find((part) => part.id === 'screw');
+    const screw = screwPart ? toMesh(screwPart) : null;
+    const count = screw ? lidPosts(requested).spots.length : 0;
     const layout = caseLayout(requested);
     const shape = { kind: requested.shape.kind, console: layout.console };
+    // printed screws travel with the lid: same print job, same material
     const mesh = requested.exportMode === 'body'
       ? bodyForPrint(body, face, dims, shape)
       : requested.exportMode === 'lid'
-        ? lidForPrint(lid, face, dims)
-        : mergeMeshes(printLayout(body, lid, face, dims, shape));
+        ? mergeMeshes(lidWithScrews(lid, screw, count, face, dims))
+        : mergeMeshes(bothForPrint(body, lid, screw, count, face, dims, shape));
     download(encodeSTL(mesh, { name: requested.exportMode }), `case-constructor-${requested.exportMode}.stl`);
   } catch (error) {
     blockersEl.textContent = t('error.export', { error: message(error) });

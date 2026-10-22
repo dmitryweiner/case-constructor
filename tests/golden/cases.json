@@ -319,6 +319,26 @@
       ]
     }
   },
+  "printed-screws-top": {
+    "body": {
+      "triangles": 16156,
+      "volume": 40634.63,
+      "extents": [
+        115.7,
+        84.3,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 1936,
+      "volume": 19137.38,
+      "extents": [
+        115.7,
+        84.3,
+        5
+      ]
+    }
+  },
   "magnets-top": {
     "body": {
       "triangles": 3828,

@@ -1,6 +1,6 @@
 # Case Constructor — improvements after the review
 
-Status: agreed with the user on 2026-10-22. Done: I1…I6, I8.
+Status: agreed with the user on 2026-10-22. Done: I1…I8 (all).
 
 Same rules as PLAN.md: TDD, golden tests for new geometry (a new state per
 feature, old ones untouched), `npm run check` and `npm run smoke` before
@@ -297,3 +297,15 @@ geometry, `tests/presetsBuild.test.ts` if a preset uses it.
   (`warn.keyholeClosedRound`). The standoff warning now measures the
   distance to the cutter's section, not to its centre: a closed pocket is
   long, and a standoff hole that reaches it opens the case.
+- **I7.** Printed screws are a fourth *fastening* (`lid.fastening =
+  'printed'`), not a fourth hole kind: the metal-screw size, hole and head
+  controls mean nothing for them. The head is a knurled thumb head with a
+  slot (Q7b's default) and stands proud — no counterbore. Posts for a
+  printed screw are as long as its engagement + 1.5 mm (10.5 mm for P6,
+  instead of 8) and thread + 2 × 2 mm thick. The preview draws threads with
+  16 points per turn (not 24): with four threaded holes it stays at ~230 ms,
+  under the 300 ms limit. The screw is drawn in place (exploded: over the
+  lifted lid) and in a row next to the lid in the print layout.
+- **I8.** A magnet post's corner fill stops 0.3 mm under its top: reaching
+  it, the top face met the outer rounded corner's edge on the diagonal and
+  left zero-area triangles (found by the fastening variants test).

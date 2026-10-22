@@ -70,7 +70,7 @@ it('inspect', async () => {
   console.log(`state: ${JSON.stringify({ shape: state.shape.kind, lid: state.lid.face, depth: state.lid.depth, boards: state.boards.map((b) => b.board) })}`);
   console.log(`dims ${built.dims.w.toFixed(2)}×${built.dims.d.toFixed(2)}×${built.dims.h.toFixed(2)}, segments ${segments}, ${total.toFixed(0)} ms`);
   console.log(`stages: ${stages.join(', ')}`);
-  for (const [id, mesh] of Object.entries({ body: built.body, lid: built.lid })) {
+  for (const [id, mesh] of Object.entries({ body: built.body, lid: built.lid, ...(built.screw ? { screw: built.screw } : {}) })) {
     const r = validateMesh(mesh);
     console.log(`${id}: ${r.triangleCount} tri, ${r.degenerateTriangles} degenerate, watertight ${r.watertight}, `
       + `volume ${(r.volume / 1000).toFixed(2)} cm³, bbox ${r.bbox.min.map((v) => v.toFixed(2))} … ${r.bbox.max.map((v) => v.toFixed(2))}`);

@@ -10,7 +10,9 @@ import type { CutterSpec } from './cutters';
 import type { FaceFrame } from './face';
 import { NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE } from './fasteners';
 import type { PostSpot } from './fastening';
-import { POST_LEN, magnetPockets, snapSpots } from './fastening';
+import { magnetPockets, postLength, snapSpots } from './fastening';
+import { threadSolid } from './screwSolids';
+import { THREADS, minorRadius, threadEngagement, threadPoints } from './thread';
 import type { LidState } from './lidSpec';
 import type { Vec2 } from './section';
 import { bounds2, convexIntersect } from './opening';
@@ -81,7 +83,7 @@ export function postSolids(
   for (const spot of spots) {
     const outline = [...circlePoints(spot.centre, spot.r, n), spot.anchor];
     const footprint = scope.keep(csg.CrossSection.hull([outline]));
-    const bottom = zp - POST_LEN;
+    const bottom = zp - postLength(lid);
     // The part filled out to the walls ends just below the body's rim (the
     // body is cut SPLIT_OFFSET below the plane): reaching the plane it would
     // poke into the lid's walls, and trimming that leaves a sliver step.
@@ -108,7 +110,20 @@ export function postSolids(
 
     // the hole the screw goes into, down from the post's top
     const c = spot.centre;
-    const depth = Math.min(POST_LEN - 1, top - bottom - 1);
+    const depth = Math.min(postLength(lid) - 1, top - bottom - 1);
+    if (lid.fastening === 'printed') {
+      // the thread the printed screw goes into, a 45° countersink at its mouth;
+      // the lid: a clearance hole, the head stands proud (a thumb screw)
+      const { size, fit } = lid.thread;
+      const R = THREADS[size].d / 2;
+      const holeDepth = Math.min(threadEngagement(size) + 0.5, depth);
+      const thread = threadSolid(csg, scope, size, fit, top - holeDepth, top + EPS, threadPoints(segments));
+      postHoles.push(scope.keep(thread.translate([c[0], c[1], 0])));
+      const sink = R - minorRadius(size) + 0.5;
+      postHoles.push(column(csg, scope, c, minorRadius(size) + fit, top - sink, top + EPS, n, R + fit + 0.5 + EPS));
+      lidHoles.push(column(csg, scope, c, R + 0.3, top - 1, 1, n));
+      continue;
+    }
     if (magnets) {
       // pockets as deep as the magnet, a 0.5 mm chamfer at the mouth guides it in
       const { r, h, lidBossH, lidMouth } = magnets;

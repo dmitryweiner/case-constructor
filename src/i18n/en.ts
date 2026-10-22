@@ -68,6 +68,7 @@ export const en = {
   'fastening.snaps': 'snaps',
   'fastening.screws': 'screws',
   'fastening.magnets': "magnets",
+  'fastening.printed': "printed screws",
   'lid.lipH': 'Skirt height',
   'lid.lipH.hint': 'how far the lid skirt drops into the body, mm',
   'lid.lipT': 'Skirt thickness',
@@ -350,4 +351,8 @@ export const en = {
   'lid.magnet.hint': "disc magnet, diameter × height. Press them in after printing (a drop of glue if loose), each pair attracting: mark one face of every magnet before inserting. Not melted in — neodymium loses its strength above ~80 °C",
   'lid.magnetFit': "Magnet fit",
   'lid.magnetFit.hint': "added to the magnet's diameter for its pocket, mm",
+  'lid.thread': "Thread",
+  'lid.thread.hint': "printed screws: major diameter × pitch, mm. Thumb screws with a slot; they come in the lid's STL, standing on their heads, and the posts get the matching thread. 6 mm is the smallest that holds on a printer",
+  'lid.threadFit': "Thread fit",
+  'lid.threadFit.hint': "radial clearance of the threaded hole, mm; raise it if the screw is tight",
 };

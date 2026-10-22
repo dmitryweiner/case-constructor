@@ -159,6 +159,15 @@ freely; a temporary script that turns out useful becomes a permanent one.
   (`magnetPockets`); a magnet post stops a fit below the lid's boss, and its
   corner fill stops `POST_STEP` below its top — reaching it, the top face met
   the outer corner's edge on the diagonal: slivers.
+- Printed screws (`thread.ts` pure, `screwSolids.ts` worker): a single-start
+  thread has one horizontal section at every height, turned 360° per pitch,
+  so a thread is `CrossSection.extrude` with a twist (one slice per point and
+  turn) — the screw and, grown by the fit, its hole. The worker returns one
+  screw in its own frame (part `screw`); the main thread places the copies
+  over the posts (`screwsInCase`) or in a row next to the lid
+  (`screwsForPrint`, `lidWithScrews`), for the view and the STL alike.
+  `tests/thread.test.ts` turns the screw in its hole: at the right angle it
+  touches nothing, at a wrong one it runs into the thread.
 - Slivers come from coincident geometry, not from manifold: a rod axis on a
   face (sink it), the web's bottom on the ceiling plane (lift it), two
   stacked prisms of one outline (build one prism and clip it), a part
@@ -211,6 +220,9 @@ browser is within ~10 % of it):
 | `pi4-desktop` — export | 24 | 0.5 s | 44k |
 | `pi4-desktop` — finest export | 64 | 2.0 s | 150k |
 | `cylinder-puck` — finest export | 64 | 1.2 s | 130k |
+| default Pi 4 on printed P6 screws — preview | 12 | 230 ms | 20k + a 4.5k screw |
+| printed P6 screws — export | 24 | 0.9 s | 120k + a 33k screw |
+| printed P6 screws — finest export | 64 | 2.2 s | 215k + a 58k screw |
 
 Decided at M1 and confirmed at M8: the preview is the exact case (the same
 pipeline as the export, 12 segments per quarter arc), rebuilt 120 ms after
@@ -263,9 +275,10 @@ Openings: `#cutAdd`; per cut `#cut<i>_face` (select), `#cut<i>_shape_rect|round`
 Case card: `#case_kind_box|cylinder|console`, `#case_cornerR`, `#case_edgeR`,
 `#case_wall`, `#case_floor`, `#case_auto`, `#case_w`, `#case_diameter`,
 `#case_d`, `#case_h`, `#case_frontH`, `#case_backH`.
-Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets`,
+Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets|printed`,
 `#lid_screw` (select), `#lid_hole_tap|insert|nut`, `#lid_magnet` (select),
-`#lid_magnetFit` (magnets only),
+`#lid_magnetFit` (magnets only), `#lid_thread` (select), `#lid_threadFit`
+(printed screws only),
 `#lid_head_none|counterbore|countersunk` (screws only), `#lid_lipH`,
 `#lid_lipT`, `#lid_fit`.
 View and export card (`#exportCard`): parts `#tabBoth` (first, default),

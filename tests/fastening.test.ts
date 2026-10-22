@@ -62,7 +62,7 @@ function lidGeometry(state: AppState) {
 
 const VARIANTS: [ShapeKind, string, Fastening][] = [];
 for (const kind of ['box', 'cylinder', 'console'] as const) {
-  for (const face of lidFaces(kind)) for (const fastening of ['snaps', 'screws', 'magnets'] as const) VARIANTS.push([kind, face, fastening]);
+  for (const face of lidFaces(kind)) for (const fastening of ['snaps', 'screws', 'magnets', 'printed'] as const) VARIANTS.push([kind, face, fastening]);
 }
 
 describe('fastening variants', () => {

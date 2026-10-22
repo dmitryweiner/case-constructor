@@ -28,3 +28,9 @@ Known limits of the current version:
   vents.
 - A fan larger than the flat part of its face still cuts through the rim; the
   panel warns.
+- Printed screws and their threads, magnet pockets and closed keyholes wait
+  for a printed test: the fits (thread 0.2 mm, magnet + 0.2 mm) are
+  defaults to tune with *Thread fit* and *Magnet fit*.
+- Closed keyholes on the bottom with the lid on top: the body prints on the
+  pads and feet, and the floor between them needs supports (the panel says
+  so).

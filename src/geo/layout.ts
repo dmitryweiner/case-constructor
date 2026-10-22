@@ -13,7 +13,7 @@ import { boardOf } from '../boards/placement';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import { bossDiameter } from './fasteners';
-import { POST_LEN } from './fastening';
+import { postLength } from './fastening';
 import type { LidState } from './lidSpec';
 import { postDiameter } from './lidSpec';
 import type { Message } from './message';
@@ -170,8 +170,8 @@ export function placeBoards(input: LayoutInput): PlacedBoard[] {
  * much of the floor, and supports belong on the body's floor (PLAN.md §3.5).
  */
 export function lidBand(lid: LidState, shape: ShapeState): { x0: number; x1: number; y0: number; y1: number } {
-  // posts reach POST_LEN (and a boss) into the body from the parting plane
-  const posts = lid.fastening !== 'snaps' ? POST_LEN + postDiameter(lid) : 0;
+  // posts reach their length (and a boss) into the body from the parting plane
+  const posts = lid.fastening !== 'snaps' ? postLength(lid) + postDiameter(lid) : 0;
   // the lid takes at least the rounded corners of the walls (effectiveLid)
   const corner = shape.kind === 'cylinder' ? 0 : Math.max(0, shape.cornerR - shape.wall);
   const depth = Math.max(lid.depth, corner);

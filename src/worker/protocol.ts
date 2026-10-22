@@ -25,7 +25,8 @@ export type CsgJob = (
   label?: LabelRaster | null;
 };
 
-export type PartId = 'body' | 'lid';
+/** 'screw': one printed screw in its own frame, when the lid holds on printed screws */
+export type PartId = 'body' | 'lid' | 'screw';
 
 /** A finished part: the mesh plus what the panel shows about it. */
 export interface JobPart {

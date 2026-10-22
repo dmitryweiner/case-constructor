@@ -8,12 +8,14 @@ floor plate is the lid.
 | Parameter | Range | Default | Notes |
 |---|---|---|---|
 | Lid depth | 0–60 mm | 0 | 0 = a flat plate; more = the lid takes this much of the walls. Never less than the rounded zone of the walls (the inner corner radius for a side lid, the inner edge fillet for a top or bottom lid): the parting line runs where the straight walls begin, so the skirt sits against them. Limited so the body keeps room for the skirt. The panel says when it raises or clamps the depth |
-| Fastening | snaps / screws / magnets | snaps | see below |
+| Fastening | snaps / screws / magnets / printed screws | snaps | see below |
 | Screw | M2 / M2.5 / M3 / M4 | M3 | screws only |
 | Hole in the posts | tap / insert / nut | tap | as for board standoffs (docs/boards.md) |
 | Head | flat / counterbore / countersunk | counterbore | flat — the head sits on the lid; counterbore — a pocket the head's diameter + 0.4 mm, its height deep; countersunk — a 90° cone |
 | Magnet | 5 × 2 … 10 × 3 mm | 6 × 3 | magnets only: disc diameter × height |
 | Magnet fit | 0–0.5 mm | 0.2 | magnets only: added to the magnet's diameter for its pocket |
+| Thread | 6 × 1.5 / 8 × 2 / 10 × 2.5 mm | 6 × 1.5 | printed screws only: major diameter × pitch |
+| Thread fit | 0.1–0.4 mm | 0.2 | printed screws only: radial clearance of the threaded hole |
 | Skirt height | 1.5–10 mm | 3 | how far the skirt drops into the body |
 | Skirt thickness | 0.8–4 mm | 1.2 | |
 | Fit clearance | 0–0.6 mm | 0.2 | gap between the skirt and the walls; raise it if the lid is too tight on your printer |
@@ -56,3 +58,25 @@ Press the magnets in after printing (a drop of glue if they sit loose), each
 pair attracting: mark one face of every magnet before inserting. Do not melt
 them in like heat-set inserts: neodymium loses its strength for good above
 ~80 °C. The skirt still centres the lid; the magnets only hold it.
+
+## Printed screws
+
+The screws are printed too: thumb screws with a knurled head and a slot,
+in the lid's STL (and in Both), standing on their heads next to the lid. The
+corner posts get the matching thread; the lid a clearance hole (+ 0.6 mm),
+and the head stands proud on it.
+
+The thread is not ISO — both halves are printed, so it is a coarse 60°
+profile half a pitch deep, with flat crests and roots, right-hand. 6 mm with
+a 1.5 mm pitch is the smallest: below that a printed thread wears out in a
+few turns and the shank, printed standing, snaps at the head. The screw
+goes 1.5 diameters into its post, so the posts are longer (and thicker:
+thread + 2 × 2 mm); the auto size makes room for them. The hole has a 45°
+countersink at its mouth and the screw a chamfered tip, so the thread finds
+its start. Raise *Thread fit* if the screw is tight on your printer.
+
+The preview draws the threads with 16 points per turn; the export with
+twice the resolution's segments (48 at the default 24, at most 64) — four
+threaded holes make the body several times heavier, so a printed-screw case
+takes about a second to export.
+

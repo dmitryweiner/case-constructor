@@ -1,4 +1,7 @@
-import { bodyForPrint, lidForPrint, printLayout, PRINT_GAP_MM } from '../src/geo/print';
+import { bodyForPrint, lidForPrint, lidWithScrews, printLayout, PRINT_GAP_MM, screwsForPrint, screwsInCase } from '../src/geo/print';
+import { SCREW_GAP } from '../src/geo/thread';
+import { faceFrame } from '../src/geo/face';
+import { applyAffine, transformMesh, translation } from '../src/geo/surface';
 import { FACES } from '../src/geo/face';
 import { meshBounds } from '../src/geo/surface';
 import { validateMesh } from '../src/geo/validate';
@@ -27,6 +30,46 @@ describe('print layout', () => {
   it('the lid goes to the right of the body with a gap', () => {
     const [body, lid] = printLayout(boxMesh(), boxMesh(), 'top', dims);
     expect(meshBounds(lid).min[0]).toBeCloseTo(meshBounds(body).max[0] + PRINT_GAP_MM);
+  });
+});
+
+describe('printed screws', () => {
+  // a stand-in screw in its own frame: a 4 mm head below z = 0, a 2 × 2 × 8 shank above
+  const head = transformMesh(boxMesh(6, 6, 4), translation(-3, -3, -4));
+  const screw = { ...head };
+
+  it('print: standing on their heads in a row, a gap apart, closed', () => {
+    const row = screwsForPrint(screw, 4, 20);
+    expect(row).not.toBeNull();
+    if (!row) return;
+    const { min, max } = meshBounds(row);
+    expect(min.map((x) => +x.toFixed(6))).toEqual([20, 0, 0]);
+    expect(max[0]).toBeCloseTo(20 + 4 * 6 + 3 * SCREW_GAP);
+    expect(validateMesh(row).volume).toBeGreaterThan(0);
+  });
+
+  it('in the case: heads on the lid\'s outer face, outside, over each post', () => {
+    for (const face of FACES) {
+      const frame = faceFrame(face, dims);
+      const placed = screwsInCase(screw, [[3, 2]], face, dims);
+      expect(placed).not.toBeNull();
+      if (!placed) return;
+      // the head (z ∈ [−4, 0] in its frame) ends up outside the face, 0…4 along the normal
+      const along = [];
+      for (let i = 0; i < placed.positions.length; i += 3) {
+        along.push(applyAffine(frame.toFace, [placed.positions[i], placed.positions[i + 1], placed.positions[i + 2]]));
+      }
+      expect(Math.min(...along.map((p) => p[2])), face).toBeCloseTo(0);
+      expect(Math.max(...along.map((p) => p[2])), face).toBeCloseTo(4);
+      expect(Math.min(...along.map((p) => p[0])), face).toBeCloseTo(0);
+      expect(validateMesh(placed).volume, face).toBeGreaterThan(0);
+    }
+  });
+
+  it('the lid tab and the STL: the lid, then its screws to the right', () => {
+    const [lid, screws] = lidWithScrews(boxMesh(), screw, 4, 'top', dims);
+    expect(meshBounds(screws).min[0]).toBeCloseTo(meshBounds(lid).max[0] + PRINT_GAP_MM);
+    expect(lidWithScrews(boxMesh(), null, 4, 'top', dims)).toHaveLength(1);
   });
 });
 

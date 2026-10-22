@@ -23,6 +23,7 @@ import type { Message } from './message';
 import type { FaceFrame } from './face';
 import type { LidState } from './lidSpec';
 import { postDiameter } from './lidSpec';
+import { threadEngagement } from './thread';
 import type { Vec2 } from './section';
 import { MAGNETS } from './fasteners';
 import { boundaryHit, bounds2 } from './opening';
@@ -43,6 +44,11 @@ export const SNAP_FROM_END = 1.5;
 export const SNAP_TWO_FROM = 40;
 /** How far a screw post reaches below the parting plane (above its taper). */
 export const POST_LEN = 8;
+
+/** A post's length below the parting plane: longer for a printed screw, which goes in 1.5 diameters. */
+export function postLength(lid: LidState): number {
+  return lid.fastening === 'printed' ? Math.max(POST_LEN, threadEngagement(lid.thread.size) + 1.5) : POST_LEN;
+}
 
 /** Plastic left between a magnet in the lid and the lid's outer face, mm. */
 export const MAGNET_SKIN = 0.6;
@@ -194,7 +200,7 @@ export function postCollisions(spots: readonly PostSpot[], frame: FaceFrame, zp:
     const reach = Math.hypot(spot.centre[0] - spot.anchor[0], spot.centre[1] - spot.anchor[1]) + spot.r;
     const us = [spot.centre[0] - spot.r, spot.centre[0] + spot.r];
     const vs = [spot.centre[1] - spot.r, spot.centre[1] + spot.r];
-    const zs = [zp - POST_LEN - reach * 0.5, -plate - lid.fit];
+    const zs = [zp - postLength(lid) - reach * 0.5, -plate - lid.fit];
     const pts: Vec3[] = [];
     for (const u of us) for (const v of vs) for (const z of zs) pts.push(applyAffine(frame.fromFace, [u, v, z]));
     const lo = [0, 1, 2].map((k) => Math.min(...pts.map((p) => p[k])));
@@ -215,7 +221,8 @@ export function postCollisions(spots: readonly PostSpot[], frame: FaceFrame, zp:
 export function postsInOpenings(spots: readonly PostSpot[], frame: FaceFrame, zp: number, plate: number, lid: LidState, cutters: readonly CutterSpec[]): Message[] {
   const out: Message[] = [];
   spots.forEach((spot, index) => {
-    const zs = [zp - POST_LEN / 2, (zp - POST_LEN - plate - lid.fit) / 2 + zp / 2, -plate - lid.fit - 0.5];
+    const len = postLength(lid);
+    const zs = [zp - len / 2, (zp - len - plate - lid.fit) / 2 + zp / 2, -plate - lid.fit - 0.5];
     const hit = zs.some((z) => {
       const p = applyAffine(frame.fromFace, [spot.centre[0], spot.centre[1], z]);
       return cutters.some((cutter) => cutterContains(cutter, p, spot.r));

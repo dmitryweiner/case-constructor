@@ -23,6 +23,8 @@ import { extraCutters } from './cutters';
 import { outerTopAt, portCutters } from './ports';
 import { closedKeyholes, earSpecs, extrasCutters } from './extras';
 import { earSolids, keyholePadSolids, labelSolid } from './extrasSolids';
+import { screwSolid } from './screwSolids';
+import { screwShape, threadPoints } from './thread';
 import type { LabelRaster } from './label';
 import { labelPlacement } from './label';
 import { applyAffine } from './surface';
@@ -32,6 +34,8 @@ import type { AppState } from '../state/schema';
 export interface CaseBuild {
   body: SurfaceMesh;
   lid: SurfaceMesh;
+  /** printed screws: one screw in its own frame (head below z = 0, shank up); the main thread places the copies */
+  screw: SurfaceMesh | null;
   dims: Dims;
 }
 
@@ -162,7 +166,10 @@ export function buildCase(
       if (relief) lidSolid = scope.keep(state.label.raised ? lidSolid.add(relief) : lidSolid.subtract(relief));
     }
 
-    return { body: fromManifold(body), lid: fromManifold(lidSolid), dims };
+    const screw = lid.fastening === 'printed'
+      ? fromManifold(screwSolid(csg, scope, screwShape(lid.thread.size, plate, lid.fit), threadPoints(segments)))
+      : null;
+    return { body: fromManifold(body), lid: fromManifold(lidSolid), screw, dims };
   } finally {
     scope.dispose();
   }

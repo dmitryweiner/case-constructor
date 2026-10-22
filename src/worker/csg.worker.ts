@@ -60,6 +60,7 @@ function run(csg: CsgApi, jobId: number, job: CsgJob): JobPart[] {
   return [
     part('body', built.body, exporting),
     part('lid', built.lid, exporting),
+    ...(built.screw ? [part('screw', built.screw, exporting)] : []),
   ];
 }
 

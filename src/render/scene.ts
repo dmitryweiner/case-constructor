@@ -8,7 +8,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SurfaceMesh } from '../geo/surface';
 
-export type PartRole = 'body' | 'lid' | 'board' | 'port';
+export type PartRole = 'body' | 'lid' | 'screw' | 'board' | 'port';
 
 export interface ScenePart {
   role: PartRole;
@@ -34,6 +34,7 @@ const CLEAR_COLOR = 0x15181c;
 const COLORS: Record<PartRole, number> = {
   body: 0x8fa3b8,
   lid: 0xb8c6d4,
+  screw: 0xd4dde6,
   board: 0x3fae6a,
   port: 0xd9b45a,
 };
@@ -77,6 +78,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
   const materials: Record<PartRole, THREE.MeshStandardMaterial> = {
     body: new THREE.MeshStandardMaterial({ color: COLORS.body, metalness: 0.05, roughness: 0.6, side: THREE.DoubleSide }),
     lid: new THREE.MeshStandardMaterial({ color: COLORS.lid, metalness: 0.05, roughness: 0.6, side: THREE.DoubleSide }),
+    screw: new THREE.MeshStandardMaterial({ color: COLORS.screw, metalness: 0.05, roughness: 0.6, side: THREE.DoubleSide }),
     // Boards are drawn schematically and see-through, so they never read as
     // part of the case: the PCB green, its connectors and parts amber.
     board: new THREE.MeshStandardMaterial({
@@ -214,7 +216,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
     },
 
     setXray(on: boolean): void {
-      for (const material of [materials.body, materials.lid]) {
+      for (const material of [materials.body, materials.lid, materials.screw]) {
         material.transparent = on;
         material.opacity = on ? 0.35 : 1;
         material.depthWrite = !on;

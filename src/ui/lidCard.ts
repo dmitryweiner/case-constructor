@@ -5,6 +5,7 @@ import { FACES } from '../geo/face';
 import type { LidState } from '../geo/lidSpec';
 import { DEPTH_MAX, FASTENINGS, lidFaces } from '../geo/lidSpec';
 import { HEAD_KINDS, HOLE_KINDS, MAGNETS, MAGNET_SIZES, SCREW_SIZES } from '../geo/fasteners';
+import { THREADS, THREAD_SIZES } from '../geo/thread';
 import type { AppState } from '../state/schema';
 
 function lidOf(state: AppState, patch: Partial<LidState>): AppState {
@@ -14,6 +15,7 @@ function lidOf(state: AppState, patch: Partial<LidState>): AppState {
 export function lidControls(): Control<AppState>[] {
   const screws = (state: AppState): boolean => state.lid.fastening === 'screws';
   const magnets = (state: AppState): boolean => state.lid.fastening === 'magnets';
+  const printed = (state: AppState): boolean => state.lid.fastening === 'printed';
   return [
     {
       kind: 'segmented', key: 'face', label: 'lid.face',
@@ -62,6 +64,17 @@ export function lidControls(): Control<AppState>[] {
       kind: 'range', key: 'magnetFit', label: 'lid.magnetFit', hint: 'lid.magnetFit.hint', when: magnets, min: 0, max: 0.5, step: 0.05,
       get: (state) => state.lid.magnet.fit,
       set: (state, value) => lidOf(state, { magnet: { ...state.lid.magnet, fit: value } }),
+    },
+    {
+      kind: 'select', key: 'thread', label: 'lid.thread', hint: 'lid.thread.hint', when: printed,
+      options: THREAD_SIZES.map((size) => ({ value: size, text: `${THREADS[size].d} × ${THREADS[size].pitch}` })),
+      get: (state) => state.lid.thread.size,
+      set: (state, value) => lidOf(state, { thread: { ...state.lid.thread, size: THREAD_SIZES.find((size) => size === value) ?? state.lid.thread.size } }),
+    },
+    {
+      kind: 'range', key: 'threadFit', label: 'lid.threadFit', hint: 'lid.threadFit.hint', when: printed, min: 0.1, max: 0.4, step: 0.05,
+      get: (state) => state.lid.thread.fit,
+      set: (state, value) => lidOf(state, { thread: { ...state.lid.thread, fit: value } }),
     },
     {
       kind: 'range', key: 'lipH', label: 'lid.lipH', hint: 'lid.lipH.hint', min: 1.5, max: 10, step: 0.5,
