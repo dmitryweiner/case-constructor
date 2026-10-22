@@ -217,8 +217,9 @@ Add a state when a feature lands, never edit an old one.
 Built-in presets (`src/state/presets.ts`): `pi4-desktop`, `pi-zero-gpio`,
 `esp32-sensor-box`, `arduino-uno-box`, `cylinder-puck`, `plain-box`. Each is
 built by `tests/presetsBuild.test.ts` (closed, no slivers, no overlap, no
-layout warnings). Names and notes are dictionary keys `preset.<id>` and
-`preset.<id>.note`.
+layout warnings). A preset's name is one English string in `presets.ts`
+(not translated: the review asked for one name); its note is the
+dictionary key `preset.<id>.note`.
 
 ## What is not in v1
 

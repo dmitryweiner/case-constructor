@@ -1,6 +1,6 @@
 # Case Constructor — improvements after the review
 
-Status: agreed with the user on 2026-10-22. Done: I1.
+Status: agreed with the user on 2026-10-22. Done: I1, I2.
 
 Same rules as PLAN.md: TDD, golden tests for new geometry (a new state per
 feature, old ones untouched), `npm run check` and `npm run smoke` before

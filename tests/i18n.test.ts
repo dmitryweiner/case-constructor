@@ -57,9 +57,16 @@ describe('dictionaries', () => {
     }
   });
 
-  it('every built-in preset, face, shape and fastening has a label', () => {
+  it('a built-in preset has one name in every language, and a translated note', () => {
+    const names = PRESETS.map((preset) => preset.name);
+    for (const name of names) expect(name.trim()).not.toBe('');
+    expect(new Set(names).size).toBe(names.length);
+    for (const preset of PRESETS) expect(hasKey(`preset.${preset.id}`), preset.id).toBe(false);
+  });
+
+  it('every built-in preset note, face, shape and fastening has a label', () => {
     const needed: string[] = [
-      ...PRESETS.flatMap((preset) => [`preset.${preset.id}`, `preset.${preset.id}.note`]),
+      ...PRESETS.map((preset) => `preset.${preset.id}.note`),
       ...FACES.map((face) => `face.${face}`),
       ...SHAPE_KINDS.map((kind) => `shape.${kind}`),
       ...FASTENINGS.map((kind) => `fastening.${kind}`),

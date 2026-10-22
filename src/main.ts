@@ -545,7 +545,7 @@ let presetName = '';
 let presetRef = '';
 
 function builtinName(id: string): string {
-  return tDynamic(`preset.${id}`);
+  return presetById(id)?.name ?? id;
 }
 
 function presetRows(): PresetRow[] {
@@ -746,7 +746,8 @@ onLangChange(() => {
   const scroll = panel.scrollTop;
   renderPanel();
   panel.scrollTop = scroll;
-  setPresetRef(presetRef, presetRef.startsWith('b:') ? builtinName(presetRef.slice(2)) : presetName);
+  // preset names are not translated: only the button's placeholder is
+  setPresetRef(presetRef, presetName);
   exportBtn.textContent = t('export.button');
   progress.refresh();
   syncPanel();

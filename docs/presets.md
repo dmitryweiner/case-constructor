@@ -8,7 +8,8 @@
   and nothing changes.
 - ↩️ / ↪️ undo and redo (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z).
 
-Built-in presets:
+Built-in presets (their names are the same in every language; the
+description in the tooltip is translated):
 
 | Preset | What it shows |
 |---|---|

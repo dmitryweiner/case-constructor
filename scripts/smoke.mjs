@@ -363,6 +363,9 @@ for (const [code, title] of Object.entries(expected)) {
   const heading = (await page.locator('#panel h2').first().textContent()).trim();
   if (heading !== title) errors.push(`[lang:${code}] heading "${heading}"`);
   if ((await page.locator('html').getAttribute('lang')) !== code) errors.push(`[lang:${code}] html lang`);
+  // the open preset (pi4-desktop, from the view section) keeps its one name
+  const presetText = (await page.locator('#presetBtn').textContent()).trim();
+  if (presetText !== 'Pi 4 desktop case') errors.push(`[lang:${code}] the preset is called "${presetText}"`);
 }
 await page.reload();
 await page.waitForTimeout(200);

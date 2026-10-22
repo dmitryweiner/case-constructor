@@ -300,17 +300,11 @@ export const en = {
   'progress.extras': 'Ears and label',
 
   // --- built-in presets ---
-  'preset.pi4-desktop': "Pi 4 desktop case",
   'preset.pi4-desktop.note': "Vents on two sides, the lid on four screws into heat-set inserts, a label",
-  'preset.pi-zero-gpio': "Pi Zero with GPIO access",
   'preset.pi-zero-gpio.note': "A flat case with the 40-pin header open through the lid",
-  'preset.esp32-sensor-box': "ESP32 sensor box",
   'preset.esp32-sensor-box.note': "Hex vents, keyholes for the wall, the board slides into rails",
-  'preset.arduino-uno-box': "Arduino Uno box",
   'preset.arduino-uno-box.note': "Headers open for jumper wires, the lid on M3 screws",
-  'preset.cylinder-puck': "Cylinder sensor puck",
   'preset.cylinder-puck.note': "A round LoRa node: the display through the lid, vents below, ears",
-  'preset.plain-box': "Plain box",
   'preset.plain-box.note': "An empty rounded box with a flat lid on snaps",
   'show.what': "Parts — shown and exported",
   'show.how': "View",
