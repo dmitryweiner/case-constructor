@@ -118,6 +118,10 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     lid: { ...defaultState().lid, fastening: 'printed', thread: { size: 'P6', fit: 0.2 } },
   }),
+  'printed-screws-p4': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, fastening: 'printed', thread: { size: 'P4', fit: 0.2 } },
+  }),
   // I8: magnets, a lid boss under a thin plate (PLAN-IMPROVEMENTS.md)
   'magnets-top': sanitizeState({
     ...defaultState(),

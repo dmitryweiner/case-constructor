@@ -14,7 +14,7 @@ floor plate is the lid.
 | Head | flat / counterbore / countersunk | counterbore | flat — the head sits on the lid; counterbore — a pocket the head's diameter + 0.4 mm, its height deep; countersunk — a 90° cone |
 | Magnet | 5 × 2 … 10 × 3 mm | 6 × 3 | magnets only: disc diameter × height |
 | Magnet fit | 0–0.5 mm | 0.2 | magnets only: added to the magnet's diameter for its pocket |
-| Thread | 6 × 1.5 / 8 × 2 / 10 × 2.5 mm | 6 × 1.5 | printed screws only: major diameter × pitch |
+| Thread | 4 × 1 / 6 × 1.5 / 8 × 2 / 10 × 2.5 mm | 6 × 1.5 | printed screws only: major diameter × pitch |
 | Thread fit | 0.1–0.4 mm | 0.2 | printed screws only: radial clearance of the threaded hole |
 | Skirt height | 1.5–10 mm | 3 | how far the skirt drops into the body |
 | Skirt thickness | 0.8–4 mm | 1.2 | |
@@ -68,8 +68,11 @@ and the head stands proud on it.
 
 The thread is not ISO — both halves are printed, so it is a coarse 60°
 profile half a pitch deep, with flat crests and roots, right-hand. 6 mm with
-a 1.5 mm pitch is the smallest: below that a printed thread wears out in a
-few turns and the shank, printed standing, snaps at the head. The screw
+a 1.5 mm pitch is the smallest that holds reliably: below that a printed
+thread wears out in a few turns and the shank, printed standing, snaps at
+the head. 4 × 1 is offered at your own risk — its thread is half a
+millimetre deep, at the limit of a 0.4 mm nozzle; the panel warns. Print it
+slowly, in a tough plastic (PETG), and do not overtighten. The screw
 goes 1.5 diameters into its post, so the posts are longer (and thicker:
 thread + 2 × 2 mm); the auto size makes room for them. The hole has a 45°
 countersink at its mouth and the screw a chamfered tip, so the thread finds

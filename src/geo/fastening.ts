@@ -23,7 +23,7 @@ import type { Message } from './message';
 import type { FaceFrame } from './face';
 import type { LidState } from './lidSpec';
 import { postDiameter } from './lidSpec';
-import { threadEngagement } from './thread';
+import { THREADS, THREAD_RELIABLE_D, threadEngagement } from './thread';
 import type { Vec2 } from './section';
 import { MAGNETS } from './fasteners';
 import { boundaryHit, bounds2 } from './opening';
@@ -48,6 +48,12 @@ export const POST_LEN = 8;
 /** A post's length below the parting plane: longer for a printed screw, which goes in 1.5 diameters. */
 export function postLength(lid: LidState): number {
   return lid.fastening === 'printed' ? Math.max(POST_LEN, threadEngagement(lid.thread.size) + 1.5) : POST_LEN;
+}
+
+/** Printed screws thinner than 6 mm: the thread may strip, the screw may snap. */
+export function printedScrewWarnings(lid: LidState): Message[] {
+  if (lid.fastening !== 'printed' || THREADS[lid.thread.size].d >= THREAD_RELIABLE_D) return [];
+  return [{ code: 'warn.threadSmall' }];
 }
 
 /** Plastic left between a magnet in the lid and the lid's outer face, mm. */

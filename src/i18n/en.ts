@@ -352,7 +352,7 @@ export const en = {
   'lid.magnetFit': "Magnet fit",
   'lid.magnetFit.hint': "added to the magnet's diameter for its pocket, mm",
   'lid.thread': "Thread",
-  'lid.thread.hint': "printed screws: major diameter × pitch, mm. Thumb screws with a slot; they come in the lid's STL, standing on their heads, and the posts get the matching thread. 6 mm is the smallest that holds on a printer",
+  'lid.thread.hint': "printed screws: major diameter × pitch, mm. Thumb screws with a slot; they come in the lid's STL, standing on their heads, and the posts get the matching thread. 6 mm is the smallest that holds reliably on a printer; 4 mm is a risk",
   'lid.threadFit': "Thread fit",
   'lid.threadFit.hint': "radial clearance of the threaded hole, mm; raise it if the screw is tight",
   'mount.earCount': "Ears",
@@ -366,4 +366,5 @@ export const en = {
   'mount.earAlong.hint': "centred — the spacing apart; at the ends — spread out to the corners",
   'earAlong.centre': "centred",
   'earAlong.ends': "at the ends",
+  'warn.threadSmall': "A 4 mm printed thread is at the limit of a 0.4 mm nozzle: it may strip and the screw may snap at the head. Print it slowly, in a tough plastic (PETG), and do not overtighten.",
 };

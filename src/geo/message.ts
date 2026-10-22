@@ -27,6 +27,7 @@ export type MessageCode =
   // lid fastening
   | 'warn.postHitsBoard'
   | 'warn.postInOpening'
+  | 'warn.threadSmall'
   // extras
   | 'warn.fanTooBig'
   | 'warn.keyholeNearStandoff'

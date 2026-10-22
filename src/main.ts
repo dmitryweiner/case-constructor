@@ -29,7 +29,7 @@ import { cutWarnings, outerTopAt, portCutters } from './geo/ports';
 import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
 import { effectiveLid } from './geo/layout';
 import { faceFrame as frameOf } from './geo/face';
-import { postCollisions, postSpots, postsInOpenings } from './geo/fastening';
+import { postCollisions, postSpots, postsInOpenings, printedScrewWarnings } from './geo/fastening';
 import { openingPolygon } from './geo/opening';
 import { plateOf, shapeSpec } from './geo/shape';
 import { setupAdjustmentButtons } from './ui/adjust';
@@ -233,6 +233,7 @@ function refresh(): void {
     baseWarnings.push(...postCollisions(spots, frame, zp, plate, lidBuilt, layout.boards).map(tm));
     baseWarnings.push(...postsInOpenings(spots, frame, zp, plate, lidBuilt, cutters).map(tm));
   }
+  baseWarnings.push(...printedScrewWarnings(lidBuilt).map(tm));
   baseWarnings.push(...extrasWarnings(state, shapeBuilt, layout, lidBuilt).map(tm));
   if (currentLabel) {
     const place = labelPlacement(state.label, currentLabel, lidBuilt.face, dims);

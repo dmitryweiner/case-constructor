@@ -6,7 +6,8 @@
 // profile, half a pitch deep, with flat crests and roots — coarse enough for
 // a 0.4 mm nozzle. Below 6 mm (pitch 1.5) a printed thread wears out in a
 // few turns and the shank, printed standing, snaps at the head: P6 is the
-// smallest size.
+// smallest that holds reliably. P4 (4 × 1, a thread half a millimetre deep)
+// is offered at the user's risk, with a warning.
 //
 // A single-start helical thread has the same horizontal cross-section at
 // every height, turned by 360° per pitch: the thread is that section
@@ -14,15 +15,19 @@
 
 import type { Vec2 } from './section';
 
-export const THREAD_SIZES = ['P6', 'P8', 'P10'] as const;
+export const THREAD_SIZES = ['P4', 'P6', 'P8', 'P10'] as const;
 export type ThreadSize = (typeof THREAD_SIZES)[number];
 
 /** Major diameter and pitch, mm. */
 export const THREADS: Readonly<Record<ThreadSize, { d: number; pitch: number }>> = {
+  P4: { d: 4, pitch: 1 },
   P6: { d: 6, pitch: 1.5 },
   P8: { d: 8, pitch: 2 },
   P10: { d: 10, pitch: 2.5 },
 };
+
+/** Sizes below this may strip or snap: the panel warns. */
+export const THREAD_RELIABLE_D = 6;
 
 export function isThreadSize(value: unknown): value is ThreadSize {
   return typeof value === 'string' && THREAD_SIZES.some((size) => size === value);

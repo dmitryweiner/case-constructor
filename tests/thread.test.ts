@@ -9,7 +9,7 @@ import { buildCase } from '../src/geo/build';
 import { caseLayout, effectiveLid } from '../src/geo/layout';
 import { faceFrame } from '../src/geo/face';
 import { openingPolygon } from '../src/geo/opening';
-import { postSpots } from '../src/geo/fastening';
+import { postSpots, printedScrewWarnings } from '../src/geo/fastening';
 import { plateOf, shapeSpec } from '../src/geo/shape';
 import { screwsInCase } from '../src/geo/print';
 import { threadSolid } from '../src/geo/screwSolids';
@@ -71,6 +71,16 @@ describe('thread section', () => {
 });
 
 describe('printed screws', () => {
+  it('a 4 mm thread is offered, with a warning that it may not hold; 6 mm and up are not warned about', () => {
+    expect(THREAD_SIZES).toContain('P4');
+    expect(THREADS.P4).toEqual({ d: 4, pitch: 1 });
+    const warned = (size: string) => printedScrewWarnings(effectiveLid(printedState('top', size).shape, printedState('top', size).lid, { w: 90, d: 70, h: 40 }));
+    expect(warned('P4').map((m) => m.code)).toEqual(['warn.threadSmall']);
+    for (const size of ['P6', 'P8', 'P10']) expect(warned(size)).toEqual([]);
+    const snaps = sanitizeState({ ...defaultState(), lid: { ...defaultState().lid, thread: { size: 'P4', fit: 0.2 } } });
+    expect(printedScrewWarnings(snaps.lid)).toEqual([]);
+  });
+
   it.each(THREAD_SIZES)('%s: the screw is closed, sliver-free, head below z = 0, the shank as long as planned', (size) => {
     const state = printedState('top', size);
     const built = buildCase(csg, state, 8);
@@ -82,10 +92,12 @@ describe('printed screws', () => {
     const shape = screwShape(size, plateOf(state.shape, 'top'), state.lid.fit);
     expect(report.bbox.min[2]).toBeCloseTo(-shape.headH, 3);
     expect(report.bbox.max[2]).toBeCloseTo(shape.shank, 3);
-    expect(report.extents[0]).toBeCloseTo(shape.headD, 1);
+    // the head's width: the knurls' grooves (0.6 mm) may fall on the axis
+    expect(report.extents[0]).toBeLessThanOrEqual(shape.headD + 1e-6);
+    expect(report.extents[0]).toBeGreaterThan(shape.headD - 1.2);
   });
 
-  it.each([['top', 'P6'], ['right', 'P8'], ['bottom', 'P10']] as const)(
+  it.each([['top', 'P6'], ['right', 'P8'], ['bottom', 'P10'], ['top', 'P4']] as const)(
     'lid %s, %s: turned to the right angle, the screw goes through the lid and into the post without touching either',
     (face, size) => {
       const state = printedState(face, size);

@@ -316,6 +316,9 @@ geometry, `tests/presetsBuild.test.ts` if a preset uses it.
   16 points per turn (not 24): with four threaded holes it stays at ~230 ms,
   under the 300 ms limit. The screw is drawn in place (exploded: over the
   lifted lid) and in a row next to the lid in the print layout.
+- **I7, later.** At the user's request a 4 × 1 printed screw (P4) was
+  added, at their own risk: the panel warns that it may strip or snap
+  (`warn.threadSmall`, any thread under 6 mm). P6 stays the default.
 - **I8.** A magnet post's corner fill stops 0.3 mm under its top: reaching
   it, the top face met the outer rounded corner's edge on the diagonal and
   left zero-area triangles (found by the fastening variants test).
