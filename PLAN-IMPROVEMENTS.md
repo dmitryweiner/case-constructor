@@ -1,6 +1,6 @@
 # Case Constructor — improvements after the review
 
-Status: agreed with the user on 2026-10-22. Done: I1…I5.
+Status: agreed with the user on 2026-10-22. Done: I1…I6.
 
 Same rules as PLAN.md: TDD, golden tests for new geometry (a new state per
 feature, old ones untouched), `npm run check` and `npm run smoke` before
@@ -288,3 +288,12 @@ geometry, `tests/presetsBuild.test.ts` if a preset uses it.
   plan said it would): a rotation decides which wall a connector faces,
   and that is the user's choice. The arrange gap is a tool setting, not part
   of the project file.
+- **I6.** Outward pads under the floor make the body print standing on
+  them, with the floor between them on supports when the lid is on top —
+  missed when the plan was agreed. Asked again: the user keeps outward pads
+  and feet; the panel warns (`warn.keyholePadsOnBed`). A side lid prints the
+  bottom standing, where the pads are a small overhang. Closed keyholes on
+  a cylinder's round wall (bottom lid) fall back to through
+  (`warn.keyholeClosedRound`). The standoff warning now measures the
+  distance to the cutter's section, not to its centre: a closed pocket is
+  long, and a standoff hole that reaches it opens the case.

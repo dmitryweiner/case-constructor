@@ -9,7 +9,7 @@ import { renderControls } from './controls';
 import { make } from './dom';
 import { FACES } from '../geo/face';
 import type { FanState, LabelState, VentState, WallMountState } from '../geo/extras';
-import { FAN_SIZES, LABEL_FONTS, LABEL_MAX_CHARS, MOUNT_KINDS, VENT_PATTERNS } from '../geo/extras';
+import { FAN_SIZES, KEYHOLE_STYLES, LABEL_FONTS, LABEL_MAX_CHARS, MOUNT_KINDS, VENT_PATTERNS } from '../geo/extras';
 import { LABEL_FONT_FILES } from './fonts';
 import type { AppState } from '../state/schema';
 
@@ -88,6 +88,13 @@ function mountControls(): Control<AppState>[] {
       options: MOUNT_KINDS.map((value) => ({ value, label: `mount.${value}` as const })),
       get: (state) => state.wallMount.kind,
       set: (state, value) => mount(state, { kind: MOUNT_KINDS.find((k) => k === value) ?? state.wallMount.kind }),
+    },
+    {
+      kind: 'segmented', key: 'keyhole', label: 'mount.keyhole', hint: 'mount.keyhole.hint',
+      options: KEYHOLE_STYLES.map((value) => ({ value, label: `keyhole.${value}` as const })),
+      when: (state) => state.wallMount.kind === 'keyholes',
+      get: (state) => state.wallMount.keyhole,
+      set: (state, value) => mount(state, { keyhole: KEYHOLE_STYLES.find((k) => k === value) ?? state.wallMount.keyhole }),
     },
     {
       kind: 'range', key: 'spacing', label: 'mount.spacing', min: 10, max: 300, step: 1,

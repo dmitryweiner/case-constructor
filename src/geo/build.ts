@@ -21,8 +21,8 @@ import { openingPolygon } from './opening';
 import { loftSlice } from './section';
 import { extraCutters } from './cutters';
 import { outerTopAt, portCutters } from './ports';
-import { earSpecs, extrasCutters } from './extras';
-import { earSolids, labelSolid } from './extrasSolids';
+import { closedKeyholes, earSpecs, extrasCutters } from './extras';
+import { earSolids, keyholePadSolids, labelSolid } from './extrasSolids';
 import type { LabelRaster } from './label';
 import { labelPlacement } from './label';
 import { applyAffine } from './surface';
@@ -137,6 +137,20 @@ export function buildCase(
       const material = scope.keep(ears.material.subtract(floorOnLid ? body : lidSolid));
       if (floorOnLid) lidSolid = scope.keep(scope.keep(lidSolid.add(material)).subtract(ears.holes));
       else body = scope.keep(scope.keep(body.add(material)).subtract(ears.holes));
+    }
+    // closed keyholes: pads and feet on the part that owns their face, then
+    // the pockets — after the pads, or the pads would fill them back
+    const closed = closedKeyholes(state.wallMount, shape, dims, lid);
+    if (closed) {
+      const pads = keyholePadSolids(csg, scope, closed, faceFrame(closed.face, dims), segments);
+      const keyFrame = faceFrame(closed.face, dims);
+      const inPlate = applyAffine(keyFrame.fromFace, [keyFrame.extent.w / 2, keyFrame.extent.h / 2, -plateOf(shape, closed.face) / 2]);
+      const padsOnLid = applyAffine(frame.toFace, inPlate)[2] > zp;
+      const material = scope.keep(pads.material.subtract(padsOnLid ? body : lidSolid));
+      let owner = scope.keep((padsOnLid ? lidSolid : body).add(material));
+      if (pads.holes) owner = scope.keep(owner.subtract(pads.holes));
+      if (padsOnLid) lidSolid = owner;
+      else body = owner;
     }
     if (state.label.on && label) {
       const place = labelPlacement(state.label, label, lid.face, dims);

@@ -338,4 +338,11 @@ export const en = {
   'align.back': "Back",
   'align.nextY': "Behind",
   'align.height': "The same",
+  'mount.keyhole': "Keyholes",
+  'mount.keyhole.hint': "through — into the case; closed — a blind pocket in a pad standing out of the floor, the case stays closed (two feet of the same height keep it level)",
+  'keyhole.through': "through",
+  'keyhole.closed': "closed",
+  'warn.keyholeOffFlat': "A keyhole pad or foot runs onto the rounded edge — change the spacing or the case size.",
+  'warn.keyholeClosedRound': "A round wall has no flat place for closed keyholes: they go through.",
+  'warn.keyholePadsOnBed': "The keyhole pads and feet stand out of the bottom, which prints on the bed: the floor between them needs supports.",
 };

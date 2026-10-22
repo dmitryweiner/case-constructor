@@ -102,6 +102,11 @@ const STATES: Record<string, AppState> = {
     vents: { on: true, faces: ['right', 'top'], pattern: 'slots', along: 'x' },
     wallMount: { kind: 'keyholes', spacing: 50 },
   }),
+  // I6: closed keyholes, pads and feet (PLAN-IMPROVEMENTS.md)
+  'closed-keyholes-feet': sanitizeState({
+    ...defaultState(),
+    wallMount: { kind: 'keyholes', keyhole: 'closed', spacing: 58, screwD: 4 },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

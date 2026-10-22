@@ -32,6 +32,22 @@ any face, shifted from the face's centre by X / Y. Screw holes default to
   (2 × screw + 1 mm) and a 6 mm slot for the shank (screw + 0.6 mm). Hang the
   case on two screws and slide it down. Keep them away from standoffs (the
   panel warns).
+
+  *Keyholes: through / closed.* A through keyhole opens into the case. A
+  closed one is a blind pocket the screw head slides in, in a pad standing
+  out of the floor (the floor alone is too thin for it), so the case stays
+  closed: the head hole and the slot from outside, the head's channel
+  behind the slot, 1 mm of the floor left towards the cavity. On the bottom
+  the pads go to its far end and two feet of the same height to the near
+  end, so the case stands level on four; on a short case each pad and its
+  foot merge into one strip. With the lid on top the body prints on its
+  bottom — on the pads — and the floor between them needs supports (the
+  panel says so); with a side lid the bottom prints standing and the pads
+  are a small overhang. When the floor is the lid the pads stand out of the
+  back wall, without feet. A cylinder's round wall has no flat place for a
+  pad: there the keyholes go through. Vents are left out under pads and
+  feet. A standoff right above a pocket would open it (its hole goes into
+  the floor) — the panel warns.
 - **ears** — two tabs on the left and right at floor level, 10 × 8 mm, as
   thick as the floor, with a hole for the screw (+ 0.4 mm).
 

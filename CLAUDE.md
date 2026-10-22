@@ -165,7 +165,10 @@ freely; a temporary script that turns out useful becomes a permanent one.
   and keyholes are ExtraCuts on faces and go through `extraCutters` (curved
   walls and the console's slope come for free); vents are thinned out of the
   skirt band, away from floor supports and port openings. Ears and the label
-  are additive. The label is rasterised in the main thread
+  are additive. Closed keyholes (`closedKeyholes`) are additive pads and
+  feet whose pockets are cut by the worker after the pads are added (in the
+  common cutter pass the pads would fill them back); vents are thinned out
+  under them. The label is rasterised in the main thread
   (`ui/labelRaster.ts`, fonts in `public/fonts`, loaded lazily) and sent with
   each job (`CsgJob.label`); the worker unions the raster's row runs into a
   CrossSection and extrudes it on the lid face.
@@ -248,7 +251,7 @@ Extras: toggled cards `#on_vents`, `#on_fan`, `#on_label`; vents
 `#vents_face_<face>` (checkboxes), `#vents_pattern_slots|hex|round`,
 `#vents_along_x|y`, `#vents_size|_pitch|_margin`; fan `#fan_face` (select),
 `#fan_size_25…60`, `#fan_x|_y|_screwD`; wall mount
-`#mount_kind_none|keyholes|ears`, `#mount_spacing`, `#mount_screwD`; label
+`#mount_kind_none|keyholes|ears`, `#mount_keyhole_through|closed`, `#mount_spacing`, `#mount_screwD`; label
 `#label_text`, `#label_font`, `#label_size`, `#label_raised`, `#label_depth`,
 `#label_x|_y|_angle`.
 Openings: `#cutAdd`; per cut `#cut<i>_face` (select), `#cut<i>_shape_rect|round`,

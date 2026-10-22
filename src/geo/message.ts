@@ -30,6 +30,9 @@ export type MessageCode =
   // extras
   | 'warn.fanTooBig'
   | 'warn.keyholeNearStandoff'
+  | 'warn.keyholeOffFlat'
+  | 'warn.keyholeClosedRound'
+  | 'warn.keyholePadsOnBed'
   | 'warn.labelTooBig'
   // worker job stages
   | 'progress.loading'

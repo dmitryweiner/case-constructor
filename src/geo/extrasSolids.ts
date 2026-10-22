@@ -1,10 +1,13 @@
-// The additive extras, built by the worker: ear tabs for wall mounting and
-// the label's relief on the lid. Worker only.
+// The additive extras, built by the worker: ear tabs for wall mounting, the
+// pads and feet of closed keyholes, and the label's relief on the lid.
+// Worker only.
 
 import type { CrossSection, Manifold } from 'manifold-3d';
 import type { CsgApi, CsgScope } from './csg';
 import { extrude, transformSolid, unionAll } from './csg';
-import type { EarSpec, LabelState } from './extras';
+import { cuttersSolid } from './cut';
+import type { ClosedKeyholes, EarSpec, LabelState } from './extras';
+import { PAD_R } from './extras';
 import type { FaceFrame } from './face';
 import type { LabelRaster } from './label';
 import { rasterRuns } from './label';
@@ -24,6 +27,28 @@ export function earSolids(csg: CsgApi, scope: CsgScope, ears: readonly EarSpec[]
     holes.push(scope.keep(hole.translate([ear.hx, ear.hy, -1])));
   }
   return { material: unionAll(csg, scope, material), holes: unionAll(csg, scope, holes) };
+}
+
+/** How far a pad reaches into its plate, so the union never meets on a coplanar face, mm. */
+const PAD_SINK = 0.5;
+
+/**
+ * Pads and feet of closed keyholes, case frame: rounded rectangles on the
+ * face, from just inside the plate to `height` out of it; and the pockets,
+ * to be cut once the pads are on.
+ */
+export function keyholePadSolids(
+  csg: CsgApi, scope: CsgScope, closed: ClosedKeyholes, frame: FaceFrame, segments: number,
+): { material: Manifold; holes: Manifold | null } {
+  const n = Math.max(16, segments * 4);
+  const material = closed.pads.map((pad) => {
+    const r = Math.min(PAD_R, (pad.u1 - pad.u0) / 2 - 0.01, (pad.v1 - pad.v0) / 2 - 0.01);
+    const core = scope.keep(csg.CrossSection.square([pad.u1 - pad.u0 - 2 * r, pad.v1 - pad.v0 - 2 * r], true));
+    const rounded = scope.keep(scope.keep(scope.keep(core.offset(r, 'Round', 2, n)).simplify(1e-3))
+      .translate([(pad.u0 + pad.u1) / 2, (pad.v0 + pad.v1) / 2]));
+    return transformSolid(scope, extrude(csg, scope, rounded, -PAD_SINK, closed.height), frame.fromFace);
+  });
+  return { material: unionAll(csg, scope, material), holes: cuttersSolid(csg, scope, closed.cutters, segments) };
 }
 
 /**
