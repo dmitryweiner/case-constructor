@@ -10,7 +10,8 @@ Russian.
 
 ## Commits
 
-Commit **and push** after every milestone of `PLAN.md` without asking (CI
+Commit **and push** after every milestone of `PLAN.md` (and of
+`PLAN-IMPROVEMENTS.md`) without asking (CI
 builds every push and deploys `main` to GitHub Pages). Before each commit:
 `npm run check` and `npm run smoke`. TDD: red → green → refactor; golden
 tests pin geometry.

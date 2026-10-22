@@ -60,8 +60,8 @@ The i18n test forbids Cyrillic/Hebrew outside `src/i18n/`; English names in
 `presets.ts` are fine. A test checks every preset has a non-empty, unique
 name.
 
-**Q2.** The note stays translated — agreed? (Recommended: yes, it is a
-description, not a name.)
+**Q2 (decided: yes).** The note stays translated: it is a description, not
+a name.
 
 ## I3. Mobile: the picture keeps its proportions under the settings sheet
 
@@ -92,10 +92,9 @@ the vertical position changes. `snap.mjs` gets a `--panel open|hidden`
 flag for screenshots of both states (the backdrop cannot be clicked by
 selector: its centre is under the sheet).
 
-**Q3.** Re-centre the case when the sheet hides (it moves down to the
-middle of the canvas), or leave it where it was (no movement at all, the
-case stays in the upper part)? Recommended: re-centre, with the same
-0.25 s ease as the sheet so it does not jump.
+**Q3 (decided: re-centre).** When the sheet hides, the case moves down to
+the middle of the canvas with the same 0.25 s ease as the sheet, so it
+does not jump.
 
 ## I4. Board ghosts show their mounting holes
 
@@ -192,6 +191,7 @@ flat crest. Sizes offered:
 
 | Name | Major Ø | Pitch | Post Ø | Use |
 |---|---|---|---|---|
+| P4 | 4 mm | 1 mm | ≈ 8.4 mm | added later at the user's risk; the panel warns |
 | P6 | 6 mm | 1.5 mm | ≈ 10.5 mm | smallest reliable; the default |
 | P8 | 8 mm | 2 mm | ≈ 12.5 mm | big cases, PETG |
 | P10 | 10 mm | 2.5 mm | ≈ 14.5 mm | thumb screws on large lids |
@@ -225,8 +225,8 @@ the golden table gets the new states, and the time is checked against the
 to the lid (same print job, same material); Both exports body + lid +
 screws; the Lid tab (I1) shows them in that layout.
 
-**Q7b.** Head: thumb head with a slot (default), plain cylinder head with a
-slot, or a choice of both?
+**Q7b (decided: the default).** The head is a knurled thumb head with a
+slot.
 
 ## I8. Lid on magnets
 
@@ -277,6 +277,7 @@ Small and independent first; each is one commit and push.
 | I6 | Closed keyholes | M |
 | I8 | Magnets | M |
 | I7 | Printed screws and threads | L |
+| I9 | Ears: count and placement (asked later) | S–M |
 
 Magnets before printed screws: they reuse the posts with simpler geometry,
 and the post/boss changes they bring are what I7 builds on.

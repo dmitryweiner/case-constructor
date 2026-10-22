@@ -27,8 +27,9 @@ printing.
   lid's STL, a matching thread in the posts); wall mounting (ears, through or
   closed keyholes); a label on the lid.
 - Exact preview: the same CSG pipeline as the export, in a web worker; the
-  boards drawn schematically inside, the case exploded, assembled or laid out
-  for printing, with a caption saying what is shown.
+  boards drawn schematically inside, with their mounting holes, the case
+  exploded, assembled or laid out for printing, with a caption saying what
+  is shown; on a phone the settings slide over the view.
 - Several boards arranged in a row, a column or compact, or aligned to each
   other.
 - STL export of the body, the lid (with its printed screws), or both in one

@@ -18,7 +18,8 @@
 
 **Size from boards** (on by default) — the smallest case that fits every
 board with its protruding ports and rails, plus the margins: 2 mm from the
-boards to the walls (more if the lid skirt needs it) and 3 mm from the
+boards to the walls (more if the lid skirt needs it, or the corner posts of
+a top or bottom lid on screws, magnets or printed screws) and 3 mm from the
 tallest part to the ceiling. With it off, the case takes your size but never
 shrinks below that minimum; the sliders show the size the case is actually
 built at. A cylinder is sized to hold the boards' diagonal; a console raises

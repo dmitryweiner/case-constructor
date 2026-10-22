@@ -73,8 +73,9 @@ thread wears out in a few turns and the shank, printed standing, snaps at
 the head. 4 × 1 is offered at your own risk — its thread is half a
 millimetre deep, at the limit of a 0.4 mm nozzle; the panel warns. Print it
 slowly, in a tough plastic (PETG), and do not overtighten. The screw
-goes 1.5 diameters into its post, so the posts are longer (and thicker:
-thread + 2 × 2 mm); the auto size makes room for them. The hole has a 45°
+goes 1.5 diameters into its post, so the posts are as long as that +
+1.5 mm, at least 8 mm (10.5 mm for 6 mm screws), and thread + 2 × 2 mm
+thick; the auto size makes room for them. The hole has a 45°
 countersink at its mouth and the screw a chamfered tip, so the thread finds
 its start. Raise *Thread fit* if the screw is tight on your printer.
 

@@ -38,13 +38,17 @@ freely; a temporary script that turns out useful becomes a permanent one.
 - `scripts/smoke.mjs` — browser smoke: every shape, slider extremes, every
   catalog board from the picker (with nut/insert holes and a rotation), port
   toggles, user openings, the custom board editor and its catalog JSON,
-  board search and overlap warnings, every lid face, cylinder/console lid
-  restrictions, snaps and screws with every hole and head kind, vents, fan,
-  keyholes, ears, a label in a real font, export of each mode with a real
-  download (times printed), undo/redo, user preset through a reload, project
-  file round trip and a foreign JSON refused, the view modes per parts tab
-  and the caption, all four languages (switch, memory, a fresh `he-IL`
-  browser keeps the panel on the left), the mobile sheet. Browser in
+  board search and overlap warnings, arranging and aligning two boards (and
+  undo), every lid face, cylinder/console lid restrictions, snaps and screws
+  with every hole and head kind, magnets, printed screws (P4 with its
+  warning, the Lid tab with the screws, a lid export), vents, fan, through
+  and closed keyholes, ears by count and walls, a label in a real font,
+  export of each mode with a real download (times printed), undo/redo, user
+  preset through a reload, project file round trip and a foreign JSON
+  refused, the view modes per parts tab and the caption (the Lid tab's lid
+  on its outer face), all four languages (switch, memory, the open preset
+  keeps its name, a fresh `he-IL` browser keeps the panel on the left), the
+  mobile sheet (the case on screen keeps its size and proportions). Browser in
   `en-US`. Flags: `--preview`, `--shots <dir>`.
 - `scripts/snap.mjs` — a spot screenshot in a given state; prints status,
   audit, warnings and blockers. Waits for the worker's build. Flags: `--out`
@@ -59,14 +63,18 @@ freely; a temporary script that turns out useful becomes a permanent one.
   looks closed under flat light): check the mesh with `--eval` or
   `inspect.mjs --levels` before believing an image.
 - `scripts/inspect.mjs` — builds a case in Node (through vitest, so the same
-  module resolution) and reports per part: triangles, degenerate triangles,
-  watertight, volume, bbox, stage timings; `--stl <dir>` writes the raw parts.
+  module resolution) and reports per part (body, lid, and the printed screw
+  when there is one): triangles, degenerate triangles, watertight, volume,
+  bbox, stage timings; `--stl <dir>` writes the raw parts. Manifold is lazy:
+  a boolean's cost shows where its mesh is read, usually at the end.
   Flags: `--preset`, `--file <json>`, `--state '<json>'`, `--set
   path.in.state=value` (repeatable; JSON values like `boards=[]` work),
   `--segments <n>`, `--overlap` (where the assembled lid and body share
   volume, piece by piece), `--levels` (horizontal face areas per z: a
   zero-thickness membrane shows as equal up and down areas at one level),
-  `--degenerate` (where the zero-area triangles are). In zsh quote JSON
+  `--degenerate` (where the zero-area triangles are, and the first few in
+  full: which vertices collapse along what). Strings need no quotes:
+  `--set lid.face=bottom`. In zsh quote JSON
   values: `--set 'boards=[]'`.
 - `scripts/board.mjs` — catalog tools: `--check` validates every board file
   (readable list of problems; `npm run boards:check` adds the vitest
@@ -196,9 +204,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   tab silently switched the view to the print layout, and the review found
   the view toggles "did nothing".
 - Print layout (`print.ts`): the body with its opening up, the lid on its
-  outer face; every exported STL is in print orientation. A console with a
-  bottom lid lies on its slope instead (opening up it would stand on an
-  edge).
+  outer face, printed screws on their heads in a row after the lid; every
+  exported STL is in print orientation. A console with a bottom lid lies on
+  its slope instead (opening up it would stand on an edge).
 - Visible text comes only from `src/i18n/` dictionaries; `en.ts` is the
   reference and gives `Key`. The core and the worker speak in message codes
   (`geo/message.ts`). A test fails on any Cyrillic or Hebrew in a string

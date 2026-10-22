@@ -715,6 +715,11 @@ commit; new features get their `docs/` page in the same commit.
 
 ## 12. Deviations from the plan (recorded as they happen)
 
+The improvements after the review (I1…I9: the lid's print view, preset
+names, the mobile view, mounting holes in the ghosts, arranging boards,
+closed keyholes, printed screws, magnets, ears) have their own plan and
+deviations: `PLAN-IMPROVEMENTS.md`.
+
 Status: M0…M8 done. Open: question 2 (rails facing a side lid / rails and
 pin headers) and question 3 (insert taper) wait for printed tests; boards
 marked ≈ wait for measurements; Hebrew and Ukrainian texts got an agent

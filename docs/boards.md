@@ -15,7 +15,10 @@ Each board has:
 | Hole | tap / insert / nut | see below |
 
 Up to 8 boards; boards that overlap, or a standoff that runs into another
-board, are reported under the export button.
+board, are reported under the export button. In the view a board is drawn
+see-through: the PCB green with its mounting holes through it and a pad
+around each (so a standoff visibly lines up with its hole), connectors and
+parts amber.
 
 ## Several boards
 
