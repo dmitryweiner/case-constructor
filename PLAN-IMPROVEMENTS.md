@@ -1,6 +1,6 @@
 # Case Constructor — improvements after the review
 
-Status: agreed with the user on 2026-10-22. Done: I1…I4.
+Status: agreed with the user on 2026-10-22. Done: I1…I5.
 
 Same rules as PLAN.md: TDD, golden tests for new geometry (a new state per
 feature, old ones untouched), `npm run check` and `npm run smoke` before
@@ -278,4 +278,13 @@ geometry, `tests/presetsBuild.test.ts` if a preset uses it.
 
 ## Deviations (recorded as they happen)
 
-—
+- **I5.** No *Stack* arrange mode: boards stacked one above another each
+  stand on their own standoffs from the floor, which run through the board
+  below (`warn.standoffHitsBoard`) — HATs sharing standoffs are out of v1
+  (docs/limitations.md). Alignment got *The same* standoff height instead.
+  *Compact* scores a split by the case it gives (outer area with margins
+  and walls, a cylinder's diameter), not the boards' bare area: the bare
+  area favoured one long row. Compact never tries other rotations (the
+  plan said it would): a rotation decides which wall a connector faces,
+  and that is the user's choice. The arrange gap is a tool setting, not part
+  of the project file.

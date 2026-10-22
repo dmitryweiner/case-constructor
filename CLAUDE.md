@@ -231,8 +231,12 @@ dictionary key `preset.<id>.note`.
 ## Control ids
 
 Boards: `#boardAdd` opens `#boardPicker` (`#boardSearch`, rows
-`#boardList [data-board="<id>"]`, `#boardPickerClose`); per board
-`#board<i>_x|_y|_z`, `#board<i>_rot_0|90|180|270`, `#board<i>_screw`,
+`#boardList [data-board="<id>"]`, `#boardPickerClose`); with two boards or more
+`#boardsArrange_row|column|compact` and `#boards_gap` (geo/arrange.ts);
+per board
+`#board<i>_x|_y|_z`, alignment (two boards or more) `#board<i>_align`
+(details), `#board<i>_alignRef`,
+`#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_screw`,
 `#board<i>_hole_tap|insert|nut`, `#board<i>_remove`, port toggles
 `#board<i>_cut_<portId>`.
 Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHeight|_bottomHeight`,

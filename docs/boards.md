@@ -17,6 +17,25 @@ Each board has:
 Up to 8 boards; boards that overlap, or a standoff that runs into another
 board, are reported under the export button.
 
+## Several boards
+
+With two boards or more the card offers:
+
+- **Arrange** — places all the boards anew, in their order: **In a row**
+  (left to right, front edges aligned), **In a column** (front to back, left
+  edges aligned), **Compact** (the order split into rows so that the case
+  comes out smallest: the outer area, or the diameter of a cylinder).
+  **Gap** is kept between the boards — ports that stick out and rails
+  included. Rotations never change: they decide which wall a connector
+  faces. Arranging does not look at where a port points: a port facing a
+  neighbour is yours to rotate.
+- **Align to another board** (in each board's box) — moves that board only:
+  its left, centre or right (X), front, centre or back (Y) lines up with the
+  chosen board; **Beside** and **Behind** put it right next to it, the gap
+  apart; **The same** standoff height.
+
+Each button is one undo step.
+
 ## Your own board
 
 **+ Custom board** adds a board you describe yourself; its card gets an

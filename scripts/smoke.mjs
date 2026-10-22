@@ -167,7 +167,30 @@ label('boards:overlap');
 await setRange('board1_x', 0);
 await page.waitForTimeout(100);
 if (!(await page.locator('#warnings').textContent()).includes('overlap')) errors.push('[boards:overlap] no warning');
+label('boards:arrange');
+const boardXY = () => page.evaluate(() => window.__case.state().boards.map((b) => [b.x, b.y]));
+for (const mode of ['row', 'column', 'compact']) {
+  await page.click(`#boardsArrange_${mode}`);
+  await expectWatertight(`boards:arrange:${mode}`);
+  if ((await page.locator('#warnings').textContent()).includes('overlap')) errors.push(`[boards:arrange] ${mode} leaves an overlap`);
+}
+await setRange('boards_gap', 10);
+await page.click('#boardsArrange_row');
+const [[x0], [x1]] = await boardXY();
+if (!(x1 > x0 + 10)) errors.push(`[boards:arrange] the gap is not kept: ${x0}, ${x1}`);
+await page.click('#board1_align summary');
+if ((await page.locator('#board1_alignRef').inputValue()) !== '0') errors.push('[boards:align] board 2 is not aligned to board 1 by default');
+await page.click('#board1_align_nextY');
+await page.click('#board1_align_left');
+await expectWatertight('boards:align');
+const [[ax0, ay0], [ax1, ay1]] = await boardXY();
+if (Math.abs(ax0 - ax1) > 1e-6 || !(ay1 > ay0)) errors.push(`[boards:align] behind and left: ${[ax0, ay0, ax1, ay1]}`);
+if ((await page.locator('#warnings').textContent()).includes('overlap')) errors.push('[boards:align] an overlap');
+await page.click('#undoBtn');
+const [, [ux1]] = await boardXY();
+if (Math.abs(ux1 - ax1) < 1e-6) errors.push('[boards:align] undo does not take the alignment back');
 await page.click('#board1_remove');
+if (await page.locator('#boardsArrange').isVisible()) errors.push('[boards:arrange] offered for a single board');
 await page.click('#board0_remove');
 await expectWatertight('boards:none');
 

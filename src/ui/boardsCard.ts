@@ -1,13 +1,18 @@
 // The Boards card: one box per placed board — position, height, rotation,
 // how it is held — and a remove button. The list is rebuilt when boards are
 // added or removed; otherwise only synced, so a slider keeps its focus.
+// With two boards or more: arrange buttons for all of them on top, and in
+// each box a way to line it up with another board (geo/arrange.ts).
 
 import { make } from './dom';
 import type { Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';
 import type { BoardPlacement } from '../boards/placement';
-import { POSITION_MAX, ROTATIONS, Z_MAX, boardOf, minBoardZ, portCut } from '../boards/placement';
+import { NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, Z_MAX, boardOf, minBoardZ, portCut } from '../boards/placement';
+import type { Align, ArrangeMode } from '../geo/arrange';
+import { ALIGN_X, ALIGN_Y, ARRANGE_MODES, alignBoard, arrangeBoards } from '../geo/arrange';
+import type { Key } from '../i18n';
 import { tDynamic } from '../i18n';
 import type { CustomEditorHandle } from './customBoard';
 import { customSignature, renderCustomEditor } from './customBoard';
@@ -79,6 +84,33 @@ function portControls(index: number, state: AppState): Control<AppState>[] {
   }));
 }
 
+/** A row of plain action buttons under a label, styled like a segmented control. */
+function actionRow(label: Key, hint: Key | null, buttons: { id: string; text: string; title?: string; run(): void }[]): HTMLElement {
+  const row = make('div', 'row');
+  const name = make('span', 'row-label', t(label));
+  if (hint) name.title = t(hint);
+  const group = make('div', 'segmented');
+  for (const spec of buttons) {
+    const button = make('button', 'seg-btn', spec.text);
+    button.type = 'button';
+    button.id = spec.id;
+    if (spec.title) button.title = spec.title;
+    button.addEventListener('click', spec.run);
+    group.append(button);
+  }
+  row.append(name, group);
+  return row;
+}
+
+const ARRANGE_LABELS: Record<ArrangeMode, Key> = {
+  row: 'boards.arrange.row', column: 'boards.arrange.column', compact: 'boards.arrange.compact',
+};
+
+const ALIGN_LABELS: Record<Align, Key> = {
+  left: 'align.left', centreX: 'align.centre', right: 'align.right', nextX: 'align.nextX',
+  front: 'align.front', centreY: 'align.centre', back: 'align.back', nextY: 'align.nextY', height: 'align.height',
+};
+
 export interface BoardsCardHandle {
   sync(state: AppState): void;
 }
@@ -94,9 +126,69 @@ export function renderBoardsCard(
 ): BoardsCardHandle {
   let handles: ControlsHandle<AppState>[] = [];
   let signature = '';
+  /** the gap the arrange and "beside" buttons keep between footprints, mm — a tool setting, not part of the case */
+  let gap = NEW_BOARD_GAP;
+
+  /** Arrange buttons for all the boards, and the gap they keep. */
+  function arrangeBox(): HTMLElement {
+    const box = make('div', 'board-arrange');
+    box.id = 'boardsArrange';
+    box.append(actionRow('boards.arrange', 'boards.arrange.hint', ARRANGE_MODES.map((mode) => ({
+      id: `boardsArrange_${mode}`,
+      text: t(ARRANGE_LABELS[mode]),
+      title: mode === 'compact' ? t('boards.arrange.compact.title') : undefined,
+      run: () => {
+        const current = read();
+        onChange({ ...current, boards: arrangeBoards(current, mode, gap) });
+      },
+    }))));
+    const gapRow = make('div');
+    box.append(gapRow);
+    renderControls<{ gap: number }>(gapRow, [{
+      kind: 'range', key: 'gap', label: 'boards.gap', hint: 'boards.gap.hint', min: 0, max: 30, step: 0.5,
+      get: (local) => local.gap,
+      set: (_local, value) => ({ gap: value }),
+    }], () => ({ gap }), (next) => {
+      gap = next.gap;
+    }, 'boards');
+    return box;
+  }
+
+  /** In a board's box: line it up with another board. */
+  function alignBox(index: number, state: AppState): HTMLElement {
+    const details = make('details', 'custom-details');
+    details.id = `board${index}_align`;
+    details.append(make('summary', undefined, t('board.align')));
+    const refRow = make('label', 'row');
+    refRow.append(make('span', 'row-label', t('board.align.ref')));
+    const select = make('select');
+    select.id = `board${index}_alignRef`;
+    state.boards.forEach((other, i) => {
+      if (i === index) return;
+      const option = make('option', undefined, `${i + 1}. ${boardOf(other).name}`);
+      option.value = String(i);
+      select.append(option);
+    });
+    // the board above it by default: the one it was most likely placed after
+    select.value = String(index > 0 ? index - 1 : 1);
+    refRow.append(select);
+    const run = (how: Align) => (): void => {
+      const current = read();
+      onChange({ ...current, boards: alignBoard(current, index, Number(select.value), how, gap) });
+    };
+    const buttons = (list: readonly Align[]) => list.map((how) => ({ id: `board${index}_align_${how}`, text: t(ALIGN_LABELS[how]), run: run(how) }));
+    details.append(
+      refRow,
+      actionRow('board.align.x', 'board.align.hint', buttons(ALIGN_X)),
+      actionRow('board.align.y', 'board.align.hint', buttons(ALIGN_Y)),
+      actionRow('board.z', null, buttons(['height'])),
+    );
+    return details;
+  }
 
   function build(state: AppState): void {
     container.replaceChildren();
+    if (state.boards.length >= 2) container.append(arrangeBox());
     handles = state.boards.map((placement, index) => {
       const def = boardOf(placement);
       const box = make('div', 'board-box');
@@ -122,6 +214,7 @@ export function renderBoardsCard(
       if (def.mount.kind === 'rails') box.append(make('p', 'board-note', t('board.rails')));
       const controls = make('div');
       box.append(controls);
+      if (state.boards.length >= 2) box.append(alignBox(index, state));
       let editor: CustomEditorHandle | null = null;
       if (placement.board === 'custom') {
         const details = make('details', 'custom-details');
