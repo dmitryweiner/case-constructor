@@ -387,12 +387,39 @@ await heApp.browser.close();
 // the mobile panel: a bottom sheet with a settings button
 label('mobile');
 await page.setViewportSize({ width: 390, height: 780 });
-await page.waitForTimeout(200);
+await page.waitForTimeout(400);
+// the drawn parts' bounding box on screen: the sheet may move it, never scale or stretch it
+const onScreen = () => page.evaluate(() => {
+  const lo = [Infinity, Infinity, Infinity];
+  const hi = [-Infinity, -Infinity, -Infinity];
+  for (const part of window.__case.drawnParts()) {
+    const p = part.mesh.positions;
+    const o = part.offset ?? [0, 0, 0];
+    for (let i = 0; i < p.length; i += 3) {
+      for (let k = 0; k < 3; k++) {
+        lo[k] = Math.min(lo[k], p[i + k] + o[k]);
+        hi[k] = Math.max(hi[k], p[i + k] + o[k]);
+      }
+    }
+  }
+  const corners = [];
+  for (const x of [lo[0], hi[0]]) for (const y of [lo[1], hi[1]]) for (const z of [lo[2], hi[2]]) corners.push([x, y, z]);
+  const screen = window.__case.project(corners);
+  const xs = screen.map((q) => q[0]);
+  const ys = screen.map((q) => q[1]);
+  return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys), cy: (Math.max(...ys) + Math.min(...ys)) / 2 };
+});
+const withSheet = await onScreen();
 await page.click('#panelBackdrop', { position: { x: 200, y: 60 } });
-await page.waitForTimeout(350);
+await page.waitForTimeout(400);
 if (!(await page.locator('#panelBtn').isVisible())) errors.push('[mobile] no settings button after closing the sheet');
+const withoutSheet = await onScreen();
+if (Math.abs(withSheet.w - withoutSheet.w) > 1 || Math.abs(withSheet.h - withoutSheet.h) > 1) {
+  errors.push(`[mobile] the sheet changes the picture's size or proportions: ${JSON.stringify({ withSheet, withoutSheet })}`);
+}
+if (!(withoutSheet.cy > withSheet.cy + 20)) errors.push('[mobile] the case is not centred above the sheet');
 await page.click('#panelBtn');
-await page.waitForTimeout(350);
+await page.waitForTimeout(400);
 if (!(await page.locator('#case_wall').isVisible())) errors.push('[mobile] the sheet did not open');
 if (shotsDir) await page.screenshot({ path: `${shotsDir}/mobile.png` });
 

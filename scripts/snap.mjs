@@ -19,12 +19,14 @@
 //   --view                only the 3D view, without the panel
 //   --clip x,y,w,h        a piece of the frame — to look at a joint closely
 //   --orbit dx,dy         orbit the camera with the mouse
+//   --panel open|hidden   narrow screens: show or hide the settings sheet (after the actions)
 //   --wait <ms>           extra pause before the shot
 //   --width / --height    window size
 //   --preview             production build instead of the dev server
 //   --url <path>          shoot any server path (the icon, an asset)
 //   --eval <js>           evaluate an expression in the page after the shot and print it
-//                         (dev builds expose window.__case: state(), parts(), ghosts())
+//                         (dev builds expose window.__case: state(), parts(), ghosts(),
+//                         drawn(), drawnParts(), project([[x, y, z], …]))
 
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -32,7 +34,7 @@ import { parseArgs, openApp } from './lib/harness.mjs';
 
 const flags = parseArgs(
   process.argv.slice(2),
-  ['out', 'preset', 'wait', 'width', 'height', 'url', 'clip', 'orbit', 'lang', 'eval'],
+  ['out', 'preset', 'wait', 'width', 'height', 'url', 'clip', 'orbit', 'lang', 'eval', 'panel'],
   ['set', 'check', 'uncheck', 'click', 'upload'],
 );
 
@@ -108,6 +110,17 @@ for (let i = 0; i < argv.length; i++) {
     await page.click(arg);
     await page.waitForTimeout(120);
   }
+}
+
+// The sheet's backdrop cannot be clicked by selector (its centre is under the
+// sheet), so the panel is toggled through its own controls.
+const panelMode = flags.get('panel');
+if (panelMode) {
+  label(`panel:${panelMode}`);
+  if (panelMode === 'hidden') await page.evaluate(() => document.getElementById('panelBackdrop')?.click());
+  else if (await page.locator('#panelBtn').isVisible()) await page.click('#panelBtn');
+  // the sheet and the picture move for 0.25 s
+  await page.waitForTimeout(400);
 }
 
 // Orbiting is a plain drag over the canvas, as a person does it.

@@ -50,7 +50,8 @@ freely; a temporary script that turns out useful becomes a permanent one.
   audit, warnings and blockers. Waits for the worker's build. Flags: `--out`
   (required), `--preset <id>`, `--lang en|ru|uk|he`, `--set <id>=<value>`,
   `--check <id>`, `--uncheck <id>`, `--click <selector>`, `--upload
-  <id>=<path>` (in command-line order), `--view`, `--clip x,y,w,h`, `--orbit
+  <id>=<path>` (in command-line order), `--panel open|hidden` (the mobile
+  sheet), `--view`, `--clip x,y,w,h`, `--orbit
   dx,dy`, `--url <path>`, `--wait <ms>`, `--width/--height`, `--preview`,
   `--eval '<js>'` (prints a page expression; dev builds expose
   `window.__case.state() / parts() / ghosts() / drawn() / drawnParts()` — the meshes and
@@ -260,7 +261,12 @@ caption over the canvas `#viewCaption` says what is shown and scrolls to the
 card. Dev builds: `window.__case.drawn()` lists the roles drawn last,
 `drawnParts()` the meshes with their offsets.
 Mobile: on a narrow screen the view centres the case above the settings
-sheet (`scene.setBottomInset`).
+sheet (`scene.setBottomInset`): the canvas stays full size under the sheet,
+and the inset only moves the picture, eased like the sheet — the virtual
+frame keeps the canvas's angle per pixel (its own aspect, a wider fov).
+With the canvas's aspect the picture was stretched and round holes came
+out as ellipses; the smoke measures the case on screen in both states
+(`window.__case.project`).
 Top bar: `#presetBtn` (list `#presetList [data-preset="b:<id>"|"u:<name>"]`),
 `#saveBtn`, `#fileOpenBtn`, `#fileSaveBtn`, `#fileInput`, `#undoBtn`,
 `#redoBtn`,

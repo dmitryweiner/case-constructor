@@ -25,6 +25,8 @@ export interface SceneHandle {
    * mobile settings sheet): the picture is centred in what is left.
    */
   setBottomInset(px: number): void;
+  /** Where model points (mm, z-up) land on the canvas, CSS pixels from its top-left — for the smoke. */
+  project(points: readonly [number, number, number][]): [number, number][];
   dispose(): void;
 }
 
@@ -35,6 +37,10 @@ const COLORS: Record<PartRole, number> = {
   board: 0x3fae6a,
   port: 0xd9b45a,
 };
+/** Vertical field of view of the whole canvas, degrees. */
+const FOV = 40;
+/** How long the picture takes to follow the settings sheet, ms (the sheet's own transition). */
+const INSET_EASE_MS = 250;
 /** Faces meeting at a sharper angle than this get a hard edge; rounded corners stay smooth. */
 const CREASE_ANGLE = (35 * Math.PI) / 180;
 
@@ -44,7 +50,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
   renderer.setClearColor(CLEAR_COLOR);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(40, 1, 1, 8000);
+  const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 8000);
   // three-quarter view from the front-right, a little from above
   camera.position.set(140, 110, 170);
 
@@ -87,7 +93,9 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
 
   const objects: THREE.Mesh[] = [];
   let disposed = false;
+  /** the inset applied now, and the one it eases towards */
   let bottomInset = 0;
+  let inset = { from: 0, to: 0, start: 0 };
   /** size of the model at the last camera fit — so a zoom set by the mouse survives edits */
   let fittedRadius = 0;
 
@@ -98,32 +106,60 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
     const dpr = Math.min(window.devicePixelRatio, 2);
     if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
       renderer.setSize(w, h, false);
-      camera.aspect = w / h;
       applyInset(w, h);
     }
   }
 
-  /** A taller virtual frame whose lower part we show: its centre lands above the inset. */
+  /**
+   * A taller virtual frame whose lower part we show: its centre lands above
+   * the inset. The frame keeps the canvas's angle per pixel — its aspect is
+   * its own (w × (h + inset)) and its field of view grows with its height —
+   * so the sheet only moves the picture: the scale and the proportions stay.
+   * (With the canvas's aspect the picture was stretched by (h + inset) / h,
+   * and round holes came out as ellipses.)
+   */
   function applyInset(w: number, h: number): void {
-    const inset = Math.min(bottomInset, h * 0.8);
-    if (inset > 0) camera.setViewOffset(w, h + inset, 0, inset, w, h);
-    else camera.clearViewOffset();
+    const px = Math.min(bottomInset, h * 0.8);
+    if (px > 0) {
+      const full = h + px;
+      camera.aspect = w / full;
+      camera.fov = (2 * Math.atan(Math.tan((FOV * Math.PI) / 360) * (full / h)) * 180) / Math.PI;
+      camera.setViewOffset(w, full, 0, px, w, h);
+    } else {
+      camera.aspect = w / h;
+      camera.fov = FOV;
+      camera.clearViewOffset();
+    }
     camera.updateProjectionMatrix();
   }
 
-  function frame(): void {
+  /** Eases the applied inset towards its target, in step with the sheet. */
+  function stepInset(now: number): void {
+    if (bottomInset === inset.to) return;
+    const k = Math.min(1, (now - inset.start) / INSET_EASE_MS);
+    const eased = 1 - (1 - k) ** 3;
+    bottomInset = k >= 1 ? inset.to : inset.from + (inset.to - inset.from) * eased;
+    applyInset(canvas.clientWidth, canvas.clientHeight);
+  }
+
+  function frame(now: number): void {
     if (disposed) return;
     resize();
+    stepInset(now);
     controls.update();
     renderer.render(scene, camera);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 
+  /** Camera distance at which a sphere fits the part of the canvas the sheet leaves open. */
   function fitDistance(radius: number): number {
-    const vFov = (camera.fov * Math.PI) / 180;
-    const aspect = camera.aspect > 0 ? camera.aspect : 1;
-    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    const open = h > 0 ? Math.max(0.2, 1 - Math.min(inset.to, h * 0.8) / h) : 1;
+    const tanHalf = Math.tan((FOV * Math.PI) / 360);
+    const vFov = 2 * Math.atan(tanHalf * open);
+    const hFov = 2 * Math.atan(tanHalf * (h > 0 ? w / h : 1));
     return (radius / Math.sin(Math.min(vFov, hFov) / 2)) * 1.1;
   }
 
@@ -187,8 +223,20 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
     },
 
     setBottomInset(px: number): void {
-      bottomInset = Math.max(0, px);
-      applyInset(canvas.clientWidth, canvas.clientHeight);
+      const to = Math.max(0, px);
+      if (to === inset.to) return;
+      inset = { from: bottomInset, to, start: performance.now() };
+    },
+
+    project(points: readonly [number, number, number][]): [number, number][] {
+      group.updateMatrixWorld(true);
+      camera.updateMatrixWorld(true);
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      return points.map(([x, y, z]) => {
+        const v = new THREE.Vector3(x, y, z).applyMatrix4(group.matrixWorld).project(camera);
+        return [((v.x + 1) / 2) * w, ((1 - v.y) / 2) * h];
+      });
     },
 
     dispose(): void {

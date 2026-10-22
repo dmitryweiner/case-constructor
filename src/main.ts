@@ -722,6 +722,8 @@ function setPanelOpen(open: boolean): void {
 }
 
 narrow.addEventListener('change', () => setPanelOpen(panel.classList.contains('open')));
+// the sheet's height follows the window (max-height in vh)
+window.addEventListener('resize', () => setPanelOpen(panel.classList.contains('open')));
 
 panelBtn.addEventListener('click', () => setPanelOpen(true));
 panelBackdrop.addEventListener('click', () => setPanelOpen(false));
@@ -761,6 +763,7 @@ if (import.meta.env.DEV) {
     ghosts: () => ghosts,
     drawn: () => drawnRoles,
     drawnParts: () => drawnParts,
+    project: (points: [number, number, number][]) => scene.project(points),
   });
 }
 
