@@ -267,7 +267,9 @@ Extras: toggled cards `#on_vents`, `#on_fan`, `#on_label`; vents
 `#vents_face_<face>` (checkboxes), `#vents_pattern_slots|hex|round`,
 `#vents_along_x|y`, `#vents_size|_pitch|_margin`; fan `#fan_face` (select),
 `#fan_size_25…60`, `#fan_x|_y|_screwD`; wall mount
-`#mount_kind_none|keyholes|ears`, `#mount_keyhole_through|closed`, `#mount_spacing`, `#mount_screwD`; label
+`#mount_kind_none|keyholes|ears`, `#mount_keyhole_through|closed`, ears
+`#mount_earCount_1…4`, `#mount_earWalls_leftRight|frontBack|one`,
+`#mount_earWall` (select), `#mount_earAlong_centre|ends`, `#mount_spacing`, `#mount_screwD`; label
 `#label_text`, `#label_font`, `#label_size`, `#label_raised`, `#label_depth`,
 `#label_x|_y|_angle`.
 Openings: `#cutAdd`; per cut `#cut<i>_face` (select), `#cut<i>_shape_rect|round`,

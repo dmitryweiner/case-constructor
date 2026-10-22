@@ -137,7 +137,7 @@ export function buildCase(
 
     // Additive extras: ears on the part that owns the floor, the label on the lid.
     onStage(BUILD_STAGES[6]);
-    const ears = earSolids(csg, scope, earSpecs(state.wallMount, dims), shape.floor, segments);
+    const ears = earSolids(csg, scope, earSpecs(state.wallMount, shape, dims), shape.floor, segments);
     if (ears) {
       const floorOnLid = applyAffine(frame.toFace, [dims.w / 2, dims.d / 2, shape.floor / 2])[2] > zp;
       const material = scope.keep(ears.material.subtract(floorOnLid ? body : lidSolid));

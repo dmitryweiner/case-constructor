@@ -9,7 +9,9 @@ import { renderControls } from './controls';
 import { make } from './dom';
 import { FACES } from '../geo/face';
 import type { FanState, LabelState, VentState, WallMountState } from '../geo/extras';
-import { FAN_SIZES, KEYHOLE_STYLES, LABEL_FONTS, LABEL_MAX_CHARS, MOUNT_KINDS, VENT_PATTERNS } from '../geo/extras';
+import {
+  EAR_ALONG, EAR_COUNT_MAX, EAR_SIDES, EAR_WALLS, FAN_SIZES, KEYHOLE_STYLES, LABEL_FONTS, LABEL_MAX_CHARS, MOUNT_KINDS, VENT_PATTERNS,
+} from '../geo/extras';
 import { LABEL_FONT_FILES } from './fonts';
 import type { AppState } from '../state/schema';
 
@@ -81,6 +83,14 @@ function fanControls(): Control<AppState>[] {
   ];
 }
 
+const ears = (state: AppState, patch: Partial<WallMountState['ears']>): AppState => mount(state, { ears: { ...state.wallMount.ears, ...patch } });
+
+/** Whether some wall gets two ears or more: only then does "along the wall" mean anything (a box; a cylinder spaces them evenly). */
+function earsShareWall(state: AppState): boolean {
+  const { count, walls } = state.wallMount.ears;
+  return state.wallMount.kind === 'ears' && state.shape.kind !== 'cylinder' && count >= (walls === 'one' ? 2 : 3);
+}
+
 function mountControls(): Control<AppState>[] {
   return [
     {
@@ -97,8 +107,36 @@ function mountControls(): Control<AppState>[] {
       set: (state, value) => mount(state, { keyhole: KEYHOLE_STYLES.find((k) => k === value) ?? state.wallMount.keyhole }),
     },
     {
+      kind: 'segmented', key: 'earCount', label: 'mount.earCount',
+      options: Array.from({ length: EAR_COUNT_MAX }, (_, i) => ({ value: String(i + 1), text: String(i + 1) })),
+      when: (state) => state.wallMount.kind === 'ears',
+      get: (state) => String(state.wallMount.ears.count),
+      set: (state, value) => ears(state, { count: Number(value) }),
+    },
+    {
+      kind: 'segmented', key: 'earWalls', label: 'mount.earWalls', hint: 'mount.earWalls.hint',
+      options: EAR_WALLS.map((value) => ({ value, label: `earWalls.${value}` as const })),
+      when: (state) => state.wallMount.kind === 'ears',
+      get: (state) => state.wallMount.ears.walls,
+      set: (state, value) => ears(state, { walls: EAR_WALLS.find((w) => w === value) ?? state.wallMount.ears.walls }),
+    },
+    {
+      kind: 'select', key: 'earWall', label: 'mount.earWall',
+      options: EAR_SIDES.map((value) => ({ value, label: `face.${value}` as const })),
+      when: (state) => state.wallMount.kind === 'ears' && state.wallMount.ears.walls === 'one',
+      get: (state) => state.wallMount.ears.wall,
+      set: (state, value) => ears(state, { wall: EAR_SIDES.find((w) => w === value) ?? state.wallMount.ears.wall }),
+    },
+    {
+      kind: 'segmented', key: 'earAlong', label: 'mount.earAlong', hint: 'mount.earAlong.hint',
+      options: EAR_ALONG.map((value) => ({ value, label: `earAlong.${value}` as const })),
+      when: earsShareWall,
+      get: (state) => state.wallMount.ears.along,
+      set: (state, value) => ears(state, { along: EAR_ALONG.find((a) => a === value) ?? state.wallMount.ears.along }),
+    },
+    {
       kind: 'range', key: 'spacing', label: 'mount.spacing', min: 10, max: 300, step: 1,
-      when: (state) => state.wallMount.kind === 'keyholes',
+      when: (state) => state.wallMount.kind === 'keyholes' || (earsShareWall(state) && state.wallMount.ears.along === 'centre'),
       get: (state) => state.wallMount.spacing, set: (state, value) => mount(state, { spacing: value }),
     },
     {

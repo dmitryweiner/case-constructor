@@ -19,7 +19,7 @@ export function earSolids(csg: CsgApi, scope: CsgScope, ears: readonly EarSpec[]
   const material: Manifold[] = [];
   const holes: Manifold[] = [];
   for (const ear of ears) {
-    const rect = scope.keep(new csg.CrossSection([[[ear.x0, ear.y0], [ear.x1, ear.y0], [ear.x1, ear.y1], [ear.x0, ear.y1]]], 'Positive'));
+    const rect = scope.keep(new csg.CrossSection([ear.outline], 'Positive'));
     // rounded corners: shrink, then grow back
     const rounded = scope.keep(scope.keep(scope.keep(rect.offset(-3, 'Round', 2, n)).offset(3, 'Round', 2, n)).simplify(1e-3));
     material.push(extrude(csg, scope, rounded, 0, floor));

@@ -319,6 +319,46 @@
       ]
     }
   },
+  "ears-four-ends": {
+    "body": {
+      "triangles": 3320,
+      "volume": 26671.29,
+      "extents": [
+        97.9,
+        82.5,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 1916,
+      "volume": 12868.16,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "ears-three-cylinder": {
+    "body": {
+      "triangles": 3082,
+      "volume": 36272.7,
+      "extents": [
+        116.464,
+        123.258,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 1786,
+      "volume": 20782.44,
+      "extents": [
+        115.258,
+        115.258,
+        5
+      ]
+    }
+  },
   "printed-screws-top": {
     "body": {
       "triangles": 16156,

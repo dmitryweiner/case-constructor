@@ -1,6 +1,6 @@
 # Case Constructor — improvements after the review
 
-Status: agreed with the user on 2026-10-22. Done: I1…I8 (all).
+Status: agreed with the user on 2026-10-22. Done: I1…I9 (all).
 
 Same rules as PLAN.md: TDD, golden tests for new geometry (a new state per
 feature, old ones untouched), `npm run check` and `npm run smoke` before
@@ -250,6 +250,16 @@ Polarity: a note in the panel to put the magnets in attracting each other
 the magnets only hold it. Posts and lid bosses reuse the screw posts'
 placement, collision and opening checks (`postSpots`,
 `postCollisions`, `postsInOpenings`).
+
+## I9. Ears: how many and where (added on 2026-10-22)
+
+**Asked after I1…I8.** Ears were always two, left and right, in the middle
+of the walls. Now: 1–4 ears; on the left and right walls, the front and
+back ones (an odd ear goes to the first wall: 3 = 2 + 1) or one wall of
+the user's choice; along a wall centred `spacing` apart or spread between
+the ends of its flat part (clear of the rounded corners). A cylinder: the
+ears go evenly around, the first towards the first wall named. Old files
+keep two ears left and right, centred — the same geometry (golden).
 
 ---
 

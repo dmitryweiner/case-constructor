@@ -48,8 +48,14 @@ any face, shifted from the face's centre by X / Y. Screw holes default to
   pad: there the keyholes go through. Vents are left out under pads and
   feet. A standoff right above a pocket would open it (its hole goes into
   the floor) — the panel warns.
-- **ears** — two tabs on the left and right at floor level, 10 × 8 mm, as
-  thick as the floor, with a hole for the screw (+ 0.4 mm).
+- **ears** — tabs at floor level, 10 × 8 mm, as thick as the floor, with a
+  hole for the screw (+ 0.4 mm). *Ears*: 1–4. *On the walls*: left and
+  right, front and back (an odd ear goes to the first wall: 3 = 2 + 1) or
+  one wall of your choice. *Along the wall* (when a wall gets two or more):
+  centred, *Spacing* apart, or at the ends — spread out to the corners. Ears
+  stay on the flat part of a wall, clear of the rounded corners. A cylinder
+  has no walls: its ears go evenly around, the first towards the first wall
+  named.
 
 ## Label
 

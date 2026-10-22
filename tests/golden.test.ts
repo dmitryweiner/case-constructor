@@ -102,6 +102,17 @@ const STATES: Record<string, AppState> = {
     vents: { on: true, faces: ['right', 'top'], pattern: 'slots', along: 'x' },
     wallMount: { kind: 'keyholes', spacing: 50 },
   }),
+  // I9: ears, count and placement (PLAN-IMPROVEMENTS.md)
+  'ears-four-ends': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, cornerR: 6 },
+    wallMount: { kind: 'ears', ears: { count: 4, walls: 'frontBack', along: 'ends' } },
+  }),
+  'ears-three-cylinder': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'cylinder' },
+    wallMount: { kind: 'ears', ears: { count: 3, walls: 'frontBack' } },
+  }),
   // I7: printed screws, threads in the posts (PLAN-IMPROVEMENTS.md)
   'printed-screws-top': sanitizeState({
     ...defaultState(),

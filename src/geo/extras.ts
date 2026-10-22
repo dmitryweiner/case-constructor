@@ -57,10 +57,29 @@ export type WallMountKind = (typeof MOUNT_KINDS)[number];
 export const KEYHOLE_STYLES = ['through', 'closed'] as const;
 export type KeyholeStyle = (typeof KEYHOLE_STYLES)[number];
 
+/** Ears: on the left and right walls, the front and back ones, or all on one wall. */
+export const EAR_WALLS = ['leftRight', 'frontBack', 'one'] as const;
+export type EarWalls = (typeof EAR_WALLS)[number];
+/** Along a wall: centred, `spacing` apart — or spread from one end of its flat part to the other. */
+export const EAR_ALONG = ['centre', 'ends'] as const;
+export type EarAlong = (typeof EAR_ALONG)[number];
+export const EAR_SIDES = ['front', 'back', 'left', 'right'] as const;
+export type EarSide = (typeof EAR_SIDES)[number];
+export const EAR_COUNT_MAX = 4;
+
+export interface EarsState {
+  count: number;
+  walls: EarWalls;
+  /** the wall when `walls` is 'one' */
+  wall: EarSide;
+  along: EarAlong;
+}
+
 export interface WallMountState {
   kind: WallMountKind;
   keyhole: KeyholeStyle;
-  /** keyholes: distance between them, mm */
+  ears: EarsState;
+  /** keyholes, and ears centred on a wall: distance between them, mm */
   spacing: number;
   /** wall screw shank, mm */
   screwD: number;
@@ -95,7 +114,7 @@ export function defaultFan(): FanState {
 }
 
 export function defaultWallMount(): WallMountState {
-  return { kind: 'none', keyhole: 'through', spacing: 40, screwD: 4 };
+  return { kind: 'none', keyhole: 'through', ears: { count: 2, walls: 'leftRight', wall: 'back', along: 'centre' }, spacing: 40, screwD: 4 };
 }
 
 export function defaultLabel(): LabelState {
@@ -147,8 +166,19 @@ export function sanitizeWallMount(raw: unknown): WallMountState {
   return {
     kind: MOUNT_KINDS.find((k) => k === r.kind) ?? d.kind,
     keyhole: KEYHOLE_STYLES.find((k) => k === r.keyhole) ?? d.keyhole,
+    ears: sanitizeEars(r.ears, d.ears),
     spacing: clampNum(r.spacing, 10, 300, d.spacing),
     screwD: clampNum(r.screwD, 2.5, 6, d.screwD),
+  };
+}
+
+function sanitizeEars(raw: unknown, d: EarsState): EarsState {
+  const r = rec(raw);
+  return {
+    count: Math.round(clampNum(r.count, 1, EAR_COUNT_MAX, d.count)),
+    walls: EAR_WALLS.find((w) => w === r.walls) ?? d.walls,
+    wall: EAR_SIDES.find((w) => w === r.wall) ?? d.wall,
+    along: EAR_ALONG.find((a) => a === r.along) ?? d.along,
   };
 }
 
@@ -382,11 +412,8 @@ export function closedKeyholes(mount: WallMountState, shape: ShapeState, dims: D
 }
 
 export interface EarSpec {
-  /** the tab in the case xy: a rectangle from the wall outwards */
-  x0: number;
-  y0: number;
-  x1: number;
-  y1: number;
+  /** the tab in the case xy: a rectangle from inside the wall outwards, counter-clockwise */
+  outline: [number, number][];
   /** a hole through it */
   hx: number;
   hy: number;
@@ -396,16 +423,64 @@ export interface EarSpec {
 export const EAR_LENGTH = 8;
 export const EAR_WIDTH = 10;
 
-/** Two tabs at floor level on the left and right, with a screw hole each. */
-export function earSpecs(mount: WallMountState, dims: Dims): EarSpec[] {
+/** Outward direction of a side wall in the case xy. */
+const SIDE_DIRECTION: Readonly<Record<EarSide, [number, number]>> = { left: [-1, 0], right: [1, 0], front: [0, -1], back: [0, 1] };
+
+/** A tab standing out of the wall at `origin` along `out`: from 2 mm inside the wall to EAR_LENGTH out. */
+function earAt(origin: [number, number], out: [number, number], d: number): EarSpec {
+  const side: [number, number] = [-out[1], out[0]];
+  const at = (z: number, s: number): [number, number] => [origin[0] + out[0] * z + side[0] * s, origin[1] + out[1] * z + side[1] * s];
+  const w = EAR_WIDTH / 2;
+  // inside the wall first, then out: counter-clockwise for any direction
+  const outline = [at(-2, -w), at(EAR_LENGTH, -w), at(EAR_LENGTH, w), at(-2, w)];
+  const [hx, hy] = at(EAR_LENGTH / 2, 0);
+  return { outline, hx, hy, d };
+}
+
+/** Positions of k ears along a wall `length` long, clear of its rounded corners. */
+function alongWall(k: number, length: number, corner: number, mount: WallMountState): number[] {
+  const lo = Math.min(length / 2, corner + 1 + EAR_WIDTH / 2);
+  const hi = Math.max(length / 2, length - corner - 1 - EAR_WIDTH / 2);
+  if (k === 1) return [length / 2];
+  if (mount.ears.along === 'ends') return Array.from({ length: k }, (_, i) => lo + ((hi - lo) * i) / (k - 1));
+  // centred, `spacing` apart (never closer than a tab), squeezed into the flat part
+  const step = Math.min(Math.max(mount.spacing, EAR_WIDTH + 2), (hi - lo) / (k - 1));
+  return Array.from({ length: k }, (_, i) => length / 2 + (i - (k - 1) / 2) * step);
+}
+
+/**
+ * Tabs at floor level with a screw hole each: 1…4, on the left and right
+ * walls, the front and back ones (3 = two on the first wall and one on the
+ * second) or all on one wall; along a wall centred `spacing` apart or spread
+ * between the ends of its flat part. A cylinder has no walls to choose: its
+ * ears go evenly around, the first towards the first wall asked for.
+ */
+export function earSpecs(mount: WallMountState, shape: ShapeState, dims: Dims): EarSpec[] {
   if (mount.kind !== 'ears') return [];
-  const cy = dims.d / 2;
   const d = mount.screwD + 0.4;
-  // each tab reaches 2 mm into the wall, so it fuses with it (also on a cylinder)
-  return [
-    { x0: -EAR_LENGTH, y0: cy - EAR_WIDTH / 2, x1: 2, y1: cy + EAR_WIDTH / 2, hx: -EAR_LENGTH / 2, hy: cy, d },
-    { x0: dims.w - 2, y0: cy - EAR_WIDTH / 2, x1: dims.w + EAR_LENGTH, y1: cy + EAR_WIDTH / 2, hx: dims.w + EAR_LENGTH / 2, hy: cy, d },
-  ];
+  const { count, walls, wall } = mount.ears;
+  const sides: EarSide[] = walls === 'leftRight' ? ['left', 'right'] : walls === 'frontBack' ? ['front', 'back'] : [wall];
+  if (shape.kind === 'cylinder') {
+    const radius = dims.w / 2;
+    const [fx, fy] = SIDE_DIRECTION[sides[0]];
+    const start = Math.atan2(fy, fx);
+    return Array.from({ length: count }, (_, i) => {
+      const a = start + (2 * Math.PI * i) / count;
+      const out: [number, number] = [Math.cos(a), Math.sin(a)];
+      return earAt([dims.w / 2 + out[0] * radius, dims.d / 2 + out[1] * radius], out, d);
+    });
+  }
+  // ears per wall: the first wall takes the odd one
+  const perWall = sides.length === 1 ? [count] : [Math.ceil(count / 2), Math.floor(count / 2)];
+  const corner = Math.min(shape.cornerR, dims.w / 2, dims.d / 2);
+  return sides.flatMap((side, index) => {
+    const [ox, oy] = SIDE_DIRECTION[side];
+    const length = ox !== 0 ? dims.d : dims.w;
+    return alongWall(perWall[index], length, corner, mount).map((t) => {
+      const origin: [number, number] = ox !== 0 ? [ox < 0 ? 0 : dims.w, t] : [t, oy < 0 ? 0 : dims.d];
+      return earAt(origin, [ox, oy], d);
+    });
+  });
 }
 
 /**

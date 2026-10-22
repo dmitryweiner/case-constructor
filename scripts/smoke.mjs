@@ -284,6 +284,18 @@ if (!(await page.locator('#warnings').textContent()).includes('supports')) error
 await page.click('#mount_keyhole_through');
 await page.click('#mount_kind_ears');
 await expectWatertight('ears');
+if (await page.locator('#mount_earAlong').isVisible()) errors.push('[ears] "along the wall" offered for one ear per wall');
+await page.click('#mount_earCount_4');
+await page.click('#mount_earWalls_frontBack');
+await page.click('#mount_earAlong_ends');
+if (await page.locator('#mount_spacing').isVisible()) errors.push('[ears] spacing offered for ears at the ends');
+await expectWatertight('ears:4:frontBack:ends');
+await page.click('#mount_earWalls_one');
+await page.selectOption('#mount_earWall', 'left');
+await page.click('#mount_earCount_1');
+await expectWatertight('ears:1:left');
+await page.click('#mount_earWalls_leftRight');
+await page.click('#mount_earCount_2');
 const trianglesBefore = await page.evaluate(() => window.__case.parts()?.lid.indices.length ?? 0);
 await page.check('#on_label');
 await page.fill('#label_text', 'Hello שלום Привет');
