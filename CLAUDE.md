@@ -124,7 +124,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   `tests/boards.test.ts`; placements live in the layout frame and the whole
   layout is centred in the cavity (`geo/layout.ts`, `caseLayout`). The main
   thread and the worker compute the same layout, so board ghosts
-  (`geo/ghost.ts`, no CSG) line up with the worker's case.
+  (`geo/ghost.ts`, no CSG) line up with the worker's case. A ghost's PCB has
+  its mounting holes through it (faces triangulated with `earcut`) and a pad
+  ring around each, in the ports' colour.
 - Supports (`geo/standoffs.ts`) go to the part that owns the floor under
   them (the lid when the floor is the lid), minus whatever of them would
   enter the other part; holes are drilled after the union. A deep side lid
