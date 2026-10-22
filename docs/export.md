@@ -27,8 +27,8 @@ broken mesh, an empty part or a part larger than 400 mm.
   closed; *print layout* — the parts as they go into the STL.
 - **Body**: *assembled* or *print layout* (a body alone has nothing to
   explode).
-- **Lid**: no choice — the lid is shown as it sits on the case, put down on
-  the grid.
+- **Lid**: no choice — the lid is shown as it prints and as it is in the
+  STL: on its outer face, the skirt up.
 
 *Boards* — show the boards (off in the print layout: they are not printed;
 hidden for the lid alone); *X-ray* — see through the walls.

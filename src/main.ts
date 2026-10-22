@@ -46,7 +46,7 @@ import { MAX_BOARDS, NEW_BOARD_GAP, defaultPlacement } from './boards/placement'
 import type { BoardDef } from './boards/schema';
 import { bodyForPrint, lidForPrint, printLayout } from './geo/print';
 import type { SurfaceMesh } from './geo/surface';
-import { meshBounds, mergeMeshes } from './geo/surface';
+import { mergeMeshes } from './geo/surface';
 import { encodeSTL } from './geo/stl';
 import { assessExport, validateMesh } from './geo/validate';
 import type { AppState, ExportMode } from './state/schema';
@@ -311,7 +311,9 @@ function drawParts(): void {
     const face = built.lid.face;
     const parts: ScenePart[] = built.exportMode === 'both'
       ? printLayout(body, lid, face, dims, shape).map((mesh, i): ScenePart => ({ role: i === 0 ? 'body' : 'lid', mesh }))
-      : [{ role: 'body', mesh: bodyForPrint(body, face, dims, shape) }];
+      : built.exportMode === 'lid'
+        ? [{ role: 'lid', mesh: lidForPrint(lid, face, dims) }]
+        : [{ role: 'body', mesh: bodyForPrint(body, face, dims, shape) }];
     show(parts);
     return;
   }
@@ -324,29 +326,30 @@ function drawParts(): void {
     const n = faceFrame(built.lid.face, dims).n;
     const lift = mode === 'exploded' ? LIFT_MM : 0;
     parts.push({ role: 'lid', mesh: lid, offset: [n[0] * lift, n[1] * lift, n[2] * lift] });
-  } else if (showLid) {
-    // the lid alone, as it sits on the case, put down on the grid
-    parts.push({ role: 'lid', mesh: lid, offset: [0, 0, -meshBounds(lid).min[2]] });
   }
   show(parts);
 }
 
 /** Roles of what was drawn last — for the smoke (window.__case.drawn()). */
 let drawnRoles: string[] = [];
+/** What was drawn last, meshes and offsets — for the smoke (window.__case.drawnParts()). */
+let drawnParts: ScenePart[] = [];
 
 function show(parts: ScenePart[]): void {
   drawnRoles = parts.map((part) => part.role);
+  drawnParts = parts;
   scene.setParts(parts);
 }
 
 /**
  * The view as it applies to the parts shown. Both parts: any of the three.
  * The body alone: exploded is the same as assembled. The lid alone: no
- * choice at all — it is shown as it sits on the case, put down on the grid.
+ * choice at all — it is shown as it prints and as its STL is: outer face
+ * down, the skirt up.
  * The chosen mode is kept, so going back to Both brings exploded back.
  */
 function effectiveView(parts: ExportMode): ViewMode {
-  if (parts === 'lid') return 'assembled';
+  if (parts === 'lid') return 'print';
   if (parts === 'body' && viewMode === 'exploded') return 'assembled';
   return viewMode;
 }
@@ -356,7 +359,6 @@ function describeView(state: AppState): string {
   const parts = state.exportMode;
   const what = t(parts === 'both' ? 'caption.both' : parts === 'body' ? 'caption.body' : 'caption.lid');
   const view = effectiveView(parts);
-  if (parts === 'lid') return what;
   if (view === 'print') return `${what} · ${t('caption.print')}`;
   const boards = viewBoards.checked && state.boards.length > 0 ? ` · ${t('caption.withBoards')}` : '';
   // the body alone has nothing to explode
@@ -757,6 +759,7 @@ if (import.meta.env.DEV) {
     parts: () => lastParts,
     ghosts: () => ghosts,
     drawn: () => drawnRoles,
+    drawnParts: () => drawnParts,
   });
 }
 

@@ -4,6 +4,8 @@
 
 `PLAN.md` — architecture and milestones M0…M8, decisions taken with the user
 at the top. Deviations from the plan are recorded at its end as they happen.
+`PLAN-IMPROVEMENTS.md` — the improvements after the review (I1…I8), same
+rules.
 
 ## Node
 
@@ -51,7 +53,7 @@ freely; a temporary script that turns out useful becomes a permanent one.
   <id>=<path>` (in command-line order), `--view`, `--clip x,y,w,h`, `--orbit
   dx,dy`, `--url <path>`, `--wait <ms>`, `--width/--height`, `--preview`,
   `--eval '<js>'` (prints a page expression; dev builds expose
-  `window.__case.state() / parts() / ghosts() / drawn()` — the meshes and
+  `window.__case.state() / parts() / ghosts() / drawn() / drawnParts()` — the meshes and
   the roles actually drawn). A picture can lie (an open box seen from above
   looks closed under flat light): check the mesh with `--eval` or
   `inspect.mjs --levels` before believing an image.
@@ -166,10 +168,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   CrossSection and extrudes it on the lid face.
 - View and export live in one card: the parts tab decides what is shown and
   exported (Both — default and first; Body with its boards; the Lid alone,
-  put down on the grid), the view row decides how (exploded — default,
+  in its print layout), the view row decides how (exploded — default,
   assembled, print layout as in the STL), and a caption over the canvas says
   it in words. Only meaningful choices are offered (`effectiveView`): Both —
-  all three; Body — assembled and print layout; Lid — none (and no Boards).
+  all three; Body — assembled and print layout; Lid — none: it is
+  drawn as it prints and as its STL is (and no Boards).
   The chosen mode is kept, so Both brings exploded back. Before, the export
   tab silently switched the view to the print layout, and the review found
   the view toggles "did nothing".
@@ -253,7 +256,8 @@ View and export card (`#exportCard`): parts `#tabBoth` (first, default),
 `#tabBody`, `#tabLid`; view `#viewExploded` (default), `#viewAssembled`,
 `#viewPrint`; `#viewBoards`, `#viewXray`; `#resolution`, `#exportBtn`. The
 caption over the canvas `#viewCaption` says what is shown and scrolls to the
-card. Dev builds: `window.__case.drawn()` lists the roles drawn last.
+card. Dev builds: `window.__case.drawn()` lists the roles drawn last,
+`drawnParts()` the meshes with their offsets.
 Mobile: on a narrow screen the view centres the case above the settings
 sheet (`scene.setBottomInset`).
 Top bar: `#presetBtn` (list `#presetList [data-preset="b:<id>"|"u:<name>"]`),

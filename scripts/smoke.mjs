@@ -313,6 +313,27 @@ await expectWatertight('view:lid');
 if ((await drawn()) !== 'lid') errors.push(`[view] the Lid tab draws ${await drawn()}`);
 if (await page.locator('#viewRow').isVisible()) errors.push('[view] the Lid tab offers a view');
 if (await page.locator('#viewBoards').isVisible()) errors.push('[view] the Lid tab offers boards');
+if (!(await page.locator('#viewCaption').textContent()).includes('print layout')) errors.push('[view] the Lid tab caption does not say print layout');
+// in the print layout the lid lies on its outer face: most of its footprint is on the bed
+const lidOnBed = await page.evaluate(() => {
+  const [part] = window.__case.drawnParts();
+  const { positions: p, indices: ix } = part.mesh;
+  const dz = part.offset?.[2] ?? 0;
+  let minZ = Infinity;
+  let x0 = Infinity; let x1 = -Infinity; let y0 = Infinity; let y1 = -Infinity;
+  for (let i = 0; i < p.length; i += 3) {
+    minZ = Math.min(minZ, p[i + 2] + dz);
+    x0 = Math.min(x0, p[i]); x1 = Math.max(x1, p[i]); y0 = Math.min(y0, p[i + 1]); y1 = Math.max(y1, p[i + 1]);
+  }
+  let bed = 0;
+  for (let t = 0; t < ix.length; t += 3) {
+    const [a, b, c] = [ix[t] * 3, ix[t + 1] * 3, ix[t + 2] * 3];
+    if (Math.max(p[a + 2], p[b + 2], p[c + 2]) + dz > minZ + 0.01) continue;
+    bed += Math.abs((p[b] - p[a]) * (p[c + 1] - p[a + 1]) - (p[c] - p[a]) * (p[b + 1] - p[a + 1])) / 2;
+  }
+  return { minZ, share: bed / ((x1 - x0) * (y1 - y0)) };
+});
+if (Math.abs(lidOnBed.minZ) > 0.01 || lidOnBed.share < 0.5) errors.push(`[view] the Lid tab does not show the lid on its outer face: ${JSON.stringify(lidOnBed)}`);
 await page.click('#tabBody');
 await expectWatertight('view:body');
 if ((await drawn()).includes('lid') || !(await drawn()).includes('board')) errors.push(`[view] the Body tab draws ${await drawn()}`);
