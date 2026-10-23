@@ -1,0 +1,35 @@
+{
+  "id": "quinled-dig-quad",
+  "name": "QuinLED Dig-Quad v3",
+  "vendor": "QuinLED",
+  "kind": "mcu",
+  "size": { "w": 48.209, "d": 100.394, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.188, "y": 3.099, "d": 2.7 },
+      { "x": 35.484, "y": 3.099, "d": 2.7 },
+      { "x": 3.188, "y": 97.409, "d": 2.7 },
+      { "x": 44.996, "y": 97.409, "d": 2.7 }
+    ],
+    "screw": "M2.5",
+    "rails": "long"
+  },
+  "topHeight": 31.5,
+  "bottomHeight": 2,
+  "ports": [
+    { "id": "power-in", "type": "generic", "edge": "left", "along": 84.6, "w": 20.7, "h": 14, "d": 16.4, "protrude": 1.55, "cut": true },
+    { "id": "gnd-in", "type": "generic", "edge": "left", "along": 15.45, "w": 20.7, "h": 14, "d": 15.5, "protrude": 1.55, "cut": true },
+    { "id": "vext-relay", "type": "generic", "edge": "left", "along": 52.9, "w": 15.2, "h": 10, "d": 9.9, "protrude": 0, "cut": false },
+    { "id": "led-power", "type": "generic", "edge": "right", "along": 76.2, "w": 35.2, "h": 10, "d": 9.9, "protrude": 0, "cut": true },
+    { "id": "led-data", "type": "generic", "edge": "right", "along": 42.0, "w": 20.2, "h": 10, "d": 9.1, "protrude": 1, "cut": true },
+    { "id": "led-gnd", "type": "generic", "edge": "right", "along": 12.95, "w": 25.4, "h": 10, "d": 9.9, "protrude": 0, "cut": true },
+    { "id": "gnd-aux", "type": "generic", "edge": "front", "along": 27.6, "w": 10.2, "h": 10, "d": 8, "protrude": 0, "cut": false },
+    { "id": "esp32-antenna", "type": "generic", "edge": "right", "along": 41.95, "w": 18.4, "h": 3.2, "d": 5, "z": 12.6, "protrude": 4.6, "cut": false },
+    { "id": "esp32-board", "type": "generic", "edge": "top", "x": 31.3, "y": 41.95, "w": 33, "d": 30.9, "h": 16 },
+    { "id": "gpio-top", "type": "header-1xN", "edge": "top", "x": 23.5, "y": 60.0, "w": 17.8, "d": 2.5, "h": 8.5 },
+    { "id": "gpio-bottom", "type": "header-1xN", "edge": "top", "x": 24.9, "y": 22.1, "w": 15.2, "d": 2.5, "h": 8.5 }
+  ],
+  "source": "https://quinled.info/quinled-dig-quad-board-dimensions/",
+  "verified": true
+}
