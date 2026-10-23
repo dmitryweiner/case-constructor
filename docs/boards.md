@@ -150,3 +150,4 @@ shows the same mark). New boards: the add-board skill
 | Heltec Wireless Stick Lite V3 | Heltec | 58.08 × 22.6 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Stick_Lite_V3/HTIT-WSL_V3(Rev1.1).pdf) | yes |
 | Heltec Wireless Stick V3 | Heltec | 58.08 × 22.6 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Stick_V3/HTIT-WS_V3(Rev1.0).pdf) | yes |
 | Heltec Wireless Tracker | Heltec | 63.64 × 28 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Tracker/Wireless%20Tracker1.1.pdf) | yes |
+| Adafruit Feather (RP2040 / RP2350 / ESP32 V2 / nRF52840 / M4 / M0) | Adafruit | 50.8 × 22.86 | 4 × M2.5 | [source](https://github.com/adafruit/Adafruit-Feather-RP2040-PCB) | yes |

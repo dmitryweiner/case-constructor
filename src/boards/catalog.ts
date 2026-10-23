@@ -57,6 +57,7 @@ import heltecWifiLora32V4 from './data/heltec-wifi-lora-32-v4.json';
 import heltecWirelessStickLiteV3 from './data/heltec-wireless-stick-lite-v3.json';
 import heltecWirelessStickV3 from './data/heltec-wireless-stick-v3.json';
 import heltecWirelessTracker from './data/heltec-wireless-tracker.json';
+import adafruitFeather from './data/adafruit-feather.json';
 
 /** Raw entries as they are in the files — the tests validate them strictly. */
 export const RAW_BOARDS: readonly unknown[] = [
@@ -112,6 +113,7 @@ export const RAW_BOARDS: readonly unknown[] = [
   heltecWirelessStickLiteV3,
   heltecWirelessStickV3,
   heltecWirelessTracker,
+  adafruitFeather,
 ];
 
 export const CATALOG: readonly BoardDef[] = RAW_BOARDS.map((raw) => sanitizeBoard(raw));
