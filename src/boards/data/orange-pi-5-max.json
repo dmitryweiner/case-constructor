@@ -1,0 +1,184 @@
+{
+  "id": "orange-pi-5-max",
+  "name": "Orange Pi 5 Max",
+  "vendor": "Orange Pi",
+  "kind": "sbc",
+  "size": {
+    "w": 89,
+    "d": 57,
+    "t": 1.6
+  },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      {
+        "x": 23.5,
+        "y": 4.5,
+        "d": 2.7
+      },
+      {
+        "x": 81.5,
+        "y": 4.5,
+        "d": 2.7
+      },
+      {
+        "x": 23.5,
+        "y": 53.5,
+        "d": 2.7
+      },
+      {
+        "x": 81.5,
+        "y": 53.5,
+        "d": 2.7
+      }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 16,
+  "bottomHeight": 5,
+  "ports": [
+    {
+      "id": "ethernet",
+      "type": "rj45",
+      "edge": "left",
+      "along": 46.84,
+      "w": 16.97,
+      "protrude": 2.5
+    },
+    {
+      "id": "usb-3",
+      "type": "usb-a",
+      "edge": "left",
+      "along": 27.89,
+      "h": 16,
+      "d": 17.9,
+      "protrude": 2.55
+    },
+    {
+      "id": "usb-2",
+      "type": "usb-a",
+      "edge": "left",
+      "along": 10.04,
+      "w": 14.4,
+      "h": 16,
+      "d": 17.2,
+      "protrude": 2.59
+    },
+    {
+      "id": "usb-c-power",
+      "type": "usb-c",
+      "edge": "back",
+      "along": 29.09,
+      "w": 4.5,
+      "h": 9,
+      "d": 11.5,
+      "protrude": 2.49
+    },
+    {
+      "id": "hdmi-1",
+      "type": "hdmi",
+      "edge": "back",
+      "along": 42.64,
+      "protrude": 2.49
+    },
+    {
+      "id": "audio",
+      "type": "audio-3.5",
+      "edge": "back",
+      "along": 56.66,
+      "protrude": 2.49
+    },
+    {
+      "id": "hdmi-2",
+      "type": "hdmi",
+      "edge": "back",
+      "along": 70.65,
+      "protrude": 2.5
+    },
+    {
+      "id": "power-button",
+      "type": "switch",
+      "edge": "right",
+      "along": 49.07,
+      "w": 4.8,
+      "protrude": 0.21
+    },
+    {
+      "id": "microsd",
+      "type": "microsd",
+      "edge": "right",
+      "along": 14.43,
+      "z": -3.1,
+      "protrude": 0
+    },
+    {
+      "id": "gpio",
+      "type": "header-2x20",
+      "edge": "top",
+      "x": 52.5,
+      "y": 4.5,
+      "w": 50.8,
+      "d": 5.08,
+      "h": 8.5
+    },
+    {
+      "id": "lcd",
+      "type": "fpc",
+      "edge": "top",
+      "x": 85.88,
+      "y": 29.52,
+      "w": 4.6,
+      "d": 23.49
+    },
+    {
+      "id": "cam0",
+      "type": "fpc",
+      "edge": "top",
+      "x": 18.59,
+      "y": 32.84,
+      "w": 3.1,
+      "d": 8.22
+    },
+    {
+      "id": "cam2",
+      "type": "fpc",
+      "edge": "top",
+      "x": 33,
+      "y": 42.64,
+      "w": 8.22,
+      "d": 3.1
+    },
+    {
+      "id": "pcie",
+      "type": "fpc",
+      "edge": "top",
+      "x": 30.93,
+      "y": 19.45,
+      "w": 3.1,
+      "d": 8.22,
+      "cut": false
+    },
+    {
+      "id": "maskrom",
+      "type": "button",
+      "edge": "top",
+      "x": 82.35,
+      "y": 16.26,
+      "w": 5.6,
+      "d": 2,
+      "shape": "rect",
+      "cut": false
+    },
+    {
+      "id": "wifi-antenna",
+      "type": "antenna",
+      "edge": "top",
+      "x": 17.97,
+      "y": 3.26,
+      "w": 1.7,
+      "d": 1.7
+    }
+  ],
+  "source": "https://drive.google.com/file/d/1HTPhgRq5EuVlTSzSiLY6-X320II8eArF/view",
+  "verified": true
+}
