@@ -62,6 +62,7 @@ import adafruitFeatherEsp32S3 from './data/adafruit-feather-esp32-s3.json';
 import olimexEsp32PoeIso from './data/olimex-esp32-poe-iso.json';
 import quinledDigQuad from './data/quinled-dig-quad.json';
 import quinledDigUno from './data/quinled-dig-uno.json';
+import rakwirelessRak19007 from './data/rakwireless-rak19007.json';
 
 /** Raw entries as they are in the files — the tests validate them strictly. */
 export const RAW_BOARDS: readonly unknown[] = [
@@ -122,6 +123,7 @@ export const RAW_BOARDS: readonly unknown[] = [
   olimexEsp32PoeIso,
   quinledDigQuad,
   quinledDigUno,
+  rakwirelessRak19007,
 ];
 
 export const CATALOG: readonly BoardDef[] = RAW_BOARDS.map((raw) => sanitizeBoard(raw));
