@@ -134,6 +134,7 @@ shows the same mark). New boards: the add-board skill
 | ESP32-C3 SuperMini | Espressif | 18 × 22.5 | rails (long) | [source](https://mischianti.org/wp-content/uploads/2025/07/ESP32-C3-SuperMini-Size.jpg) | ≈ |
 | ESP32-CAM (AI-Thinker) | Espressif | 27 × 40.5 | rails (long) | [source](https://docs.ai-thinker.com/en/esp32-cam) | ≈ |
 | ESP32-DevKitC V4 | Espressif | 54.4 × 27.9 | rails (long) | [source](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/hw-reference/esp32/get-started-devkitc.html) | ≈ |
+| ESP32 DevKit V1, 30-pin (DOIT and clones) | Espressif | 51.8 × 28.2 | 4 × M2.5 | [source](https://forum.fritzing.org/t/doit-esp32-devkit-v1/6158) | ≈ |
 | ESP32-S3-DevKitC-1 | Espressif | 25.4 × 62.74 | rails (long) | [source](https://dl.espressif.com/dl/schematics/esp_idf/DXF_ESP32-S3-DevKitC-1_V1.1_20220429.pdf) | yes |
 | Wemos D1 mini (ESP8266 / ESP32) | Espressif | 34.2 × 25.6 | rails (short) | [source](https://www.wemos.cc/en/latest/d1/d1_mini.html) | ≈ |
 | Arduino Leonardo | Arduino | 68.58 × 53.34 | 4 × M3 | [source](https://docs.arduino.cc/hardware/leonardo/) | ≈ |

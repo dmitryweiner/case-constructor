@@ -1,0 +1,29 @@
+{
+  "id": "esp32-devkit-v1",
+  "name": "ESP32 DevKit V1, 30-pin (DOIT and clones)",
+  "vendor": "Espressif",
+  "kind": "mcu",
+  "size": { "w": 51.8, "d": 28.2, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2.2, "y": 2.2, "d": 2.8 },
+      { "x": 2.2, "y": 26, "d": 2.8 },
+      { "x": 49.6, "y": 2.2, "d": 2.8 },
+      { "x": 49.6, "y": 26, "d": 2.8 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 3.5,
+  "bottomHeight": 8.5,
+  "ports": [
+    { "id": "usb", "type": "micro-usb", "edge": "left", "along": 14.1, "z": 0, "protrude": 1 },
+    { "id": "en", "type": "button", "edge": "top", "x": 3.55, "y": 22.33, "w": 3.8, "d": 2.9, "shape": "rect" },
+    { "id": "boot", "type": "button", "edge": "top", "x": 3.55, "y": 5.78, "w": 3.8, "d": 2.9, "shape": "rect" },
+    { "id": "power-led", "type": "led", "edge": "top", "x": 13.4, "y": 21.3 },
+    { "id": "led-gpio2", "type": "led", "edge": "top", "x": 13.4, "y": 18.8 },
+    { "id": "module", "type": "generic", "edge": "top", "x": 38.2, "y": 14.1, "w": 25.5, "d": 18, "h": 3.1 }
+  ],
+  "source": "https://forum.fritzing.org/t/doit-esp32-devkit-v1/6158",
+  "verified": false
+}

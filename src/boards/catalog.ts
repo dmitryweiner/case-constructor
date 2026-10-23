@@ -41,6 +41,7 @@ import esp322432s028r from './data/esp32-2432s028r.json';
 import esp32C3Supermini from './data/esp32-c3-supermini.json';
 import esp32Cam from './data/esp32-cam.json';
 import esp32DevkitcV4 from './data/esp32-devkitc-v4.json';
+import esp32DevkitV1 from './data/esp32-devkit-v1.json';
 import esp32S3Devkitc1 from './data/esp32-s3-devkitc-1.json';
 import wemosD1Mini from './data/wemos-d1-mini.json';
 import arduinoLeonardo from './data/arduino-leonardo.json';
@@ -92,6 +93,7 @@ export const RAW_BOARDS: readonly unknown[] = [
   esp32C3Supermini,
   esp32Cam,
   esp32DevkitcV4,
+  esp32DevkitV1,
   esp32S3Devkitc1,
   wemosD1Mini,
   arduinoLeonardo,
