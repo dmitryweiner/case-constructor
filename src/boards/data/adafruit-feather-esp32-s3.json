@@ -1,0 +1,34 @@
+{
+  "id": "adafruit-feather-esp32-s3",
+  "name": "Adafruit Feather ESP32-S3 / S2 / C6 (incl. TFT, Reverse TFT)",
+  "vendor": "Adafruit",
+  "kind": "mcu",
+  "size": { "w": 50.8, "d": 22.86, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2.54, "y": 2.54, "d": 2.5 },
+      { "x": 2.54, "y": 20.32, "d": 2.5 },
+      { "x": 48.26, "y": 1.8415, "d": 2.2 },
+      { "x": 48.26, "y": 20.955, "d": 2.2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 5,
+  "bottomHeight": 8.5,
+  "ports": [
+    { "id": "usb", "type": "usb-c", "edge": "left", "along": 11.43, "z": 0, "protrude": 1.1 },
+    { "id": "battery", "type": "generic", "edge": "back", "along": 10.92, "w": 6, "h": 4.8, "d": 6, "z": 0, "protrude": -0.5, "cut": false },
+    { "id": "reset", "type": "button", "edge": "top", "x": 10.8, "y": 5.14, "w": 4.2, "d": 2.8, "h": 1.9, "shape": "rect" },
+    { "id": "boot", "type": "button", "edge": "top", "x": 20.96, "y": 5.21, "w": 4.2, "d": 2.8, "h": 1.9, "shape": "rect", "cut": false },
+    { "id": "led-13", "type": "led", "edge": "top", "x": 1.46, "y": 17.53 },
+    { "id": "led-chg", "type": "led", "edge": "top", "x": 1.46, "y": 5.46 },
+    { "id": "neopixel", "type": "led", "edge": "top", "x": 29.4, "y": 8.13, "w": 1.5, "d": 1.5, "h": 0.7, "shape": "rect", "cut": false },
+    { "id": "stemma-qt", "type": "generic", "edge": "top", "x": 22.45, "y": 11.43, "w": 3.2, "d": 6.1, "h": 3 },
+    { "id": "module", "type": "generic", "edge": "top", "x": 40.64, "y": 11.43, "w": 20.5, "d": 15.4, "h": 2.4 },
+    { "id": "header-16", "type": "header-1xN", "edge": "top", "x": 25.4, "y": 1.27, "w": 40.64, "d": 2.54, "h": 1.5 },
+    { "id": "header-12", "type": "header-1xN", "edge": "top", "x": 30.48, "y": 21.59, "w": 30.48, "d": 2.54, "h": 1.5 }
+  ],
+  "source": "https://github.com/adafruit/Adafruit-Feather-ESP32-S3-PCB",
+  "verified": true
+}
