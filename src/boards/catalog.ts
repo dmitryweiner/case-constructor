@@ -9,6 +9,7 @@ import raspberryPi3aPlus from './data/raspberry-pi-3a-plus.json';
 import raspberryPi3bPlus from './data/raspberry-pi-3b-plus.json';
 import raspberryPi4b from './data/raspberry-pi-4b.json';
 import raspberryPi5 from './data/raspberry-pi-5.json';
+import raspberryPiCm5Io from './data/raspberry-pi-cm5-io.json';
 import raspberryPiPico from './data/raspberry-pi-pico.json';
 import raspberryPiZero2W from './data/raspberry-pi-zero-2-w.json';
 import bananaPiM2Zero from './data/banana-pi-m2-zero.json';
@@ -48,6 +49,7 @@ export const RAW_BOARDS: readonly unknown[] = [
   raspberryPi3bPlus,
   raspberryPi4b,
   raspberryPi5,
+  raspberryPiCm5Io,
   raspberryPiPico,
   raspberryPiZero2W,
   bananaPiM2Zero,

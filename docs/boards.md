@@ -102,6 +102,7 @@ shows the same mark). New boards: the add-board skill
 | Raspberry Pi 3 Model B+ | Raspberry Pi | 85 × 56 | 4 × M2.5 | [source](https://datasheets.raspberrypi.com/rpi3/raspberry-pi-3-b-plus-mechanical-drawing.pdf) | yes |
 | Raspberry Pi 4 Model B | Raspberry Pi | 85 × 56 | 4 × M2.5 | [source](https://datasheets.raspberrypi.com/rpi4/raspberry-pi-4-mechanical-drawing.pdf) | yes |
 | Raspberry Pi 5 | Raspberry Pi | 85 × 56 | 4 × M2.5 | [source](https://datasheets.raspberrypi.com/rpi5/raspberry-pi-5-mechanical-drawing.pdf) | yes |
+| Raspberry Pi CM5 IO Board (with CM5) | Raspberry Pi | 160 × 90 | 4 × M2.5 | [source](https://datasheets.raspberrypi.com/cm5/cm5io-datasheet.pdf) | yes |
 | Raspberry Pi Pico / Pico W / Pico 2 / Pico 2 W | Raspberry Pi | 21 × 51 | 4 × M2 | [source](https://datasheets.raspberrypi.com/pico/pico-2-datasheet.pdf) | yes |
 | Raspberry Pi Zero 2 W / Zero W | Raspberry Pi | 65 × 30 | 4 × M2.5 | [source](https://datasheets.raspberrypi.com/rpizero2/raspberry-pi-zero-2-w-mechanical-drawing.pdf) | yes |
 | Banana Pi BPI-M2 Zero | Banana Pi | 65 × 30 | 4 × M2.5 | [source](https://wiki.banana-pi.org/Banana_Pi_BPI-M2_ZERO) | ≈ |

@@ -1,0 +1,40 @@
+{
+  "id": "raspberry-pi-cm5-io",
+  "name": "Raspberry Pi CM5 IO Board (with CM5)",
+  "vendor": "Raspberry Pi",
+  "kind": "sbc",
+  "size": { "w": 160, "d": 90, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 11, "y": 8, "d": 2.7 },
+      { "x": 132.5, "y": 8, "d": 2.7 },
+      { "x": 11, "y": 77, "d": 2.7 },
+      { "x": 132.5, "y": 77, "d": 2.7 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 16,
+  "bottomHeight": 2,
+  "ports": [
+    { "id": "hdmi-0", "type": "hdmi", "edge": "front", "along": 23, "protrude": 0 },
+    { "id": "hdmi-1", "type": "hdmi", "edge": "front", "along": 48, "protrude": 0 },
+    { "id": "ethernet", "type": "rj45", "edge": "front", "along": 74, "w": 16, "h": 13.5, "d": 21.4, "protrude": 1.4 },
+    { "id": "usb-3", "type": "usb-a", "edge": "front", "along": 93, "w": 14, "h": 16, "d": 17.5, "protrude": 0.8 },
+    { "id": "usb-c", "type": "usb-c", "edge": "front", "along": 108, "protrude": 1.2 },
+    { "id": "microsd", "type": "microsd", "edge": "front", "along": 121.25, "z": 0, "w": 12, "h": 1.5, "d": 14, "protrude": -0.5 },
+    { "id": "power-button", "type": "switch", "edge": "back", "along": 29.5, "w": 6, "h": 4, "d": 7, "protrude": 2.9 },
+    { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 32.5, "y": 52.5, "w": 51, "d": 5, "h": 8.5 },
+    { "id": "cam-disp-0", "type": "fpc", "edge": "top", "x": 11.5, "y": 86.25, "w": 14.1, "d": 6.3, "h": 2 },
+    { "id": "cam-disp-1", "type": "fpc", "edge": "top", "x": 47.5, "y": 86.25, "w": 14.1, "d": 6.3, "h": 2 },
+    { "id": "j2-header", "type": "header-1xN", "edge": "top", "x": 67.62, "y": 86.77, "w": 17.8, "d": 5.1, "h": 8.5 },
+    { "id": "poe-header", "type": "header-1xN", "edge": "top", "x": 61.5, "y": 9.5, "w": 5.1, "d": 5.1, "h": 8.5 },
+    { "id": "fan", "type": "generic", "edge": "top", "x": 125.85, "y": 77.3, "w": 2.9, "d": 6, "h": 4.25 },
+    { "id": "cm5", "type": "generic", "edge": "top", "x": 100, "y": 62.5, "w": 40, "d": 55, "h": 4.94 },
+    { "id": "pwr-led", "type": "led", "edge": "top", "x": 33.7, "y": 1.1, "d": 1.6 },
+    { "id": "act-led", "type": "led", "edge": "top", "x": 37.35, "y": 1.1, "d": 1.6 },
+    { "id": "nvme-led", "type": "led", "edge": "top", "x": 132.5, "y": 1.1, "d": 1.6 }
+  ],
+  "source": "https://datasheets.raspberrypi.com/cm5/cm5io-datasheet.pdf",
+  "verified": true
+}
