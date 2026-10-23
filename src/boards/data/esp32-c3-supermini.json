@@ -1,0 +1,19 @@
+{
+  "id": "esp32-c3-supermini",
+  "name": "ESP32-C3 SuperMini",
+  "vendor": "Espressif",
+  "kind": "mcu",
+  "size": { "w": 18, "d": 22.5, "t": 1 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
+  "topHeight": 3.3,
+  "bottomHeight": 1,
+  "ports": [
+    { "id": "usb", "type": "usb-c", "edge": "back", "along": 9, "protrude": 1.6 },
+    { "id": "boot", "type": "button", "edge": "top", "x": 6.3, "y": 13.9, "w": 4, "d": 3, "h": 1.5, "shape": "rect", "cut": false },
+    { "id": "reset", "type": "button", "edge": "top", "x": 11.6, "y": 13.9, "w": 4, "d": 3, "h": 1.5, "shape": "rect", "cut": false },
+    { "id": "led", "type": "led", "edge": "top", "x": 13.4, "y": 11.4, "d": 1.2 },
+    { "id": "antenna", "type": "antenna", "edge": "top", "x": 8.6, "y": 1.4, "w": 6.3, "d": 2.2, "h": 1.2 }
+  ],
+  "source": "https://mischianti.org/wp-content/uploads/2025/07/ESP32-C3-SuperMini-Size.jpg",
+  "verified": false
+}

@@ -131,6 +131,7 @@ shows the same mark). New boards: the add-board skill
 | Walnut Pi 1B | Walnut Pi | 85 × 56 | 4 × M2.5 | [source](https://www.walnutpi.com/) | ≈ |
 | ESP32-C3-DevKitM-1 | Espressif | 25.4 × 44.3 | rails (long) | [source](https://dl.espressif.com/dl/schematics/DIMENSION_ESP32-C3-DEVKITM-1_V1_20200915AA.pdf) | yes |
 | ESP32-2432S028R (Cheap Yellow Display) | Espressif | 86 × 50 | 4 × M3 | [source](https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/OriginalDocumentation/3-Structure_Diagram/Dimensions.png) | ≈ |
+| ESP32-C3 SuperMini | Espressif | 18 × 22.5 | rails (long) | [source](https://mischianti.org/wp-content/uploads/2025/07/ESP32-C3-SuperMini-Size.jpg) | ≈ |
 | ESP32-CAM (AI-Thinker) | Espressif | 27 × 40.5 | rails (long) | [source](https://docs.ai-thinker.com/en/esp32-cam) | ≈ |
 | ESP32-DevKitC V4 | Espressif | 54.4 × 27.9 | rails (long) | [source](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/hw-reference/esp32/get-started-devkitc.html) | ≈ |
 | ESP32-S3-DevKitC-1 | Espressif | 25.4 × 62.74 | rails (long) | [source](https://dl.espressif.com/dl/schematics/esp_idf/DXF_ESP32-S3-DevKitC-1_V1.1_20220429.pdf) | yes |
