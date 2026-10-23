@@ -1,0 +1,18 @@
+{
+  "id": "waveshare-zero",
+  "name": "Waveshare RP2040-Zero / RP2350-Zero / ESP32-S3-Zero",
+  "vendor": "Waveshare",
+  "kind": "mcu",
+  "size": { "w": 18, "d": 23.5, "t": 0.8 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
+  "topHeight": 3,
+  "bottomHeight": 1,
+  "ports": [
+    { "id": "usb", "type": "usb-c", "edge": "back", "along": 9, "z": -0.3, "protrude": 1.1 },
+    { "id": "boot", "type": "button", "edge": "top", "x": 4.5, "y": 7.55, "w": 3, "d": 4.6, "h": 2.5, "shape": "rect", "cut": false },
+    { "id": "reset", "type": "button", "edge": "top", "x": 13.5, "y": 7.55, "w": 3, "d": 4.6, "h": 2.5, "shape": "rect", "cut": false },
+    { "id": "rgb-led", "type": "led", "edge": "top", "x": 9, "y": 8.05, "w": 1.5, "d": 1.8, "h": 1, "shape": "rect", "cut": false }
+  ],
+  "source": "https://files.waveshare.com/wiki/RP2350-Zero/RP2350_Zero_step.zip",
+  "verified": true
+}

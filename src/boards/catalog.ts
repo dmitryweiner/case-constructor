@@ -65,6 +65,7 @@ import quinledDigUno from './data/quinled-dig-uno.json';
 import rakwirelessRak19007 from './data/rakwireless-rak19007.json';
 import seeedXiao from './data/seeed-xiao.json';
 import seeedXiaoEsp32s3Sense from './data/seeed-xiao-esp32s3-sense.json';
+import waveshareZero from './data/waveshare-zero.json';
 
 /** Raw entries as they are in the files — the tests validate them strictly. */
 export const RAW_BOARDS: readonly unknown[] = [
@@ -128,6 +129,7 @@ export const RAW_BOARDS: readonly unknown[] = [
   rakwirelessRak19007,
   seeedXiao,
   seeedXiaoEsp32s3Sense,
+  waveshareZero,
 ];
 
 export const CATALOG: readonly BoardDef[] = RAW_BOARDS.map((raw) => sanitizeBoard(raw));

@@ -48,6 +48,13 @@ drawing is worth as much as a new board.
 
 ## Tier A — the first wave
 
+Added to the catalog on 2026-10-23 (`docs/boards.md`). The Pico 2 turned
+out to be an alias of the Pico entry. Two families got a second entry
+each: the ESP32-S2/S3/C6 Feathers (their antenna-end holes are Ø2.2 and
+shifted) and the XIAO ESP32-S3 Sense (the camera board). The ROCK 5B+
+drawing showed that the `radxa-rock-5b` entry's front connectors have the
+right positions but the wrong types.
+
 ### Single-board computers
 
 | Board | SoC | Size, mm | Why | Drawing | Note |
