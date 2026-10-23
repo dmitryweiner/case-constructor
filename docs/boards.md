@@ -121,6 +121,7 @@ shows the same mark). New boards: the add-board skill
 | Radxa Dragon Q6A | Radxa | 85 × 56 | 4 × M2.5 | [source](https://dl.radxa.com/dragon/q6a/hw/radxa_dragon_q6a_2d_dimensions_v1.21.pdf) | yes |
 | Radxa ROCK 3A | Radxa | 85 × 54 | 4 × M2.5 | [source](https://dl.radxa.com/rock3/docs/hw/3a/radxa_rock_3a_v1310_2d_dxf.zip) | ≈ |
 | Radxa ROCK 4 SE | Radxa | 85 × 54 | 4 × M2.5 | [source](https://docs.radxa.com/en/rock4/rock4se) | ≈ |
+| Radxa ROCK 4D | Radxa | 85 × 56 | 4 × M2.5 | [source](https://dl.radxa.com/rock4/4d/docs/hw/Radxa_ROCK_4D_2D_DXF_V1.11_20250328.zip) | yes |
 | Radxa ROCK 5B | Radxa | 100.2 × 74.25 | 6 × M2.5 | [source](https://dl.radxa.com/rock5/5b/docs/hw/radxa_rock5b_v141_dimension_20220728_pdf.zip) | ≈ |
 | Radxa ZERO 3W | Radxa | 65 × 30 | 4 × M2.5 | [source](https://dl.radxa.com/zero3/docs/hw/3w/radxa_zero_3w_2d_dxf.zip) | ≈ |
 | Repka Pi 3 | Repka Pi | 85 × 56 | 4 × M2.5 | [source](https://repka-pi.ru/) | ≈ |

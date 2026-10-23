@@ -28,6 +28,7 @@ import orangePiZero3w from './data/orange-pi-zero-3w.json';
 import radxaDragonQ6a from './data/radxa-dragon-q6a.json';
 import radxaRock3a from './data/radxa-rock-3a.json';
 import radxaRock4Se from './data/radxa-rock-4-se.json';
+import radxaRock4d from './data/radxa-rock-4d.json';
 import radxaRock5b from './data/radxa-rock-5b.json';
 import radxaZero3w from './data/radxa-zero-3w.json';
 import repkaPi3 from './data/repka-pi-3.json';
@@ -74,6 +75,7 @@ export const RAW_BOARDS: readonly unknown[] = [
   radxaDragonQ6a,
   radxaRock3a,
   radxaRock4Se,
+  radxaRock4d,
   radxaRock5b,
   radxaZero3w,
   repkaPi3,
