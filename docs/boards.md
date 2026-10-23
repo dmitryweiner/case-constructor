@@ -143,6 +143,7 @@ shows the same mark). New boards: the add-board skill
 | Arduino Nano / Nano Every | Arduino | 43.18 × 17.78 | rails (long) | [source](https://docs.arduino.cc/resources/datasheets/ABX00028-datasheet.pdf) | yes |
 | Arduino Pro Mini | Arduino | 33 × 18 | rails (long) | [source](https://docs.arduino.cc/retired/boards/arduino-pro-mini/) | ≈ |
 | Arduino Uno R3 / R4 | Arduino | 68.58 × 53.34 | 4 × M3 | [source](https://docs.arduino.cc/resources/datasheets/A000066-datasheet.pdf) | ≈ |
+| Arduino UNO Q | Arduino | 68.58 × 53.34 | 4 × M3 | [source](https://docs.arduino.cc/resources/datasheets/ABX00162-datasheet.pdf) | yes |
 | Heltec WiFi LoRa 32 V3 | Heltec | 50.2 × 25.5 | rails (long) | [source](https://resource.heltec.cn/download/WiFi_LoRa_32_V3/HTIT-WB32LA_V3.2.pdf) | yes |
 | Heltec Wireless Stick Lite V3 | Heltec | 58.08 × 22.6 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Stick_Lite_V3/HTIT-WSL_V3(Rev1.1).pdf) | yes |
 | Heltec Wireless Stick V3 | Heltec | 58.08 × 22.6 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Stick_V3/HTIT-WS_V3(Rev1.0).pdf) | yes |
