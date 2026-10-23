@@ -1,0 +1,19 @@
+{
+  "id": "seeed-xiao",
+  "name": "Seeed XIAO (ESP32-S3/C3/C6, RP2040/RP2350, nRF52840, SAMD21, MG24)",
+  "vendor": "Seeed",
+  "kind": "mcu",
+  "size": { "w": 17.78, "d": 21.14, "t": 1.2 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
+  "topHeight": 3.3,
+  "bottomHeight": 1,
+  "ports": [
+    { "id": "usb", "type": "usb-c", "edge": "back", "along": 8.89, "protrude": 1.5 },
+    { "id": "reset", "type": "button", "edge": "top", "x": 2.96, "y": 19.36, "w": 1.6, "d": 2.6, "h": 0.8, "shape": "rect", "cut": false },
+    { "id": "boot", "type": "button", "edge": "top", "x": 14.8, "y": 19.36, "w": 1.6, "d": 2.6, "h": 0.8, "shape": "rect", "cut": false },
+    { "id": "shield", "type": "generic", "edge": "top", "x": 8.89, "y": 8.94, "w": 12.6, "d": 10.6, "h": 2 },
+    { "id": "u-fl", "type": "antenna", "edge": "top", "x": 4.16, "y": 1.72, "w": 3.1, "d": 3, "h": 1.25 }
+  ],
+  "source": "https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/XIAO_ESP32S3_v1.1_Dimensioning.dxf",
+  "verified": true
+}
