@@ -1,0 +1,20 @@
+{
+  "id": "seeed-xiao-esp32s3-sense",
+  "name": "Seeed XIAO ESP32-S3 Sense (with camera board)",
+  "vendor": "Seeed",
+  "kind": "mcu",
+  "size": { "w": 17.78, "d": 21.14, "t": 1.2 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
+  "topHeight": 12.8,
+  "bottomHeight": 1,
+  "ports": [
+    { "id": "usb", "type": "usb-c", "edge": "back", "along": 8.89, "protrude": 1.5 },
+    { "id": "microsd", "type": "microsd", "edge": "back", "along": 8.6, "z": 4.1, "w": 11.5, "h": 2.7, "protrude": 0 },
+    { "id": "camera", "type": "generic", "edge": "top", "x": 8.4, "y": 17.1, "d": 7, "h": 12.7, "shape": "round", "cut": true },
+    { "id": "reset", "type": "button", "edge": "top", "x": 2.96, "y": 19.36, "w": 1.6, "d": 2.6, "h": 0.8, "shape": "rect", "cut": false },
+    { "id": "boot", "type": "button", "edge": "top", "x": 14.8, "y": 19.36, "w": 1.6, "d": 2.6, "h": 0.8, "shape": "rect", "cut": false },
+    { "id": "u-fl", "type": "antenna", "edge": "top", "x": 4.16, "y": 1.72, "w": 3.1, "d": 3, "h": 1.25 }
+  ],
+  "source": "https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/seeed-studio-xiao-esp32s3-sense-3d_model.zip",
+  "verified": false
+}

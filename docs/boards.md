@@ -157,3 +157,4 @@ shows the same mark). New boards: the add-board skill
 | QuinLED Dig-Uno v3 / v2 | QuinLED | 48.5 × 39.4 | 4 × M2 | [source](https://quinled.info/2020/08/02/quinled-dig-uno-board-dimensions/) | ≈ |
 | RAKwireless RAK19007 + RAK4631 (WisBlock) | RAKwireless | 60 × 30 | 4 × M2.5 | [source](https://docs.rakwireless.com/product-categories/wisblock/rak19007/datasheet/) | yes |
 | Seeed XIAO (ESP32-S3/C3/C6, RP2040/RP2350, nRF52840, SAMD21, MG24) | Seeed | 17.78 × 21.14 | rails (long) | [source](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/XIAO_ESP32S3_v1.1_Dimensioning.dxf) | yes |
+| Seeed XIAO ESP32-S3 Sense (with camera board) | Seeed | 17.78 × 21.14 | rails (long) | [source](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/seeed-studio-xiao-esp32s3-sense-3d_model.zip) | ≈ |
