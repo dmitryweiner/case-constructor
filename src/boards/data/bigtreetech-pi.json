@@ -1,0 +1,37 @@
+{
+  "id": "bigtreetech-pi",
+  "name": "BIGTREETECH Pi V1.2 / BTT Pi (CB1)",
+  "vendor": "BIGTREETECH",
+  "kind": "sbc",
+  "size": { "w": 85, "d": 56, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.3, "y": 3.3, "d": 2.5 },
+      { "x": 67.35, "y": 3.3, "d": 2.5 },
+      { "x": 3.3, "y": 52.7, "d": 2.5 },
+      { "x": 61.54, "y": 52.7, "d": 2.5 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 16.3,
+  "bottomHeight": 2.2,
+  "ports": [
+    { "id": "usb-c", "type": "usb-c", "edge": "back", "along": 13.51, "h": 3.5, "protrude": 1.4 },
+    { "id": "audio", "type": "audio-3.5", "edge": "back", "along": 25.3, "w": 5, "protrude": 1.4 },
+    { "id": "hdmi", "type": "micro-hdmi", "edge": "back", "along": 35.79, "w": 6.5, "h": 3.05, "protrude": 1.44 },
+    { "id": "usb-1", "type": "usb-a", "edge": "right", "along": 8.73, "w": 14.5, "h": 16.3, "d": 17.6, "protrude": 3.4 },
+    { "id": "usb-2", "type": "usb-a", "edge": "right", "along": 26.71, "w": 14.5, "h": 16.3, "d": 17.6, "protrude": 3.4 },
+    { "id": "ethernet", "type": "rj45", "edge": "right", "along": 45.66, "w": 15.9, "h": 13.5, "d": 21.4, "protrude": 3.44 },
+    { "id": "power-in", "type": "generic", "edge": "left", "along": 11.79, "w": 10.6, "h": 8, "d": 10.3, "protrude": 2.95, "cut": true },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 23, "z": -3.1, "w": 11.4, "h": 1.45, "d": 13.5, "protrude": -0.5 },
+    { "id": "ir", "type": "generic", "edge": "front", "along": 9.8, "w": 6, "h": 6.25, "d": 5.5, "protrude": 1, "cut": true },
+    { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 38.87, "y": 3.07, "w": 50.8, "d": 5.08, "h": 8.5 },
+    { "id": "spi-screen", "type": "fpc", "edge": "top", "x": 3.43, "y": 39.93, "w": 4.9, "d": 15.4, "h": 6.3 },
+    { "id": "adxl345", "type": "generic", "edge": "top", "x": 3.59, "y": 24.45, "w": 5.2, "d": 9.6, "h": 4.7 },
+    { "id": "can", "type": "generic", "edge": "top", "x": 48, "y": 52.1, "w": 12.5, "d": 6, "h": 8 },
+    { "id": "fan", "type": "generic", "edge": "top", "x": 48.07, "y": 11.7, "w": 10, "d": 6, "h": 8 }
+  ],
+  "source": "https://github.com/bigtreetech/BTT-Pi/blob/master/3D/BIGTREETECH_Pi_V1.2.zip",
+  "verified": true
+}

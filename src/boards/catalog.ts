@@ -15,6 +15,7 @@ import raspberryPiZero2W from './data/raspberry-pi-zero-2-w.json';
 import bananaPiM2Zero from './data/banana-pi-m2-zero.json';
 import bananaPiM5 from './data/banana-pi-m5.json';
 import bananaPiM64 from './data/banana-pi-m64.json';
+import bigtreetechPi from './data/bigtreetech-pi.json';
 import orangePi3Lts from './data/orange-pi-3-lts.json';
 import orangePi4Pro from './data/orange-pi-4-pro.json';
 import orangePi5 from './data/orange-pi-5.json';
@@ -55,6 +56,7 @@ export const RAW_BOARDS: readonly unknown[] = [
   bananaPiM2Zero,
   bananaPiM5,
   bananaPiM64,
+  bigtreetechPi,
   orangePi3Lts,
   orangePi4Pro,
   orangePi5,
