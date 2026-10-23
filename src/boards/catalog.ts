@@ -52,6 +52,7 @@ import arduinoProMini from './data/arduino-pro-mini.json';
 import arduinoUno from './data/arduino-uno.json';
 import arduinoUnoQ from './data/arduino-uno-q.json';
 import heltecWifiLora32V3 from './data/heltec-wifi-lora-32-v3.json';
+import heltecMeshNodeT114 from './data/heltec-mesh-node-t114.json';
 import heltecWirelessStickLiteV3 from './data/heltec-wireless-stick-lite-v3.json';
 import heltecWirelessStickV3 from './data/heltec-wireless-stick-v3.json';
 import heltecWirelessTracker from './data/heltec-wireless-tracker.json';
@@ -105,6 +106,7 @@ export const RAW_BOARDS: readonly unknown[] = [
   arduinoUno,
   arduinoUnoQ,
   heltecWifiLora32V3,
+  heltecMeshNodeT114,
   heltecWirelessStickLiteV3,
   heltecWirelessStickV3,
   heltecWirelessTracker,

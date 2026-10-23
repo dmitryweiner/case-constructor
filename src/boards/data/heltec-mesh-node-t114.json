@@ -1,0 +1,21 @@
+{
+  "id": "heltec-mesh-node-t114",
+  "name": "Heltec Mesh Node T114",
+  "vendor": "Heltec",
+  "kind": "mcu",
+  "size": { "w": 50.8, "d": 22.86, "t": 1.6 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
+  "topHeight": 4.6,
+  "bottomHeight": 3.5,
+  "ports": [
+    { "id": "usb-c", "type": "usb-c", "edge": "left", "along": 11.43, "protrude": 1.5 },
+    { "id": "display", "type": "display", "edge": "top", "x": 23.53, "y": 11.43, "w": 31.25, "d": 17.7, "h": 4.6 },
+    { "id": "user", "type": "button", "edge": "top", "x": 2.25, "y": 19.5, "w": 3.3, "d": 3.3, "h": 4.6, "shape": "rect" },
+    { "id": "rst", "type": "button", "edge": "top", "x": 2.25, "y": 3.45, "w": 3.3, "d": 3.3, "h": 4.6, "shape": "rect" },
+    { "id": "rgb1", "type": "led", "edge": "top", "x": 8.9, "y": 15.1, "d": 3 },
+    { "id": "rgb2", "type": "led", "edge": "top", "x": 8.9, "y": 7.3, "d": 3 },
+    { "id": "lora-antenna", "type": "antenna", "edge": "top", "x": 49.3, "y": 5.1 }
+  ],
+  "source": "https://resource.heltec.cn/download/Mesh_Node_T114/Datasheet.pdf",
+  "verified": true
+}
