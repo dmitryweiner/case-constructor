@@ -1,0 +1,38 @@
+{
+  "id": "radxa-dragon-q6a",
+  "name": "Radxa Dragon Q6A",
+  "vendor": "Radxa",
+  "kind": "sbc",
+  "size": { "w": 85, "d": 56, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.5, "y": 3.5, "d": 3.5 },
+      { "x": 61.5, "y": 3.5, "d": 3.5 },
+      { "x": 3.5, "y": 52.5, "d": 3.5 },
+      { "x": 61.5, "y": 52.5, "d": 3.5 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 16.3,
+  "bottomHeight": 3.7,
+  "ports": [
+    { "id": "usb-c", "type": "usb-c", "edge": "front", "along": 11.2, "z": 0, "h": 3.1, "protrude": 1.2 },
+    { "id": "hdmi", "type": "hdmi", "edge": "front", "along": 32, "z": 0.4, "h": 6, "protrude": 2.3 },
+    { "id": "audio", "type": "audio-3.5", "edge": "front", "along": 54, "z": -0.75, "protrude": 2.6 },
+    { "id": "edl-button", "type": "switch", "edge": "front", "along": 66.9, "z": 0.7, "w": 1.8, "h": 2, "d": 3.7, "protrude": 0.4 },
+    { "id": "usb-1", "type": "usb-a", "edge": "right", "along": 8.6, "z": 0.6, "w": 14.5, "h": 15.6, "d": 17.5, "protrude": 2.75 },
+    { "id": "usb-2", "type": "usb-a", "edge": "right", "along": 27.1, "z": 0.6, "w": 14.5, "h": 15.6, "d": 17.5, "protrude": 2.75 },
+    { "id": "ethernet", "type": "rj45", "edge": "right", "along": 45.85, "z": 0.3, "w": 15.9, "h": 13.3, "protrude": 3.3 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 28.6, "z": -2.9, "h": 1.3, "protrude": 0 },
+    { "id": "power-button", "type": "switch", "edge": "left", "along": 19.1, "z": 0.7, "w": 1.8, "h": 2, "d": 3.7, "protrude": 0.4 },
+    { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 32.5, "y": 52.5, "w": 51, "d": 5, "h": 9.65 },
+    { "id": "poe", "type": "header-1xN", "edge": "top", "x": 61.55, "y": 46.4, "w": 5.08, "d": 5.08, "h": 7.5 },
+    { "id": "power-header", "type": "header-1xN", "edge": "top", "x": 20.24, "y": 2.17, "w": 7.62, "d": 2.54, "h": 8.5 },
+    { "id": "m2", "type": "generic", "edge": "top", "x": 12.34, "y": 42, "w": 21.85, "d": 8.15, "h": 5.5 },
+    { "id": "antenna-bt", "type": "antenna", "edge": "top", "x": 1.47, "y": 25.37, "w": 2.6, "d": 3, "h": 1.25 },
+    { "id": "antenna-wifi", "type": "antenna", "edge": "top", "x": 1.47, "y": 31.9, "w": 2.6, "d": 3, "h": 1.25 }
+  ],
+  "source": "https://dl.radxa.com/dragon/q6a/hw/radxa_dragon_q6a_2d_dimensions_v1.21.pdf",
+  "verified": true
+}
