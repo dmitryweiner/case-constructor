@@ -154,3 +154,4 @@ shows the same mark). New boards: the add-board skill
 | Adafruit Feather ESP32-S3 / S2 / C6 (incl. TFT, Reverse TFT) | Adafruit | 50.8 × 22.86 | 4 × M2 | [source](https://github.com/adafruit/Adafruit-Feather-ESP32-S3-PCB) | yes |
 | Olimex ESP32-POE-ISO (rev K and later) | Olimex | 28 × 98.15 | 3 × M2 | [source](https://github.com/OLIMEX/ESP32-POE-ISO/blob/master/HARDWARE/Dimensions/Revision%20J%20and%20newer/ESP32-POE-ISO-revision-J-dimensions.pdf) | yes |
 | QuinLED Dig-Quad v3 | QuinLED | 48.2 × 100.4 | 4 × M2.5 | [source](https://quinled.info/quinled-dig-quad-board-dimensions/) | yes |
+| QuinLED Dig-Uno v3 / v2 | QuinLED | 48.5 × 39.4 | 4 × M2 | [source](https://quinled.info/2020/08/02/quinled-dig-uno-board-dimensions/) | ≈ |
