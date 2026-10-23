@@ -114,6 +114,7 @@ shows the same mark). New boards: the add-board skill
 | Orange Pi 5 | Orange Pi | 100 × 62 | 4 × M2.5 | [source](https://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-5.html) | ≈ |
 | Orange Pi 5 Max | Orange Pi | 89 × 57 | 4 × M2.5 | [source](https://drive.google.com/file/d/1HTPhgRq5EuVlTSzSiLY6-X320II8eArF/view) | yes |
 | Orange Pi 5 Plus | Orange Pi | 100 × 75 | 4 × M3 | [source](https://drive.google.com/file/d/1rW0tlabPHQ-_rhFcBBpHRGK9TQmT1JEP/view) | yes |
+| Orange Pi 5 Pro | Orange Pi | 89.07 × 56 | 4 × M2.5 | [source](https://drive.google.com/file/d/10j5W9Dki9KfirN4JE5pp6X2RujavGOyS/view) | yes |
 | Orange Pi Zero 2W | Orange Pi | 65 × 30 | 4 × M2.5 | [source](https://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-Zero-2W.html) | ≈ |
 | Orange Pi Zero 3 | Orange Pi | 50 × 55 | 4 × M2.5 | [source](https://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-Zero-3.html) | ≈ |
 | Radxa ROCK 3A | Radxa | 85 × 54 | 4 × M2.5 | [source](https://dl.radxa.com/rock3/docs/hw/3a/radxa_rock_3a_v1310_2d_dxf.zip) | ≈ |

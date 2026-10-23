@@ -21,6 +21,7 @@ import orangePi4Pro from './data/orange-pi-4-pro.json';
 import orangePi5 from './data/orange-pi-5.json';
 import orangePi5Max from './data/orange-pi-5-max.json';
 import orangePi5Plus from './data/orange-pi-5-plus.json';
+import orangePi5Pro from './data/orange-pi-5-pro.json';
 import orangePiZero2w from './data/orange-pi-zero-2w.json';
 import orangePiZero3 from './data/orange-pi-zero-3.json';
 import radxaRock3a from './data/radxa-rock-3a.json';
@@ -64,6 +65,7 @@ export const RAW_BOARDS: readonly unknown[] = [
   orangePi5,
   orangePi5Max,
   orangePi5Plus,
+  orangePi5Pro,
   orangePiZero2w,
   orangePiZero3,
   radxaRock3a,
