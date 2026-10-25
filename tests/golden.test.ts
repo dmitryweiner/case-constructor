@@ -137,6 +137,11 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     boards: [{ board: 'arduino-nano', pins: true }],
   }),
+  // B2: a board on M1.6 screws (PLAN-IMPROVEMENTS-NEW-BOARDS.md)
+  'heltec-v4-m1.6': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'heltec-wifi-lora-32-v4' }],
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

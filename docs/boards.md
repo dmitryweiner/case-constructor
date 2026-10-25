@@ -12,7 +12,7 @@ Each board has:
 | Standoff height | the board's underside parts + 1 mm … 60 mm | PCB underside above the floor |
 | Pins soldered downwards | on / off | boards with header rows; the default is how the board ships; the board goes up with its pins (8.5 mm with the plastic) |
 | Rotation | 0° / 90° / 180° / 270° | |
-| Screw | M2 / M2.5 / M3 / M4 | boards with mounting holes; the default comes from the board |
+| Screw | M1.6 / M2 / M2.5 / M3 / M4 | boards with mounting holes; the default comes from the board (M1.6 is for boards only: the lid takes M2 and up) |
 | Hole | tap / insert / nut | see below |
 
 Up to 8 boards; boards that overlap, or a standoff that runs into another
@@ -65,10 +65,11 @@ The custom board is part of the project and travels with the project file.
 A board with mounting holes stands on a standoff per hole. The standoff
 diameter follows the screw (hole + 2 × 1.6 mm, at least 5 mm):
 
-- **tap** — a pilot hole for a self-tapping screw (M2 1.7, M2.5 2.2, M3 2.6,
-  M4 3.5 mm).
-- **insert** — a hole for a heat-set insert (M2 3.2, M2.5 3.5, M3 4.0, M4
-  5.6 mm), as deep as the insert, with a 0.5 mm chamfer.
+- **tap** — a pilot hole for a self-tapping screw (M1.6 1.3, M2 1.7, M2.5
+  2.2, M3 2.6, M4 3.5 mm).
+- **insert** — a hole for a heat-set insert (M1.6 2.4, M2 3.2, M2.5 3.5, M3
+  4.0, M4 5.6 mm), as deep as the insert, with a 0.5 mm chamfer. The M1.6
+  insert is an estimate until a real one is measured.
 - **nut** — a hexagonal pocket for a nut, 2 mm above the floor (lower if the
   standoff is short), with a slot towards the board's centre to slide the nut
   in before the board goes on; the screw goes through a clearance hole.

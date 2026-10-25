@@ -4,7 +4,7 @@
 import type { Face } from './face';
 import { isFace } from './face';
 import type { FastenerSpec, MagnetSize } from './fasteners';
-import { BOSS_MIN_D, BOSS_WALL, MAGNETS, bossDiameter, defaultFastener, isMagnetSize, sanitizeFastener } from './fasteners';
+import { BOSS_MIN_D, BOSS_WALL, MAGNETS, bossDiameter, defaultFastener, isLidScrewSize, isMagnetSize, sanitizeFastener } from './fasteners';
 import type { ShapeKind } from './shape';
 import type { ThreadSize } from './thread';
 import { THREADS, THREAD_WALL, isThreadSize } from './thread';
@@ -55,6 +55,11 @@ function isFastening(value: unknown): value is Fastening {
   return typeof value === 'string' && FASTENINGS.some((kind) => kind === value);
 }
 
+/** A lid screw from a file may be a board size: the lid falls back to its default. */
+function lidFastener(spec: FastenerSpec, fallback: FastenerSpec): FastenerSpec {
+  return isLidScrewSize(spec.size) ? spec : { ...spec, size: fallback.size };
+}
+
 export function sanitizeLid(raw: unknown, kind: ShapeKind): LidState {
   const d = defaultLid();
   const r = typeof raw === 'object' && raw !== null ? raw : {};
@@ -73,7 +78,7 @@ export function sanitizeLid(raw: unknown, kind: ShapeKind): LidState {
     face: isFace(face) && allowed.includes(face) ? face : allowed[0],
     depth: clampNum(Reflect.get(r, 'depth'), 0, DEPTH_MAX, d.depth),
     fastening: isFastening(fastening) ? fastening : d.fastening,
-    screw: sanitizeFastener(Reflect.get(r, 'screw'), d.screw),
+    screw: lidFastener(sanitizeFastener(Reflect.get(r, 'screw'), d.screw), d.screw),
     magnet: {
       size: isMagnetSize(magnetSize) ? magnetSize : d.magnet.size,
       fit: clampNum(Reflect.get(magnetRec, 'fit'), 0, 0.5, d.magnet.fit),

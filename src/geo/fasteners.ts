@@ -2,8 +2,10 @@
 // in mm; this table is the one place to tune fits after a test print (there
 // is deliberately no global hole compensation parameter).
 
-export const SCREW_SIZES = ['M2', 'M2.5', 'M3', 'M4'] as const;
+export const SCREW_SIZES = ['M1.6', 'M2', 'M2.5', 'M3', 'M4'] as const;
 export type ScrewSize = (typeof SCREW_SIZES)[number];
+/** The lid's posts take M2 and up: an M1.6 does not hold a lid. */
+export const LID_SCREW_SIZES = ['M2', 'M2.5', 'M3', 'M4'] as const satisfies readonly ScrewSize[];
 
 /** plain hole for a self-tapping screw | heat-set insert | embedded hex nut */
 export const HOLE_KINDS = ['tap', 'insert', 'nut'] as const;
@@ -37,6 +39,8 @@ export interface ScrewDims {
 }
 
 export const SCREWS: Readonly<Record<ScrewSize, ScrewDims>> = {
+  // M1.6: board holes only (Heltec V4); the insert is an estimate until a real one is measured
+  'M1.6': { d: 1.6, tap: 1.3, insert: 2.4, insertLen: 3, nutAF: 3.2, nutH: 1.3, headD: 3.2, headH: 1.3 },
   'M2': { d: 2, tap: 1.7, insert: 3.2, insertLen: 4, nutAF: 4.0, nutH: 1.6, headD: 3.8, headH: 1.3 },
   'M2.5': { d: 2.5, tap: 2.2, insert: 3.5, insertLen: 4, nutAF: 5.0, nutH: 2.0, headD: 4.5, headH: 1.7 },
   'M3': { d: 3, tap: 2.6, insert: 4.0, insertLen: 5, nutAF: 5.5, nutH: 2.4, headD: 5.5, headH: 2.0 },
@@ -72,6 +76,10 @@ export const THROUGH_CLEARANCE = 0.4;
 
 export function isScrewSize(value: unknown): value is ScrewSize {
   return typeof value === 'string' && SCREW_SIZES.some((size) => size === value);
+}
+
+export function isLidScrewSize(value: unknown): value is (typeof LID_SCREW_SIZES)[number] {
+  return typeof value === 'string' && LID_SCREW_SIZES.some((size) => size === value);
 }
 
 export function isHoleKind(value: unknown): value is HoleKind {

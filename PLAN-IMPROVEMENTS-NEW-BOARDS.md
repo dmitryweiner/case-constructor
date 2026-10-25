@@ -101,6 +101,8 @@ its modules, not for mounting the board.
 tap < d < insert). The lid sanitizer refuses M1.6. The golden test gets a
 new state with a board on M1.6.
 
+**Done.** `LID_SCREW_SIZES` is the lid's list; the Heltec V4 is on M1.6.
+
 ## B3. Non-rectangular outlines
 
 **Now.** `size` is a rectangle. Entries that are not:

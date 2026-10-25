@@ -7,7 +7,8 @@ import type { CsgApi } from '../src/geo/csg';
 import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, standoffColumns, PIN_SPACER, RAIL_GRIP } from '../src/geo/layout';
-import { SCREWS, NUT_CLEARANCE } from '../src/geo/fasteners';
+import { SCREWS, SCREW_SIZES, LID_SCREW_SIZES, NUT_CLEARANCE } from '../src/geo/fasteners';
+import { sanitizeLid } from '../src/geo/lidSpec';
 import { HOLE_SKIN, NUT_LIFT } from '../src/geo/standoffs';
 import { validateMesh } from '../src/geo/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
@@ -34,6 +35,23 @@ function solidAt(part: Manifold, x: number, y: number, z: number): boolean {
 function withMount(hole: 'tap' | 'insert' | 'nut', z = 8): AppState {
   return sanitizeState({ ...defaultState(), boards: [{ board: 'raspberry-pi-4b', z, mount: { size: 'M2.5', hole } }] });
 }
+
+describe('the screw table', () => {
+  it.each(SCREW_SIZES.map((size) => [size]))('%s is consistent', (size) => {
+    const dims = SCREWS[size];
+    for (const value of Object.values(dims)) expect(value).toBeGreaterThan(0);
+    expect(dims.tap).toBeLessThan(dims.d);
+    expect(dims.d).toBeLessThan(dims.insert);
+    expect(dims.nutAF).toBeGreaterThan(dims.d);
+    expect(dims.headD).toBeGreaterThan(dims.d);
+  });
+
+  it('the lid takes M2 and up: an M1.6 from a file falls back to the default', () => {
+    expect(LID_SCREW_SIZES).not.toContain('M1.6');
+    const lid = sanitizeLid({ ...defaultState().lid, screw: { size: 'M1.6', hole: 'nut', head: 'countersunk' } }, 'box');
+    expect(lid.screw).toEqual({ ...defaultState().lid.screw, hole: 'nut', head: 'countersunk' });
+  });
+});
 
 describe('standoffs', () => {
   it.each(['tap', 'insert', 'nut'] as const)('%s: watertight, hole open on top, skin below', (hole) => {

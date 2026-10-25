@@ -4,7 +4,7 @@ import type { Control } from './controls';
 import { FACES } from '../geo/face';
 import type { LidState } from '../geo/lidSpec';
 import { DEPTH_MAX, FASTENINGS, lidFaces } from '../geo/lidSpec';
-import { HEAD_KINDS, HOLE_KINDS, MAGNETS, MAGNET_SIZES, SCREW_SIZES } from '../geo/fasteners';
+import { HEAD_KINDS, HOLE_KINDS, LID_SCREW_SIZES, MAGNETS, MAGNET_SIZES } from '../geo/fasteners';
 import { THREADS, THREAD_SIZES } from '../geo/thread';
 import type { AppState } from '../state/schema';
 
@@ -38,9 +38,9 @@ export function lidControls(): Control<AppState>[] {
     },
     {
       kind: 'select', key: 'screw', label: 'lid.screw', when: screws,
-      options: SCREW_SIZES.map((size) => ({ value: size, text: size })),
+      options: LID_SCREW_SIZES.map((size) => ({ value: size, text: size })),
       get: (state) => state.lid.screw.size,
-      set: (state, value) => lidOf(state, { screw: { ...state.lid.screw, size: SCREW_SIZES.find((size) => size === value) ?? state.lid.screw.size } }),
+      set: (state, value) => lidOf(state, { screw: { ...state.lid.screw, size: LID_SCREW_SIZES.find((size) => size === value) ?? state.lid.screw.size } }),
     },
     {
       kind: 'segmented', key: 'hole', label: 'lid.hole', hint: 'board.hole.hint', when: screws,
