@@ -59,7 +59,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   dx,dy`, `--url <path>`, `--wait <ms>`, `--width/--height`, `--preview`,
   `--eval '<js>'` (prints a page expression; dev builds expose
   `window.__case.state() / parts() / ghosts() / drawn() / drawnParts()` — the meshes and
-  the roles actually drawn). A picture can lie (an open box seen from above
+  the roles actually drawn; `built()` — the worker has answered for the
+  current state). On the dev server it waits for the first build and for the
+  build after each action; a page reload in between (HMR while another
+  process edits files) exits with code 3 instead of shooting the old page.
+  A picture can lie (an open box seen from above
   looks closed under flat light): check the mesh with `--eval` or
   `inspect.mjs --levels` before believing an image.
 - `scripts/inspect.mjs` — builds a case in Node (through vitest, so the same

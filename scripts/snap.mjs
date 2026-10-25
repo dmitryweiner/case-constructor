@@ -26,7 +26,12 @@
 //   --url <path>          shoot any server path (the icon, an asset)
 //   --eval <js>           evaluate an expression in the page after the shot and print it
 //                         (dev builds expose window.__case: state(), parts(), ghosts(),
-//                         drawn(), drawnParts(), project([[x, y, z], …]))
+//                         drawn(), drawnParts(), project([[x, y, z], …]), built())
+//
+// On the dev server the snap waits for the app's first build before the
+// actions and for the build of each action's state after it. A page reload
+// in between (Vite's HMR, while another process edits files) is an error:
+// the actions would have gone to the old page.
 
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -73,12 +78,44 @@ await page.waitForFunction(
   { timeout: 20000 },
 );
 
+// Dev builds report when the worker has answered for the current state; the
+// production build has no hook, and there the audit's text is all there is.
+const dev = await page.evaluate(() => typeof window.__case?.built === 'function');
+async function settle() {
+  if (dev) {
+    await page.waitForFunction(() => window.__case?.built(), undefined, { timeout: 30000 });
+    return;
+  }
+  await page.waitForFunction(
+    () => {
+      const text = document.querySelector('#audit')?.textContent ?? '';
+      return text.length > 0 && !/building|сборка|збирання|בונה/.test(text);
+    },
+    undefined,
+    { timeout: 30000 },
+  ).catch(() => {});
+}
+await settle();
+
+// From here on a navigation of the main frame is a reload under our feet.
+let reloaded = false;
+page.on('framenavigated', (frame) => {
+  if (frame === page.mainFrame()) reloaded = true;
+});
+function checkReload(step) {
+  if (!reloaded) return;
+  console.error(`the page reloaded during the actions (at ${step}): the dev server saw a file change. Run the snap again.`);
+  process.exit(3);
+}
+
 const preset = flags.get('preset');
 if (preset) {
   label(`preset:${preset}`);
   await page.click('#presetBtn');
   await page.click(`#presetList [data-preset="b:${preset}"]`);
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(150);
+  await settle();
+  checkReload(`preset:${preset}`);
 }
 
 // Actions run in command-line order: a click may reveal the slider set next.
@@ -110,6 +147,9 @@ for (let i = 0; i < argv.length; i++) {
     await page.click(arg);
     await page.waitForTimeout(120);
   }
+  // a slider or a board added: the next action and the shot see its build
+  await settle();
+  checkReload(`${name}:${arg}`);
 }
 
 // The sheet's backdrop cannot be clicked by selector (its centre is under the
@@ -139,14 +179,9 @@ if (orbit) {
 }
 
 // the case comes from the worker: wait for its verdict, then the extra pause
-await page.waitForFunction(
-  () => {
-    const text = document.querySelector('#audit')?.textContent ?? '';
-    return text.length > 0 && !/building|сборка|збирання|בונה/.test(text);
-  },
-  { timeout: 30000 },
-).catch(() => {});
+await settle();
 await page.waitForTimeout(Number(flags.get('wait') ?? 300));
+checkReload('shot');
 
 // Clipping works on the whole page: a locator has its own coordinates, and
 // counting from the window's top-left corner is simpler.

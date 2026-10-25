@@ -263,6 +263,11 @@ argument; it does not: `parseArgs` treats it as a boolean.)
 click that changes the board list, it waits for the next build. A reload
 during the actions is reported as an error, not shot silently.
 
+**Done.** The dev hook has `built()` (the worker answered for the current
+generation). The snap waits for it after boot and after every action, not
+only board-list clicks: a slider's rebuild had the same race. A reload exits
+with code 3.
+
 ## B9. Data follow-ups
 
 - **The user's visual review** of every new entry: `shots/<id>.png` against

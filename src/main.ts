@@ -201,6 +201,8 @@ function updateHistoryButtons(): void {
 let previewTimer: ReturnType<typeof setTimeout> | null = null;
 /** Grows with every rebuild: a late answer from an old build must not overwrite a fresh one. */
 let generation = 0;
+/** The generation whose build has answered (a preview or an error) — for scripts/snap.mjs. */
+let settled = 0;
 /** The last preview from the worker, kept so view toggles redraw without a rebuild. */
 let lastParts: { body: SurfaceMesh; lid: SurfaceMesh; screw: SurfaceMesh | null; state: AppState } | null = null;
 /** The label's raster for the current state — the worker gets it with every job. */
@@ -272,6 +274,7 @@ async function showPreview(stamp: number): Promise<void> {
       { label: 'progress.preview' },
     );
     if (!result || stamp !== generation) return;
+    settled = stamp;
     const body = toMesh(partById(result.parts, 'body'));
     const lid = toMesh(partById(result.parts, 'lid'));
     const screwPart = result.parts.find((part) => part.id === 'screw');
@@ -281,6 +284,7 @@ async function showPreview(stamp: number): Promise<void> {
     audit(screw ? [body, lid, screw] : [body, lid], result.ms);
   } catch (error) {
     if (stamp !== generation) return;
+    settled = stamp;
     auditEl.textContent = '';
     blockersEl.textContent = t('error.build', { error: message(error) });
     exportBtn.disabled = true;
@@ -797,6 +801,8 @@ if (import.meta.env.DEV) {
     drawn: () => drawnRoles,
     drawnParts: () => drawnParts,
     project: (points: [number, number, number][]) => scene.project(points),
+    /** true when the worker has answered for the current state */
+    built: () => generation > 0 && settled === generation,
   });
 }
 
