@@ -20,7 +20,7 @@ the lid.
 | Magnet | 5 × 2 … 10 × 3 mm | 6 × 3 | magnets only: disc diameter × height |
 | Magnet fit | 0–0.5 mm | 0.2 | magnets only: added to the magnet's diameter for its pocket |
 | Thread | 4 × 1 / 6 × 1.5 / 8 × 2 / 10 × 2.5 mm | 6 × 1.5 | printed screws only: major diameter × pitch |
-| Thread fit | 0.1–0.4 mm | 0.2 | printed screws only: radial clearance of the threaded hole |
+| Thread fit | 0.1–0.8 mm | 0.35 | printed screws only: radial clearance of the threaded hole; raise it if the screw goes in hard |
 | Skirt height | 1.5–10 mm | 3 | how far the skirt drops into the body |
 | Skirt thickness | 0.8–4 mm | 1.2 | |
 | Fit clearance | 0–0.6 mm | 0.2 | gap between the skirt and the walls; raise it if the lid is too tight on your printer |

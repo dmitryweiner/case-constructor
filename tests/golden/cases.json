@@ -221,8 +221,8 @@
   },
   "screws-counterbore-top": {
     "body": {
-      "triangles": 4332,
-      "volume": 34191.36,
+      "triangles": 4348,
+      "volume": 34178.51,
       "extents": [
         109.3,
         77.9,
@@ -242,7 +242,7 @@
   "screws-nut-countersunk-side": {
     "body": {
       "triangles": 6012,
-      "volume": 42805.38,
+      "volume": 42796.22,
       "extents": [
         116.8,
         66.5,
@@ -361,8 +361,8 @@
   },
   "printed-screws-top": {
     "body": {
-      "triangles": 16156,
-      "volume": 40634.63,
+      "triangles": 16164,
+      "volume": 40604.5,
       "extents": [
         115.7,
         84.3,
@@ -381,8 +381,8 @@
   },
   "printed-screws-p4": {
     "body": {
-      "triangles": 16332,
-      "volume": 36324.32,
+      "triangles": 16340,
+      "volume": 36305.89,
       "extents": [
         111.7,
         80.3,
@@ -401,8 +401,8 @@
   },
   "magnets-top": {
     "body": {
-      "triangles": 3828,
-      "volume": 41605.56,
+      "triangles": 3836,
+      "volume": 41568.69,
       "extents": [
         117.7,
         86.3,
@@ -521,8 +521,8 @@
   },
   "countersunk-head-6.5": {
     "body": {
-      "triangles": 3568,
-      "volume": 40020.47,
+      "triangles": 3580,
+      "volume": 40012.86,
       "extents": [
         106.5,
         75.1,
@@ -541,8 +541,8 @@
   },
   "counterbore-deep": {
     "body": {
-      "triangles": 4332,
-      "volume": 51162.55,
+      "triangles": 4348,
+      "volume": 51149.7,
       "extents": [
         109.3,
         77.9,

@@ -35,6 +35,8 @@ export interface LidState {
 }
 
 export const DEPTH_MAX = 200;
+/** Widest radial clearance of a printed screw's hole, mm (the default 0.35 was 0.2: too tight on real printers). */
+export const THREAD_FIT_MAX = 0.8;
 
 export function defaultLid(): LidState {
   return {
@@ -45,7 +47,7 @@ export function defaultLid(): LidState {
     screw: { ...defaultFastener('M3'), head: 'counterbore' },
     head: { d: null, depth: null },
     magnet: { size: '6x3', fit: 0.2 },
-    thread: { size: 'P6', fit: 0.2 },
+    thread: { size: 'P6', fit: 0.35 },
     lip: { h: 3, t: 1.2 },
     fit: 0.2,
   };
@@ -140,7 +142,7 @@ export function sanitizeLid(raw: unknown, kind: ShapeKind): LidState {
     },
     thread: {
       size: isThreadSize(threadSize) ? threadSize : d.thread.size,
-      fit: clampNum(Reflect.get(threadRec, 'fit'), 0.1, 0.4, d.thread.fit),
+      fit: clampNum(Reflect.get(threadRec, 'fit'), 0.1, THREAD_FIT_MAX, d.thread.fit),
     },
     lip: {
       h: clampNum(Reflect.get(lipRec, 'h'), 1.5, 10, d.lip.h),

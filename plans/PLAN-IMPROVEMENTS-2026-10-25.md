@@ -227,3 +227,15 @@ Bugs and small things first, then the bigger features; R8 last since it
 adds a part.
 
 ## Deviations (recorded as they happen)
+
+- **R4 (fit, test prints).** A post's anchor — the point in the wall its
+  corner fill reaches — was the opening's bounding-box corner pulled in by
+  half a wall. On a rounded corner that point lies outside the outer
+  surface, so the fill poked through the corner and was trimmed into seams
+  (a zero-area triangle when a seam met an arc vertex: the console with a
+  bottom lid on printed screws at the new 0.35 fit), and with a large
+  radius the fill missed the wall (a gap between post and wall). The anchor
+  is now half a wall outside the opening's edge on the diagonal; every
+  state with posts moved in the golden file. The hole for an asymmetric
+  form must be the screw's thread turned over (`threadHole`): the case's
+  holes switch to it with the chosen form.

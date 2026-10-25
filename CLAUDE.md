@@ -87,7 +87,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   volume, piece by piece), `--levels` (horizontal face areas per z: a
   zero-thickness membrane shows as equal up and down areas at one level),
   `--degenerate` (where the zero-area triangles are, and the first few in
-  full: which vertices collapse along what). Strings need no quotes:
+  full: which vertices collapse along what), `--thread-test <dir>` (test prints
+  of the candidate thread forms: a screw and a three-fit nut each, marked
+  with dots). Strings need no quotes:
   `--set lid.face=bottom`. In zsh quote JSON
   values: `--set 'boards=[]'`.
 - `scripts/board.mjs` — catalog tools: `--check` validates every board file

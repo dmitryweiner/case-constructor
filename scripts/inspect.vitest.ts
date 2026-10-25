@@ -6,7 +6,12 @@
 import { it } from 'vitest';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { initCSG, toManifold } from '../src/geo/csg';
+import type { Manifold } from 'manifold-3d';
+import { CsgScope, fromManifold, initCSG, toManifold } from '../src/geo/csg';
+import type { CsgApi } from '../src/geo/csg';
+import { screwSolid, threadHole } from '../src/geo/screwSolids';
+import type { ThreadForm } from '../src/geo/thread';
+import { minorRadius, screwShape, threadEngagement, threadForm } from '../src/geo/thread';
 import { buildCase } from '../src/geo/build';
 import { encodeSTL } from '../src/geo/stl';
 import { validateMesh } from '../src/geo/validate';
@@ -24,6 +29,7 @@ interface Args {
   levels?: string;
   degenerate?: string;
   set?: string[];
+  threadTest?: string;
 }
 
 function setPath(target: Record<string, unknown>, path: string, value: unknown): void {
@@ -48,8 +54,87 @@ function parseValue(text: string): unknown {
   return Number.isFinite(Number(text)) ? Number(text) : text;
 }
 
+/** Thread forms to print and compare (plans/PLAN-IMPROVEMENTS-2026-10-25.md, R4). */
+const TEST_FORMS: { id: string; note: string; form: ThreadForm }[] = [
+  { id: 'a', note: 'today: 6 × 1.5, 60°, half a pitch deep', form: threadForm('P6') },
+  { id: 'b', note: 'print-friendly: 6 × 1.5, the overhanging flank at 45°, 0.4 pitch deep',
+    form: { d: 6, pitch: 1.5, depth: 0.4, rise: 0.4, fall: 0.4 * Math.tan(Math.PI / 6) } },
+  { id: 'c', note: 'fine ISO pitch: 6 × 1, 60°, half a pitch deep', form: { ...threadForm('P6'), pitch: 1 } },
+];
+/** The fits of the three holes in each test nut, 1, 2 and 3 dots. */
+const TEST_FITS = [0.25, 0.35, 0.45];
+
+/** Dimples on a face: `count` of them in a row along x, centred on (x, y), cut down from z. */
+function dots(csg: CsgApi, scope: CsgScope, count: number, x: number, y: number, z: number): Manifold[] {
+  return Array.from({ length: count }, (_, i) => {
+    const dot = scope.keep(csg.Manifold.cylinder(1.2, 0.6, 0.6, 16));
+    return scope.keep(dot.translate([x + (i - (count - 1) / 2) * 1.8, y, z - 0.6]));
+  });
+}
+
+/**
+ * Test prints of thread forms: per form a screw (as the case's, on its head,
+ * the form's letter as dots on the head's bed face: a 1, b 2, c 3) and a
+ * nut — a block with three through holes at the fits of TEST_FITS (1, 2, 3
+ * dots by each mouth; the form's dots on the front face), printed mouth up
+ * like a post.
+ */
+function threadTest(csg: CsgApi, dir: string): void {
+  mkdirSync(dir, { recursive: true });
+  const n = 64;
+  TEST_FORMS.forEach(({ id, note, form }, index) => {
+    const scope = new CsgScope();
+    try {
+      const shape = { ...screwShape('P6', 2, 0.35), form };
+      const screw = screwSolid(csg, scope, shape, n);
+      // the head's bed face is z = −headH; dots in a row beside the slot (along x)
+      const marks = dots(csg, scope, index + 1, 0, shape.headD / 4 + 0.6, -shape.headH);
+      const marked = scope.keep(screw.subtract(scope.keep(csg.Manifold.union(marks))));
+      const screwMesh = fromManifold(scope.keep(marked.translate([0, 0, shape.headH])));
+
+      const h = threadEngagement('P6') + 1;
+      const pitch = form.d + 6;
+      const w = pitch * TEST_FITS.length;
+      const d = form.d + 9;
+      let nut = scope.keep(csg.Manifold.cube([w, d, h]));
+      TEST_FITS.forEach((fit, k) => {
+        const x = pitch * (k + 0.5);
+        const y = form.d / 2 + 3;
+        const hole = scope.keep(threadHole(csg, scope, form, fit, h + 1, 1, n).translate([x, y, h]));
+        // a 0.5 mm chamfer at the mouth, as on the case's posts
+        const R = form.d / 2;
+        const sink = R - minorRadius(form) + 0.5;
+        const cone = scope.keep(scope.keep(csg.Manifold.cylinder(sink + 0.05, minorRadius(form) + fit, R + fit + 0.55, n)).translate([x, y, h - sink]));
+        nut = scope.keep(nut.subtract(scope.keep(hole.add(cone))));
+        nut = scope.keep(nut.subtract(scope.keep(csg.Manifold.union(dots(csg, scope, k + 1, x, d - 2, h)))));
+      });
+      // the form's dots on the front face (y = 0): dimples along y, 0.6 deep
+      const front = Array.from({ length: index + 1 }, (_, i) => {
+        const dot = scope.keep(scope.keep(csg.Manifold.cylinder(1.2, 0.6, 0.6, 16)).rotate([90, 0, 0]));
+        return scope.keep(dot.translate([w / 2 + (i - index / 2) * 1.8, 0.6, h / 2]));
+      });
+      nut = scope.keep(nut.subtract(scope.keep(csg.Manifold.union(front))));
+      const nutMesh = fromManifold(nut);
+
+      for (const [part, mesh] of [['screw', screwMesh], ['nut', nutMesh]] as const) {
+        const r = validateMesh(mesh);
+        const file = join(dir, `thread-${id}-${part}.stl`);
+        writeFileSync(file, new Uint8Array(encodeSTL(mesh, { name: `thread-${id}-${part}` })));
+        console.log(`${file}: ${r.triangleCount} tri, watertight ${r.watertight}, ${r.degenerateTriangles} degenerate`);
+      }
+      console.log(`  ${id} (${index + 1} dot${index ? 's' : ''}): ${note}; holes ${TEST_FITS.map((fit, k) => `${k + 1} dot${k ? 's' : ''} = ${fit}`).join(', ')} mm`);
+    } finally {
+      scope.dispose();
+    }
+  });
+}
+
 it('inspect', async () => {
   const args: Args = JSON.parse(process.env.INSPECT_ARGS ?? '{}');
+  if (args.threadTest) {
+    threadTest(await initCSG(), args.threadTest);
+    return;
+  }
   let raw: Record<string, unknown> = JSON.parse(JSON.stringify(defaultState()));
   if (args.preset) raw = JSON.parse(JSON.stringify(presetById(args.preset)?.build() ?? defaultState()));
   if (args.file) raw = JSON.parse(JSON.stringify(decodePresetFile(readFileSync(args.file, 'utf8'))?.state ?? defaultState()));

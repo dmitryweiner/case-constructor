@@ -3,7 +3,7 @@
 import type { Control } from './controls';
 import { FACES } from '../geo/face';
 import type { LidState } from '../geo/lidSpec';
-import { DEPTH_MAX, FASTENINGS, HEAD_DEPTH_MAX, HEAD_DEPTH_MIN, HEAD_D_MAX, HEAD_D_MIN, headSeat, lidFaces } from '../geo/lidSpec';
+import { DEPTH_MAX, FASTENINGS, HEAD_DEPTH_MAX, HEAD_DEPTH_MIN, HEAD_D_MAX, HEAD_D_MIN, THREAD_FIT_MAX, headSeat, lidFaces } from '../geo/lidSpec';
 import { HEAD_KINDS, HOLE_KINDS, LID_SCREW_SIZES, MAGNETS, MAGNET_SIZES } from '../geo/fasteners';
 import { THREADS, THREAD_SIZES } from '../geo/thread';
 import type { AppState } from '../state/schema';
@@ -96,7 +96,7 @@ export function lidControls(): Control<AppState>[] {
       set: (state, value) => lidOf(state, { thread: { ...state.lid.thread, size: THREAD_SIZES.find((size) => size === value) ?? state.lid.thread.size } }),
     },
     {
-      kind: 'range', key: 'threadFit', label: 'lid.threadFit', hint: 'lid.threadFit.hint', when: printed, min: 0.1, max: 0.4, step: 0.05,
+      kind: 'range', key: 'threadFit', label: 'lid.threadFit', hint: 'lid.threadFit.hint', when: printed, min: 0.1, max: THREAD_FIT_MAX, step: 0.05,
       get: (state) => state.lid.thread.fit,
       set: (state, value) => lidOf(state, { thread: { ...state.lid.thread, fit: value } }),
     },

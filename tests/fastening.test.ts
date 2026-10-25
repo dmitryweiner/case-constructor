@@ -2,7 +2,7 @@
 // the body; screw posts stand under the lid's holes; every variant stays
 // closed, free of slivers and of overlaps between the parts.
 
-import { initCSG, toManifold } from '../src/geo/csg';
+import { fromManifold, initCSG, toManifold } from '../src/geo/csg';
 import type { CsgApi } from '../src/geo/csg';
 import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
@@ -139,6 +139,30 @@ describe('screw posts', () => {
       }
       body.delete();
       lid.delete();
+    },
+  );
+
+  it.each([['box', 'top', 12], ['box', 'bottom', 6], ['console', 'bottom', 6], ['box', 'left', 8]] as const)(
+    '%s, lid %s, corner %s: a post is filled out to the wall and stays inside the outer surface',
+    (kind, face, cornerR) => {
+      const state = stateFor(kind, face, 'screws', {});
+      const rounded = sanitizeState({ ...state, shape: { ...state.shape, cornerR } });
+      const g = lidGeometry(rounded);
+      const body = toManifold(csg, buildCase(csg, rounded, 8).body);
+      const z = g.zp - POST_LEN / 2;
+      for (const spot of postSpots(g.opening, g.lid, rounded.shape.wall)) {
+        const along = Math.hypot(spot.anchor[0] - spot.centre[0], spot.anchor[1] - spot.centre[1]);
+        const dir = [(spot.anchor[0] - spot.centre[0]) / along, (spot.anchor[1] - spot.centre[1]) / along];
+        // between the boss and the wall, on the diagonal: solid
+        for (const t of [spot.r + 0.3, (spot.r + along) / 2]) {
+          const p = applyAffine(g.frame.fromFace, [spot.centre[0] + dir[0] * t, spot.centre[1] + dir[1] * t, z]);
+          expect(solidAt(body, p), `post ${spot.centre.map((v) => v.toFixed(1))} at ${t.toFixed(1)}`).toBe(true);
+        }
+      }
+      // nothing of a post reaches the outer surface: the body's outer corner has no seam at the post's levels
+      const report = validateMesh(fromManifold(body));
+      expect(report.degenerateTriangles).toBe(0);
+      body.delete();
     },
   );
 

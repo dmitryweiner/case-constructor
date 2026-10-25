@@ -12,7 +12,8 @@ import { openingPolygon } from '../src/geo/opening';
 import { postSpots, printedScrewWarnings } from '../src/geo/fastening';
 import { plateOf, shapeSpec } from '../src/geo/shape';
 import { screwsInCase } from '../src/geo/print';
-import { threadSolid } from '../src/geo/screwSolids';
+import { screwSolid, threadHole, threadSolid } from '../src/geo/screwSolids';
+import type { Manifold } from 'manifold-3d';
 import { THREADS, THREAD_SIZES, minorRadius, screwShape, threadEngagement, threadSection } from '../src/geo/thread';
 import { transformMesh } from '../src/geo/surface';
 import { validateMesh } from '../src/geo/validate';
@@ -143,4 +144,53 @@ describe('printed screws', () => {
       lidSolid.delete();
     },
   );
+});
+
+describe('the thread fit', () => {
+  it('defaults to 0.35 mm and goes up to 0.8 (0.2 was too tight on real printers)', () => {
+    expect(defaultState().lid.thread.fit).toBe(0.35);
+    const fit = (value: unknown) => sanitizeState({ lid: { thread: { size: 'P6', fit: value } } }).lid.thread.fit;
+    expect(fit(0.7)).toBe(0.7);
+    expect(fit(2)).toBe(0.8);
+    expect(fit(0.01)).toBe(0.1);
+  });
+});
+
+describe('asymmetric forms (test prints)', () => {
+  // the print-friendly candidate: the overhanging flank at 45°, the other at 30° from radial
+  const form = { d: 6, pitch: 1.5, depth: 0.4, rise: 0.4, fall: 0.4 * Math.tan(Math.PI / 6) };
+
+  function bestAndWorst(hole: Manifold, screw: Manifold): [number, number] {
+    let best = Infinity;
+    let worst = 0;
+    for (let step = 0; step < 48; step++) {
+      const turned = screw.rotate([0, 0, (360 * step) / 48]);
+      const meet = hole.intersect(turned);
+      best = Math.min(best, meet.volume());
+      worst = Math.max(worst, meet.volume());
+      meet.delete();
+      // a turn by 0° may hand back the screw itself
+      if (turned !== screw) turned.delete();
+    }
+    return [best, worst];
+  }
+
+  // a tight fit (0.05 mm): with the usual 0.2 the wrong hole hides behind the clearance
+  it('a screw of an asymmetric form goes into threadHole (turned over as it goes in), not into an unturned one', () => {
+    const scope = new CsgScope();
+    try {
+      const shape = { ...screwShape('P6', 2, 0.2), form };
+      // the screw, shank down, its head's underside at z = 0.5 over a block whose top is z = 0
+      const screw = scope.keep(scope.keep(screwSolid(csg, scope, shape, 32).rotate([180, 0, 0])).translate([0, 0, 0.5]));
+      const block = scope.keep(scope.keep(csg.Manifold.cube([16, 16, 12], true)).translate([0, 0, -6]));
+      const good = scope.keep(block.subtract(threadHole(csg, scope, form, 0.05, 13, 1, 32)));
+      const wrong = scope.keep(block.subtract(threadSolid(csg, scope, form, 0.05, -13, 1, 32)));
+      const [best, worst] = bestAndWorst(good, screw);
+      expect(best).toBeLessThan(1e-3);
+      expect(worst).toBeGreaterThan(1);
+      expect(bestAndWorst(wrong, screw)[0]).toBeGreaterThan(0.1);
+    } finally {
+      scope.dispose();
+    }
+  });
 });
