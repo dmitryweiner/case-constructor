@@ -179,6 +179,8 @@ export interface BoardDef {
   vendor: string;
   kind: 'sbc' | 'mcu';
   size: { w: number; d: number; t: number };
+  /** the PCB's real outline when it is not the rectangle: a simple polygon inside `size`, counter-clockwise */
+  outline?: [number, number][];
   mount: {
     kind: MountKind;
     holes: Hole[];
@@ -205,6 +207,7 @@ export const BOARD_MAX_MM = 300;
 export const MAX_PORTS = 40;
 export const MAX_HOLES = 8;
 export const MAX_VARIANTS = 16;
+export const MAX_OUTLINE = 64;
 
 function rec(x: unknown): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -371,6 +374,63 @@ export function resolveVariant(def: BoardDef, variantId: string | undefined): Bo
   };
 }
 
+/** Twice the signed area of a polygon: positive when counter-clockwise. */
+export function signedArea2(points: readonly (readonly [number, number])[]): number {
+  let sum = 0;
+  for (let i = 0; i < points.length; i++) {
+    const [x0, y0] = points[i];
+    const [x1, y1] = points[(i + 1) % points.length];
+    sum += x0 * y1 - x1 * y0;
+  }
+  return sum;
+}
+
+function segmentsCross(a: readonly [number, number], b: readonly [number, number], c: readonly [number, number], d: readonly [number, number]): boolean {
+  const side = (p: readonly [number, number], q: readonly [number, number], r: readonly [number, number]): number =>
+    Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]));
+  return side(a, b, c) * side(a, b, d) < 0 && side(c, d, a) * side(c, d, b) < 0;
+}
+
+/** Whether a point is inside a polygon (even-odd). */
+export function insidePolygon(points: readonly (readonly [number, number])[], x: number, y: number): boolean {
+  let inside = false;
+  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+    const [xi, yi] = points[i];
+    const [xj, yj] = points[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/** Whether two edges of a polygon cross (neighbours share a vertex and do not count). */
+export function selfCrossing(points: readonly (readonly [number, number])[]): boolean {
+  const n = points.length;
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 2; j < n; j++) {
+      if (i === 0 && j === n - 1) continue;
+      if (segmentsCross(points[i], points[(i + 1) % n], points[j], points[(j + 1) % n])) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * An outline clamped into the rectangle, counter-clockwise; none when it is
+ * not a polygon at all or its edges cross (the ghost would not triangulate).
+ */
+export function sanitizeOutline(raw: unknown, size: { w: number; d: number }): [number, number][] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const points: [number, number][] = [];
+  for (const item of raw.slice(0, MAX_OUTLINE)) {
+    if (!Array.isArray(item) || typeof item[0] !== 'number' || typeof item[1] !== 'number') continue;
+    points.push([num(item[0], 0, size.w, 0), num(item[1], 0, size.d, 0)]);
+  }
+  if (points.length < 3 || selfCrossing(points)) return undefined;
+  const area = signedArea2(points);
+  if (Math.abs(area) < 1e-6) return undefined;
+  return area > 0 ? points : points.reverse();
+}
+
 export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
   const r = rec(raw);
   const size = rec(r.size);
@@ -384,6 +444,7 @@ export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
   }
   const kind: MountKind = mount.kind === 'rails' || holes.length === 0 ? 'rails' : 'holes';
   const ports = uniquePorts(Array.isArray(r.ports) ? r.ports : [], { w, d });
+  const outline = sanitizeOutline(r.outline, { w, d });
   const variants = sanitizeVariants(r.variants, { w, d }, ports);
   return {
     id: str(r.id, fallbackId, 60),
@@ -391,6 +452,7 @@ export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
     vendor: str(r.vendor, ''),
     kind: r.kind === 'sbc' ? 'sbc' : 'mcu',
     size: { w, d, t: num(size.t, 0.4, 5, 1.6) },
+    ...(outline ? { outline } : {}),
     mount: {
       kind,
       holes: kind === 'holes' ? holes : [],

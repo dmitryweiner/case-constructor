@@ -5,6 +5,7 @@ import { GHOST_CIRCLE, ghostHoles, boardGhost, pinBlocks } from '../src/geo/ghos
 import { caseLayout } from '../src/geo/layout';
 import { validateMesh } from '../src/geo/validate';
 import { catalogBoard, CATALOG } from '../src/boards/catalog';
+import { signedArea2 } from '../src/boards/schema';
 import { defaultState, sanitizeState } from '../src/state/schema';
 
 /** Area of the regular polygon a circle of radius r is drawn as. */
@@ -76,5 +77,19 @@ describe('board ghosts', () => {
     expect(Math.min(...blocks.map((block) => block[2]))).toBeCloseTo(-pins.below);
     expect(Math.max(...blocks.map((block) => block[5]))).toBe(0);
     expect(pinBlocks(placed('arduino-nano', 0, false))).toEqual([]);
+  });
+
+  it('a board with an outline draws it: a closed slab of the outline less its holes', () => {
+    for (const id of ['arduino-uno', 'rakwireless-rak19007', 'heltec-wifi-lora-32-v4']) {
+      const board = placed(id);
+      const outline = board.def.outline;
+      if (!outline) throw new Error(`${id} has an outline`);
+      const { pcb } = boardGhost(board);
+      const report = validateMesh(pcb);
+      expect(report.watertight, id).toBe(true);
+      expect(report.degenerateTriangles, id).toBe(0);
+      const holes = ghostHoles(board.def).reduce((sum, hole) => sum + ngon(hole.r + hole.pad), 0);
+      expect(report.volume, id).toBeCloseTo((signedArea2(outline) / 2 - holes) * board.def.size.t, 2);
+    }
   });
 });

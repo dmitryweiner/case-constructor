@@ -3,7 +3,7 @@
 
 import { RAW_BOARDS, CATALOG, catalogBoard } from '../src/boards/catalog';
 import type { PortType } from '../src/boards/schema';
-import { PORT_TYPES, isPortType, onFace, resolveVariant, sanitizeBoard, sanitizePort } from '../src/boards/schema';
+import { PORT_TYPES, insidePolygon, isPortType, onFace, resolveVariant, sanitizeBoard, sanitizeOutline, sanitizePort } from '../src/boards/schema';
 import { defaultPlacement, sanitizePlacement, portCut, boardOf, entryOf, minBoardZ, placementMinZ, pinsDown } from '../src/boards/placement';
 import { garbageLike, rng } from './helpers';
 
@@ -30,6 +30,13 @@ describe('board catalog', () => {
     expect(board.bottomHeight).toBe(r.bottomHeight);
     const mount = rec(r.mount);
     expect(board.mount.kind).toBe(mount.kind);
+    // an outline, when written, is kept as written: inside the size, counter-clockwise, edges not crossing;
+    // the holes are in it (parts may overhang it: the RAK4631 module covers the RAK19007's notch)
+    expect(board.outline).toEqual(r.outline);
+    if (board.outline) {
+      const outline = board.outline;
+      for (const hole of board.mount.holes) expect(insidePolygon(outline, hole.x, hole.y), `hole ${hole.x},${hole.y}`).toBe(true);
+    }
     // pins, when written, are written in full and in the edges' order
     expect(board.pins).toEqual(r.pins);
     if (board.pins) expect(board.pins.below, 'pins reach below the bare underside').toBeGreaterThan(board.bottomHeight);
@@ -110,6 +117,14 @@ describe('sanitizeBoard', () => {
       const once = sanitizeBoard(garbageLike(template, random));
       expect(sanitizeBoard(once)).toEqual(once);
     }
+  });
+
+  it('an outline is clamped into the size and turned counter-clockwise; a crossing one is dropped', () => {
+    const size = { w: 10, d: 10 };
+    expect(sanitizeOutline([[0, 0], [0, 10], [12, 10], [10, 0]], size)).toEqual([[10, 0], [10, 10], [0, 10], [0, 0]]);
+    expect(sanitizeOutline([[0, 0], [10, 10], [10, 0], [0, 10]], size)).toBeUndefined();
+    expect(sanitizeOutline([[0, 0], [5, 5]], size)).toBeUndefined();
+    expect(sanitizeOutline('nope', size)).toBeUndefined();
   });
 
   it('pins need an edge; the rest takes defaults', () => {

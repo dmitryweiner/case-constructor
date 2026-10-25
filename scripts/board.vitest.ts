@@ -7,7 +7,7 @@ import { it } from 'vitest';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { RAW_BOARDS, catalogBoard } from '../src/boards/catalog';
-import { OVERRIDE_NUMBERS, isPortType, onFace, resolveVariant, sanitizeBoard } from '../src/boards/schema';
+import { OVERRIDE_NUMBERS, insidePolygon, isPortType, onFace, resolveVariant, sanitizeBoard } from '../src/boards/schema';
 import type { BoardDef } from '../src/boards/schema';
 
 interface Args { check?: string; svg?: string; out?: string; variant?: string }
@@ -30,6 +30,14 @@ function problems(raw: unknown): string[] {
   for (const hole of board.mount.holes) {
     if (hole.x - hole.d / 2 < 0 || hole.x + hole.d / 2 > w || hole.y - hole.d / 2 < 0 || hole.y + hole.d / 2 > d) {
       out.push(`hole at ${hole.x},${hole.y} leaves the outline`);
+    }
+  }
+  if (r.outline !== undefined) {
+    const outline = board.outline;
+    if (!outline) out.push('outline dropped: fewer than 3 points, crossing edges or no area');
+    else if (JSON.stringify(outline) !== JSON.stringify(r.outline)) out.push('outline changed by the sanitizer: outside the size, or clockwise');
+    else {
+      for (const hole of board.mount.holes) if (!insidePolygon(outline, hole.x, hole.y)) out.push(`hole at ${hole.x},${hole.y} is outside the outline`);
     }
   }
   const ports = Array.isArray(r.ports) ? r.ports : [];
@@ -86,7 +94,13 @@ function svg(def: BoardDef, variant?: string): string {
   const X = (x: number): number => pad + (x + reach) * s;
   const Y = (y: number): number => H - pad - (y + reach) * s;
   const parts: string[] = [];
-  parts.push(`<rect x="${X(0)}" y="${Y(def.size.d)}" width="${def.size.w * s}" height="${def.size.d * s}" fill="#2f7d4a" stroke="#1d4d2e"/>`);
+  if (def.outline) {
+    // the rectangle the case is sized by, and the real outline in it
+    parts.push(`<rect x="${X(0)}" y="${Y(def.size.d)}" width="${def.size.w * s}" height="${def.size.d * s}" fill="none" stroke="#555" stroke-dasharray="4 3"/>`);
+    parts.push(`<polygon points="${def.outline.map(([x, y]) => `${X(x)},${Y(y)}`).join(' ')}" fill="#2f7d4a" stroke="#1d4d2e"/>`);
+  } else {
+    parts.push(`<rect x="${X(0)}" y="${Y(def.size.d)}" width="${def.size.w * s}" height="${def.size.d * s}" fill="#2f7d4a" stroke="#1d4d2e"/>`);
+  }
   for (const hole of def.mount.holes) {
     parts.push(`<circle cx="${X(hole.x)}" cy="${Y(hole.y)}" r="${(hole.d / 2) * s}" fill="#fff" stroke="#000"/>`);
     parts.push(`<text x="${X(hole.x) + 8}" y="${Y(hole.y) - 8}" font-size="10" fill="#fff">${hole.x}, ${hole.y}</text>`);

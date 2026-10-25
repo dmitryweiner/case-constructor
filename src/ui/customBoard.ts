@@ -62,6 +62,7 @@ export function catalogJson(def: BoardDef): string {
     vendor: def.vendor,
     kind: def.kind,
     size: def.size,
+    ...(def.outline ? { outline: def.outline } : {}),
     mount: def.mount.kind === 'holes'
       ? { kind: 'holes', holes: def.mount.holes, screw: def.mount.screw }
       : { kind: 'rails', holes: [], screw: def.mount.screw, rails: def.mount.rails },

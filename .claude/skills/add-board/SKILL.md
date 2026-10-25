@@ -62,6 +62,11 @@ shows; do not mirror a bottom view.
   "top"`, no opening by default), `header-2xN` (a 2-row header other than
   the Pi's GPIO: PoE 2×2, UEXT 2×5), `sim` (a SIM slot on an edge, like
   `microsd`). `generic` is for what none of the types describe.
+- **A PCB that is not a rectangle** (Arduino's chamfered right edge, Heltec
+  V4, RAK19007's notches) gets `"outline": [[x, y], …]`: a simple polygon,
+  counter-clockwise, inside `size`, the holes in it. Only the board's
+  picture uses it; the case is still sized by `size`. Arcs become a few
+  points. `board.mjs --svg` draws it over the dashed rectangle.
 - A **standing connector** (HDMI or USB-C on its end: ROCK 5B+, Orange Pi 5
   Max / Pro / Plus) keeps its type with `w` and `h` swapped.
 - A part the user reaches from below (CYD buttons, a bottom LED, a

@@ -1,4 +1,5 @@
-// Board ghosts for the preview: the PCB as a slab with its mounting holes
+// Board ghosts for the preview: the PCB as a slab (its real outline when the
+// entry has one) with its mounting holes
 // through it and a pad ring around each, every port and top element as a
 // block. A parametric mesh without CSG (the slab's faces are triangulated
 // with earcut), so the main thread rebuilds it at slider speed while the
@@ -176,9 +177,11 @@ export function boardGhost(board: PlacedBoard): { pcb: SurfaceMesh; ports: Surfa
   const blocks = [...board.def.ports.map((port) => portBlock(board, port)), ...pinBlocks(board)]
     .map(([x0, y0, z0, x1, y1, z1]) => boxMesh(board, x0, y0, z0, x1, y1, z1));
   const holes = ghostHoles(board.def);
-  const pcb = holes.length === 0
+  // the real outline when the entry has one (chamfers, notches); layout and cavity keep the rectangle
+  const outer = board.def.outline ?? [[0, 0], [w, 0], [w, d], [0, d]];
+  const pcb = holes.length === 0 && !board.def.outline
     ? boxMesh(board, 0, 0, 0, w, d, t)
-    : prismMesh(board, [[0, 0], [w, 0], [w, d], [0, d]], holes.map((hole) => circle(hole.x, hole.y, hole.r + hole.pad, true)), 0, t);
+    : prismMesh(board, outer, holes.map((hole) => circle(hole.x, hole.y, hole.r + hole.pad, true)), 0, t);
   const pads = holes.map((hole) => prismMesh(
     board, circle(hole.x, hole.y, hole.r + hole.pad, false), [circle(hole.x, hole.y, hole.r, true)], -PAD_PROUD, t + PAD_PROUD,
   ));

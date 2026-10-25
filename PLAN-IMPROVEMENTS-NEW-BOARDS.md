@@ -123,6 +123,12 @@ big. The ghost is wrong, though, and the overlap check is pessimistic.
 - The board check rejects an outline that leaves `size` or crosses itself.
 - Low priority: it changes the picture, not the print.
 
+**Done** for Arduino Uno, Leonardo, Mega (layer 20 of their Eagle files),
+UNO Q (the UNO outline: its Allegro files are binary), Heltec V4 (its
+datasheet drawing) and RAK19007 (the notches above). The Orange Pi 5 Max /
+Pro notches and the Zero 3W chamfers wait for B7: their drawings are vector
+PDFs (and a Drive folder), which `dxf.mjs` reads only after it.
+
 ## B4. Parts on the underside
 
 **Now.** A part is on an edge or on top (`edge: "top"`). Parts the user
@@ -342,3 +348,6 @@ with code 3.
 - **B6.** The Feather ESP32-S3 TFT has its module on the underside next to
   the right-hand holes: the layout warns that a 5 mm standoff reaches it.
   That is the board, not the data; the variant test expects the warning.
+- **B3.** The board check requires the holes inside the outline, not the
+  parts: a part on a module may overhang the base board (the RAK4631's BLE
+  connector sits above the RAK19007's notch).
