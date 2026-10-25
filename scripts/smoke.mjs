@@ -275,6 +275,19 @@ for (const hole of ['tap', 'insert', 'nut']) {
     await expectWatertight(`fastening:${hole}:${head}`);
   }
 }
+// the head seat: a countersunk M3 is 6 mm by default; the user's diameter and depth, then the table back
+label('fastening:head');
+if (Number(await page.locator('#lid_headD').inputValue()) !== 6) errors.push('[head] a countersunk M3 seat is not 6 mm');
+if (await page.locator('#lid_headDepth').isVisible()) errors.push('[head] a countersunk seat offers a counterbore depth');
+await setRange('lid_headD', 7);
+await expectWatertight('fastening:head:countersunk-7');
+await page.click('#lid_head_counterbore');
+await setRange('lid_headDepth', 5);
+await expectWatertight('fastening:head:counterbore-deep');
+if (!(await page.locator('#warnings').textContent()).includes('counterbore is limited')) errors.push('[head] no warning about a counterbore deeper than the plate');
+await page.click('#lid_headReset');
+if (await page.locator('#lid_headReset').isVisible()) errors.push('[head] the reset button stays after a reset');
+if (Number(await page.locator('#lid_headD').inputValue()) !== 5.5) errors.push('[head] the reset does not bring the pan head back');
 await page.click('#lid_face_left');
 await expectWatertight('fastening:screws:left');
 await page.click('#lid_face_top');

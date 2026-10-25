@@ -28,7 +28,7 @@ import type { CutsCardHandle } from './ui/cutsCard';
 import { cutWarnings, outerTopAt, portCutters } from './geo/ports';
 import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
 import { effectiveLid } from './geo/layout';
-import { lidFaces } from './geo/lidSpec';
+import { HEAD_FLOOR, headSeat, lidFaces } from './geo/lidSpec';
 import { faceFrame as frameOf } from './geo/face';
 import { postCollisions, postSpots, postsInOpenings, printedScrewWarnings } from './geo/fastening';
 import { openingPolygon } from './geo/opening';
@@ -236,6 +236,11 @@ function refresh(): void {
   baseWarnings.push(...cutWarnings(layout, shapeBuilt, lidBuilt, cutters, state.extraCuts).map(tm));
   if (lidBuilt.fastening !== 'snaps') {
     const { frame, plate, zp, spots } = lidPosts(state);
+    // the table's depth was always capped quietly; a depth the user set is worth a word
+    if (lidBuilt.fastening === 'screws' && lidBuilt.screw.head === 'counterbore' && lidBuilt.head.depth !== null
+      && headSeat(lidBuilt).depth > plate - HEAD_FLOOR) {
+      baseWarnings.push(t('warn.headDepthClamped', { max: (plate - HEAD_FLOOR).toFixed(1) }));
+    }
     baseWarnings.push(...postCollisions(spots, frame, zp, plate, lidBuilt, layout.boards).map(tm));
     baseWarnings.push(...postsInOpenings(spots, frame, zp, plate, lidBuilt, cutters).map(tm));
   }

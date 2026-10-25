@@ -348,7 +348,7 @@ Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets
 `#lid_screw` (select), `#lid_hole_tap|insert|nut`, `#lid_magnet` (select),
 `#lid_magnetFit` (magnets only), `#lid_thread` (select), `#lid_threadFit`
 (printed screws only),
-`#lid_head_none|counterbore|countersunk` (screws only), `#lid_lipH`,
+`#lid_head_none|counterbore|countersunk` (screws only), `#lid_headD`, `#lid_headDepth` (counterbore), `#lid_headReset` (when set), `#lid_lipH`,
 `#lid_lipT`, `#lid_fit`.
 View and export card (`#exportCard`): parts `#tabBoth` (first, default),
 `#tabBody`, `#tabLid`; view `#viewExploded` (default), `#viewAssembled`,

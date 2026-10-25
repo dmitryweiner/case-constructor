@@ -153,6 +153,17 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     boards: [{ board: 'adafruit-feather-esp32-s3', variant: 'reverse-tft' }],
   }),
+  // R3: the head seat set by the user (plans/PLAN-IMPROVEMENTS-2026-10-25.md)
+  'countersunk-head-6.5': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, floor: 3 },
+    lid: { ...defaultState().lid, fastening: 'screws', screw: { size: 'M3', hole: 'tap', head: 'countersunk' }, head: { d: 6.5, depth: null } },
+  }),
+  'counterbore-deep': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, floor: 4 },
+    lid: { ...defaultState().lid, fastening: 'screws', screw: { size: 'M3', hole: 'insert', head: 'counterbore' }, head: { d: 6, depth: 3 } },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

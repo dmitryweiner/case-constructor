@@ -14,6 +14,7 @@ import { magnetPockets, postLength, snapSpots } from './fastening';
 import { threadSolid } from './screwSolids';
 import { THREADS, minorRadius, threadEngagement, threadPoints } from './thread';
 import type { LidState } from './lidSpec';
+import { HEAD_FLOOR, headSeat } from './lidSpec';
 import type { Vec2 } from './section';
 import { bounds2, convexIntersect } from './opening';
 import { SPLIT_OFFSET } from './parting';
@@ -159,10 +160,11 @@ export function postSolids(
 
     // the lid plate: a through hole and the seat for the head
     const through = (dims.d + THROUGH_CLEARANCE) / 2;
-    const head = (dims.headD + THROUGH_CLEARANCE) / 2;
+    const seat = headSeat(lid);
+    const head = (seat.d + THROUGH_CLEARANCE) / 2;
     lidHoles.push(column(csg, scope, c, through, top - 1, 1, n));
     if (lid.screw.head === 'counterbore') {
-      lidHoles.push(column(csg, scope, c, head, -Math.min(dims.headH, plate - 0.6), 1, n));
+      lidHoles.push(column(csg, scope, c, head, -Math.min(seat.depth, plate - HEAD_FLOOR), 1, n));
     } else if (lid.screw.head === 'countersunk') {
       // 90°: the cone loses as much depth as it loses radius
       const sink = Math.min(head - through, plate - 0.4);

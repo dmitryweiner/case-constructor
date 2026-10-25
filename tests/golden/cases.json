@@ -251,7 +251,7 @@
     },
     "lid": {
       "triangles": 3004,
-      "volume": 4881.45,
+      "volume": 4868.67,
       "extents": [
         9,
         66.5,
@@ -516,6 +516,46 @@
         59.9,
         30.86,
         5
+      ]
+    }
+  },
+  "countersunk-head-6.5": {
+    "body": {
+      "triangles": 3568,
+      "volume": 40020.47,
+      "extents": [
+        106.5,
+        75.1,
+        27.39
+      ]
+    },
+    "lid": {
+      "triangles": 2704,
+      "volume": 23050.38,
+      "extents": [
+        106.5,
+        75.1,
+        6
+      ]
+    }
+  },
+  "counterbore-deep": {
+    "body": {
+      "triangles": 4332,
+      "volume": 51162.55,
+      "extents": [
+        109.3,
+        77.9,
+        28.39
+      ]
+    },
+    "lid": {
+      "triangles": 2384,
+      "volume": 32294.7,
+      "extents": [
+        109.3,
+        77.9,
+        7
       ]
     }
   }

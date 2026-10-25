@@ -8,7 +8,7 @@ import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, effectiveLid } from '../src/geo/layout';
 import { faceFrame } from '../src/geo/face';
-import { lidFaces } from '../src/geo/lidSpec';
+import { HEAD_DEPTH_MIN, HEAD_D_MAX, headSeat, lidFaces } from '../src/geo/lidSpec';
 import { openingPolygon } from '../src/geo/opening';
 import { MAGNET_SKIN, POST_LEN, SNAP_R, magnetPockets, postCollisions, postSpots, postsInOpenings, snapSpots } from '../src/geo/fastening';
 import { portCutters } from '../src/geo/ports';
@@ -234,5 +234,27 @@ describe('fastening around openings', () => {
     const spots = postSpots(g.opening, g.lid, 2);
     const messages = postsInOpenings(spots, g.frame, g.zp, g.plate, g.lid, portCutters(g.layout, g.shape));
     expect(messages.length).toBeGreaterThan(0);
+  });
+});
+
+describe('head seats of lid screws', () => {
+  const lidWith = (screw: object, head: object = {}) => sanitizeLid({ fastening: 'screws', screw, head }, 'box');
+
+  it('a countersunk seat takes a countersunk head (DIN 7991), a counterbore a pan head', () => {
+    expect(headSeat(lidWith({ size: 'M3', head: 'countersunk' })).d).toBe(6);
+    expect(headSeat(lidWith({ size: 'M4', head: 'countersunk' })).d).toBe(8);
+    expect(headSeat(lidWith({ size: 'M3', head: 'counterbore' }))).toEqual({ d: 5.5, depth: 2 });
+  });
+
+  it('the user may set the head diameter and the counterbore depth; never under the screw + 1 mm', () => {
+    expect(headSeat(lidWith({ size: 'M3', head: 'countersunk' }, { d: 6.5 })).d).toBe(6.5);
+    expect(headSeat(lidWith({ size: 'M3', head: 'counterbore' }, { depth: 3.5 })).depth).toBe(3.5);
+    expect(headSeat(lidWith({ size: 'M3', head: 'counterbore' }, { d: 2 })).d).toBe(4);
+  });
+
+  it('an unset head is the table, garbage falls back to unset', () => {
+    expect(lidWith({ size: 'M3' }).head).toEqual({ d: null, depth: null });
+    expect(lidWith({ size: 'M3' }, { d: 'big', depth: -4 }).head).toEqual({ d: null, depth: HEAD_DEPTH_MIN });
+    expect(lidWith({ size: 'M3' }, { d: 99 }).head.d).toBe(HEAD_D_MAX);
   });
 });
