@@ -6,6 +6,7 @@
 //   node scripts/board.mjs --svg <id> --out shots/x.svg
 //   node scripts/board.mjs --svg <id> --png             # also a PNG next to it (rendered by Playwright)
 //   node scripts/board.mjs --svg <id> --variant <v>     # one variant of a family → shots/<id>-<v>.svg
+//   node scripts/board.mjs --review [--only a,b]          # every entry over its cached drawing → shots/review/index.html
 //   node scripts/board.mjs --format                      # rewrite every catalog file in the one layout
 //   node scripts/board.mjs --brd board.brd               # footprints of an Eagle board, board frame
 //   node scripts/board.mjs --kicad board.kicad_pcb       # the same for KiCad
@@ -15,7 +16,7 @@
 //     --outline              the board outline as the entry's "outline" (--eps 0.15 simplifies)
 //     --compare <id>         the entry's holes and size against the drawing's
 
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { parseArgs } from './lib/harness.mjs';
@@ -24,7 +25,7 @@ import { formatBoard, inline } from './lib/boardJson.mjs';
 import { chainLoops, largestLoop, toOutline } from './lib/outline.mjs';
 import { compareHoles, readEntry } from './lib/compare.mjs';
 
-const flags = parseArgs(process.argv.slice(2), ['svg', 'out', 'variant', 'brd', 'kicad', 'match', 'rotate', 'eps', 'compare']);
+const flags = parseArgs(process.argv.slice(2), ['svg', 'out', 'variant', 'brd', 'kicad', 'match', 'rotate', 'eps', 'compare', 'only']);
 
 // --format: every catalog file in the layout of scripts/lib/boardJson.mjs (values untouched)
 if (flags.has('format')) {
@@ -73,13 +74,21 @@ if (flags.has('brd') || flags.has('kicad')) {
 }
 const args = Object.fromEntries(flags);
 if (args.svg && !args.out) args.out = args.variant ? `shots/${args.svg}-${args.variant}.svg` : `shots/${args.svg}.svg`;
-const result = spawnSync('npx', ['vitest', 'run', '--config', 'scripts/vitest.board.config.ts', '--silent=false', '--reporter=dot'], {
+// vitest's output line by line as it comes (a --review runs for minutes), its own chatter left out
+const noise = /^(stdout \||\s*RUN|\s*Test Files|\s*Tests|\s*Start at|\s*Duration|·|×|⎯|\s*FAIL\s+scripts|\s*❯|npm notice)/;
+const child = spawn('npx', ['vitest', 'run', '--config', 'scripts/vitest.board.config.ts', '--silent=false', '--reporter=dot'], {
   env: { ...process.env, BOARD_ARGS: JSON.stringify(args) },
-  encoding: 'utf8',
 });
-const lines = `${result.stdout}\n${result.stderr}`.split('\n')
-  .filter((line) => line.trim() && !/^(stdout \||\s*RUN|\s*Test Files|\s*Tests|\s*Start at|\s*Duration|·|×|⎯|\s*FAIL\s+scripts|\s*❯)/.test(line.trim()));
-console.log(lines.join('\n'));
+for (const stream of [child.stdout, child.stderr]) {
+  let rest = '';
+  stream.setEncoding('utf8');
+  stream.on('data', (chunk) => {
+    const lines = (rest + chunk).split('\n');
+    rest = lines.pop();
+    for (const line of lines) if (line.trim() && !noise.test(line.trim())) console.log(line);
+  });
+}
+const result = { status: await new Promise((resolve) => child.on('close', resolve)) };
 if (flags.has('png') && flags.has('svg') && result.status === 0) {
   const svg = args.out;
   const png = svg.replace(/\.svg$/, '.png');

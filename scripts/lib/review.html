@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Board Review</title>
+<!-- The catalog review page, written by `node scripts/board.mjs --review` (scripts/lib/review.mjs). -->
+<style>
+:root { --bg:#0f1114; --panel:#181b20; --line:#2a2f37; --text:#e3e6ea; --dim:#8a929c; --acc:#4ea1ff; --ok:#3fb950; --bad:#f85149; --q:#d29922; }
+* { box-sizing: border-box; }
+html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font:13px/1.4 -apple-system, system-ui, sans-serif; }
+body { display:grid; grid-template-columns: 300px 1fr; height:100vh; overflow:hidden; }
+aside { border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0; background:var(--panel); }
+aside header { padding:10px; border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:6px; }
+#search { width:100%; padding:6px 8px; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:6px; }
+#stats { color:var(--dim); font-size:12px; }
+#list { overflow:auto; flex:1; }
+#list div { padding:5px 10px; cursor:pointer; display:flex; gap:8px; align-items:center; border-bottom:1px solid #1f2329; }
+#list div:hover { background:#20252c; }
+#list div.cur { background:#1d3557; }
+#list .dot { width:9px; height:9px; border-radius:50%; flex:none; background:#3a4049; }
+#list .dot.ok { background:var(--ok); } #list .dot.bad { background:var(--bad); } #list .dot.q { background:var(--q); }
+#list .tag { margin-left:auto; color:var(--dim); font-size:11px; white-space:nowrap; }
+#list .unv { color:var(--q); }
+main { display:flex; flex-direction:column; min-width:0; min-height:0; }
+.bar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:7px 10px; border-bottom:1px solid var(--line); background:var(--panel); }
+.bar h1 { font-size:15px; margin:0 8px 0 0; font-weight:600; }
+.bar a { color:var(--acc); }
+button, select { background:#252a31; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 9px; cursor:pointer; font:inherit; }
+button:hover { border-color:#4a525d; }
+button.on { background:var(--acc); border-color:var(--acc); color:#000; }
+select { max-width:420px; }
+.sep { width:1px; height:20px; background:var(--line); margin:0 3px; }
+.dim { color:var(--dim); }
+#how { color:var(--dim); font-size:12px; }
+#view { flex:1; min-height:0; position:relative; display:flex; gap:6px; padding:6px; }
+#view svg.stage { flex:1; min-width:0; height:100%; background:#fff; border-radius:6px; cursor:grab; display:block; }
+#view svg.stage.picking { cursor:crosshair; }
+#msg { position:absolute; top:14px; left:50%; transform:translateX(-50%); background:#000d; padding:6px 12px; border-radius:6px; pointer-events:none; z-index:5; max-width:90%; text-align:center; }
+#msg:empty { display:none; }
+.drawing { color:#1b1f24; }
+.scheme .pcb { fill:rgba(46,160,67,.10); stroke:#1f8f3a; stroke-width:1.5px; vector-effect:non-scaling-stroke; }
+.scheme .box { fill:none; stroke:#1f8f3a; stroke-dasharray:4 3; stroke-width:1px; vector-effect:non-scaling-stroke; }
+.scheme .port { fill:rgba(20,110,255,.20); stroke:#0b62d6; stroke-width:1.5px; vector-effect:non-scaling-stroke; }
+.scheme .port.top { fill:rgba(240,150,0,.22); stroke:#c46f00; }
+.scheme .port.bottom { fill:rgba(170,60,210,.16); stroke:#9a3cc8; stroke-dasharray:4 3; }
+.scheme .hole { fill:rgba(255,0,0,.15); stroke:#e00000; stroke-width:1.5px; vector-effect:non-scaling-stroke; }
+.scheme .label { font:1.5px sans-serif; text-anchor:middle; dominant-baseline:middle; fill:#08306b; paint-order:stroke; stroke:#fff; stroke-width:0.35px; pointer-events:none; }
+.scheme.nofill .pcb, .scheme.nofill .port, .scheme.nofill .hole { fill:none; }
+.scheme.nolabels .label { display:none; }
+.mark { fill:none; stroke:#ff00d4; stroke-width:2px; vector-effect:non-scaling-stroke; }
+.mark.q { stroke:#00b7ff; }
+.notes { display:flex; gap:8px; align-items:flex-start; padding:7px 10px; border-top:1px solid var(--line); background:var(--panel); }
+.notes textarea { flex:1; min-height:44px; height:44px; resize:vertical; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:5px 7px; font:inherit; }
+.st button.ok.on { background:var(--ok); border-color:var(--ok); }
+.st button.bad.on { background:var(--bad); border-color:var(--bad); }
+.st button.q.on { background:var(--q); border-color:var(--q); }
+input[type=range] { width:100px; }
+kbd { background:#252a31; border:1px solid var(--line); border-radius:3px; padding:0 4px; font-size:11px; }
+.legend span { display:inline-block; width:10px; height:10px; border-radius:2px; margin:0 3px 0 8px; vertical-align:-1px; }
+</style>
+</head>
+<body>
+<aside>
+  <header>
+    <input id="search" type="text" placeholder="Поиск платы…">
+    <div id="stats"></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button id="copyReport" title="Отмеченные платы с заметками — в буфер обмена">Копировать отчёт</button>
+      <button id="filterOpen" title="Только платы без отметки">Без отметки</button>
+      <button id="filterUnv" title="Только записи с verified: false">Непроверенные</button>
+    </div>
+  </header>
+  <div id="list"></div>
+</aside>
+<main>
+  <div class="bar">
+    <h1 id="title"></h1>
+    <span class="dim" id="size"></span>
+    <a id="src" target="_blank" rel="noopener">источник</a>
+    <span class="sep"></span>
+    <select id="layer" title="Чертёж  ([ и ])"></select>
+    <select id="variant" title="Вариант платы"></select>
+    <span id="how"></span>
+  </div>
+  <div class="bar">
+    <button data-mode="overlay" title="1">Наложение</button>
+    <button data-mode="drawing" title="2">Чертёж</button>
+    <button data-mode="scheme" title="3">Схема</button>
+    <button data-mode="blink" title="4">Мигание</button>
+    <button data-mode="side" title="5">Рядом</button>
+    <span class="sep"></span>
+    <label class="dim">схема <input id="alpha" type="range" min="10" max="100" value="85"></label>
+    <label class="dim"><input id="fill" type="checkbox" checked> заливка</label>
+    <label class="dim"><input id="labels" type="checkbox" checked> подписи</label>
+    <span class="sep"></span>
+    <button id="rot" title="Повернуть чертёж на 90° вокруг центра платы">↻ 90°</button>
+    <button id="mirror" title="Отразить чертёж (вид снизу)">⇋</button>
+    <button id="pick" title="Совместить по двум точкам: две на чертеже, затем те же две на схеме">2 точки</button>
+    <button id="resetAdj" title="Вернуть автоматическое совмещение">сброс</button>
+    <span class="dim legend"><span style="background:#0b62d6"></span>край <span style="background:#c46f00"></span>сверху <span style="background:#9a3cc8"></span>снизу <span style="background:#e00000"></span>отверстия · колесо — зум, тащить — сдвиг, <kbd>R</kbd> — весь вид</span>
+  </div>
+  <div id="view"><div id="msg"></div></div>
+  <div class="notes">
+    <div class="st">
+      <button class="ok" data-st="ok" title="O">Совпадает</button>
+      <button class="bad" data-st="bad" title="X">Расхождение</button>
+      <button class="q" data-st="q" title="?">Под вопросом</button>
+    </div>
+    <textarea id="note" placeholder="Что не так: порт, отверстие, сторона, высота… (N — сюда, Esc — обратно)"></textarea>
+  </div>
+</main>
+<script>
+const DATA = /*DATA*/null;
+const BOARDS = DATA.boards;
+const SVGNS = 'http://www.w3.org/2000/svg';
+const LS = 'boardReview2:';
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(LS + k)) ?? d; } catch { return d; } };
+const save = (k, v) => { try { localStorage.setItem(LS + k, JSON.stringify(v)); } catch {} };
+const $ = (s) => document.querySelector(s);
+const view = $('#view'), msg = $('#msg');
+const meta = (b) => load('m:' + b.id, {});
+const setMeta = (b, m) => save('m:' + b.id, m);
+
+const state = { cur: 0, mode: load('mode', 'overlay'), alpha: load('alpha', 85), fill: load('fill', true), labels: load('labels', true), layer: 0, variant: 0, onlyOpen: false, onlyUnv: false, blink: null, pick: null, vb: null, swap: false };
+
+// --- layers arrive as data/<id>.js
+const LAYERS = {};
+const waiting = {};
+window.__layers = (id, list) => { LAYERS[id] = list; waiting[id]?.(); };
+function layersOf(id) {
+  if (LAYERS[id]) return Promise.resolve(LAYERS[id]);
+  return new Promise((res) => {
+    waiting[id] = () => res(LAYERS[id]);
+    const s = document.createElement('script');
+    s.src = `data/${id}.js`;
+    s.onerror = () => { LAYERS[id] = []; res([]); };
+    document.head.appendChild(s);
+  });
+}
+
+// --- 2D affine [a, b, c, d, e, f]: x' = a x + c y + e, y' = b x + d y + f
+const I = [1, 0, 0, 1, 0, 0];
+const mul = (m, n) => [m[0] * n[0] + m[2] * n[1], m[1] * n[0] + m[3] * n[1], m[0] * n[2] + m[2] * n[3], m[1] * n[2] + m[3] * n[3], m[0] * n[4] + m[2] * n[5] + m[4], m[1] * n[4] + m[3] * n[5] + m[5]];
+const at = (m, [x, y]) => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
+const about = (m, cx, cy) => mul([1, 0, 0, 1, cx, cy], mul(m, [1, 0, 0, 1, -cx, -cy]));
+const mstr = (m) => `matrix(${m.join(' ')})`;
+function similarity(p1, p2, q1, q2) {
+  const px = p2[0] - p1[0], py = p2[1] - p1[1], qx = q2[0] - q1[0], qy = q2[1] - q1[1];
+  const l = px * px + py * py;
+  if (l < 1e-9) return null;
+  const zr = (qx * px + qy * py) / l, zi = (qy * px - qx * py) / l;
+  return [zr, zi, -zi, zr, q1[0] - (zr * p1[0] - zi * p1[1]), q1[1] - (zi * p1[0] + zr * p1[1])];
+}
+const adjKey = (b, layer) => `adj:${b.id}:${layer?.name ?? ''}`;
+
+function visible() {
+  const q = $('#search').value.trim().toLowerCase();
+  return BOARDS.map((b, i) => i).filter((i) => {
+    const b = BOARDS[i];
+    if (q && !`${b.name} ${b.id} ${b.vendor}`.toLowerCase().includes(q)) return false;
+    if (state.onlyOpen && meta(b).st && i !== state.cur) return false;
+    if (state.onlyUnv && b.verified && i !== state.cur) return false;
+    return true;
+  });
+}
+
+function tagOf(b) {
+  const list = DATA.summary[b.id] ?? [];
+  if (list.length === 0) return 'нет чертежа';
+  const best = list[0];
+  if (best.kind === 'image') return 'картинка';
+  if (best.kind === 'page') return 'веб-страница';
+  if (/not aligned|failed/.test(best.how) || best.kind === 'step') return 'вручную';
+  return /by holes|other file/.test(best.how) ? 'по отверстиям' : /outline/.test(best.how) ? 'по контуру' : best.kind === 'brd' || best.kind === 'kicad' ? 'по разводке' : best.kind;
+}
+
+function renderList() {
+  const list = $('#list');
+  list.innerHTML = '';
+  for (const i of visible()) {
+    const b = BOARDS[i], m = meta(b);
+    const d = document.createElement('div');
+    d.className = i === state.cur ? 'cur' : '';
+    d.innerHTML = `<span class="dot ${m.st ?? ''}"></span><span>${b.name}${b.verified ? '' : ' <span class="unv" title="verified: false">•</span>'}</span><span class="tag">${tagOf(b)}</span>`;
+    d.onclick = () => select(i);
+    list.appendChild(d);
+  }
+  const all = BOARDS.map(meta);
+  $('#stats').textContent = `${BOARDS.length} плат · ✓ ${all.filter((m) => m.st === 'ok').length} · ✗ ${all.filter((m) => m.st === 'bad').length} · ? ${all.filter((m) => m.st === 'q').length} · без отметки ${all.filter((m) => !m.st).length}`;
+  list.querySelector('.cur')?.scrollIntoView({ block: 'nearest' });
+}
+
+async function select(i) {
+  state.cur = i; state.layer = 0; state.variant = 0; state.pick = null; state.vb = null; state.swap = false;
+  const b = BOARDS[i], m = meta(b);
+  save('cur', b.id);
+  $('#title').textContent = b.name;
+  $('#size').textContent = `${b.size.w} × ${b.size.d} × ${b.size.t} мм · ${b.verified ? 'verified' : 'не проверена'}`;
+  $('#src').href = b.source;
+  $('#note').value = m.note ?? '';
+  for (const btn of document.querySelectorAll('[data-st]')) btn.classList.toggle('on', m.st === btn.dataset.st);
+  const vsel = $('#variant');
+  vsel.innerHTML = b.schemes.map((s, k) => `<option value="${k}">${s.name || 'плата'}</option>`).join('');
+  vsel.style.display = b.schemes.length > 1 ? '' : 'none';
+  renderList();
+  const layers = await layersOf(b.id);
+  if (state.cur !== i) return;
+  $('#layer').innerHTML = layers.length ? layers.map((l, k) => `<option value="${k}">${l.name} — ${l.kind}</option>`).join('') : '<option>чертежа нет в кэше</option>';
+  render();
+}
+
+function el(name, attrs = {}, html) {
+  const e = document.createElementNS(SVGNS, name);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (html !== undefined) e.innerHTML = html;
+  return e;
+}
+
+function homeBox(b) {
+  const m = 12;
+  return [-m, -b.size.d - m, b.size.w + 2 * m, b.size.d + 2 * m];
+}
+
+function buildStage(b, layer, show) {
+  const svg = el('svg', { class: 'stage', viewBox: (state.vb ?? homeBox(b)).join(' '), preserveAspectRatio: 'xMidYMid meet' });
+  if (show.drawing && layer) {
+    const adj = load(adjKey(b, layer), I);
+    const outer = el('g', { class: 'drawing', transform: mstr(adj) });
+    if (layer.markup) outer.innerHTML = layer.markup;
+    else if (layer.nested) outer.appendChild(el('g', { transform: mstr(layer.matrix) }, layer.nested));
+    else if (layer.image) {
+      const img = el('image', { href: layer.image });
+      const probe = new Image();
+      probe.onload = () => {
+        // a picture is placed by hand: start it centred on the board, a little wider than it
+        const k = (b.size.w * 1.4) / probe.naturalWidth;
+        img.setAttribute('width', probe.naturalWidth); img.setAttribute('height', probe.naturalHeight);
+        img.setAttribute('transform', mstr([k, 0, 0, k, b.size.w / 2 - (probe.naturalWidth * k) / 2, -b.size.d / 2 - (probe.naturalHeight * k) / 2]));
+      };
+      probe.src = layer.image;
+      outer.appendChild(img);
+    }
+    svg.appendChild(outer);
+  }
+  if (show.scheme) {
+    const g = el('g', { class: `scheme${state.fill ? '' : ' nofill'}${state.labels ? '' : ' nolabels'}`, opacity: show.alpha ?? 1 }, b.schemes[state.variant].markup);
+    svg.appendChild(g);
+  }
+  if (state.pick) for (const [k, p] of state.pick.points.entries()) svg.appendChild(el('circle', { class: k < 2 ? 'mark' : 'mark q', cx: p[0], cy: p[1], r: 0.9 }));
+  wireZoom(svg);
+  return svg;
+}
+
+function svgPoint(svg, e) {
+  const p = svg.createSVGPoint();
+  p.x = e.clientX; p.y = e.clientY;
+  const q = p.matrixTransform(svg.getScreenCTM().inverse());
+  return [q.x, q.y];
+}
+
+function wireZoom(svg) {
+  let drag = null;
+  svg.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const vb = (state.vb ?? homeBox(BOARDS[state.cur])).slice();
+    const [x, y] = svgPoint(svg, e);
+    const k = Math.exp(e.deltaY * 0.0015);
+    state.vb = [x - (x - vb[0]) * k, y - (y - vb[1]) * k, vb[2] * k, vb[3] * k];
+    for (const s of view.querySelectorAll('svg.stage')) s.setAttribute('viewBox', state.vb.join(' '));
+  }, { passive: false });
+  svg.addEventListener('pointerdown', (e) => {
+    if (state.pick) return;
+    drag = { x: e.clientX, y: e.clientY, vb: (state.vb ?? homeBox(BOARDS[state.cur])).slice(), k: svg.viewBox.baseVal.width / svg.getBoundingClientRect().width };
+    svg.setPointerCapture(e.pointerId);
+  });
+  svg.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const r = svg.getBoundingClientRect();
+    const k = Math.max(drag.vb[2] / r.width, drag.vb[3] / r.height);
+    state.vb = [drag.vb[0] - (e.clientX - drag.x) * k, drag.vb[1] - (e.clientY - drag.y) * k, drag.vb[2], drag.vb[3]];
+    for (const s of view.querySelectorAll('svg.stage')) s.setAttribute('viewBox', state.vb.join(' '));
+  });
+  svg.addEventListener('pointerup', () => { drag = null; });
+  svg.addEventListener('click', (e) => { if (state.pick) pickAt(svg, e); });
+}
+
+function pickAt(svg, e) {
+  const b = BOARDS[state.cur];
+  let p = svgPoint(svg, e);
+  const pk = state.pick;
+  if (pk.points.length >= 2) {
+    const tol = 14 * svg.viewBox.baseVal.width / svg.getBoundingClientRect().width;
+    let best = null, bd = tol;
+    for (const t of b.snaps) { const d = Math.hypot(t[0] - p[0], t[1] - p[1]); if (d < bd) { bd = d; best = t; } }
+    if (best) p = best;
+  }
+  pk.points.push(p);
+  if (pk.points.length === 4) {
+    const [p1, p2, q1, q2] = pk.points;
+    const s = similarity(p1, p2, q1, q2);
+    const layer = LAYERS[b.id][state.layer];
+    if (s) save(adjKey(b, layer), mul(s, load(adjKey(b, layer), I)));
+    state.pick = null;
+  }
+  render();
+}
+
+function stopBlink() { clearInterval(state.blink); state.blink = null; }
+
+function render() {
+  stopBlink();
+  for (const btn of document.querySelectorAll('[data-mode]')) btn.classList.toggle('on', btn.dataset.mode === state.mode);
+  $('#alpha').value = state.alpha; $('#fill').checked = state.fill; $('#labels').checked = state.labels;
+  $('#pick').classList.toggle('on', !!state.pick);
+  for (const s of view.querySelectorAll('svg.stage')) s.remove();
+  msg.textContent = '';
+  const b = BOARDS[state.cur];
+  const layers = LAYERS[b.id] ?? [];
+  const layer = layers[state.layer];
+  $('#layer').value = state.layer; $('#variant').value = state.variant;
+  const adjusted = layer && localStorage.getItem(LS + adjKey(b, layer));
+  $('#how').textContent = layer ? `${layer.how}${adjusted ? ' · поправлено вручную' : ''}` : '';
+  const drawable = layer && (layer.markup || layer.nested || layer.image);
+  if (layer && !drawable) msg.innerHTML = layer.kind === 'page' ? `Чертёж только на веб-странице — <a href="${b.source}" target="_blank" style="color:#4ea1ff;pointer-events:auto">открыть источник</a>` : layer.how;
+  else if (!layer) msg.textContent = 'Чертежа нет в кэше (node scripts/fetch.mjs --board ' + b.id + ')';
+
+  if (state.pick) {
+    const n = state.pick.points.length;
+    msg.textContent = n < 2 ? `Точка ${n + 1} из 2 на ЧЕРТЕЖЕ (отверстие, угол) · Esc — отмена` : `Та же точка ${n - 1} на СХЕМЕ (прилипает к отверстиям, углам и разъёмам) · Esc — отмена`;
+    view.appendChild(buildStage(b, layer, { drawing: true, scheme: n >= 2, alpha: 0.6 }));
+    view.lastChild.classList.add('picking');
+    return;
+  }
+  const alpha = state.alpha / 100;
+  if (state.mode === 'side') {
+    view.appendChild(buildStage(b, layer, { drawing: true }));
+    view.appendChild(buildStage(b, layer, { scheme: true }));
+    crosshair();
+    return;
+  }
+  // Space (swap) shows the other layer alone; in the overlay, the scheme alone
+  const show = {
+    overlay: state.swap ? { scheme: true } : { drawing: true, scheme: true, alpha },
+    drawing: state.swap ? { scheme: true } : { drawing: true },
+    scheme: state.swap ? { drawing: true } : { scheme: true },
+    blink: { drawing: true, scheme: true },
+  }[state.mode];
+  const svg = buildStage(b, layer, show);
+  view.appendChild(svg);
+  if (state.mode === 'blink') {
+    const d = svg.querySelector('.drawing'), s = svg.querySelector('.scheme');
+    let on = false;
+    if (d) d.style.display = 'none';
+    state.blink = setInterval(() => { on = !on; if (d) d.style.display = on ? '' : 'none'; s.style.display = on ? 'none' : ''; }, 700);
+  }
+}
+
+function crosshair() {
+  const stages = [...view.querySelectorAll('svg.stage')];
+  const lines = stages.map((s) => { const h = el('line', { class: 'mark' }), v = el('line', { class: 'mark' }); s.append(h, v); return [h, v]; });
+  for (const s of stages) {
+    s.addEventListener('pointermove', (e) => {
+      const [x, y] = svgPoint(s, e);
+      const vb = s.viewBox.baseVal;
+      for (const [h, v] of lines) {
+        Object.entries({ x1: vb.x, x2: vb.x + vb.width, y1: y, y2: y }).forEach(([k, val]) => h.setAttribute(k, val));
+        Object.entries({ x1: x, x2: x, y1: vb.y, y2: vb.y + vb.height }).forEach(([k, val]) => v.setAttribute(k, val));
+      }
+    });
+  }
+}
+
+function adjust(f) {
+  const b = BOARDS[state.cur], layer = (LAYERS[b.id] ?? [])[state.layer];
+  if (!layer) return;
+  save(adjKey(b, layer), mul(f(b), load(adjKey(b, layer), I)));
+  render();
+}
+
+// --- controls
+for (const btn of document.querySelectorAll('[data-mode]')) btn.onclick = () => setMode(btn.dataset.mode);
+function setMode(mode) { state.mode = mode; state.swap = false; save('mode', mode); render(); }
+$('#alpha').oninput = (e) => { state.alpha = +e.target.value; save('alpha', state.alpha); if (state.mode !== 'overlay') state.mode = 'overlay'; render(); };
+$('#fill').onchange = (e) => { state.fill = e.target.checked; save('fill', state.fill); render(); };
+$('#labels').onchange = (e) => { state.labels = e.target.checked; save('labels', state.labels); render(); };
+$('#layer').onchange = (e) => { state.layer = +e.target.value; render(); };
+$('#variant').onchange = (e) => { state.variant = +e.target.value; render(); };
+$('#rot').onclick = () => adjust((b) => about([0, 1, -1, 0, 0, 0], b.size.w / 2, -b.size.d / 2));
+$('#mirror').onclick = () => adjust((b) => about([-1, 0, 0, 1, 0, 0], b.size.w / 2, -b.size.d / 2));
+$('#resetAdj').onclick = () => { const b = BOARDS[state.cur], layer = (LAYERS[b.id] ?? [])[state.layer]; if (layer) localStorage.removeItem(LS + adjKey(b, layer)); render(); };
+$('#pick').onclick = () => { state.pick = state.pick ? null : { points: [] }; render(); };
+$('#search').oninput = renderList;
+$('#filterOpen').onclick = (e) => { state.onlyOpen = !state.onlyOpen; e.target.classList.toggle('on', state.onlyOpen); renderList(); };
+$('#filterUnv').onclick = (e) => { state.onlyUnv = !state.onlyUnv; e.target.classList.toggle('on', state.onlyUnv); renderList(); };
+for (const btn of document.querySelectorAll('[data-st]')) btn.onclick = () => setStatus(btn.dataset.st);
+function setStatus(st) {
+  const b = BOARDS[state.cur], m = meta(b);
+  m.st = m.st === st ? undefined : st;
+  setMeta(b, m);
+  for (const x of document.querySelectorAll('[data-st]')) x.classList.toggle('on', m.st === x.dataset.st);
+  renderList();
+}
+$('#note').oninput = (e) => { const b = BOARDS[state.cur], m = meta(b); m.note = e.target.value; setMeta(b, m); };
+$('#copyReport').onclick = async () => {
+  const rows = [];
+  for (const b of BOARDS) {
+    const m = meta(b);
+    if (!m.st && !m.note) continue;
+    rows.push([{ bad: 0, q: 1, ok: 2 }[m.st] ?? 3, `${{ ok: 'OK ', bad: 'BAD', q: '?  ' }[m.st] ?? '   '} ${b.id}${m.note ? ' — ' + m.note.replace(/\s*\n\s*/g, '; ') : ''}`]);
+  }
+  const text = rows.sort((a, c) => a[0] - c[0]).map((r) => r[1]).join('\n') || '(пока нет отметок)';
+  try { await navigator.clipboard.writeText(text); msg.textContent = `Отчёт скопирован: ${rows.length} строк`; } catch { prompt('Отчёт:', text); }
+  setTimeout(() => { if (msg.textContent.startsWith('Отчёт')) msg.textContent = ''; }, 2000);
+};
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') { if (e.key === 'Escape') e.target.blur(); return; }
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const vis = visible(), atI = vis.indexOf(state.cur);
+  const layers = LAYERS[BOARDS[state.cur].id] ?? [];
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const next = vis[Math.max(0, Math.min(vis.length - 1, atI + (e.key === 'ArrowDown' ? 1 : -1)))];
+    if (next !== undefined) select(next);
+  } else if (e.key === 'Escape' && state.pick) { state.pick = null; render(); }
+  else if (e.key === ' ') { e.preventDefault(); state.swap = !state.swap; render(); }
+  else if (/^[1-5]$/.test(e.key)) setMode(['overlay', 'drawing', 'scheme', 'blink', 'side'][+e.key - 1]);
+  else if (e.key === '[' || e.key === 'х') { if (layers.length) { state.layer = (state.layer + layers.length - 1) % layers.length; render(); } }
+  else if (e.key === ']' || e.key === 'ъ') { if (layers.length) { state.layer = (state.layer + 1) % layers.length; render(); } }
+  else if (e.key === 'r' || e.key === 'к') { state.vb = null; render(); }
+  else if (e.key === 'o' || e.key === 'щ') setStatus('ok');
+  else if (e.key === 'x' || e.key === 'ч') setStatus('bad');
+  else if (e.key === '?' || e.key === ',') setStatus('q');
+  else if (e.key === 'n' || e.key === 'т') { e.preventDefault(); $('#note').focus(); }
+});
+
+const last = load('cur', null);
+const start = BOARDS.findIndex((b) => b.id === last);
+select(start >= 0 ? start : 0);
+</script>
+</body>
+</html>

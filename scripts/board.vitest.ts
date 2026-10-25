@@ -1,16 +1,19 @@
 // Catalog tools, run through scripts/board.mjs (options in BOARD_ARGS):
 // --check validates every catalog file strictly (the same rules as
 // tests/boards.test.ts, readable output); --svg <id> draws a board's top view
-// with holes, ports and dimensions, to compare against the drawing by eye.
+// with holes, ports and dimensions, to compare against the drawing by eye;
+// --review writes the review page: every entry over its cached vendor
+// drawing (scripts/lib/review.mjs).
 
 import { it } from 'vitest';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { RAW_BOARDS, catalogBoard } from '../src/boards/catalog';
+import { CATALOG, RAW_BOARDS, catalogBoard } from '../src/boards/catalog';
+import { layersFor, writeReview } from './lib/review.mjs';
 import { OVERRIDE_NUMBERS, insidePolygon, isPortType, onFace, resolveVariant, sanitizeBoard } from '../src/boards/schema';
 import type { BoardDef } from '../src/boards/schema';
 
-interface Args { check?: string; svg?: string; out?: string; variant?: string }
+interface Args { check?: string; svg?: string; out?: string; variant?: string; review?: string; only?: string }
 
 function rec(x: unknown): Record<string, unknown> {
   return typeof x === 'object' && x !== null ? Object.fromEntries(Object.entries(x)) : {};
@@ -84,6 +87,49 @@ function problems(raw: unknown): string[] {
   return out;
 }
 
+/** A port's box in the board frame, seen from above: [x0, y0, x1, y1]. */
+function portBox(def: BoardDef, port: BoardDef['ports'][number]): [number, number, number, number] {
+  if (onFace(port)) return [port.x - port.w / 2, port.y - port.d / 2, port.x + port.w / 2, port.y + port.d / 2];
+  const inward = port.d;
+  const out = port.protrude;
+  if (port.edge === 'front') return [port.along - port.w / 2, -out, port.along + port.w / 2, inward - out];
+  if (port.edge === 'back') return [port.along - port.w / 2, def.size.d - inward + out, port.along + port.w / 2, def.size.d + out];
+  if (port.edge === 'left') return [-out, port.along - port.w / 2, inward - out, port.along + port.w / 2];
+  return [def.size.w - inward + out, port.along - port.w / 2, def.size.w + out, port.along + port.w / 2];
+}
+
+const esc = (text: string): string => text.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+/** Where a click on the scheme snaps when a drawing is aligned by hand: holes, outline corners, port corners and centres (display mm). */
+function snapPoints(def: BoardDef): [number, number][] {
+  const out: [number, number][] = def.mount.holes.map((hole) => [hole.x, -hole.y]);
+  for (const [x, y] of def.outline ?? [[0, 0], [def.size.w, 0], [def.size.w, def.size.d], [0, def.size.d]]) out.push([x, -y]);
+  for (const port of def.ports) {
+    const [x0, y0, x1, y1] = portBox(def, port);
+    out.push([x0, -y0], [x1, -y0], [x1, -y1], [x0, -y1], [(x0 + x1) / 2, -(y0 + y1) / 2]);
+  }
+  return out.map(([x, y]) => [Math.round(x * 100) / 100, Math.round(y * 100) / 100]);
+}
+
+/** The entry's top view for the review page, in display mm (x, -y). */
+function schemeMarkup(def: BoardDef): string {
+  const n = (v: number): number => Math.round(v * 100) / 100;
+  const parts: string[] = [];
+  const board = def.outline ?? [[0, 0], [def.size.w, 0], [def.size.w, def.size.d], [0, def.size.d]];
+  parts.push(`<polygon class="pcb" points="${board.map(([x, y]) => `${n(x)},${n(-y)}`).join(' ')}"/>`);
+  if (def.outline) parts.push(`<rect class="box" x="0" y="${-def.size.d}" width="${def.size.w}" height="${def.size.d}"/>`);
+  for (const port of def.ports) {
+    const [x0, y0, x1, y1] = portBox(def, port);
+    const where = onFace(port) ? `${port.x}, ${port.y}` : `${port.edge} @${port.along}`;
+    parts.push(`<rect class="port ${port.edge}" x="${n(x0)}" y="${n(-y1)}" width="${n(x1 - x0)}" height="${n(y1 - y0)}"><title>${esc(port.id)} (${port.type}) ${where}</title></rect>`);
+    parts.push(`<text class="label" x="${n((x0 + x1) / 2)}" y="${n(-(y0 + y1) / 2)}">${esc(port.id)}</text>`);
+  }
+  for (const hole of def.mount.holes) {
+    parts.push(`<circle class="hole" cx="${n(hole.x)}" cy="${n(-hole.y)}" r="${n(hole.d / 2)}"><title>${hole.x}, ${hole.y} Ø${hole.d}</title></circle>`);
+  }
+  return parts.join('');
+}
+
 function svg(def: BoardDef, variant?: string): string {
   const s = 6; // px per mm
   const pad = 30;
@@ -106,20 +152,7 @@ function svg(def: BoardDef, variant?: string): string {
     parts.push(`<text x="${X(hole.x) + 8}" y="${Y(hole.y) - 8}" font-size="10" fill="#fff">${hole.x}, ${hole.y}</text>`);
   }
   for (const port of def.ports) {
-    let x0: number;
-    let y0: number;
-    let x1: number;
-    let y1: number;
-    if (onFace(port)) {
-      [x0, y0, x1, y1] = [port.x - port.w / 2, port.y - port.d / 2, port.x + port.w / 2, port.y + port.d / 2];
-    } else {
-      const inward = port.d;
-      const out = port.protrude;
-      if (port.edge === 'front') [x0, y0, x1, y1] = [port.along - port.w / 2, -out, port.along + port.w / 2, inward - out];
-      else if (port.edge === 'back') [x0, y0, x1, y1] = [port.along - port.w / 2, def.size.d - inward + out, port.along + port.w / 2, def.size.d + out];
-      else if (port.edge === 'left') [x0, y0, x1, y1] = [-out, port.along - port.w / 2, inward - out, port.along + port.w / 2];
-      else [x0, y0, x1, y1] = [def.size.w - inward + out, port.along - port.w / 2, def.size.w + out, port.along + port.w / 2];
-    }
+    const [x0, y0, x1, y1] = portBox(def, port);
     // a part on the underside is seen through the board: dashed, paler
     const fill = port.edge === 'top' ? '#d9b45a' : port.edge === 'bottom' ? '#c9a0dc' : '#9aa7b4';
     const dash = port.edge === 'bottom' ? ' stroke-dasharray="4 3"' : '';
@@ -131,7 +164,7 @@ function svg(def: BoardDef, variant?: string): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="#15181c"/>${parts.join('')}</svg>\n`;
 }
 
-it('board', () => {
+it('board', { timeout: 30 * 60_000 }, () => {
   const args: Args = JSON.parse(process.env.BOARD_ARGS ?? '{}');
   if (args.check) {
     let bad = 0;
@@ -146,6 +179,31 @@ it('board', () => {
     }
     console.log(`${RAW_BOARDS.length} boards, ${bad} with problems`);
     if (bad > 0) throw new Error('catalog check failed');
+  }
+  if (args.review) {
+    const out = args.out ?? 'shots/review';
+    const only = args.only ? new Set(args.only.split(',')) : null;
+    mkdirSync(out, { recursive: true });
+    writeFileSync(`${out}/review.log`, '');
+    const boards = [];
+    const layers: Record<string, unknown[]> = {};
+    for (const entry of CATALOG) {
+      if (only && !only.has(entry.id)) continue;
+      const variants = entry.variants?.map((variant) => ({ id: variant.id, name: variant.name, markup: schemeMarkup(resolveVariant(entry, variant.id)) }));
+      boards.push({
+        id: entry.id, name: entry.name, vendor: entry.vendor, size: entry.size, verified: entry.verified, source: entry.source,
+        holes: entry.mount.holes, outline: entry.outline, snaps: snapPoints(resolveVariant(entry, undefined)),
+        schemes: variants ?? [{ id: '', name: '', markup: schemeMarkup(entry) }],
+      });
+      const def = resolveVariant(entry, undefined);
+      // vitest holds a test's console until it ends: the progress goes to a file too
+      layers[entry.id] = layersFor(def, def.ports.map((port) => portBox(def, port)), out, (line: string) => {
+        console.log(line);
+        appendFileSync(`${out}/review.log`, `${line}\n`);
+      });
+    }
+    writeReview(out, boards, layers);
+    console.log(`review → ${out}/index.html (${boards.length} boards)`);
   }
   if (args.svg) {
     const entry = catalogBoard(args.svg);
