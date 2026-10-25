@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 // Vendor drawings in a local cache, so a board can be checked again later
 // (the visual review, a re-transcription) without hunting for its files:
-// drawings/<host>/<path>, zip archives unpacked next to them, and
+// drawings/<host>/<path>, zip and rar archives unpacked next to them, and
 // drawings/index.json mapping every URL to what it gave. drawings/ is not
 // committed. Downloaded files are data: nothing in them is run.
 //
 //   node scripts/fetch.mjs <url>                     # download (once) and list the files
 //   node scripts/fetch.mjs --board <id>              # the catalog entry's source URL
+//   node scripts/fetch.mjs <url> --board <id>        # another file of that board (a layout next to its page)
 //   node scripts/fetch.mjs <url> --file ~/Downloads/x.pdf   # a file you downloaded by hand
 //   node scripts/fetch.mjs --all                     # every catalog entry's source (skips the cached)
 //   node scripts/fetch.mjs --list                    # what the cache holds
@@ -65,26 +66,31 @@ function plan(url) {
   return { download, path };
 }
 
-/** Unpacks a zip next to it, once; returns the directory. */
-function unpack(path) {
+/** Unpacks an archive next to it, once (zip with unzip, rar with the system bsdtar); returns the directory. */
+function unpack(path, kind) {
   const dir = `${path}.d`;
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
-    const result = spawnSync('unzip', ['-q', '-o', path, '-d', dir], { encoding: 'utf8' });
-    if (result.status !== 0 && result.status !== 1) console.error(`unzip: ${result.stderr.trim()}`);
+    const [tool, args] = kind === 'rar' ? ['bsdtar', ['-xf', path, '-C', dir]] : ['unzip', ['-q', '-o', path, '-d', dir]];
+    const result = spawnSync(tool, args, { encoding: 'utf8' });
+    if (result.error || (result.status !== 0 && result.status !== 1)) console.error(`${tool}: ${result.error?.message ?? result.stderr.trim()}`);
   }
   return dir;
 }
 
-function isZip(path) {
+/** 'zip', 'rar' (Orange Pi ships its models so) or null, by the file's first bytes. */
+function archiveOf(path) {
   const head = readFileSync(path).subarray(0, 4);
-  return head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04;
+  if (head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04) return 'zip';
+  if (head.toString('latin1') === 'Rar!') return 'rar';
+  return null;
 }
 
 function report(url, path) {
   console.log(`${url}\n  → ${path}`);
-  if (isZip(path)) {
-    const dir = unpack(path);
+  const kind = archiveOf(path);
+  if (kind) {
+    const dir = unpack(path, kind);
     for (const f of filesUnder(dir).filter((f) => !f.includes('__MACOSX'))) console.log(`    ${join(dir, f)}`);
   }
 }
@@ -118,7 +124,7 @@ if (board) {
     console.error(`no board ${board}`);
     process.exit(2);
   }
-  url = JSON.parse(readFileSync(file, 'utf8')).source;
+  url ??= JSON.parse(readFileSync(file, 'utf8')).source;
 }
 if (!url) {
   console.error('usage: node scripts/fetch.mjs <url> | --board <id> [--file <downloaded file>] [--force] | --list');

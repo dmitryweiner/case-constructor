@@ -37,5 +37,5 @@
     { "id": "led-b", "type": "led", "edge": "top", "x": 76.98, "y": 56.58 }
   ],
   "source": "https://drive.google.com/drive/folders/0B4PAo2nW2Kfnfkd0QmxaU3F2bHBWdkFiS09vT3VoZkVyNW93OXFjM0dHRVdGazhRWmFzZDQ",
-  "verified": false
+  "verified": true
 }

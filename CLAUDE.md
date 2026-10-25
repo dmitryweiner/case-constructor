@@ -96,7 +96,14 @@ freely; a temporary script that turns out useful becomes a permanent one.
   and every variant (readable list of problems; `npm run boards:check` adds
   the vitest suite), `--svg <id> [--variant <v>] [--png]` draws the board's
   top view with holes, ports, the outline and their coordinates to compare
-  against the drawing. `--format` rewrites every catalog file in the one
+  against the drawing. `--review [--only a,b]` writes `shots/review/index.html`:
+  every entry over its cached drawing (`drawings/`), aligned by the mounting
+  holes (scale, quarter turn, mirror; the board edge and the connectors break
+  ties), by the outline when there are no holes, or by two points by hand on
+  the page; a PDF keeps its page text, an Eagle/KiCad layout shows its pads.
+  The person marks each board and copies a report (`scripts/lib/review.mjs`,
+  the page `scripts/lib/review.html`; `--only` updates those boards in the
+  page already there; progress in `shots/review/review.log`). `--format` rewrites every catalog file in the one
   layout (`scripts/lib/boardJson.mjs`; `tests/boards.test.ts` fails on any
   other) — edit entries as text, no regex scripts.
 - `scripts/dxf.mjs <file.dxf|file.pdf>` — extents and circles of a vendor
@@ -126,7 +133,8 @@ freely; a temporary script that turns out useful becomes a permanent one.
   reads a fixture of every format back to known boxes (`tests/fixtures/`).
 - `scripts/fetch.mjs <url> | --board <id> | --all` — vendor drawings in the
   local cache `drawings/` (not committed; zips unpacked, `drawings/index.json`
-  maps URL → file), downloaded once; `--file <path>` registers a file
+  maps URL → file), downloaded once; `<url> --board <id>` ties another
+  file to a board (a layout next to its product page); `--file <path>` registers a file
   downloaded by hand (Google Drive asks a person), `--list`. Fetch here, not
   with curl into the scratchpad: the next session finds the same files.
 - Adding a board: the skill `.claude/skills/add-board/SKILL.md` (its

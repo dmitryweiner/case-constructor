@@ -25,5 +25,5 @@
     { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 32.5, "y": 26.5, "w": 51, "d": 5, "h": 1, "cut": false }
   ],
   "source": "https://dl.radxa.com/zero3/docs/hw/3w/radxa_zero_3w_2d_dxf.zip",
-  "verified": false
+  "verified": true
 }
