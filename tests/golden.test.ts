@@ -173,6 +173,13 @@ describe('golden cases', () => {
       actual[name] = { body: part(built.body), lid: part(built.lid) };
     }
     if (process.env.UPDATE_GOLDEN || !existsSync(GOLDEN_PATH)) {
+      // say what moved, so a regeneration is a decision and not a blind overwrite
+      const before: Record<string, Entry> = existsSync(GOLDEN_PATH) ? JSON.parse(readFileSync(GOLDEN_PATH, 'utf8')) : {};
+      const changed = Object.keys(actual).filter((name) => before[name] && JSON.stringify(before[name]) !== JSON.stringify(actual[name]));
+      const added = Object.keys(actual).filter((name) => !before[name]);
+      const removed = Object.keys(before).filter((name) => !actual[name]);
+      // vitest hides a passing test's console output; the terminal gets it directly
+      process.stdout.write(`golden: ${changed.length} changed${changed.length ? ` (${changed.join(', ')})` : ''}, ${added.length} added${added.length ? ` (${added.join(', ')})` : ''}, ${removed.length} removed${removed.length ? ` (${removed.join(', ')})` : ''}\n`);
       writeFileSync(GOLDEN_PATH, `${JSON.stringify(actual, null, 2)}\n`);
       return;
     }

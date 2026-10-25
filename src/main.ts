@@ -801,6 +801,7 @@ if (import.meta.env.DEV) {
     drawn: () => drawnRoles,
     drawnParts: () => drawnParts,
     project: (points: [number, number, number][]) => scene.project(points),
+    lookFrom: (direction: [number, number, number]) => scene.lookFrom(direction),
     /** true when the worker has answered for the current state */
     built: () => generation > 0 && settled === generation,
   });

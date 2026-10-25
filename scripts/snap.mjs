@@ -18,7 +18,9 @@
 //   --upload <id>=<path>  hand a file to an <input type=file> (repeatable)
 //   --view                only the 3D view, without the panel
 //   --clip x,y,w,h        a piece of the frame — to look at a joint closely
-//   --orbit dx,dy         orbit the camera with the mouse
+//   --camera <name>       iso (the default view), top, bottom, front, back, left, right,
+//                         under (iso from below); dev builds only, applied after the actions
+//   --orbit dx,dy         orbit the camera with the mouse (after --camera)
 //   --panel open|hidden   narrow screens: show or hide the settings sheet (after the actions)
 //   --wait <ms>           extra pause before the shot
 //   --width / --height    window size
@@ -39,7 +41,7 @@ import { parseArgs, openApp } from './lib/harness.mjs';
 
 const flags = parseArgs(
   process.argv.slice(2),
-  ['out', 'preset', 'wait', 'width', 'height', 'url', 'clip', 'orbit', 'lang', 'eval', 'panel'],
+  ['out', 'preset', 'wait', 'width', 'height', 'url', 'clip', 'orbit', 'lang', 'eval', 'panel', 'camera'],
   ['set', 'check', 'uncheck', 'click', 'upload'],
 );
 
@@ -127,6 +129,17 @@ for (let i = 0; i < argv.length; i++) {
   const arg = argv[++i];
   label(`${name}:${arg}`);
   const eq = arg.indexOf('=');
+  // a control the current state disables would make Playwright wait 30 s and fail: say so at once
+  const selector = name === 'click' ? arg : `#${name === 'set' || name === 'upload' ? arg.slice(0, eq) : arg}`;
+  const target = page.locator(selector).first();
+  if (!(await target.count())) {
+    console.error(`${name} ${arg}: no element ${selector} in this state`);
+    process.exit(2);
+  }
+  if (await target.isDisabled()) {
+    console.error(`${name} ${arg}: ${selector} is disabled in this state (e.g. the boards toggle in the print view)`);
+    process.exit(2);
+  }
   if (name === 'check') {
     await page.check(`#${arg}`);
     await page.waitForTimeout(80);
@@ -161,6 +174,28 @@ if (panelMode) {
   else if (await page.locator('#panelBtn').isVisible()) await page.click('#panelBtn');
   // the sheet and the picture move for 0.25 s
   await page.waitForTimeout(400);
+}
+
+// Camera presets: directions in the screen frame (y up; the model's front is +z).
+const CAMERAS = {
+  iso: [140, 110, 170], under: [140, -110, 170],
+  top: [0, 1, 0.001], bottom: [0, -1, 0.001],
+  front: [0, 0.25, 1], back: [0, 0.25, -1], left: [-1, 0.25, 0], right: [1, 0.25, 0],
+};
+const cameraName = flags.get('camera');
+if (cameraName) {
+  const direction = CAMERAS[cameraName];
+  if (!direction) {
+    console.error(`--camera takes ${Object.keys(CAMERAS).join(', ')}`);
+    process.exit(2);
+  }
+  if (!dev) {
+    console.error('--camera needs the dev server (the production build has no window.__case)');
+    process.exit(2);
+  }
+  label(`camera:${cameraName}`);
+  await page.evaluate((d) => window.__case.lookFrom(d), direction);
+  await page.waitForTimeout(150);
 }
 
 // Orbiting is a plain drag over the canvas, as a person does it.

@@ -27,6 +27,8 @@ export interface SceneHandle {
   setBottomInset(px: number): void;
   /** Where model points (mm, z-up) land on the canvas, CSS pixels from its top-left — for the smoke. */
   project(points: readonly [number, number, number][]): [number, number][];
+  /** Puts the camera on a direction from the target (screen frame, y up), at the same distance — for scripts/snap.mjs --camera. */
+  lookFrom(direction: readonly [number, number, number]): void;
   dispose(): void;
 }
 
@@ -213,6 +215,14 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
         camera.position.copy(controls.target).addScaledVector(direction, distance);
         fittedRadius = radius;
       }
+    },
+
+    lookFrom(direction: readonly [number, number, number]): void {
+      const dir = new THREE.Vector3(...direction).normalize();
+      const distance = camera.position.distanceTo(controls.target);
+      camera.position.copy(controls.target).addScaledVector(dir, distance);
+      camera.lookAt(controls.target);
+      controls.update();
     },
 
     setXray(on: boolean): void {

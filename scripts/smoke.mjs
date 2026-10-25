@@ -31,6 +31,8 @@ async function verdict() {
       const text = document.querySelector('#audit')?.textContent ?? '';
       return text.length > 0 && !text.includes('building');
     },
+    // the second argument goes to the page function; options are the third
+    undefined,
     { timeout: 20000 },
   );
   return (await page.locator('#audit').textContent()).trim();

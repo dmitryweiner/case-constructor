@@ -56,14 +56,16 @@ freely; a temporary script that turns out useful becomes a permanent one.
   (required), `--preset <id>`, `--lang en|ru|uk|he`, `--set <id>=<value>`,
   `--check <id>`, `--uncheck <id>`, `--click <selector>`, `--upload
   <id>=<path>` (in command-line order), `--panel open|hidden` (the mobile
-  sheet), `--view`, `--clip x,y,w,h`, `--orbit
-  dx,dy`, `--url <path>`, `--wait <ms>`, `--width/--height`, `--preview`,
+  sheet), `--view`, `--clip x,y,w,h`, `--camera
+  iso|under|top|bottom|front|back|left|right` (dev builds; use it instead of
+  guessing `--orbit` values), `--orbit dx,dy`, `--url <path>`, `--wait <ms>`, `--width/--height`, `--preview`,
   `--eval '<js>'` (prints a page expression; dev builds expose
   `window.__case.state() / parts() / ghosts() / drawn() / drawnParts()` — the meshes and
   the roles actually drawn; `built()` — the worker has answered for the
   current state). On the dev server it waits for the first build and for the
   build after each action; a page reload in between (HMR while another
-  process edits files) exits with code 3 instead of shooting the old page.
+  process edits files) exits with code 3 instead of shooting the old page. An action on a missing or disabled control fails at
+  once with exit code 2.
   A picture can lie (an open box seen from above
   looks closed under flat light): check the mesh with `--eval` or
   `inspect.mjs --levels` before believing an image.
@@ -280,7 +282,9 @@ as the limit, so the preview never drops vents or the label. Vent slots and
 round holes are the bulk of the triangles.
 
 Golden tests pin volumes and triangle counts of a fixed set of states;
-regenerate knowingly: `UPDATE_GOLDEN=1 npx vitest run tests/golden.test.ts`.
+regenerate knowingly: `UPDATE_GOLDEN=1 npx vitest run tests/golden.test.ts`
+prints which states changed, were added or removed — check that only the
+ones you meant moved.
 Add a state when a feature lands, never edit an old one.
 
 ## Presets
