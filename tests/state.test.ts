@@ -2,7 +2,7 @@
 // localStorage, worker messages). It must digest any garbage without
 // throwing, and twice must equal once.
 
-import { defaultState, sanitizeState, RESOLUTIONS, STATE_VERSION } from '../src/state/schema';
+import { defaultState, sanitizeState, withShapeKind, RESOLUTIONS, STATE_VERSION } from '../src/state/schema';
 import { WALL_MIN, WALL_MAX, SIZE_MAX, SIZE_MIN } from '../src/geo/shape';
 import { lidFaces } from '../src/geo/lidSpec';
 import { garbageLike, rng } from './helpers';
@@ -51,6 +51,21 @@ describe('sanitizeState', () => {
     const console = sanitizeState({ shape: { kind: 'console' }, lid: { face: 'top' } });
     expect(console.lid.face).not.toBe('top');
     expect(sanitizeState({ shape: { kind: 'console' }, lid: { face: 'left' } }).lid.face).toBe('left');
+  });
+
+  it('the face the user chose comes back when the shape allows it again (box → console → box)', () => {
+    const box = sanitizeState({ lid: { face: 'top' } });
+    const console = sanitizeState(withShapeKind(box, 'console'));
+    expect(console.lid.face).toBe('bottom');
+    expect(console.lid.chosen).toBe('top');
+    expect(sanitizeState(withShapeKind(console, 'box')).lid.face).toBe('top');
+    // a face picked on the console is the new choice
+    const picked = sanitizeState({ ...console, lid: { ...console.lid, face: 'left', chosen: 'left' } });
+    expect(sanitizeState(withShapeKind(picked, 'box')).lid.face).toBe('left');
+    // a face the new shape cannot have, chosen or not: an allowed one
+    expect(sanitizeState(withShapeKind(picked, 'cylinder')).lid.face).toBe('top');
+    // an old file without a choice: the face is the choice
+    expect(sanitizeState({ lid: { face: 'front' } }).lid.chosen).toBe('front');
   });
 
   it('an unknown resolution or export mode falls back to the default', () => {

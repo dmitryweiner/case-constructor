@@ -224,6 +224,7 @@ export const he: Record<Key, string> = {
   'progress.fastening': 'תפסים ומעמדים',
   'warn.postInOpening': "מעמד בורג {n} עומד בדרכו של פתח ונחתך על ידו.",
   'info.depthRaised': "המכסה לוקח {d} מ״מ מהדפנות: קו החלוקה עובר היכן שהפינות המעוגלות נגמרות.",
+  'info.lidFaceMoved': "צורה זו אינה מאפשרת מכסה „{chosen}”: כרגע הוא „{face}”, והוא יחזור כשהצורה תאפשר.",
 
   // --- custom board ---
   'boards.custom': '+ לוח משלך',

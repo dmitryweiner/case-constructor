@@ -232,6 +232,7 @@ export const en = {
   'progress.fastening': 'Snaps and posts',
   'warn.postInOpening': "Screw post {n} stands in the way of an opening and is cut by it.",
   'info.depthRaised': "The lid takes {d} mm of the walls: the parting line runs where the rounded corners end.",
+  'info.lidFaceMoved': "This shape cannot have its lid “{chosen}”: it is “{face}” for now and goes back when the shape allows it.",
 
   // --- custom board ---
   'boards.custom': '+ Custom board',

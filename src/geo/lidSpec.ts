@@ -14,7 +14,10 @@ export const FASTENINGS = ['snaps', 'screws', 'magnets', 'printed'] as const;
 export type Fastening = (typeof FASTENINGS)[number];
 
 export interface LidState {
+  /** the face the lid is built on: the chosen one, or an allowed one when the shape cannot have it */
   face: Face;
+  /** the face the user chose last: it comes back when the shape allows it again */
+  chosen: Face;
   /** 0 = a flat plate; more = the lid takes this much of the walls, mm */
   depth: number;
   fastening: Fastening;
@@ -34,6 +37,7 @@ export const DEPTH_MAX = 200;
 export function defaultLid(): LidState {
   return {
     face: 'top',
+    chosen: 'top',
     depth: 0,
     fastening: 'snaps',
     screw: { ...defaultFastener('M3'), head: 'counterbore' },
@@ -51,6 +55,17 @@ export function lidFaces(kind: ShapeKind): readonly Face[] {
   return ['top', 'bottom', 'front', 'back', 'left', 'right'];
 }
 
+/**
+ * The lid when the shape changes to `kind`: on the face the user chose if
+ * the shape allows it (box → console → box brings a top lid back on top),
+ * else where it is, else on the first allowed face.
+ */
+export function lidForKind(lid: LidState, kind: ShapeKind): LidState {
+  const allowed = lidFaces(kind);
+  const face = allowed.includes(lid.chosen) ? lid.chosen : allowed.includes(lid.face) ? lid.face : allowed[0];
+  return { ...lid, face };
+}
+
 function isFastening(value: unknown): value is Fastening {
   return typeof value === 'string' && FASTENINGS.some((kind) => kind === value);
 }
@@ -64,6 +79,7 @@ export function sanitizeLid(raw: unknown, kind: ShapeKind): LidState {
   const d = defaultLid();
   const r = typeof raw === 'object' && raw !== null ? raw : {};
   const face: unknown = Reflect.get(r, 'face');
+  const chosen: unknown = Reflect.get(r, 'chosen');
   const lip: unknown = Reflect.get(r, 'lip');
   const lipRec = typeof lip === 'object' && lip !== null ? lip : {};
   const fastening: unknown = Reflect.get(r, 'fastening');
@@ -76,6 +92,8 @@ export function sanitizeLid(raw: unknown, kind: ShapeKind): LidState {
   const allowed = lidFaces(kind);
   return {
     face: isFace(face) && allowed.includes(face) ? face : allowed[0],
+    // an old file has no choice: its face is the choice
+    chosen: isFace(chosen) ? chosen : isFace(face) ? face : d.chosen,
     depth: clampNum(Reflect.get(r, 'depth'), 0, DEPTH_MAX, d.depth),
     fastening: isFastening(fastening) ? fastening : d.fastening,
     screw: lidFastener(sanitizeFastener(Reflect.get(r, 'screw'), d.screw), d.screw),

@@ -28,6 +28,7 @@ import type { CutsCardHandle } from './ui/cutsCard';
 import { cutWarnings, outerTopAt, portCutters } from './geo/ports';
 import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
 import { effectiveLid } from './geo/layout';
+import { lidFaces } from './geo/lidSpec';
 import { faceFrame as frameOf } from './geo/face';
 import { postCollisions, postSpots, postsInOpenings, printedScrewWarnings } from './geo/fastening';
 import { openingPolygon } from './geo/opening';
@@ -229,6 +230,9 @@ function refresh(): void {
   const cutters = [...portCutters(layout, shapeBuilt), ...extraCutters(state.extraCuts, shapeBuilt, dims, top)];
   const lidBuilt = effectiveLid(shapeBuilt, state.lid, dims);
   if (lidBuilt.depth > state.lid.depth + 0.01) baseWarnings.push(t('info.depthRaised', { d: lidBuilt.depth.toFixed(1) }));
+  if (state.lid.face !== state.lid.chosen && !lidFaces(state.shape.kind).includes(state.lid.chosen)) {
+    baseWarnings.push(t('info.lidFaceMoved', { chosen: t(`face.${state.lid.chosen}`), face: t(`face.${state.lid.face}`) }));
+  }
   baseWarnings.push(...cutWarnings(layout, shapeBuilt, lidBuilt, cutters, state.extraCuts).map(tm));
   if (lidBuilt.fastening !== 'snaps') {
     const { frame, plate, zp, spots } = lidPosts(state);
@@ -360,7 +364,25 @@ function drawParts(): void {
     const screws = screw ? screwsInCase(screw, posts, built.lid.face, dims, 2 * lift) : null;
     if (screws) parts.push({ role: 'screw', mesh: screws });
   }
-  show(parts);
+  show(standOnGrid(parts));
+}
+
+/**
+ * Parts raised together so that nothing goes under the grid: a bottom lid,
+ * exploded, floats below the body — both above the grid.
+ */
+function standOnGrid(parts: ScenePart[]): ScenePart[] {
+  let low = 0;
+  for (const part of parts) {
+    const dz = part.offset?.[2] ?? 0;
+    const positions = part.mesh.positions;
+    for (let i = 2; i < positions.length; i += 3) low = Math.min(low, positions[i] + dz);
+  }
+  if (low >= 0) return parts;
+  return parts.map((part): ScenePart => {
+    const [ox, oy, oz] = part.offset ?? [0, 0, 0];
+    return { ...part, offset: [ox, oy, oz - low] };
+  });
 }
 
 /** Roles of what was drawn last — for the smoke (window.__case.drawn()). */

@@ -223,6 +223,7 @@ export const ru: Record<Key, string> = {
   'progress.fastening': 'Защёлки и стойки',
   'warn.postInOpening': "Стойка винта {n} стоит на пути отверстия и прорезана им.",
   'info.depthRaised': "Крышка забирает {d} мм стенок: линия разъёма проходит там, где кончаются скругления.",
+  'info.lidFaceMoved': "Эта форма не допускает крышку «{chosen}»: пока она «{face}», а вернётся, когда форма позволит.",
 
   // --- custom board ---
   'boards.custom': '+ Своя плата',

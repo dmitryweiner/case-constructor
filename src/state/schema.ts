@@ -4,7 +4,7 @@
 // core may assume its parameters are valid. Sanitizers never throw and are
 // idempotent (tests check both).
 
-import type { ShapeState } from '../geo/shape';
+import type { ShapeKind, ShapeState } from '../geo/shape';
 import { defaultShape, sanitizeShape } from '../geo/shape';
 import type { BoardPlacement } from '../boards/placement';
 import { defaultPlacement, sanitizePlacements } from '../boards/placement';
@@ -16,7 +16,7 @@ import {
   defaultFan, defaultLabel, defaultVents, defaultWallMount, sanitizeFan, sanitizeLabel, sanitizeVents, sanitizeWallMount,
 } from '../geo/extras';
 import type { LidState } from '../geo/lidSpec';
-import { defaultLid, sanitizeLid } from '../geo/lidSpec';
+import { defaultLid, lidForKind, sanitizeLid } from '../geo/lidSpec';
 
 export const STATE_VERSION = 1;
 
@@ -60,6 +60,11 @@ export function defaultState(): AppState {
 
 function isExportMode(value: unknown): value is ExportMode {
   return typeof value === 'string' && EXPORT_MODES.some((mode) => mode === value);
+}
+
+/** The state with another shape; the lid goes back to the face the user chose when the shape allows it. */
+export function withShapeKind(state: AppState, kind: ShapeKind): AppState {
+  return { ...state, shape: { ...state.shape, kind }, lid: lidForKind(state.lid, kind) };
 }
 
 export function sanitizeState(raw: unknown): AppState {

@@ -247,6 +247,21 @@ if (!(await page.locator('#lid_face_top').isDisabled())) errors.push('[lid] the 
 await expectWatertight('lid:console');
 await page.click('#case_kind_box');
 await page.click('#lid_face_top');
+// box → console → box: the lid goes to the bottom and comes back on top;
+// exploded, the bottom lid floats under the body, both above the grid
+label('lid:console-and-back');
+await page.click('#case_kind_console');
+await expectWatertight('lid:console-bottom');
+const lowest = await page.evaluate(() => Math.min(...window.__case.drawnParts().map((part) => {
+  let low = Infinity;
+  const p = part.mesh.positions;
+  for (let i = 2; i < p.length; i += 3) low = Math.min(low, p[i] + (part.offset?.[2] ?? 0));
+  return low;
+})));
+if (lowest < -1e-6) errors.push(`[lid] the exploded bottom lid goes under the grid: z = ${lowest.toFixed(2)}`);
+await page.click('#case_kind_box');
+const faceBack = await page.evaluate(() => window.__case.state().lid.face);
+if (faceBack !== 'top') errors.push(`[lid] box → console → box leaves the lid on the ${faceBack}`);
 await setRange('lid_depth', 0);
 
 // lid fastening: screws with every hole and head kind, then back to snaps

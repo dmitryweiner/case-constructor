@@ -8,6 +8,7 @@ import { caseDims } from '../geo/layout';
 import { SHAPE_KINDS, SIZE_MAX, SIZE_MIN, WALL_MAX, WALL_MIN, CORNER_MAX, EDGE_MAX } from '../geo/shape';
 import type { ShapeState } from '../geo/shape';
 import type { AppState } from '../state/schema';
+import { withShapeKind } from '../state/schema';
 
 type Dim = 'w' | 'd' | 'h';
 
@@ -32,7 +33,7 @@ export function caseControls(): Control<AppState>[] {
       kind: 'segmented', key: 'kind', label: 'shape.kind',
       options: SHAPE_KINDS.map((value) => ({ value, label: `shape.${value}` as const })),
       get: kind,
-      set: (state, value) => shapeOf(state, { kind: SHAPE_KINDS.find((k) => k === value) ?? state.shape.kind }),
+      set: (state, value) => withShapeKind(state, SHAPE_KINDS.find((k) => k === value) ?? state.shape.kind),
     },
     {
       kind: 'range', key: 'cornerR', label: 'param.cornerR', hint: 'param.cornerR.hint',

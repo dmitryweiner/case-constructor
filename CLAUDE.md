@@ -8,6 +8,8 @@ at the top. Deviations from the plan are recorded at its end as they happen.
 rules.
 `plans/PLAN-IMPROVEMENTS-NEW-BOARDS.md` — what the Tier A boards left (B1…B9):
 done; read it only for its decisions and deviations.
+`plans/PLAN-IMPROVEMENTS-2026-10-25.md` — what the user trial asked for
+(R1…R8), the current plan; on the branch `improvements-2026-10-25`.
 
 ## Node
 
@@ -257,6 +259,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   outer face, printed screws on their heads in a row after the lid; every
   exported STL is in print orientation. A console with a bottom lid lies on
   its slope instead (opening up it would stand on an edge).
+- The lid keeps the face the user chose (`lid.chosen`) next to the face it
+  is built on (`lid.face`): a change of shape (`withShapeKind`,
+  `lidForKind`) puts it back when the new shape allows it (box → console →
+  box leaves a top lid on top). The sanitizer only checks the face against
+  the shape: it cannot tell a stale choice from one to restore.
 - Visible text comes only from `src/i18n/` dictionaries; `en.ts` is the
   reference and gives `Key`. The core and the worker speak in message codes
   (`geo/message.ts`). A test fails on any Cyrillic or Hebrew in a string

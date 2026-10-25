@@ -2,8 +2,11 @@
 
 **Lid on** — the face the lid sits on: top, bottom, front, back, left or
 right. A cylinder has its lid on the top or the bottom; a console on any face
-except its sloped top. With a bottom lid the case is an upturned cup and the
-floor plate is the lid.
+except its sloped top. When the shape cannot have the face you chose, the
+lid moves to an allowed one and the panel says so; the face you chose comes
+back with a shape that allows it (box → console → box keeps a top lid on
+top). With a bottom lid the case is an upturned cup and the floor plate is
+the lid.
 
 | Parameter | Range | Default | Notes |
 |---|---|---|---|

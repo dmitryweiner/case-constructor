@@ -28,7 +28,8 @@ broken mesh, an empty part or a part larger than 400 mm.
 **View** — only the choices that mean something for the parts shown:
 
 - **Both**: *exploded* (default) — the lid lifted off the case (printed
-  screws hover over it); *assembled* — closed (printed screws in their
+  screws hover over it; a bottom lid floats under the case, both above the
+  grid); *assembled* — closed (printed screws in their
   holes); *print layout* — the parts as they go into the STL.
 - **Body**: *assembled* or *print layout* (a body alone has nothing to
   explode).

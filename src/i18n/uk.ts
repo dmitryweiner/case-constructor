@@ -223,6 +223,7 @@ export const uk: Record<Key, string> = {
   'progress.fastening': 'Клямки й стійки',
   'warn.postInOpening': "Стійка гвинта {n} стоїть на шляху отвору й прорізана ним.",
   'info.depthRaised': "Кришка забирає {d} мм стінок: лінія роз’єму проходить там, де закінчуються заокруглення.",
+  'info.lidFaceMoved': "Ця форма не допускає кришку «{chosen}»: поки що вона «{face}», а повернеться, коли форма дозволить.",
 
   // --- custom board ---
   'boards.custom': '+ Власна плата',

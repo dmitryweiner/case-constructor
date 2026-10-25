@@ -22,7 +22,10 @@ export function lidControls(): Control<AppState>[] {
       options: FACES.map((value) => ({ value, label: `face.${value}` as const })),
       optionDisabled: (state, value) => !lidFaces(state.shape.kind).some((face) => face === value),
       get: (state) => state.lid.face,
-      set: (state, value) => lidOf(state, { face: FACES.find((face) => face === value) ?? state.lid.face }),
+      set: (state, value) => {
+        const face = FACES.find((one) => one === value) ?? state.lid.face;
+        return lidOf(state, { face, chosen: face });
+      },
     },
     {
       kind: 'range', key: 'depth', label: 'lid.depth', hint: 'lid.depth.hint',
