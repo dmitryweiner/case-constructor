@@ -8,7 +8,7 @@
 import './style.css';
 import { el, make } from './ui/dom';
 import { createScene } from './render/scene';
-import type { ScenePart } from './render/scene';
+import type { SceneCaption, ScenePart } from './render/scene';
 import { renderControls } from './ui/controls';
 import type { ControlsHandle } from './ui/controls';
 import { caseControls } from './ui/caseCard';
@@ -22,16 +22,17 @@ import { renderExtras } from './ui/extrasCards';
 import type { ExtrasHandle } from './ui/extrasCards';
 import { labelRaster } from './ui/labelRaster';
 import type { LabelRaster } from './geo/label';
-import { labelPlacement } from './geo/label';
+import { labelBox, labelPlacement } from './geo/label';
+import { SCREWS } from './geo/fasteners';
+import { screwShape } from './geo/thread';
 import { extrasWarnings, flatRegion } from './geo/extras';
 import type { CutsCardHandle } from './ui/cutsCard';
 import { cutWarnings, outerTopAt, portCutters } from './geo/ports';
 import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
 import { effectiveLid } from './geo/layout';
-import { faceFrame as frameOf } from './geo/face';
-import { postCollisions, postSpots, postsInOpenings, printedScrewWarnings } from './geo/fastening';
-import { openingPolygon } from './geo/opening';
-import { plateOf, shapeSpec } from './geo/shape';
+import { HEAD_FLOOR, headSeat, lidFaces } from './geo/lidSpec';
+import { headLimitsOf, lidPosts } from './geo/lidPosts';
+import { postCollisions, postsInOpenings, printedScrewWarnings } from './geo/fastening';
 import { setupAdjustmentButtons } from './ui/adjust';
 import { createProgress } from './ui/progress';
 import { renderPresetList } from './ui/presetList';
@@ -42,11 +43,11 @@ import type { Key } from './i18n';
 import { faceFrame } from './geo/face';
 import type { Dims, Face } from './geo/face';
 import type { PrintShape } from './geo/print';
-import { caseDims, caseLayout, collisions, lidDepthMax, placeBoards } from './geo/layout';
-import { boardGhost } from './geo/ghost';
-import { MAX_BOARDS, NEW_BOARD_GAP, defaultPlacement } from './boards/placement';
+import { caseLayout, collisions, lidDepthMax, placeBoards } from './geo/layout';
+import { boardGhost, portCaptionAnchor } from './geo/ghost';
+import { MAX_BOARDS, NEW_BOARD_GAP, boardOf, defaultPlacement, portCut, withPortCut } from './boards/placement';
 import type { BoardDef } from './boards/schema';
-import { bodyForPrint, lidWithScrews, printLayout, screwsForPrint, screwsInCase, PRINT_GAP_MM } from './geo/print';
+import { bodyForPrint, lidWithScrews, printLayout, screwsForPrint, screwsInCase, withClamps, PRINT_GAP_MM } from './geo/print';
 import type { SurfaceMesh } from './geo/surface';
 import { meshBounds, mergeMeshes } from './geo/surface';
 import { encodeSTL } from './geo/stl';
@@ -121,6 +122,8 @@ const exportCard = el('exportCard', HTMLElement);
 /** How the case is shown — a view setting, not part of the project. */
 let viewMode: ViewMode = 'exploded';
 const viewXray = el('viewXray', HTMLInputElement);
+const viewPortNames = el('viewPortNames', HTMLInputElement);
+const viewPortNamesLabel = el('viewPortNamesLabel', HTMLLabelElement);
 const langSel = el('langSel', HTMLSelectElement);
 const tabs: Record<ExportMode, HTMLButtonElement> = {
   body: el('tabBody', HTMLButtonElement),
@@ -133,7 +136,7 @@ const progress = createProgress({
   label: el('progressLabel', HTMLSpanElement),
 });
 
-const scene = createScene(view);
+const scene = createScene(view, el('portCaptions', HTMLDivElement));
 const csg = new CsgClient();
 const history = new History<AppState>(defaultState());
 let state: AppState = history.value;
@@ -204,11 +207,13 @@ let generation = 0;
 /** The generation whose build has answered (a preview or an error) — for scripts/snap.mjs. */
 let settled = 0;
 /** The last preview from the worker, kept so view toggles redraw without a rebuild. */
-let lastParts: { body: SurfaceMesh; lid: SurfaceMesh; screw: SurfaceMesh | null; state: AppState } | null = null;
+let lastParts: { body: SurfaceMesh; lid: SurfaceMesh; screw: SurfaceMesh | null; clamps: SurfaceMesh | null; state: AppState } | null = null;
 /** The label's raster for the current state — the worker gets it with every job. */
 let currentLabel: LabelRaster | null = null;
 /** Board ghosts of the current state — drawn at once, the case follows from the worker. */
 let ghosts: ScenePart[] = [];
+/** A caption per port of every board, drawn with the ghosts. */
+let portCaptions: SceneCaption[] = [];
 /** Warnings the panel computes itself, before the worker answers. */
 let baseWarnings: string[] = [];
 
@@ -229,26 +234,52 @@ function refresh(): void {
   const cutters = [...portCutters(layout, shapeBuilt), ...extraCutters(state.extraCuts, shapeBuilt, dims, top)];
   const lidBuilt = effectiveLid(shapeBuilt, state.lid, dims);
   if (lidBuilt.depth > state.lid.depth + 0.01) baseWarnings.push(t('info.depthRaised', { d: lidBuilt.depth.toFixed(1) }));
+  if (state.lid.face !== state.lid.chosen && !lidFaces(state.shape.kind).includes(state.lid.chosen)) {
+    baseWarnings.push(t('info.lidFaceMoved', { chosen: t(`face.${state.lid.chosen}`), face: t(`face.${state.lid.face}`) }));
+  }
   baseWarnings.push(...cutWarnings(layout, shapeBuilt, lidBuilt, cutters, state.extraCuts).map(tm));
   if (lidBuilt.fastening !== 'snaps') {
     const { frame, plate, zp, spots } = lidPosts(state);
+    const limits = headLimitsOf(state);
+    if (lidBuilt.fastening === 'screws' && lidBuilt.screw.head !== 'none' && headSeat(lidBuilt).d > limits.d + 1e-6) {
+      baseWarnings.push(t('warn.headDClamped', { max: limits.d.toFixed(1) }));
+    }
+    // the table's depth was always capped quietly; a depth the user set is worth a word
+    if (lidBuilt.fastening === 'screws' && lidBuilt.screw.head === 'counterbore' && lidBuilt.head.depth !== null
+      && headSeat(lidBuilt).depth > plate - HEAD_FLOOR) {
+      baseWarnings.push(t('warn.headDepthClamped', { max: (plate - HEAD_FLOOR).toFixed(1) }));
+    }
     baseWarnings.push(...postCollisions(spots, frame, zp, plate, lidBuilt, layout.boards).map(tm));
     baseWarnings.push(...postsInOpenings(spots, frame, zp, plate, lidBuilt, cutters).map(tm));
   }
   baseWarnings.push(...printedScrewWarnings(lidBuilt).map(tm));
   baseWarnings.push(...extrasWarnings(state, shapeBuilt, layout, lidBuilt).map(tm));
   if (currentLabel) {
-    const place = labelPlacement(state.label, currentLabel, lidBuilt.face, dims);
+    const place = labelPlacement(state.label, currentLabel, lidBuilt.face, dims, shapeBuilt);
     const region = flatRegion(shapeBuilt, dims, lidBuilt.face, 0);
-    const reach = Math.hypot(place.w, place.h) / 2;
-    const turned = Math.abs(Math.sin((state.label.angle * Math.PI) / 180));
-    const hw = place.w / 2 * (1 - turned) + reach * turned;
-    const hh = place.h / 2 * (1 - turned) + reach * turned;
+    const { hw, hh } = labelBox(place.w, place.h, state.label.angle);
     if (place.u - hw < region.u0 || place.u + hw > region.u1 || place.v - hh < region.v0 || place.v + hh > region.v1) {
       baseWarnings.push(tm({ code: 'warn.labelTooBig' }));
     }
+    // a screw head on the lid: the label must keep clear of it
+    const head = lidBuilt.fastening === 'screws' ? (lidBuilt.screw.head === 'none' ? SCREWS[lidBuilt.screw.size].headD : headSeat(lidBuilt).d) / 2 + 0.5
+      : lidBuilt.fastening === 'printed' ? screwShape(lidBuilt.thread.size, 0, 0).headD / 2 + 0.5 : 0;
+    if (head > 0 && lidPosts(state).spots.some((spot) => {
+      const du = Math.max(0, Math.abs(spot.centre[0] - place.u) - hw);
+      const dv = Math.max(0, Math.abs(spot.centre[1] - place.v) - hh);
+      return Math.hypot(du, dv) < head;
+    })) {
+      baseWarnings.push(tm({ code: 'warn.labelOverScrew' }));
+    }
   }
   showWarnings([]);
+  const numbered = layout.boards.length > 1;
+  portCaptions = layout.boards.flatMap((board) => board.def.ports.map((port): SceneCaption => ({
+    key: `${board.index}:${port.id}`,
+    text: `${numbered ? `${board.index + 1}: ` : ''}${tDynamic(`port.${port.type}`)} · ${port.id}`,
+    at: portCaptionAnchor(board, port),
+    dim: !portCut(board.placement, port.id, port.cut),
+  })));
   ghosts = layout.boards.flatMap((board): ScenePart[] => {
     const ghost = boardGhost(board);
     return [{ role: 'board', mesh: ghost.pcb }, ...(ghost.ports ? [{ role: 'port' as const, mesh: ghost.ports }] : [])];
@@ -277,11 +308,11 @@ async function showPreview(stamp: number): Promise<void> {
     settled = stamp;
     const body = toMesh(partById(result.parts, 'body'));
     const lid = toMesh(partById(result.parts, 'lid'));
-    const screwPart = result.parts.find((part) => part.id === 'screw');
-    const screw = screwPart ? toMesh(screwPart) : null;
-    lastParts = { body, lid, screw, state: requested };
+    const screw = optionalPart(result.parts, 'screw');
+    const clamps = optionalPart(result.parts, 'clamp');
+    lastParts = { body, lid, screw, clamps, state: requested };
     drawParts();
-    audit(screw ? [body, lid, screw] : [body, lid], result.ms);
+    audit([body, lid, ...(screw ? [screw] : []), ...(clamps ? [clamps] : [])], result.ms);
   } catch (error) {
     if (stamp !== generation) return;
     settled = stamp;
@@ -300,17 +331,35 @@ function bothForPrint(
   return screws ? [...parts, screws] : parts;
 }
 
-/** The lid's corner posts as the worker builds them (in the lid's face frame) — for warnings and the printed screws. */
-function lidPosts(current: AppState) {
-  const layout = caseLayout(current);
+/**
+ * The parts on the bed as the parts tab picks them — the print layout of the
+ * view and of the STL: Both is body, lid, printed screws and battery clamps;
+ * Body is the body and the clamps (they go into it); Lid is the lid and its
+ * screws.
+ */
+function printParts(
+  built: AppState, body: SurfaceMesh, lid: SurfaceMesh, screw: SurfaceMesh | null, clamps: SurfaceMesh | null,
+): ScenePart[] {
+  const layout = caseLayout(built);
   const { dims } = layout;
-  const shape = { ...current.shape, console: layout.console };
-  const lid = effectiveLid(shape, current.lid, dims);
-  const frame = frameOf(lid.face, dims);
-  const plate = plateOf(shape, lid.face);
-  const zp = -(plate + lid.depth);
-  const opening = openingPolygon(shapeSpec(shape, dims), frame, zp, lid.lip.h, 8);
-  return { frame, plate, zp, spots: lid.fastening === 'snaps' ? [] : postSpots(opening, lid, shape.wall) };
+  const shape = { kind: built.shape.kind, console: layout.console };
+  const face = built.lid.face;
+  const count = screw ? lidPosts(built).spots.length : 0;
+  const roles = (meshes: SurfaceMesh[], names: ScenePart['role'][]): ScenePart[] =>
+    meshes.map((mesh, i): ScenePart => ({ role: names[i] ?? 'screw', mesh }));
+  if (built.exportMode === 'lid') return roles(lidWithScrews(lid, screw, count, face, dims), ['lid', 'screw']);
+  const placed = built.exportMode === 'both'
+    ? bothForPrint(body, lid, screw, count, face, dims, shape)
+    : [bodyForPrint(body, face, dims, shape)];
+  const names: ScenePart['role'][] = built.exportMode === 'both' ? ['body', 'lid', 'screw'] : ['body'];
+  const withClampBars = withClamps(placed, clamps);
+  return roles(withClampBars, [...names.slice(0, placed.length), 'clamp']);
+}
+
+/** A part the worker sends only sometimes (printed screws, battery clamps), as a mesh. */
+function optionalPart(parts: JobPart[], id: JobPart['id']): SurfaceMesh | null {
+  const found = parts.find((part) => part.id === id);
+  return found ? toMesh(found) : null;
 }
 
 function partById(parts: JobPart[], id: JobPart['id']): JobPart {
@@ -327,7 +376,7 @@ function partById(parts: JobPart[], id: JobPart['id']): JobPart {
  */
 function drawParts(): void {
   if (!lastParts) return;
-  const { body, lid, screw, state: built } = lastParts;
+  const { body, lid, screw, clamps, state: built } = lastParts;
   const layout = caseLayout(built);
   const { dims } = layout;
   const showBody = built.exportMode !== 'lid';
@@ -335,22 +384,17 @@ function drawParts(): void {
   const mode = effectiveView(built.exportMode);
   const posts = screw ? lidPosts(built).spots.map((spot) => spot.centre) : [];
   if (mode === 'print') {
-    const shape = { kind: built.shape.kind, console: layout.console };
-    const face = built.lid.face;
-    const roles = (meshes: SurfaceMesh[], first: ScenePart['role'][]): ScenePart[] =>
-      meshes.map((mesh, i): ScenePart => ({ role: first[i] ?? 'screw', mesh }));
-    const parts: ScenePart[] = built.exportMode === 'both'
-      ? roles(bothForPrint(body, lid, screw, posts.length, face, dims, shape), ['body', 'lid'])
-      : built.exportMode === 'lid'
-        ? roles(lidWithScrews(lid, screw, posts.length, face, dims), ['lid'])
-        : [{ role: 'body', mesh: bodyForPrint(body, face, dims, shape) }];
-    show(parts);
+    show(printParts(built, body, lid, screw, clamps));
+    scene.setCaptions([]);
     return;
   }
   const parts: ScenePart[] = [];
+  const withBoards = showBody && viewBoards.checked;
   if (showBody) {
     parts.push({ role: 'body', mesh: body });
-    if (viewBoards.checked) parts.push(...ghosts);
+    if (withBoards) parts.push(...ghosts);
+    // battery clamps on their posts; exploded, lifted off the battery
+    if (clamps) parts.push({ role: 'clamp', mesh: clamps, offset: [0, 0, mode === 'exploded' ? LIFT_MM / 2 : 0] });
   }
   if (showLid && showBody) {
     const n = faceFrame(built.lid.face, dims).n;
@@ -360,7 +404,26 @@ function drawParts(): void {
     const screws = screw ? screwsInCase(screw, posts, built.lid.face, dims, 2 * lift) : null;
     if (screws) parts.push({ role: 'screw', mesh: screws });
   }
-  show(parts);
+  const lift = gridLift(parts);
+  show(lift > 0 ? parts.map((part): ScenePart => {
+    const [ox, oy, oz] = part.offset ?? [0, 0, 0];
+    return { ...part, offset: [ox, oy, oz + lift] };
+  }) : parts);
+  scene.setCaptions(withBoards && viewPortNames.checked ? portCaptions.map((caption) => ({ ...caption, at: [caption.at[0], caption.at[1], caption.at[2] + lift] })) : []);
+}
+
+/**
+ * How far the parts go up together so that nothing is under the grid: a
+ * bottom lid, exploded, floats below the body — both above the grid.
+ */
+function gridLift(parts: ScenePart[]): number {
+  let low = 0;
+  for (const part of parts) {
+    const dz = part.offset?.[2] ?? 0;
+    const positions = part.mesh.positions;
+    for (let i = 2; i < positions.length; i += 3) low = Math.min(low, positions[i] + dz);
+  }
+  return -low;
 }
 
 /** Roles of what was drawn last — for the smoke (window.__case.drawn()). */
@@ -409,6 +472,9 @@ function syncView(): void {
   viewBoardsLabel.hidden = parts === 'lid';
   // boards are not printed: the toggle means nothing in the print layout
   viewBoards.disabled = view === 'print';
+  // the names hang over the board ghosts: nothing to name without them
+  viewPortNamesLabel.hidden = parts === 'lid';
+  viewPortNames.disabled = view === 'print' || !viewBoards.checked;
   viewCaption.textContent = describeView(state);
 }
 
@@ -500,6 +566,7 @@ window.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && !boardPicker.hidden) closePicker();
 });
 viewXray.addEventListener('change', () => scene.setXray(viewXray.checked));
+viewPortNames.addEventListener('change', drawParts);
 
 // --- export ---
 
@@ -540,21 +607,11 @@ async function runExport(): Promise<void> {
       return;
     }
     blockersEl.textContent = '';
-    const dims = caseDims(requested);
-    const face = requested.lid.face;
     const body = toMesh(partById(result.parts, 'body'));
     const lid = toMesh(partById(result.parts, 'lid'));
-    const screwPart = result.parts.find((part) => part.id === 'screw');
-    const screw = screwPart ? toMesh(screwPart) : null;
-    const count = screw ? lidPosts(requested).spots.length : 0;
-    const layout = caseLayout(requested);
-    const shape = { kind: requested.shape.kind, console: layout.console };
-    // printed screws travel with the lid: same print job, same material
-    const mesh = requested.exportMode === 'body'
-      ? bodyForPrint(body, face, dims, shape)
-      : requested.exportMode === 'lid'
-        ? mergeMeshes(lidWithScrews(lid, screw, count, face, dims))
-        : mergeMeshes(bothForPrint(body, lid, screw, count, face, dims, shape));
+    // printed screws travel with the lid, battery clamps with the body: same print job, same material
+    const placed = printParts(requested, body, lid, optionalPart(result.parts, 'screw'), optionalPart(result.parts, 'clamp'));
+    const mesh = mergeMeshes(placed.map((part) => part.mesh));
     download(encodeSTL(mesh, { name: requested.exportMode }), `case-constructor-${requested.exportMode}.stl`);
   } catch (error) {
     blockersEl.textContent = t('error.export', { error: message(error) });
@@ -746,13 +803,11 @@ window.addEventListener('keydown', (event) => {
 // --- mobile panel ---
 
 const panelBtn = el('panelBtn', HTMLButtonElement);
-const panelBackdrop = el('panelBackdrop', HTMLDivElement);
 
 const narrow = window.matchMedia('(max-width: 760px)');
 
 function setPanelOpen(open: boolean): void {
   panel.classList.toggle('open', open);
-  panelBackdrop.hidden = !open;
   panelBtn.hidden = open;
   // on a phone the sheet covers the lower part of the view: centre the case above it
   scene.setBottomInset(open && narrow.matches ? panel.offsetHeight : 0);
@@ -763,7 +818,48 @@ narrow.addEventListener('change', () => setPanelOpen(panel.classList.contains('o
 window.addEventListener('resize', () => setPanelOpen(panel.classList.contains('open')));
 
 panelBtn.addEventListener('click', () => setPanelOpen(true));
-panelBackdrop.addEventListener('click', () => setPanelOpen(false));
+/** A tap on a port's caption: its opening on or off, as its checkbox in the board card does. */
+function togglePortCut(key: string): void {
+  const colon = key.indexOf(':');
+  const index = Number(key.slice(0, colon));
+  const placement = state.boards[index];
+  const port = placement ? boardOf(placement).ports.find((one) => one.id === key.slice(colon + 1)) : undefined;
+  if (!placement || !port) return;
+  const boards = state.boards.map((one, i) => (i === index ? withPortCut(one, port, !portCut(one, port.id, port.cut)) : one));
+  applyState({ ...state, boards });
+}
+
+// The canvas stays live under the open sheet: drags turn the case, pinches
+// zoom it; only a tap (one finger, short, still) on it closes the sheet.
+const TAP_MOVE_PX = 6;
+const TAP_MS = 300;
+const pressed = new Map<number, { x: number; y: number; t: number }>();
+let gesture = false;
+view.addEventListener('pointerdown', (event) => {
+  pressed.set(event.pointerId, { x: event.clientX, y: event.clientY, t: event.timeStamp });
+  if (pressed.size > 1) gesture = true;
+});
+view.addEventListener('pointermove', (event) => {
+  const start = pressed.get(event.pointerId);
+  if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > TAP_MOVE_PX) gesture = true;
+});
+const release = (event: PointerEvent): void => {
+  const start = pressed.get(event.pointerId);
+  pressed.delete(event.pointerId);
+  const tap = start && !gesture && event.timeStamp - start.t < TAP_MS
+    && Math.hypot(event.clientX - start.x, event.clientY - start.y) <= TAP_MOVE_PX;
+  if (pressed.size === 0) gesture = false;
+  if (!tap) return;
+  const box = view.getBoundingClientRect();
+  const caption = scene.captionAt(event.clientX - box.left, event.clientY - box.top);
+  if (caption) togglePortCut(caption);
+  else if (narrow.matches && panel.classList.contains('open')) setPanelOpen(false);
+};
+view.addEventListener('pointerup', release);
+view.addEventListener('pointercancel', (event) => {
+  pressed.delete(event.pointerId);
+  if (pressed.size === 0) gesture = false;
+});
 setPanelOpen(true);
 
 // --- language ---
@@ -798,6 +894,8 @@ if (import.meta.env.DEV) {
     state: () => state,
     parts: () => lastParts,
     ghosts: () => ghosts,
+    /** the port captions shown now and where on the canvas */
+    captions: () => scene.shownCaptions(),
     drawn: () => drawnRoles,
     drawnParts: () => drawnParts,
     project: (points: [number, number, number][]) => scene.project(points),

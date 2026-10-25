@@ -91,3 +91,15 @@ export function lidWithScrews(lid: SurfaceMesh, screw: SurfaceMesh | null, count
   const screws = screw ? screwsForPrint(screw, count, meshBounds(placed).max[0] + PRINT_GAP_MM) : null;
   return screws ? [placed, screws] : [placed];
 }
+
+/** The batteries' clamp bars as they print: turned over, their flat tops on the bed, from x0. */
+export function clampsForPrint(clamps: SurfaceMesh, x0: number): SurfaceMesh {
+  return onBed(transformMesh(clamps, FLIP), x0);
+}
+
+/** Parts already on the bed, then the clamps to their right. */
+export function withClamps(parts: SurfaceMesh[], clamps: SurfaceMesh | null): SurfaceMesh[] {
+  if (!clamps) return parts;
+  const right = Math.max(...parts.map((part) => meshBounds(part).max[0]));
+  return [...parts, clampsForPrint(clamps, right + PRINT_GAP_MM)];
+}

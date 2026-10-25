@@ -8,7 +8,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SurfaceMesh } from '../geo/surface';
 
-export type PartRole = 'body' | 'lid' | 'screw' | 'board' | 'port';
+export type PartRole = 'body' | 'lid' | 'screw' | 'clamp' | 'board' | 'port';
 
 export interface ScenePart {
   role: PartRole;
@@ -17,8 +17,22 @@ export interface ScenePart {
   offset?: [number, number, number];
 }
 
+/** A caption over a point of the model (a board's port): text, where (mm, z-up), dimmed or not. */
+export interface SceneCaption {
+  key: string;
+  text: string;
+  at: [number, number, number];
+  dim: boolean;
+}
+
 export interface SceneHandle {
   setParts(parts: ScenePart[]): void;
+  /** Captions drawn over the canvas, following the camera; those that would overlap give way to the nearer ones. */
+  setCaptions(captions: SceneCaption[]): void;
+  /** The key of the caption shown at a canvas point (CSS px from its top-left), or null. */
+  captionAt(x: number, y: number): string | null;
+  /** The captions shown now and where — for the smoke. */
+  shownCaptions(): { key: string; x: number; y: number }[];
   setXray(on: boolean): void;
   /**
    * Pixels at the bottom of the canvas hidden by something on top (the
@@ -37,6 +51,7 @@ const COLORS: Record<PartRole, number> = {
   body: 0x8fa3b8,
   lid: 0xb8c6d4,
   screw: 0xd4dde6,
+  clamp: 0xa9b8c8,
   board: 0x3fae6a,
   port: 0xd9b45a,
 };
@@ -47,7 +62,11 @@ const INSET_EASE_MS = 250;
 /** Faces meeting at a sharper angle than this get a hard edge; rounded corners stay smooth. */
 const CREASE_ANGLE = (35 * Math.PI) / 180;
 
-export function createScene(canvas: HTMLCanvasElement): SceneHandle {
+/** Room kept between two captions, and between a caption and its point, CSS px. */
+const CAPTION_GAP = 2;
+const CAPTION_LIFT = 4;
+
+export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement): SceneHandle {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(CLEAR_COLOR);
@@ -81,6 +100,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
     body: new THREE.MeshStandardMaterial({ color: COLORS.body, metalness: 0.05, roughness: 0.6, side: THREE.DoubleSide }),
     lid: new THREE.MeshStandardMaterial({ color: COLORS.lid, metalness: 0.05, roughness: 0.6, side: THREE.DoubleSide }),
     screw: new THREE.MeshStandardMaterial({ color: COLORS.screw, metalness: 0.05, roughness: 0.6, side: THREE.DoubleSide }),
+    clamp: new THREE.MeshStandardMaterial({ color: COLORS.clamp, metalness: 0.05, roughness: 0.6, side: THREE.DoubleSide }),
     // Boards are drawn schematically and see-through, so they never read as
     // part of the case: the PCB green, its connectors and parts amber.
     board: new THREE.MeshStandardMaterial({
@@ -146,12 +166,43 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
     applyInset(canvas.clientWidth, canvas.clientHeight);
   }
 
+  interface Shown { caption: SceneCaption; el: HTMLElement; w: number; h: number; rect: [number, number, number, number] | null }
+  let captions: Shown[] = [];
+
+  /** Places the captions for this frame: projected, nearest first, none over another. */
+  function placeCaptions(): void {
+    if (captions.length === 0) return;
+    group.updateMatrixWorld(true);
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    const eye = camera.position;
+    const placed = captions.map((shown) => {
+      const world = new THREE.Vector3(...shown.caption.at).applyMatrix4(group.matrixWorld);
+      const v = world.clone().project(camera);
+      return { shown, x: ((v.x + 1) / 2) * w, y: ((1 - v.y) / 2) * h, depth: world.distanceTo(eye), behind: v.z > 1 };
+    }).sort((a, b) => a.depth - b.depth);
+    const taken: [number, number, number, number][] = [];
+    for (const { shown, x, y, behind } of placed) {
+      const rect: [number, number, number, number] = [x - shown.w / 2, y - shown.h - CAPTION_LIFT, shown.w, shown.h];
+      const clash = taken.some((r) => rect[0] < r[0] + r[2] + CAPTION_GAP && r[0] < rect[0] + rect[2] + CAPTION_GAP
+        && rect[1] < r[1] + r[3] + CAPTION_GAP && r[1] < rect[1] + rect[3] + CAPTION_GAP);
+      const off = behind || clash || x < 0 || x > w || y < 0 || y > h;
+      shown.rect = off ? null : rect;
+      shown.el.hidden = off;
+      if (!off) {
+        taken.push(rect);
+        shown.el.style.transform = `translate(${rect[0].toFixed(1)}px, ${rect[1].toFixed(1)}px)`;
+      }
+    }
+  }
+
   function frame(now: number): void {
     if (disposed) return;
     resize();
     stepInset(now);
     controls.update();
     renderer.render(scene, camera);
+    placeCaptions();
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
@@ -225,8 +276,34 @@ export function createScene(canvas: HTMLCanvasElement): SceneHandle {
       controls.update();
     },
 
+    setCaptions(list: SceneCaption[]): void {
+      captionLayer.replaceChildren();
+      captions = list.map((caption) => {
+        const el = document.createElement('span');
+        el.className = caption.dim ? 'port-caption dim' : 'port-caption';
+        el.textContent = caption.text;
+        captionLayer.append(el);
+        return { caption, el, w: 0, h: 0, rect: null };
+      });
+      // measured once: the frames only move them
+      for (const shown of captions) {
+        shown.w = shown.el.offsetWidth;
+        shown.h = shown.el.offsetHeight;
+      }
+      placeCaptions();
+    },
+
+    captionAt(x: number, y: number): string | null {
+      const hit = captions.find(({ rect }) => rect && x >= rect[0] && x <= rect[0] + rect[2] && y >= rect[1] && y <= rect[1] + rect[3]);
+      return hit ? hit.caption.key : null;
+    },
+
+    shownCaptions(): { key: string; x: number; y: number }[] {
+      return captions.flatMap(({ caption, rect }) => (rect ? [{ key: caption.key, x: rect[0] + rect[2] / 2, y: rect[1] + rect[3] / 2 }] : []));
+    },
+
     setXray(on: boolean): void {
-      for (const material of [materials.body, materials.lid, materials.screw]) {
+      for (const material of [materials.body, materials.lid, materials.screw, materials.clamp]) {
         material.transparent = on;
         material.opacity = on ? 0.35 : 1;
         material.depthWrite = !on;

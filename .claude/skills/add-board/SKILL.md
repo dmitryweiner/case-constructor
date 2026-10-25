@@ -6,7 +6,7 @@ description: Add a board (SBC or microcontroller) to the Case Constructor catalo
 # Add a board to the catalog
 
 A catalog entry is data: one JSON file in `src/boards/data/`, validated by
-`src/boards/schema.ts` and `tests/boards.test.ts`. Read `PLAN.md` §2.2 (the
+`src/boards/schema.ts` and `tests/boards.test.ts`. Read `plans/PLAN.md` §2.2 (the
 format) and §0.4 (the board frame) first.
 
 ## 1. Find the drawing
@@ -146,7 +146,7 @@ the user to look as well.
 
 ### Checking an existing entry (≈ or a review)
 
-The order that worked on the Tier A boards (PLAN-IMPROVEMENTS-NEW-BOARDS.md,
+The order that worked on the Tier A boards (plans/PLAN-IMPROVEMENTS-NEW-BOARDS.md,
 B9):
 
 1. `node scripts/fetch.mjs --board <id>`; if the `source` is a page, find

@@ -9,9 +9,13 @@ import type { Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';
 import type { BoardPlacement } from '../boards/placement';
-import { NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, Z_MAX, boardOf, entryOf, pinsDown, placementMinZ, portCut } from '../boards/placement';
+import { NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, WALL_OFFSET_MAX, WALL_OFFSET_MIN, Z_MAX, boardOf, entryOf, pinsDown, placementMinZ, portCut, withPortCut } from '../boards/placement';
 import type { BoardDef } from '../boards/schema';
+import type { BatterySpec } from '../boards/battery';
+import { BATTERY_KINDS, CELL_COUNT_MAX, PACK_MAX, PACK_MIN, PRESS_MAX, PRESS_MIN, defaultBattery, sanitizeBattery } from '../boards/battery';
+import { EDGES } from '../boards/schema';
 import type { Align, ArrangeMode } from '../geo/arrange';
+import { caseLayout } from '../geo/layout';
 import { ALIGN_X, ALIGN_Y, ARRANGE_MODES, alignBoard, arrangeBoards } from '../geo/arrange';
 import type { Key } from '../i18n';
 import { tDynamic } from '../i18n';
@@ -20,6 +24,14 @@ import { customSignature, renderCustomEditor } from './customBoard';
 import { HOLE_KINDS, SCREW_SIZES } from '../geo/fasteners';
 import type { AppState } from '../state/schema';
 
+/** Whether the board could stand against this wall of the case (the layout would keep it). */
+function wallPossible(state: AppState, index: number, side: string): boolean {
+  const wall = EDGES.find((edge) => edge === side);
+  if (!wall) return false;
+  const boards = state.boards.map((one, i) => (i === index ? { ...one, walls: [wall] } : one));
+  return (caseLayout({ ...state, boards }).boards[index]?.walls.length ?? 0) > 0;
+}
+
 function patchBoard(state: AppState, index: number, patch: Partial<BoardPlacement>): AppState {
   return { ...state, boards: state.boards.map((board, i) => (i === index ? { ...board, ...patch } : board)) };
 }
@@ -27,7 +39,40 @@ function patchBoard(state: AppState, index: number, patch: Partial<BoardPlacemen
 function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
   const at = (state: AppState): BoardPlacement => state.boards[index];
   const holes = (state: AppState): boolean => boardOf(at(state)).mount.kind === 'holes';
+  const battery = (state: AppState): BatterySpec | undefined => at(state).battery;
+  const setBattery = (state: AppState, patch: Partial<BatterySpec>): AppState => {
+    const spec = sanitizeBattery({ ...(battery(state) ?? defaultBattery()), ...patch });
+    return patchBoard(state, index, { battery: spec });
+  };
   return [
+    {
+      kind: 'select', key: 'battery', label: 'battery.kind', when: (state) => battery(state) !== undefined,
+      options: BATTERY_KINDS.map((kind) => ({ value: kind, label: `battery.kind.${kind}` as const })),
+      get: (state) => battery(state)?.kind ?? '',
+      set: (state, value) => setBattery(state, { kind: BATTERY_KINDS.find((kind) => kind === value) ?? '18650' }),
+    },
+    {
+      kind: 'segmented', key: 'cells', label: 'battery.count',
+      when: (state) => battery(state) !== undefined && battery(state)?.kind !== 'pack',
+      options: Array.from({ length: CELL_COUNT_MAX }, (_, i) => ({ value: String(i + 1), text: String(i + 1) })),
+      get: (state) => String(battery(state)?.count ?? 1),
+      set: (state, value) => setBattery(state, { count: Number(value) }),
+    },
+    ...(['w', 'd', 'h'] as const).map((dim): Control<AppState> => ({
+      kind: 'range', key: `pack_${dim}`, label: `battery.pack.${dim}`, min: PACK_MIN[dim], max: PACK_MAX[dim], step: 0.5,
+      when: (state) => battery(state)?.kind === 'pack',
+      get: (state) => battery(state)?.pack[dim] ?? 0,
+      set: (state, value) => {
+        const spec = battery(state) ?? defaultBattery('pack');
+        return setBattery(state, { pack: { ...spec.pack, [dim]: value } });
+      },
+    })),
+    {
+      kind: 'range', key: 'press', label: 'battery.press', hint: 'battery.press.hint', min: PRESS_MIN, max: PRESS_MAX, step: 0.1,
+      when: (state) => battery(state) !== undefined,
+      get: (state) => battery(state)?.press ?? 0,
+      set: (state, value) => setBattery(state, { press: value }),
+    },
     {
       kind: 'select', key: 'variant', label: 'board.variant', hint: 'board.variant.hint',
       when: () => (entry.variants?.length ?? 0) > 1,
@@ -50,7 +95,9 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       set: (state, value) => patchBoard(state, index, { y: value }),
     },
     {
-      kind: 'range', key: 'z', label: 'board.z', hint: 'board.z.hint', min: 0, max: Z_MAX, step: 0.5,
+      // a battery lies in cradles rather than on standoffs: the same height, its own words
+      kind: 'range', key: 'z', label: entry.battery ? 'battery.z' : 'board.z', hint: entry.battery ? 'battery.z.hint' : 'board.z.hint',
+      min: 0, max: Z_MAX, step: 0.5,
       get: (state) => at(state).z,
       set: (state, value) => patchBoard(state, index, { z: Math.max(placementMinZ(at(state)), value) }),
     },
@@ -69,6 +116,31 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       options: ROTATIONS.map((rot) => ({ value: String(rot), text: `${rot}°` })),
       get: (state) => String(at(state).rot),
       set: (state, value) => patchBoard(state, index, { rot: ROTATIONS.find((rot) => String(rot) === value) ?? 0 }),
+    },
+    {
+      kind: 'toggles', key: 'wall', label: 'board.wall', hint: 'board.wall.hint',
+      when: (state) => state.shape.kind !== 'cylinder',
+      options: EDGES.map((edge) => ({ value: edge, label: `face.${edge}` as const })),
+      // a wall the board cannot stand against: the side lid's face, a rail edge
+      optionDisabled: (state, value) => !(at(state).walls ?? []).some((wall) => wall === value) && !wallPossible(state, index, value),
+      get: (state) => at(state).walls ?? [],
+      set: (state, values) => {
+        const walls = EDGES.filter((edge) => values.includes(edge));
+        const placement: BoardPlacement = { ...at(state), walls, wallOffset: at(state).wallOffset ?? 0 };
+        if (walls.length === 0) {
+          delete placement.walls;
+          delete placement.wallOffset;
+        }
+        return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
+      },
+    },
+    {
+      kind: 'range', key: 'wallOffset', label: 'board.wallOffset', hint: 'board.wallOffset.hint',
+      min: WALL_OFFSET_MIN, max: WALL_OFFSET_MAX, step: 0.1,
+      // a battery has no connectors to bring to the surface
+      when: (state) => state.shape.kind !== 'cylinder' && (at(state).walls ?? []).length > 0 && battery(state) === undefined,
+      get: (state) => at(state).wallOffset ?? 0,
+      set: (state, value) => patchBoard(state, index, { wallOffset: value }),
     },
     {
       kind: 'select', key: 'screw', label: 'board.screw', when: holes,
@@ -97,12 +169,7 @@ function portControls(index: number, state: AppState): Control<AppState>[] {
     key: `cut_${port.id}`,
     label: { text: `${tDynamic(`port.${port.type}`)} · ${port.id}` },
     get: (current) => portCut(current.boards[index], port.id, port.cut),
-    set: (current, value) => {
-      const cuts = { ...current.boards[index].cuts };
-      if (value === port.cut) delete cuts[port.id];
-      else cuts[port.id] = value;
-      return patchBoard(current, index, { cuts });
-    },
+    set: (current, value) => patchBoard(current, index, { cuts: withPortCut(current.boards[index], port, value).cuts }),
   }));
 }
 
@@ -140,7 +207,10 @@ export interface BoardsCardHandle {
 /** What the card's layout depends on; a change rebuilds it (a value edit does not). */
 function signatureOf(state: AppState): string {
   // a variant brings its own ports, and so its own cut toggles
-  return state.boards.map((board) => (board.board === 'custom' ? `custom:${customSignature(boardOf(board))}` : `${board.board}:${board.variant ?? ''}`)).join('|');
+  // a battery's kind decides its controls, its cell count its name
+  return state.boards.map((board) => (board.board === 'custom' ? `custom:${customSignature(boardOf(board))}`
+    : board.battery ? `battery:${board.battery.kind}:${board.battery.count}`
+      : `${board.board}:${board.variant ?? ''}`)).join('|');
 }
 
 export function renderBoardsCard(
@@ -217,7 +287,7 @@ export function renderBoardsCard(
       const box = make('div', 'board-box');
       box.id = `board${index}`;
       const head = make('div', 'board-head');
-      head.append(make('span', 'board-name', `${index + 1}. ${def.name}`));
+      head.append(make('span', 'board-name', `${index + 1}. ${def.battery?.kind === 'pack' ? t('battery.kind.pack') : def.name}`));
       if (!def.verified) {
         const mark = make('span', 'unverified', '≈');
         mark.title = t('board.unverified');
@@ -235,6 +305,7 @@ export function renderBoardsCard(
       head.append(remove);
       box.append(head);
       if (def.mount.kind === 'rails') box.append(make('p', 'board-note', t('board.rails')));
+      if (def.battery) box.append(make('p', 'board-note', t('battery.note')));
       const controls = make('div');
       box.append(controls);
       if (state.boards.length >= 2) box.append(alignBox(index, state));

@@ -1,4 +1,5 @@
-import { boardTransform, caseLayout, collisions, minimumDims, sideMargin, standoffColumns, railEdges } from '../src/geo/layout';
+import { WALL_GAP, boardTransform, caseLayout, collisions, minimumDims, sideMargin, standoffColumns, railEdges } from '../src/geo/layout';
+import { portAxis } from '../src/geo/ports';
 import { catalogBoard, CATALOG } from '../src/boards/catalog';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import { applyAffine } from '../src/geo/surface';
@@ -114,5 +115,100 @@ describe('collisions', () => {
     expect(columns).toHaveLength(4);
     const dx = Math.max(...columns.map((c) => c.x)) - Math.min(...columns.map((c) => c.x));
     expect(dx).toBeCloseTo(58);
+  });
+});
+
+describe('a board against a wall', () => {
+  const base = defaultState();
+  const withWall = (wall: string, extra: Record<string, unknown> = {}, shape: Record<string, unknown> = {}) => sanitizeState({
+    ...base,
+    shape: { ...base.shape, ...shape },
+    boards: [{ ...base.boards[0], walls: [wall], ...extra }],
+  });
+  /** The faces of the board's connectors on its edge facing the case's `side`, as the case frame's coordinate along it. */
+  const faces = (state: ReturnType<typeof withWall>, side: 'right' | 'front') => {
+    const layout = caseLayout(state);
+    const board = layout.boards[0];
+    return board.def.ports.flatMap((port) => {
+      if (port.edge !== side) return [];
+      const { face } = portAxis(board, { ...port, edge: port.edge });
+      return [side === 'right' ? face[0] : face[1]];
+    });
+  };
+
+  it('the most protruding connector is flush with the outer surface (Ethernet on the right)', () => {
+    const state = withWall('right');
+    const layout = caseLayout(state);
+    expect(Math.max(...faces(state, 'right'))).toBeCloseTo(layout.dims.w, 6);
+    expect(collisions(layout)).toEqual([]);
+  });
+
+  it('the front: the audio jack flush, the smaller connectors a little inside', () => {
+    const state = withWall('front');
+    const front = faces(state, 'front');
+    expect(Math.min(...front)).toBeCloseTo(0, 6);
+    expect(Math.max(...front)).toBeLessThan(2);
+  });
+
+  it('an offset: recessed (negative) or proud (positive)', () => {
+    const layout = caseLayout(withWall('right', { wallOffset: -1 }));
+    expect(Math.max(...faces(withWall('right', { wallOffset: -1 }), 'right'))).toBeCloseTo(layout.dims.w - 1, 6);
+    const proud = withWall('right', { wallOffset: 0.5 });
+    expect(Math.max(...faces(proud, 'right'))).toBeCloseTo(caseLayout(proud).dims.w + 0.5, 6);
+  });
+
+  it('two walls at once: the Pi 4 flush on the front and on the right', () => {
+    const state = sanitizeState({ ...base, boards: [{ ...base.boards[0], walls: ['front', 'right'] }] });
+    const layout = caseLayout(state);
+    expect(Math.max(...faces(state, 'right'))).toBeCloseTo(layout.dims.w, 6);
+    expect(Math.min(...faces(state, 'front'))).toBeCloseTo(0, 6);
+    expect(collisions(layout)).toEqual([]);
+  });
+
+  it('a manual size pushes the board to its wall instead of centring it', () => {
+    const state = withWall('right', {}, { auto: false, size: { w: 140, d: 90, h: 40 } });
+    const layout = caseLayout(state);
+    expect(layout.dims.w).toBe(140);
+    expect(Math.max(...faces(state, 'right'))).toBeCloseTo(140, 6);
+  });
+
+  it('connectors shorter than the wall: the board stops just short of the inner wall, and the panel says how deep they sit', () => {
+    const state = withWall('front', {}, { wall: 4 });
+    const layout = caseLayout(state);
+    expect(layout.boards[0].outline.y0).toBeCloseTo(4 + WALL_GAP, 6);
+    expect(collisions(layout).map((m) => m.code)).toContain('info.portsRecessed');
+  });
+
+  it('the side and the offset survive a file; garbage falls back to none', () => {
+    const state = withWall('right', { wallOffset: -0.5 });
+    expect(state.boards[0].walls).toEqual(['right']);
+    expect(state.boards[0].wallOffset).toBe(-0.5);
+    expect(sanitizeState(JSON.parse(JSON.stringify(state)))).toEqual(state);
+    expect(withWall('ceiling').boards[0].walls).toBeUndefined();
+  });
+
+  it('two boards against one wall at different depths: the one further in is warned about', () => {
+    const state = sanitizeState({
+      ...base,
+      boards: [
+        { ...base.boards[0], walls: ['right'] },
+        { ...base.boards[0], y: 70, x: 10, walls: ['right'] },
+      ],
+    });
+    // the second board reaches 10 mm further right: it takes the wall, the first is left short of it
+    const codes = collisions(caseLayout(state));
+    expect(codes).toContainEqual({ code: 'warn.notAgainstWall', params: { board: 1 } });
+    expect(codes).not.toContainEqual({ code: 'warn.notAgainstWall', params: { board: 2 } });
+  });
+
+  it('a cylinder, a rail edge and the side lid\'s own face ignore the wall', () => {
+    const cylinder = withWall('right', {}, { kind: 'cylinder' });
+    expect(caseLayout(cylinder).boards[0].walls).toEqual([]);
+    const sideLid = sanitizeState({ ...withWall('right'), lid: { ...base.lid, face: 'right', chosen: 'right' } });
+    expect(caseLayout(sideLid).boards[0].walls).toEqual([]);
+    const nano = sanitizeState({ ...base, boards: [{ board: 'arduino-nano', walls: ['front'] }] });
+    const edges = railEdges(caseLayout(nano).boards[0].def);
+    expect(edges).toContain('front');
+    expect(caseLayout(nano).boards[0].walls).toEqual([]);
   });
 });

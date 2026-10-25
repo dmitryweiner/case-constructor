@@ -47,6 +47,14 @@ export const SCREWS: Readonly<Record<ScrewSize, ScrewDims>> = {
   'M4': { d: 4, tap: 3.5, insert: 5.6, insertLen: 6, nutAF: 7.0, nutH: 3.2, headD: 7.0, headH: 2.6 },
 };
 
+/**
+ * Head diameter of a countersunk screw (DIN 7991 / ISO 10642; the smaller
+ * cross-recess heads of DIN 965 sink a little deeper in the same seat).
+ */
+export const COUNTERSUNK_HEAD_D: Readonly<Record<ScrewSize, number>> = {
+  'M1.6': 3.2, 'M2': 4, 'M2.5': 5, 'M3': 6, 'M4': 8,
+};
+
 /** Disc magnets for the lid, diameter × height. */
 export const MAGNET_SIZES = ['5x2', '6x2', '6x3', '8x2', '8x3', '10x2', '10x3'] as const;
 export type MagnetSize = (typeof MAGNET_SIZES)[number];

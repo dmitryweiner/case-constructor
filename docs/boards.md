@@ -13,6 +13,8 @@ Each board has:
 | Standoff height | the board's underside parts + 1 mm … 60 mm | PCB underside above the floor |
 | Pins soldered downwards | on / off | boards with header rows; the default is how the board ships; the board goes up with its pins (8.5 mm with the plastic) |
 | Rotation | 0° / 90° / 180° / 270° | |
+| Against the wall | front / back / left / right, any of them | not on a cylinder; see below |
+| Connectors from the surface | −10 … 3 mm (default 0) | with a wall: 0 — flush, negative — inside the wall, positive — standing out |
 | Screw | M1.6 / M2 / M2.5 / M3 / M4 | boards with mounting holes; the default comes from the board (M1.6 is for boards only: the lid takes M2 and up) |
 | Hole | tap / insert / nut | see below |
 
@@ -21,6 +23,28 @@ board, are reported under the export button. In the view a board is drawn
 see-through: the PCB green with its mounting holes through it and a pad
 around each (so a standoff visibly lines up with its hole), connectors and
 parts amber.
+
+## Against the wall
+
+By default the boards sit in the middle of the case with the side margin all
+around, so a plug has to reach through the margin and the wall. **Against
+the wall** moves the case's wall to the board instead: on that side the
+board's most protruding connector ends at the case's outer surface (or
+*Connectors from the surface* away from it), and the wall around each
+connector is opened all the way through, from the board edge out. Several
+walls at once are fine — a Raspberry Pi 4 against the front and the right has
+both its HDMI and its USB/Ethernet sides flush.
+
+- A side with no connectors, or with connectors shorter than the wall, puts
+  the board 0.3 mm from the inner wall; with connectors the panel says how
+  much deeper they sit than asked.
+- With a manual size the board is pushed to its wall rather than centred.
+- When another board reaches further towards the same wall, the wall goes
+  there and the panel says which board is not against it (align them).
+- Not offered: on a cylinder, on an edge held by rails, and on the side
+  where a side lid is.
+- The lid's skirt and corner posts still run along the walls: a post next to
+  the board is reported as for any layout.
 
 ## Several boards
 
@@ -163,3 +187,7 @@ shows the same mark). New boards: the add-board skill
 | Seeed XIAO (ESP32-S3/C3/C6, RP2040/RP2350, nRF52840, SAMD21, MG24) | Seeed | 17.78 × 21.14 | rails (long) | [source](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/XIAO_ESP32S3_v1.1_Dimensioning.dxf) | yes |
 | Seeed XIAO ESP32-S3 Sense (with camera board) | Seeed | 17.78 × 21.14 | rails (long) | [source](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/seeed-studio-xiao-esp32s3-sense-3d_model.zip) | yes |
 | Waveshare RP2040-Zero / RP2350-Zero / ESP32-S3-Zero | Waveshare | 18 × 23.5 | rails (long) | [source](https://files.waveshare.com/wiki/RP2350-Zero/RP2350_Zero_step.zip) | yes |
+| MPD BH-18650-W (1 × 18650 holder) | MPD | 77.7 × 20.9 | 2 × M3 | [source](https://memoryprotectiondevices.com/datasheets/BH-18650-W/BH-18650-W-datasheet.pdf) | yes |
+| MPD BH2AA-W (2 × AA holder) | MPD | 57.81 × 31.5 | 2 × M2 | [source](https://www.memoryprotectiondevices.com/datasheets/BH2AAW/BH2AAW-datasheet.pdf) | ≈ (holes along the length taken as centred) |
+| MPD BH4AA-W (4 × AA holder) | MPD | 57.15 × 61.72 | 2 × M2 | [source](https://www.memoryprotectiondevices.com/datasheets/BH4AAW/BH4AAW-datasheet.pdf) | ≈ (holes along the length taken as centred) |
+| MPD BH2AAA-W (2 × AAA holder) | MPD | 51.21 × 25.02 | 2 × M2 | [source](https://www.memoryprotectiondevices.com/datasheets/BH2AAAW/BH2AAAW-datasheet.pdf) | yes |

@@ -159,6 +159,80 @@ await page.click('#boardList [data-board="raspberry-pi-4b"]');
 await page.uncheck('#board0_cut_ethernet');
 await expectWatertight('ports:ethernet-off');
 await page.check('#board0_cut_ethernet');
+// port captions over the ghosts: a click on one toggles its opening, undo brings it back
+label('captions');
+await expectWatertight('captions:shown');
+const captions = await page.evaluate(() => window.__case.captions());
+if (captions.length < 4) errors.push(`[captions] only ${captions.length} port captions shown`);
+const usbC = captions.find((caption) => caption.key === '0:usb-c');
+if (!usbC) errors.push(`[captions] no USB-C caption: ${captions.map((caption) => caption.key)}`);
+else {
+  const viewBox = await page.locator('#view').boundingBox();
+  await page.mouse.click(viewBox.x + usbC.x, viewBox.y + usbC.y);
+  await expectWatertight('captions:usb-c-off');
+  // read from the state: the card's checkbox may be mid-rebuild
+  const usbCut = () => page.evaluate(() => window.__case.state().boards[0].cuts['usb-c'] ?? true);
+  if (await usbCut()) errors.push('[captions] a click on the USB-C caption left its opening on');
+  await page.click('#undoBtn');
+  await expectWatertight('captions:undo');
+  if (!(await usbCut())) errors.push('[captions] undo did not bring the USB-C opening back');
+}
+await page.uncheck('#viewPortNames');
+await page.waitForTimeout(150);
+if ((await page.evaluate(() => window.__case.captions())).length) errors.push('[captions] names stay with "Connector names" off');
+await page.check('#viewPortNames');
+await page.uncheck('#viewBoards');
+if ((await page.evaluate(() => window.__case.captions())).length) errors.push('[captions] captions stay with the boards hidden');
+if (!(await page.locator('#viewPortNames').isDisabled())) errors.push('[captions] "Connector names" is live with the boards hidden');
+await page.check('#viewBoards');
+// a board against walls: the Pi 4 flush on the front and the right, the case shrinks
+label('walls');
+const sizeOf = async () => (await page.locator('#status').textContent()).trim();
+const centred = await sizeOf();
+await page.click('#board0_wall_right');
+await page.click('#board0_wall_front');
+await expectWatertight('walls:front-right');
+if ((await sizeOf()) === centred) errors.push(`[walls] the case did not change against two walls: ${centred}`);
+await setRange('board0_wallOffset', -1);
+await expectWatertight('walls:recessed');
+await page.click('#case_kind_cylinder');
+if (await page.locator('#board0_wall').isVisible()) errors.push('[walls] a cylinder offers walls');
+await page.click('#case_kind_box');
+await page.click('#board0_wall_right');
+await page.click('#board0_wall_front');
+if (await page.locator('#board0_wallOffset').isVisible()) errors.push('[walls] the offset stays without walls');
+if ((await sizeOf()) !== centred) errors.push(`[walls] back from the walls, the case is ${await sizeOf()}, not ${centred}`);
+// a battery from the picker: placed beside the board, cells to a pack and back
+label('battery');
+await page.click('#boardAdd');
+await page.fill('#boardSearch', '18650');
+await page.click('#boardList [data-board="battery-18650"]');
+await expectWatertight('battery:2x18650');
+const cellsName = (await page.locator('#board1 .board-name').textContent()).trim();
+if (!cellsName.includes('2 × 18650')) errors.push(`[battery] the card says "${cellsName}"`);
+if ((await page.evaluate(() => window.__case.ghosts().length)) < 3) errors.push('[battery] no ghost for the battery');
+if (!(await drawn()).includes('clamp')) errors.push(`[battery] the clamps are not drawn: ${await drawn()}`);
+await page.click('#board1_cells_4');
+await expectWatertight('battery:4x18650');
+await page.click('#tabBody');
+await page.click('#viewPrint');
+await expectWatertight('battery:print');
+if ((await drawn()) !== 'body,clamp') errors.push(`[battery] the body's print layout draws ${await drawn()}`);
+await exportStl('battery:body');
+await page.click('#tabBoth');
+await page.click('#viewExploded');
+await page.selectOption('#board1_battery', 'pack');
+await setRange('board1_pack_h', 12);
+await expectWatertight('battery:pack');
+if (await page.locator('#board1_cells').isVisible()) errors.push('[battery] a pack offers a cell count');
+await page.click('#board1_remove');
+// a ready-made holder: its own group in the picker, screwed down like a board
+await page.click('#boardAdd');
+await page.fill('#boardSearch', 'battery');
+if (!(await page.locator('#boardList [data-board="mpd-bh2aa-w"]').count())) errors.push('[holders] "battery" does not find the AA holder');
+await page.click('#boardList [data-board="mpd-bh2aa-w"]');
+await expectWatertight('holders:bh2aa');
+await page.click('#board1_remove');
 label('openings');
 await page.click('#cutAdd');
 await page.click('#cut0_shape_round');
@@ -247,6 +321,21 @@ if (!(await page.locator('#lid_face_top').isDisabled())) errors.push('[lid] the 
 await expectWatertight('lid:console');
 await page.click('#case_kind_box');
 await page.click('#lid_face_top');
+// box → console → box: the lid goes to the bottom and comes back on top;
+// exploded, the bottom lid floats under the body, both above the grid
+label('lid:console-and-back');
+await page.click('#case_kind_console');
+await expectWatertight('lid:console-bottom');
+const lowest = await page.evaluate(() => Math.min(...window.__case.drawnParts().map((part) => {
+  let low = Infinity;
+  const p = part.mesh.positions;
+  for (let i = 2; i < p.length; i += 3) low = Math.min(low, p[i] + (part.offset?.[2] ?? 0));
+  return low;
+})));
+if (lowest < -1e-6) errors.push(`[lid] the exploded bottom lid goes under the grid: z = ${lowest.toFixed(2)}`);
+await page.click('#case_kind_box');
+const faceBack = await page.evaluate(() => window.__case.state().lid.face);
+if (faceBack !== 'top') errors.push(`[lid] box → console → box leaves the lid on the ${faceBack}`);
 await setRange('lid_depth', 0);
 
 // lid fastening: screws with every hole and head kind, then back to snaps
@@ -260,6 +349,25 @@ for (const hole of ['tap', 'insert', 'nut']) {
     await expectWatertight(`fastening:${hole}:${head}`);
   }
 }
+// the head seat: a countersunk M3 is 6 mm by default; the user's diameter and depth, then the table back
+label('fastening:head');
+if (Number(await page.locator('#lid_headD').inputValue()) !== 6) errors.push('[head] a countersunk M3 seat is not 6 mm');
+if (await page.locator('#lid_headDepth').isVisible()) errors.push('[head] a countersunk seat offers a counterbore depth');
+await setRange('lid_headD', 7);
+await expectWatertight('fastening:head:countersunk-7');
+await page.click('#lid_head_counterbore');
+// the sliders stop at what the lid takes: the plate less 0.6 mm, a wall to the lid's edge
+await setRange('lid_headDepth', 5);
+await expectWatertight('fastening:head:counterbore-deep');
+const deepest = await page.evaluate(() => window.__case.state().lid.head.depth);
+if (!(deepest > 1 && deepest < 2)) errors.push(`[head] the counterbore depth went to ${deepest} on a 2 mm plate`);
+await setRange('lid_headD', 16);
+await expectWatertight('fastening:head:widest');
+const widest = await page.evaluate(() => window.__case.state().lid.head.d);
+if (!(widest > 5.5 && widest < 12)) errors.push(`[head] the head seat went to ${widest} mm`);
+await page.click('#lid_headReset');
+if (await page.locator('#lid_headReset').isVisible()) errors.push('[head] the reset button stays after a reset');
+if (Number(await page.locator('#lid_headD').inputValue()) !== 5.5) errors.push('[head] the reset does not bring the pan head back');
 await page.click('#lid_face_left');
 await expectWatertight('fastening:screws:left');
 await page.click('#lid_face_top');
@@ -338,6 +446,15 @@ const trianglesAfter = await page.evaluate(() => window.__case.parts()?.lid.indi
 if (!flags.has('preview') && trianglesAfter <= trianglesBefore) errors.push('[label] the lid did not change');
 await page.check('#label_raised');
 await expectWatertight('label:raised');
+// a quick place: a corner and a quarter turn; the margin row shows only off the centre
+if (await page.locator('#label_margin').isVisible()) errors.push('[label] the margin shows for the centre');
+await page.click('#label_anchor_bottomRight');
+await page.click('#label_turn_270');
+await expectWatertight('label:corner');
+const placed = await page.evaluate(() => window.__case.state().label);
+if (placed.anchor !== 'bottomRight' || placed.angle !== -90) errors.push(`[label] anchor/turn not applied: ${JSON.stringify(placed)}`);
+if (!(await page.locator('#label_margin').isVisible())) errors.push('[label] no margin for a corner');
+await page.click('#label_anchor_centre');
 await page.uncheck('#on_label');
 await page.uncheck('#on_vents');
 await page.uncheck('#on_fan');
@@ -508,7 +625,10 @@ const onScreen = () => page.evaluate(() => {
   return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys), cy: (Math.max(...ys) + Math.min(...ys)) / 2 };
 });
 const withSheet = await onScreen();
-await page.click('#panelBackdrop', { position: { x: 200, y: 60 } });
+const canvasBox = await page.locator('#view').boundingBox();
+const [tapX, tapY] = [canvasBox.x + 200, canvasBox.y + 60];
+// a tap on the canvas closes it
+await page.mouse.click(tapX, tapY);
 await page.waitForTimeout(400);
 if (!(await page.locator('#panelBtn').isVisible())) errors.push('[mobile] no settings button after closing the sheet');
 const withoutSheet = await onScreen();
@@ -519,6 +639,16 @@ if (!(withoutSheet.cy > withSheet.cy + 20)) errors.push('[mobile] the case is no
 await page.click('#panelBtn');
 await page.waitForTimeout(400);
 if (!(await page.locator('#case_wall').isVisible())) errors.push('[mobile] the sheet did not open');
+// with the sheet open, a drag on the canvas turns the case and leaves the sheet open
+const turnedBefore = await page.evaluate(() => window.__case.project([[0, 0, 0], [100, 0, 0]]));
+await page.mouse.move(tapX, tapY);
+await page.mouse.down();
+await page.mouse.move(tapX + 60, tapY + 10, { steps: 6 });
+await page.mouse.up();
+await page.waitForTimeout(300);
+const turnedAfter = await page.evaluate(() => window.__case.project([[0, 0, 0], [100, 0, 0]]));
+if (JSON.stringify(turnedBefore) === JSON.stringify(turnedAfter)) errors.push('[mobile] a drag over the open sheet does not turn the case');
+if (!(await page.locator('#panel').evaluate((el) => el.classList.contains('open')))) errors.push('[mobile] a drag closed the sheet');
 if (shotsDir) await page.screenshot({ path: `${shotsDir}/mobile.png` });
 
 await app.close();

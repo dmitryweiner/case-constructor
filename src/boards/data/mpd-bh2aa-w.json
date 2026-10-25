@@ -1,0 +1,22 @@
+{
+  "id": "mpd-bh2aa-w",
+  "name": "MPD BH2AA-W (2 × AA)",
+  "vendor": "MPD",
+  "kind": "holder",
+  "size": { "w": 57.81, "d": 31.5, "t": 1.5 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 28.9, "y": 3.56, "d": 2.36 },
+      { "x": 28.9, "y": 27.94, "d": 2.36 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 14.5,
+  "bottomHeight": 0,
+  "ports": [
+    { "id": "wires", "type": "wires", "edge": "right", "along": 15.75, "z": 0, "protrude": 3 }
+  ],
+  "source": "https://www.memoryprotectiondevices.com/datasheets/BH2AAW/BH2AAW-datasheet.pdf",
+  "verified": false
+}

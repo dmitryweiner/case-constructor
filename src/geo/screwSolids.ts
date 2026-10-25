@@ -3,8 +3,8 @@
 
 import type { Manifold } from 'manifold-3d';
 import type { CsgApi, CsgScope } from './csg';
-import type { ScrewShape, ThreadSize } from './thread';
-import { THREADS, minorRadius, threadSection } from './thread';
+import type { ScrewShape, ThreadSpec } from './thread';
+import { formOf, minorRadius, threadSection } from './thread';
 
 /**
  * A threaded rod (or, grown by the fit, the core of a threaded hole) from z0
@@ -12,10 +12,10 @@ import { THREADS, minorRadius, threadSection } from './thread';
  * pitch, a slice per point of the section and turn, so its vertices run
  * along the helix.
  */
-export function threadSolid(csg: CsgApi, scope: CsgScope, size: ThreadSize, grow: number, z0: number, z1: number, n: number): Manifold {
-  const { pitch } = THREADS[size];
+export function threadSolid(csg: CsgApi, scope: CsgScope, spec: ThreadSpec, grow: number, z0: number, z1: number, n: number): Manifold {
+  const { pitch } = formOf(spec);
   const turns = (z1 - z0) / pitch;
-  const section = scope.keep(new csg.CrossSection([threadSection(size, grow, n)], 'Positive'));
+  const section = scope.keep(new csg.CrossSection([threadSection(spec, grow, n)], 'Positive'));
   const rod = scope.keep(section.extrude(z1 - z0, Math.max(1, Math.round(turns * n)), 360 * turns));
   return scope.keep(rod.translate([0, 0, z0]));
 }
@@ -28,8 +28,8 @@ export function threadSolid(csg: CsgApi, scope: CsgScope, size: ThreadSize, grow
  * thread.
  */
 export function screwSolid(csg: CsgApi, scope: CsgScope, shape: ScrewShape, n: number): Manifold {
-  const R = THREADS[shape.size].d / 2;
-  const r = minorRadius(shape.size);
+  const R = shape.form.d / 2;
+  const r = minorRadius(shape.form);
   const headR = shape.headD / 2;
   // knurls: half-round grooves around the rim, about 2.5 mm apart
   const knurls = Math.max(8, Math.round((Math.PI * shape.headD) / 2.5));
@@ -45,7 +45,7 @@ export function screwSolid(csg: CsgApi, scope: CsgScope, shape: ScrewShape, n: n
   const head = scope.keep(headSolid.subtract(slot));
 
   // the thread starts inside the head, so the two never meet on a plane
-  const thread = threadSolid(csg, scope, shape.size, 0, -0.5, shape.shank, n);
+  const thread = threadSolid(csg, scope, shape.form, 0, -0.5, shape.shank, n);
   const chamfer = R - r + 1;
   const outline = scope.keep(new csg.CrossSection([[
     [0, -1], [R + 0.5, -1], [R + 0.5, shape.shank - chamfer], [r - 0.5, shape.shank], [0, shape.shank],
@@ -53,4 +53,15 @@ export function screwSolid(csg: CsgApi, scope: CsgScope, shape: ScrewShape, n: n
   const mask = scope.keep(outline.revolve(n));
   const shank = scope.keep(thread.intersect(mask));
   return scope.keep(head.add(shank));
+}
+
+/**
+ * The core of a threaded hole for the screw as it goes in: the mouth at
+ * z = 0, `depth` down, built like the screw's thread (tip up) and turned
+ * over about x — so an asymmetric form meets its own flanks the right way
+ * round. Grown by the fit.
+ */
+export function threadHole(csg: CsgApi, scope: CsgScope, spec: ThreadSpec, fit: number, depth: number, mouth: number, n: number): Manifold {
+  const rod = threadSolid(csg, scope, spec, fit, -mouth, depth, n);
+  return scope.keep(rod.rotate([180, 0, 0]));
 }

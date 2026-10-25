@@ -53,6 +53,17 @@ export const PRESETS: Preset[] = [
     label: { on: true, text: 'SENSOR', font: 'oswald', sizeMm: 5, depth: 0.6, raised: true },
   })),
 
+  // A battery-powered ESP32: two 18650 cells in cradles behind the board,
+  // held by printed clamps on M3 screws.
+  make('esp32-18650-box', 'ESP32 on 18650 cells', (base) => ({
+    shape: { ...base.shape, cornerR: 4 },
+    boards: [
+      { board: 'esp32-devkitc-v4' },
+      { board: 'battery', battery: { kind: '18650', count: 2, press: 0.3 }, x: 0, y: 43, z: 1, mount: { size: 'M3', hole: 'tap' } },
+    ],
+    lid: { ...base.lid, fastening: 'screws', screw: { size: 'M3', hole: 'tap', head: 'countersunk' } },
+  })),
+
   // An Arduino Uno box with the headers open for jumper wires.
   make('arduino-uno-box', 'Arduino Uno box', (base) => ({
     shape: { ...base.shape, cornerR: 5 },

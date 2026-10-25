@@ -1,5 +1,5 @@
 // The whole case: state → { body, lid }. Worker only — every step here is a
-// boolean. The pipeline grows milestone by milestone (PLAN.md §4); the order
+// boolean. The pipeline grows milestone by milestone (plans/PLAN.md §4); the order
 // matters and is commented where it does.
 
 import type { CsgApi } from './csg';
@@ -14,9 +14,12 @@ import { plateOf, shapeSpec } from './shape';
 import { outerSolid, shellSolid } from './shell';
 import type { Support } from './standoffs';
 import { rails, standoffs } from './standoffs';
+import { batteryClamps, batterySupports } from './batterySolids';
 import { cuttersSolid } from './cut';
 import { postSpots } from './fastening';
 import { postSolids, snapSolids } from './lip';
+import { headLimits } from './lidPosts';
+import { headSeat } from './lidSpec';
 import { openingPolygon } from './opening';
 import { loftSlice } from './section';
 import { extraCutters } from './cutters';
@@ -36,6 +39,8 @@ export interface CaseBuild {
   lid: SurfaceMesh;
   /** printed screws: one screw in its own frame (head below z = 0, shank up); the main thread places the copies */
   screw: SurfaceMesh | null;
+  /** the batteries' clamp bars, case frame, as screwed down; null without batteries */
+  clamps: SurfaceMesh | null;
   dims: Dims;
 }
 
@@ -78,9 +83,11 @@ export function buildCase(
     // plane never cuts a standoff; before any cutout, so a vent under a
     // standoff does not open it.
     onStage(BUILD_STAGES[2]);
-    const supports: Support[] = layout.boards.flatMap((board) => (board.def.mount.kind === 'holes'
-      ? standoffs(csg, scope, board, shape.floor, segments)
-      : rails(csg, scope, board, shape.floor)));
+    const supports: Support[] = layout.boards.flatMap((board) => (board.def.battery
+      ? batterySupports(csg, scope, board, board.def.battery, shape.floor, segments)
+      : board.def.mount.kind === 'holes'
+        ? standoffs(csg, scope, board, shape.floor, segments)
+        : rails(csg, scope, board, shape.floor)));
     // The owner is the part under the support's base; whatever of it reaches
     // into the other part's material (a deep side lid over a manually placed
     // board) is cut away, so the parts never overlap.
@@ -110,15 +117,21 @@ export function buildCase(
     onStage(BUILD_STAGES[4]);
     if (lid.fastening !== 'snaps') {
       const upper = loftSlice(spec.inner, spec.innerCut, frame, -plate - lid.fit, segments);
-      const posts = postSolids(csg, scope, postSpots(opening, lid, shape.wall), opening, upper, frame, zp, plate, lid, segments);
+      const spots = postSpots(opening, lid, shape.wall);
+      // a head's seat never reaches the lid's edge, whatever a file asks for
+      const limits = headLimits(spots, shape, dims, lid);
+      const seated = { ...lid, head: { d: Math.min(headSeat(lid).d, limits.d), depth: lid.head.depth } };
+      const posts = postSolids(csg, scope, spots, opening, upper, frame, zp, plate, seated, segments);
       if (posts) {
         if (skirt) skirt = scope.keep(skirt.subtract(posts.skirtClearance));
         const material = scope.keep(scope.keep(posts.posts.intersect(outer)).subtract(lidSolid));
         body = scope.keep(scope.keep(body.add(material)).subtract(posts.postHoles));
         if (posts.lidBosses) lidSolid = scope.keep(lidSolid.add(posts.lidBosses));
-        lidSolid = scope.keep(lidSolid.subtract(posts.lidHoles));
       }
       if (skirt) lidSolid = scope.keep(lidSolid.add(skirt));
+      // the holes last: the skirt reaches up into the plate, and added after
+      // them it filled a deep counterbore back in, a crescent at the corner
+      if (posts) lidSolid = scope.keep(lidSolid.subtract(posts.lidHoles));
     } else {
       if (skirt) lidSolid = scope.keep(lidSolid.add(skirt));
       const snaps = snapSolids(csg, scope, opening, frame, zp, lid, shape.kind === 'cylinder', cutters, segments);
@@ -159,7 +172,7 @@ export function buildCase(
       else body = owner;
     }
     if (state.label.on && label) {
-      const place = labelPlacement(state.label, label, lid.face, dims);
+      const place = labelPlacement(state.label, label, lid.face, dims, shape);
       // an engraving never goes through the plate
       const depth = state.label.raised ? state.label.depth : Math.min(state.label.depth, plate - 0.6);
       const relief = labelSolid(csg, scope, state.label, label, frame, place, depth);
@@ -169,7 +182,9 @@ export function buildCase(
     const screw = lid.fastening === 'printed'
       ? fromManifold(screwSolid(csg, scope, screwShape(lid.thread.size, plate, lid.fit), threadPoints(segments)))
       : null;
-    return { body: fromManifold(body), lid: fromManifold(lidSolid), screw, dims };
+    const clampBars = layout.boards.flatMap((board) => (board.def.battery ? [batteryClamps(csg, scope, board, board.def.battery, segments)] : []));
+    const clamps = clampBars.length > 0 ? fromManifold(unionAll(csg, scope, clampBars)) : null;
+    return { body: fromManifold(body), lid: fromManifold(lidSolid), screw, clamps, dims };
   } finally {
     scope.dispose();
   }

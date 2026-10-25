@@ -3,10 +3,11 @@
 // catalog index. A custom board from the editor travels in the state and
 // goes through the same sanitizer.
 //
-// Board frame (PLAN.md §0.4): origin at the lower-left corner of the vendor's
+// Board frame (plans/PLAN.md §0.4): origin at the lower-left corner of the vendor's
 // top view, x to the right, y up (away from the viewer). Edges: front
 // (y = 0), back (y = d), left (x = 0), right (x = w).
 
+import type { BatterySpec } from './battery';
 import type { ScrewSize } from '../geo/fasteners';
 import { isScrewSize } from '../geo/fasteners';
 
@@ -66,6 +67,8 @@ export const PORT_TYPES = {
   'fpc': { w: 22, h: 3, d: 3, clearance: 1, shape: 'rect', cut: true, top: true },
   'antenna': { w: 3, h: 1.3, d: 3, clearance: 0.5, shape: 'rect', cut: false, top: true },
   'generic': { w: 5, h: 3, d: 5, clearance: 0.5, shape: 'rect', cut: false, top: true },
+  // a battery holder's wire leads where they leave it: room for the bend, no opening
+  'wires': { w: 4, h: 3, d: 2, clearance: 0.5, shape: 'rect', cut: false, top: false },
 } as const satisfies Record<string, PortType>;
 
 export type PortTypeId = keyof typeof PORT_TYPES;
@@ -177,7 +180,8 @@ export interface BoardDef {
   /** proper noun, never translated; aliases after a slash */
   name: string;
   vendor: string;
-  kind: 'sbc' | 'mcu';
+  /** a battery holder is screwed down like a board; a battery is placed by its spec (boards/battery.ts) */
+  kind: 'sbc' | 'mcu' | 'holder' | 'battery';
   size: { w: number; d: number; t: number };
   /** the PCB's real outline when it is not the rectangle: a simple polygon inside `size`, counter-clockwise */
   outline?: [number, number][];
@@ -201,6 +205,8 @@ export interface BoardDef {
   source: string;
   /** dimensions checked against the official drawing */
   verified: boolean;
+  /** a battery placed like a board (boards/battery.ts): never in the catalog */
+  battery?: BatterySpec;
 }
 
 export const BOARD_MAX_MM = 300;
@@ -450,7 +456,7 @@ export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
     id: str(r.id, fallbackId, 60),
     name: str(r.name, 'Custom board'),
     vendor: str(r.vendor, ''),
-    kind: r.kind === 'sbc' ? 'sbc' : 'mcu',
+    kind: r.kind === 'sbc' || r.kind === 'holder' ? r.kind : 'mcu',
     size: { w, d, t: num(size.t, 0.4, 5, 1.6) },
     ...(outline ? { outline } : {}),
     mount: {

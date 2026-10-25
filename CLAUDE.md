@@ -2,12 +2,14 @@
 
 ## Plan
 
-`PLAN.md` — architecture and milestones M0…M8, decisions taken with the user
+`plans/PLAN.md` — architecture and milestones M0…M8, decisions taken with the user
 at the top. Deviations from the plan are recorded at its end as they happen.
-`PLAN-IMPROVEMENTS.md` — the improvements after the review (I1…I8), same
+`plans/PLAN-IMPROVEMENTS.md` — the improvements after the review (I1…I8), same
 rules.
-`PLAN-IMPROVEMENTS-NEW-BOARDS.md` — what the Tier A boards left (B1…B9):
+`plans/PLAN-IMPROVEMENTS-NEW-BOARDS.md` — what the Tier A boards left (B1…B9):
 done; read it only for its decisions and deviations.
+`plans/PLAN-IMPROVEMENTS-2026-10-25.md` — what the user trial asked for
+(R1…R8), the current plan; on the branch `improvements-2026-10-25`.
 
 ## Node
 
@@ -85,7 +87,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   volume, piece by piece), `--levels` (horizontal face areas per z: a
   zero-thickness membrane shows as equal up and down areas at one level),
   `--degenerate` (where the zero-area triangles are, and the first few in
-  full: which vertices collapse along what). Strings need no quotes:
+  full: which vertices collapse along what), `--thread-test <dir>` (test prints
+  of the candidate thread forms: a screw and a three-fit nut each, marked
+  with dots). Strings need no quotes:
   `--set lid.face=bottom`. In zsh quote JSON
   values: `--set 'boards=[]'`.
 - `scripts/board.mjs` — catalog tools: `--check` validates every board file
@@ -190,6 +194,22 @@ freely; a temporary script that turns out useful becomes a permanent one.
   and a rail on a pinned edge is the **pin bed** (`pinBedProfile`): one
   extruded profile, no lower lip, a shelf under the header's plastic with a
   slot for the pins.
+- A board against walls (`placement.walls`, case frame; `PlacedBoard.walls`):
+  on each such side the board, not the margin, sets the inner wall
+  (`cavityOf`): its most protruding connector on the facing edge ends at the
+  outer surface + `wallOffset`, never closer than `WALL_GAP` to the inner
+  wall; the layout aligns to that side instead of centring. Its edge ports'
+  channels start at the board edge, since their bodies sit in the wall.
+- Batteries (`boards/battery.ts`) are placements in `state.boards` with
+  `board: 'battery'` and a `battery` spec; `entryOf` makes them a board
+  entry (`batteryDef`: no PCB, no holes, no ports, `def.battery` set), so
+  the layout, walls, alignment and overlap checks need nothing new. Code
+  that must tell them apart checks `def.battery` (the ghost draws cells,
+  the worker builds cradles or a pack's corner stops and clamp posts instead
+  of standoffs, `batterySolids.ts`). The clamp bars are a part of their own
+  (`clamp`, case frame, as screwed down): exploded they lift, in the print
+  layout they lie on their tops right of the rest (`withClamps`), and they
+  go with the body (Body and Both).
 - Nut slots point towards the board's centre: pointing outwards they cut the
   wall next to a corner standoff.
 - Cutters get a few microns of different growth each (`cut.ts`,
@@ -217,6 +237,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   (`magnetPockets`); a magnet post stops a fit below the lid's boss, and its
   corner fill stops `POST_STEP` below its top — reaching it, the top face met
   the outer corner's edge on the diagonal: slivers.
+  The lid's holes are cut after the skirt is added: the skirt reaches up
+  into the plate and filled a deep counterbore back in (a crescent at the
+  corner). A head's seat stays `SEAT_WALL` inside the lid's face
+  (`lidPosts.ts`, `headLimits`); the sliders stop there, the worker clamps
+  a file.
 - Printed screws (`thread.ts` pure, `screwSolids.ts` worker): a single-start
   thread has one horizontal section at every height, turned 360° per pitch,
   so a thread is `CrossSection.extrude` with a twist (one slice per point and
@@ -257,6 +282,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   outer face, printed screws on their heads in a row after the lid; every
   exported STL is in print orientation. A console with a bottom lid lies on
   its slope instead (opening up it would stand on an edge).
+- The lid keeps the face the user chose (`lid.chosen`) next to the face it
+  is built on (`lid.face`): a change of shape (`withShapeKind`,
+  `lidForKind`) puts it back when the new shape allows it (box → console →
+  box leaves a top lid on top). The sanitizer only checks the face against
+  the shape: it cannot tell a stale choice from one to restore.
 - Visible text comes only from `src/i18n/` dictionaries; `en.ts` is the
   reference and gives `Key`. The core and the worker speak in message codes
   (`geo/message.ts`). A test fails on any Cyrillic or Hebrew in a string
@@ -278,9 +308,9 @@ browser is within ~10 % of it):
 | `pi4-desktop` — export | 24 | 0.5 s | 44k |
 | `pi4-desktop` — finest export | 64 | 2.0 s | 150k |
 | `cylinder-puck` — finest export | 64 | 1.2 s | 130k |
-| default Pi 4 on printed P6 screws — preview | 12 | 230 ms | 20k + a 4.5k screw |
-| printed P6 screws — export | 24 | 0.9 s | 120k + a 33k screw |
-| printed P6 screws — finest export | 64 | 2.2 s | 215k + a 58k screw |
+| default Pi 4 on printed P6 screws — preview | 12 | 275 ms | 27k + a 6.3k screw |
+| printed P6 screws — export | 24 | 1.3 s | 175k + a 50k screw |
+| printed P6 screws — finest export | 64 | 2.8 s | 317k + an 87k screw |
 
 Decided at M1 and confirmed at M8: the preview is the exact case (the same
 pipeline as the export, 12 segments per quarter arc), rebuilt 120 ms after
@@ -297,7 +327,7 @@ Add a state when a feature lands, never edit an old one.
 ## Presets
 
 Built-in presets (`src/state/presets.ts`): `pi4-desktop`, `pi-zero-gpio`,
-`esp32-sensor-box`, `arduino-uno-box`, `cylinder-puck`, `plain-box`. Each is
+`esp32-sensor-box`, `esp32-18650-box`, `arduino-uno-box`, `cylinder-puck`, `plain-box`. Each is
 built by `tests/presetsBuild.test.ts` (closed, no slivers, no overlap, no
 layout warnings). A preset's name is one English string in `presets.ts`
 (not translated: the review asked for one name); its note is the
@@ -310,13 +340,13 @@ dictionary key `preset.<id>.note`.
 ## Control ids
 
 Boards: `#boardAdd` opens `#boardPicker` (`#boardSearch`, rows
-`#boardList [data-board="<id>"]`, `#boardPickerClose`); with two boards or more
+`#boardList [data-board="<id>"]`, batteries `[data-board="battery-<kind>"]`, `#boardPickerClose`); with two boards or more
 `#boardsArrange_row|column|compact` and `#boards_gap` (geo/arrange.ts);
 per board
 `#board<i>_x|_y|_z`, alignment (two boards or more) `#board<i>_align`
 (details), `#board<i>_alignRef`,
-`#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_screw`,
-`#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), `#board<i>_remove`, port toggles
+`#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_wall_front|back|left|right` (toggles; not on a cylinder), `#board<i>_wallOffset`, `#board<i>_screw`,
+`#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles
 `#board<i>_cut_<portId>`.
 Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHeight|_bottomHeight`,
 `#board<i>_custom_mount` (select), `_rails`, `_screw`, holes `_hole<h>_x|_y|_d|_remove`,
@@ -331,7 +361,7 @@ Extras: toggled cards `#on_vents`, `#on_fan`, `#on_label`; vents
 `#mount_earCount_1…4`, `#mount_earWalls_leftRight|frontBack|one`,
 `#mount_earWall` (select), `#mount_earAlong_centre|ends`, `#mount_spacing`, `#mount_screwD`; label
 `#label_text`, `#label_font`, `#label_size`, `#label_raised`, `#label_depth`,
-`#label_x|_y|_angle`.
+`#label_anchor_<anchor>` (a 3 × 3 grid: topLeft … bottomRight), `#label_margin` (off the centre), `#label_x|_y`, `#label_turn_0|90|180|270`, `#label_angle`.
 Openings: `#cutAdd`; per cut `#cut<i>_face` (select), `#cut<i>_shape_rect|round`,
 `#cut<i>_x|_y|_w|_d|_h|_r` (`_d` is the diameter of a round cut), `#cut<i>_remove`.
 Case card: `#case_kind_box|cylinder|console`, `#case_cornerR`, `#case_edgeR`,
@@ -341,14 +371,20 @@ Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets
 `#lid_screw` (select), `#lid_hole_tap|insert|nut`, `#lid_magnet` (select),
 `#lid_magnetFit` (magnets only), `#lid_thread` (select), `#lid_threadFit`
 (printed screws only),
-`#lid_head_none|counterbore|countersunk` (screws only), `#lid_lipH`,
+`#lid_head_none|counterbore|countersunk` (screws only), `#lid_headD`, `#lid_headDepth` (counterbore), `#lid_headReset` (when set), `#lid_lipH`,
 `#lid_lipT`, `#lid_fit`.
 View and export card (`#exportCard`): parts `#tabBoth` (first, default),
 `#tabBody`, `#tabLid`; view `#viewExploded` (default), `#viewAssembled`,
-`#viewPrint`; `#viewBoards`, `#viewXray`; `#resolution`, `#exportBtn`. The
+`#viewPrint`; `#viewBoards`, `#viewPortNames` (connector names over the ghosts), `#viewXray`; `#resolution`, `#exportBtn`. The
 caption over the canvas `#viewCaption` says what is shown and scrolls to the
 card. Dev builds: `window.__case.drawn()` lists the roles drawn last,
-`drawnParts()` the meshes with their offsets.
+`drawnParts()` the meshes with their offsets. Port captions (`#portCaptions`, an overlay over
+the canvas with no pointer events: `scene.setCaptions`, placed every frame,
+nearest first, overlapping ones hidden) show with the board ghosts; a tap on
+one (the canvas's tap handler, `scene.captionAt`) toggles its port's
+opening. `window.__case.captions()` lists the shown ones with their canvas
+positions. `#viewPortNames` turns them off (on by default; disabled with
+the boards hidden or in the print layout).
 Mobile: on a narrow screen the view centres the case above the settings
 sheet (`scene.setBottomInset`): the canvas stays full size under the sheet,
 and the inset only moves the picture, eased like the sheet — the virtual
@@ -356,7 +392,10 @@ frame keeps the canvas's angle per pixel (its own aspect, a wider fov).
 With the canvas's aspect the picture was stretched and round holes came
 out as ellipses; the smoke measures the case on screen in both states
 (`window.__case.project`).
+The canvas stays live under the open sheet (no backdrop): drags turn the
+case, pinches zoom it, and a tap (one pointer, short, still) on the canvas
+closes the sheet (`main.ts`, `TAP_MOVE_PX` / `TAP_MS`).
 Top bar: `#presetBtn` (list `#presetList [data-preset="b:<id>"|"u:<name>"]`),
 `#saveBtn`, `#fileOpenBtn`, `#fileSaveBtn`, `#fileInput`, `#undoBtn`,
 `#redoBtn`,
-`#langSel`, `#panelBtn`, `#panelBackdrop`.
+`#langSel`, `#panelBtn`.

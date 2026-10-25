@@ -10,8 +10,10 @@ import type { BoardDef, PortDef } from '../boards/schema';
 import { onFace } from '../boards/schema';
 import type { PlacedBoard } from './layout';
 import { PIN_SPACER, PIN_SPACER_W, edgeNormal, pinEdges } from './layout';
-import type { SurfaceMesh, Vec3 } from './surface';
-import { applyAffine, mergeMeshes } from './surface';
+import type { Affine, SurfaceMesh, Vec3 } from './surface';
+import { applyAffine, composeAffine, mergeMeshes } from './surface';
+import type { BatterySpec } from '../boards/battery';
+import { batterySize, cellCentres } from '../boards/battery';
 import { meshNormals } from './normals';
 
 /** An axis-aligned box in the board frame, mapped to the case frame. */
@@ -141,6 +143,12 @@ export function portBlock(board: PlacedBoard, port: PortDef): [number, number, n
   return [port.along - port.w / 2, Math.min(outer, inner), z0, port.along + port.w / 2, Math.max(outer, inner), z1];
 }
 
+/** Where a port's caption hangs in the view: the middle of its block's top (its bottom for a part underneath), case frame. */
+export function portCaptionAnchor(board: PlacedBoard, port: PortDef): Vec3 {
+  const [x0, y0, z0, x1, y1, z1] = portBlock(board, port);
+  return applyAffine(board.toCase, [(x0 + x1) / 2, (y0 + y1) / 2, port.edge === 'bottom' ? z0 : z1]);
+}
+
 /** Square pins as drawn, mm. */
 const PIN_SIZE = 0.64;
 
@@ -173,6 +181,7 @@ export function pinBlocks(board: PlacedBoard): [number, number, number, number, 
  * in the ports' colour, so the holes read at a glance).
  */
 export function boardGhost(board: PlacedBoard): { pcb: SurfaceMesh; ports: SurfaceMesh | null } {
+  if (board.def.battery) return { pcb: batteryGhost(board, board.def.battery), ports: null };
   const { w, d, t } = board.def.size;
   const blocks = [...board.def.ports.map((port) => portBlock(board, port)), ...pinBlocks(board)]
     .map(([x0, y0, z0, x1, y1, z1]) => boxMesh(board, x0, y0, z0, x1, y1, z1));
@@ -187,4 +196,16 @@ export function boardGhost(board: PlacedBoard): { pcb: SurfaceMesh; ports: Surfa
   ));
   const parts = [...blocks, ...pads];
   return { pcb, ports: parts.length > 0 ? mergeMeshes(parts) : null };
+}
+
+/** (u, v, w) → (w, u, v): a prism drawn in the (y, z) plane runs along x. */
+const ALONG_X: Affine = [0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0];
+
+/** A battery's ghost: its cells lying along x, or its pack as a block. */
+function batteryGhost(board: PlacedBoard, spec: BatterySpec): SurfaceMesh {
+  const size = batterySize(spec);
+  if (spec.kind === 'pack') return boxMesh(board, 0, 0, 0, size.w, size.d, size.h);
+  const alongX = { ...board, toCase: composeAffine(board.toCase, ALONG_X) };
+  const r = size.h / 2;
+  return mergeMeshes(cellCentres(spec).map((y) => prismMesh(alongX, circle(y, r, r, false), [], 0, size.w)));
 }

@@ -7,6 +7,13 @@ A ticked one gets an opening in the case; the defaults come from the part
 type — connectors, headers, displays, ribbon connectors, buttons and LEDs are
 cut, antenna connectors and other parts are not.
 
+With **Boards** and **Connector names** on (both are by default), the view puts a caption with the same name over every
+port of the board ghosts (a crossed-out one has no opening), so it is easy to
+tell which line of the list is which connector. A click on a caption turns
+its opening on or off, like its checkbox (undo brings it back); dragging over
+a caption turns the view as anywhere else. Captions that would cover each
+other give way to the nearer one — turn or zoom the view to see the rest.
+
 - A connector on a board edge gets an opening where its plug goes in: the
   size of the connector plus a clearance per side that fits a common plug
   (1.8 mm for USB-C and micro-USB, 2 mm for micro-HDMI, 0.5 mm for Ethernet,

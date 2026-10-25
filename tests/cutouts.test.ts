@@ -75,6 +75,35 @@ describe('port openings', () => {
     }
   });
 
+  it.each([['right', 0], ['front', 0], ['right', 90], ['back', 180]] as const)(
+    'a Pi 4 against the %s wall (rotated %d): the wall around each connector on that side is open all through',
+    (wall, rot) => {
+      const state = sanitizeState({ ...defaultState(), boards: [{ board: 'raspberry-pi-4b', rot, walls: [wall] }] });
+      const layout = caseLayout(state);
+      const board = layout.boards[0];
+      const placed = board.walls[0];
+      if (!placed) throw new Error('no wall');
+      const parts = built(state);
+      const { dims } = layout;
+      const t = state.shape.wall;
+      let checked = 0;
+      for (const port of board.def.ports) {
+        if (port.edge !== placed.edge || !port.cut) continue;
+        const { face, dir } = portAxis(board, port);
+        // through the wall's thickness, from just outside the inner wall to just inside the outer surface
+        for (const k of [0.15, 0.5, 0.85]) {
+          const depth = wall === 'right' ? dims.w - face[0] : wall === 'back' ? dims.d - face[1] : face[1];
+          const s = depth - t * k;
+          const [x, y, z] = [face[0] + dir[0] * s, face[1] + dir[1] * s, face[2]];
+          expect(solidAt(parts, x, y, z), `${port.id} at ${k} of the wall`).toBe(false);
+          checked++;
+        }
+      }
+      expect(checked).toBeGreaterThan(0);
+      for (const part of parts) part.delete();
+    },
+  );
+
   it('a disabled port leaves the wall whole', () => {
     const state = sanitizeState({ ...defaultState(), boards: [{ board: 'raspberry-pi-4b', cuts: { ethernet: false } }] });
     const parts = built(state);

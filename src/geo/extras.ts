@@ -88,6 +88,10 @@ export interface WallMountState {
 export const LABEL_FONTS = ['rubik', 'oswald'] as const;
 export type LabelFont = (typeof LABEL_FONTS)[number];
 
+/** Where the label goes on the lid, as seen from outside: the centre, an edge or a corner. */
+export const LABEL_ANCHORS = ['topLeft', 'top', 'topRight', 'left', 'centre', 'right', 'bottomLeft', 'bottom', 'bottomRight'] as const;
+export type LabelAnchor = (typeof LABEL_ANCHORS)[number];
+
 export interface LabelState {
   on: boolean;
   text: string;
@@ -97,13 +101,17 @@ export interface LabelState {
   depth: number;
   /** raised (embossed) or engraved */
   raised: boolean;
-  /** offset of the text's centre from the lid face's centre, mm */
+  /** where it goes: at an edge or corner its turned box keeps `margin` from the face's flat part */
+  anchor: LabelAnchor;
+  margin: number;
+  /** a fine offset from the anchored place, mm */
   x: number;
   y: number;
   angle: number;
 }
 
 export const LABEL_MAX_CHARS = 40;
+export const LABEL_MARGIN_MAX = 30;
 
 export function defaultVents(): VentState {
   return { on: false, faces: ['left', 'right'], pattern: 'slots', size: 2, pitch: 4, margin: 4, along: 'y' };
@@ -118,7 +126,7 @@ export function defaultWallMount(): WallMountState {
 }
 
 export function defaultLabel(): LabelState {
-  return { on: false, text: '', font: 'rubik', sizeMm: 6, depth: 0.6, raised: false, x: 0, y: 0, angle: 0 };
+  return { on: false, text: '', font: 'rubik', sizeMm: 6, depth: 0.6, raised: false, anchor: 'centre', margin: 3, x: 0, y: 0, angle: 0 };
 }
 
 function rec(x: unknown): Record<string, unknown> {
@@ -196,6 +204,9 @@ export function sanitizeLabel(raw: unknown): LabelState {
     sizeMm: clampNum(r.sizeMm, 3, 30, d.sizeMm),
     depth: clampNum(r.depth, 0.4, 1.5, d.depth),
     raised: bool(r.raised, d.raised),
+    // an old file has no anchor: its offset is from the centre, as it was
+    anchor: LABEL_ANCHORS.find((a) => a === r.anchor) ?? d.anchor,
+    margin: clampNum(r.margin, 0, LABEL_MARGIN_MAX, d.margin),
     x: clampNum(r.x, -200, 200, d.x),
     y: clampNum(r.y, -200, 200, d.y),
     angle: clampNum(r.angle, -180, 180, d.angle),

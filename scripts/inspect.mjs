@@ -11,15 +11,17 @@
 //   node scripts/inspect.mjs --set lid.face=back --overlap   # where lid and body intersect
 //   node scripts/inspect.mjs --degenerate    # where the zero-area triangles are
 //   node scripts/inspect.mjs --levels    # horizontal face areas per z: a membrane has equal up and down
+//   node scripts/inspect.mjs --thread-test shots/threads   # test prints of thread forms: a screw and a nut each
 //
 // --set takes a dotted path into AppState; numbers and true/false are parsed.
 
 import { spawnSync } from 'node:child_process';
 import { parseArgs } from './lib/harness.mjs';
 
-const flags = parseArgs(process.argv.slice(2), ['state', 'file', 'preset', 'segments', 'stl'], ['set']);
+const flags = parseArgs(process.argv.slice(2), ['state', 'file', 'preset', 'segments', 'stl', 'thread-test'], ['set']);
 const args = Object.fromEntries(flags);
 if (args.segments) args.segments = Number(args.segments);
+if (args['thread-test']) args.threadTest = args['thread-test'];
 const result = spawnSync('npx', ['vitest', 'run', '--config', 'scripts/vitest.inspect.config.ts', '--silent=false', '--reporter=dot'], {
   env: { ...process.env, INSPECT_ARGS: JSON.stringify(args) },
   encoding: 'utf8',

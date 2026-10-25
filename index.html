@@ -26,7 +26,6 @@
         </label>
       </header>
       <div id="content">
-        <div id="panelBackdrop"></div>
         <aside id="panel" class="open">
           <section class="card">
             <h2 data-i18n="panel.case">Case</h2>
@@ -77,6 +76,7 @@
             </div>
             <div class="view-checks">
               <label class="check-inline" id="viewBoardsLabel" data-i18n-title="view.boards.title"><input type="checkbox" id="viewBoards" checked /> <span data-i18n="view.boards">Boards</span></label>
+              <label class="check-inline" id="viewPortNamesLabel" data-i18n-title="view.portNames.title"><input type="checkbox" id="viewPortNames" checked /> <span data-i18n="view.portNames">Connector names</span></label>
               <label class="check-inline" data-i18n-title="view.xray.title"><input type="checkbox" id="viewXray" /> <span data-i18n="view.xray">X-ray</span></label>
             </div>
             <label class="row">
@@ -93,6 +93,7 @@
         </aside>
         <main id="viewWrap">
           <canvas id="view"></canvas>
+          <div id="portCaptions" aria-hidden="true"></div>
           <button id="viewCaption" type="button" aria-live="polite" data-i18n-title="caption.title"></button>
           <div id="presets" hidden>
             <div id="presetsBox" role="dialog" aria-labelledby="presetsTitle">

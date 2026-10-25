@@ -17,6 +17,8 @@ export type MessageCode =
   // layout checks (layout)
   | 'warn.boardsOverlap'
   | 'warn.standoffHitsBoard'
+  | 'warn.notAgainstWall'
+  | 'info.portsRecessed'
   | 'warn.bottomPartOnSupport'
   // cutouts (ports)
   | 'warn.portFar'
@@ -36,6 +38,7 @@ export type MessageCode =
   | 'warn.keyholeClosedRound'
   | 'warn.keyholePadsOnBed'
   | 'warn.labelTooBig'
+  | 'warn.labelOverScrew'
   // worker job stages
   | 'progress.loading'
   | 'progress.shell'

@@ -190,7 +190,20 @@ export function postSpots(opening: readonly Vec2[], lid: LidState, wall: number)
       centre = [centre[0] + du * 0.1, centre[1] + dv * 0.1];
     }
     if (insideDistance(opening, centre) < r - 1e-6) continue;
-    spots.push({ centre, anchor: [corner[0] - du * wall / 2, corner[1] - dv * wall / 2], r });
+    // the anchor: where the diagonal crosses the opening's edge, half a wall
+    // further out — inside the wall however round the corner is. From the
+    // bounding box's corner it poked out through a rounded outer corner, and
+    // the shell trimmed it into seams (slivers where one met an arc vertex).
+    let inside = 1;
+    let outside = 0;
+    for (let step = 0; step < 40; step++) {
+      const t = (inside + outside) / 2;
+      const p: Vec2 = [corner[0] + (cx - corner[0]) * t, corner[1] + (cy - corner[1]) * t];
+      if (insideDistance(opening, p) >= 0) inside = t;
+      else outside = t;
+    }
+    const edge: Vec2 = [corner[0] + (cx - corner[0]) * inside, corner[1] + (cy - corner[1]) * inside];
+    spots.push({ centre, anchor: [edge[0] - du * wall / 2, edge[1] - dv * wall / 2], r });
   }
   return spots;
 }

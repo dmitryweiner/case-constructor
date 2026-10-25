@@ -13,7 +13,7 @@ import {
 import { faceFrame } from '../src/geo/face';
 import { applyAffine } from '../src/geo/surface';
 import type { LabelRaster } from '../src/geo/label';
-import { rasterRuns, sanitizeLabelRaster } from '../src/geo/label';
+import { labelPlacement, rasterRuns, sanitizeLabelRaster } from '../src/geo/label';
 import { validateMesh } from '../src/geo/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
@@ -340,6 +340,42 @@ describe('fan, keyholes, ears', () => {
 });
 
 describe('label', () => {
+  describe('placement by anchor', () => {
+    // a 100 × 60 top, square edges; a 20 × 6 mm raster
+    const shape = { ...defaultState().shape, edgeR: 0, cornerR: 0 };
+    const dims = { w: 100, d: 60, h: 30 };
+    const raster = { w: 200, h: 60, pixels: new Uint8Array(200 * 60), mmPerPx: 0.1 };
+    const place = (patch: object) => labelPlacement(sanitizeLabel({ on: true, text: 'x', ...patch }), raster, 'top', dims, shape);
+
+    it('the centre with an offset, as before (old files keep their place)', () => {
+      expect(sanitizeLabel({ x: 5, y: -2 }).anchor).toBe('centre');
+      const p = place({ x: 5, y: -2 });
+      expect([p.u, p.v]).toEqual([55, 28]);
+    });
+
+    it('against an edge: the margin from the flat part, the offset on top', () => {
+      expect(place({ anchor: 'left', margin: 3 })).toMatchObject({ u: 13, v: 30 });
+      expect(place({ anchor: 'bottom', margin: 3, x: 4 })).toMatchObject({ u: 54, v: 6 });
+    });
+
+    it('in a corner, turned a quarter: the turned box keeps the margin', () => {
+      const p = place({ anchor: 'topRight', margin: 3, angle: 90 });
+      expect(p.u).toBeCloseTo(94);
+      expect(p.v).toBeCloseTo(47);
+    });
+
+    it('the edge fillet is not flat: the margin counts from where it ends', () => {
+      const p = labelPlacement(sanitizeLabel({ on: true, anchor: 'left', margin: 2 }), raster, 'top', dims, { ...shape, edgeR: 4 });
+      expect(p.u).toBeCloseTo(16);
+    });
+
+    it('garbage falls back: the centre, a 3 mm margin', () => {
+      const label = sanitizeLabel({ anchor: 'middle', margin: 'wide' });
+      expect([label.anchor, label.margin]).toEqual(['centre', 3]);
+      expect(sanitizeLabel({ margin: 99 }).margin).toBe(30);
+    });
+  });
+
   it('raster runs cover exactly the ink', () => {
     const raster = blocks();
     const runs = rasterRuns(raster);

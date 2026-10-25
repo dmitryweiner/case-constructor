@@ -68,8 +68,13 @@ any face, shifted from the face's centre by X / Y. Screw holes default to
 | Size | 3–30 mm | 6 | the height of a capital letter |
 | Raised | on / off | off | off — engraved |
 | Depth | 0.4–1.5 mm | 0.6 | an engraving never goes deeper than the lid plate − 0.6 mm |
-| Shift X, Y | −100 … 100 mm | 0 | from the centre of the lid |
+| Place | centre / an edge / a corner | centre | a 3 × 3 grid, as seen from outside the lid |
+| From the edge | 0–30 mm | 3 | an edge or a corner only: how far the label's box keeps from the lid's rounded edges and corners |
+| Shift X, Y | −100 … 100 mm | 0 | a fine shift from the chosen place; a new place resets it |
+| Turn | 0 / 90 / 180 / 270° | 0 | quarter turns; *Angle* takes any other |
 | Angle | −180 … 180° | 0 | |
 
-The text reads from outside the lid. The panel warns when it runs off the
-flat part of the lid. Fonts load only when a label is on.
+The text reads from outside the lid. Against an edge or in a corner the
+label's box — turned, if it is — stays *From the edge* inside the lid's flat
+part. The panel warns when the label runs off the flat part of the lid or
+over a screw head on it. Fonts load only when a label is on.

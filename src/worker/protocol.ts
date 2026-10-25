@@ -25,8 +25,11 @@ export type CsgJob = (
   label?: LabelRaster | null;
 };
 
-/** 'screw': one printed screw in its own frame, when the lid holds on printed screws */
-export type PartId = 'body' | 'lid' | 'screw';
+/**
+ * 'screw': one printed screw in its own frame, when the lid holds on printed
+ * screws; 'clamp': the batteries' clamp bars in the case frame, screwed down
+ */
+export type PartId = 'body' | 'lid' | 'screw' | 'clamp';
 
 /** A finished part: the mesh plus what the panel shows about it. */
 export interface JobPart {
