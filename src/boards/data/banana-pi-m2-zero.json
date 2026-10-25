@@ -3,80 +3,25 @@
   "name": "Banana Pi BPI-M2 Zero",
   "vendor": "Banana Pi",
   "kind": "sbc",
-  "size": {
-    "w": 65,
-    "d": 30,
-    "t": 1.2
-  },
+  "size": { "w": 65, "d": 30, "t": 1.2 },
   "mount": {
     "kind": "holes",
     "holes": [
-      {
-        "x": 3.5,
-        "y": 3.5,
-        "d": 2.7
-      },
-      {
-        "x": 61.5,
-        "y": 3.5,
-        "d": 2.7
-      },
-      {
-        "x": 3.5,
-        "y": 26.5,
-        "d": 2.7
-      },
-      {
-        "x": 61.5,
-        "y": 26.5,
-        "d": 2.7
-      }
+      { "x": 3.5, "y": 3.5, "d": 2.7 },
+      { "x": 61.5, "y": 3.5, "d": 2.7 },
+      { "x": 3.5, "y": 26.5, "d": 2.7 },
+      { "x": 61.5, "y": 26.5, "d": 2.7 }
     ],
     "screw": "M2.5"
   },
   "topHeight": 4,
   "bottomHeight": 1.5,
   "ports": [
-    {
-      "id": "hdmi",
-      "type": "mini-hdmi",
-      "edge": "front",
-      "along": 12.4,
-      "protrude": 0.5
-    },
-    {
-      "id": "usb",
-      "type": "micro-usb",
-      "edge": "front",
-      "along": 41.4,
-      "protrude": 1
-    },
-    {
-      "id": "power",
-      "type": "micro-usb",
-      "edge": "front",
-      "along": 54,
-      "protrude": 1
-    },
-    {
-      "id": "microsd",
-      "type": "microsd",
-      "edge": "left",
-      "along": 16.9,
-      "z": 0,
-      "protrude": 2
-    },
-    {
-      "id": "gpio",
-      "type": "header-2x20",
-      "edge": "top",
-      "x": 32.5,
-      "y": 26.5,
-      "w": 51,
-      "d": 5,
-      "h": 1,
-      "cut": false
-    }
+    { "id": "hdmi", "type": "mini-hdmi", "edge": "front", "along": 12.4, "protrude": 0.5 },
+    { "id": "usb", "type": "micro-usb", "edge": "front", "along": 41.4, "protrude": 1 },
+    { "id": "power", "type": "micro-usb", "edge": "front", "along": 54, "protrude": 1 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 16.9, "z": 0, "protrude": 2 },
+    { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 32.5, "y": 26.5, "w": 51, "d": 5, "h": 1, "cut": false }
   ],
   "source": "https://wiki.banana-pi.org/Banana_Pi_BPI-M2_ZERO",
   "verified": false

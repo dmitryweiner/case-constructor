@@ -3,92 +3,27 @@
   "name": "Orange Pi Zero 3W",
   "vendor": "Orange Pi",
   "kind": "sbc",
-  "size": {
-    "w": 65,
-    "d": 32,
-    "t": 1.2
-  },
+  "size": { "w": 65, "d": 32, "t": 1.2 },
   "outline": [[2.03, 0], [62.97, 0], [64.41, 0.59], [65, 2.03], [65, 29.97], [64.41, 31.41], [62.97, 32], [2.03, 32], [0.59, 31.41], [0, 29.97], [0, 2.03], [0.59, 0.59]],
   "mount": {
     "kind": "holes",
     "holes": [
-      {
-        "x": 3.5,
-        "y": 4.47,
-        "d": 3
-      },
-      {
-        "x": 61.5,
-        "y": 4.47,
-        "d": 3
-      },
-      {
-        "x": 3.5,
-        "y": 27.47,
-        "d": 3
-      },
-      {
-        "x": 61.5,
-        "y": 27.47,
-        "d": 3
-      }
+      { "x": 3.5, "y": 4.47, "d": 3 },
+      { "x": 61.5, "y": 4.47, "d": 3 },
+      { "x": 3.5, "y": 27.47, "d": 3 },
+      { "x": 61.5, "y": 27.47, "d": 3 }
     ],
     "screw": "M2.5"
   },
   "topHeight": 4,
   "bottomHeight": 2,
   "ports": [
-    {
-      "id": "hdmi",
-      "type": "mini-hdmi",
-      "edge": "front",
-      "along": 12.4,
-      "w": 10.85,
-      "protrude": 1
-    },
-    {
-      "id": "usb-c-dp",
-      "type": "usb-c",
-      "edge": "front",
-      "along": 41.42,
-      "w": 9,
-      "protrude": 1
-    },
-    {
-      "id": "usb-c-power",
-      "type": "usb-c",
-      "edge": "front",
-      "along": 53.99,
-      "protrude": 1
-    },
-    {
-      "id": "microsd",
-      "type": "microsd",
-      "edge": "left",
-      "along": 13.87,
-      "z": -2.7,
-      "protrude": 0
-    },
-    {
-      "id": "gpio",
-      "type": "header-2x20",
-      "edge": "top",
-      "x": 32.52,
-      "y": 27.8,
-      "w": 50.8,
-      "d": 5.08,
-      "h": 1,
-      "cut": false
-    },
-    {
-      "id": "wifi-antenna",
-      "type": "antenna",
-      "edge": "top",
-      "x": 63.33,
-      "y": 22.59,
-      "w": 2,
-      "d": 2
-    }
+    { "id": "hdmi", "type": "mini-hdmi", "edge": "front", "along": 12.4, "w": 10.85, "protrude": 1 },
+    { "id": "usb-c-dp", "type": "usb-c", "edge": "front", "along": 41.42, "w": 9, "protrude": 1 },
+    { "id": "usb-c-power", "type": "usb-c", "edge": "front", "along": 53.99, "protrude": 1 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 13.87, "z": -2.7, "protrude": 0 },
+    { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 32.52, "y": 27.8, "w": 50.8, "d": 5.08, "h": 1, "cut": false },
+    { "id": "wifi-antenna", "type": "antenna", "edge": "top", "x": 63.33, "y": 22.59, "w": 2, "d": 2 }
   ],
   "source": "https://drive.google.com/drive/folders/199S7SkbqVDjMpPT7tkcbBX6kmbfnz94r",
   "verified": true

@@ -3,89 +3,26 @@
   "name": "Orange Pi Zero 3",
   "vendor": "Orange Pi",
   "kind": "sbc",
-  "size": {
-    "w": 50,
-    "d": 55,
-    "t": 1.6
-  },
+  "size": { "w": 50, "d": 55, "t": 1.6 },
   "mount": {
     "kind": "holes",
     "holes": [
-      {
-        "x": 3,
-        "y": 3,
-        "d": 2.7
-      },
-      {
-        "x": 47,
-        "y": 3,
-        "d": 2.7
-      },
-      {
-        "x": 3,
-        "y": 52,
-        "d": 2.7
-      },
-      {
-        "x": 47,
-        "y": 52,
-        "d": 2.7
-      }
+      { "x": 3, "y": 3, "d": 2.7 },
+      { "x": 47, "y": 3, "d": 2.7 },
+      { "x": 3, "y": 52, "d": 2.7 },
+      { "x": 47, "y": 52, "d": 2.7 }
     ],
     "screw": "M2.5"
   },
   "topHeight": 14,
   "bottomHeight": 2,
   "ports": [
-    {
-      "id": "usb-c",
-      "type": "usb-c",
-      "edge": "front",
-      "along": 8.5,
-      "protrude": 1
-    },
-    {
-      "id": "hdmi",
-      "type": "micro-hdmi",
-      "edge": "front",
-      "along": 18.5,
-      "protrude": 1
-    },
-    {
-      "id": "ethernet",
-      "type": "rj45",
-      "edge": "left",
-      "along": 38,
-      "w": 16,
-      "protrude": 2.5
-    },
-    {
-      "id": "usb",
-      "type": "usb-a",
-      "edge": "right",
-      "along": 38,
-      "h": 7,
-      "protrude": 2
-    },
-    {
-      "id": "microsd",
-      "type": "microsd",
-      "edge": "back",
-      "along": 25,
-      "z": -2.9,
-      "protrude": 2
-    },
-    {
-      "id": "header-26",
-      "type": "header-1xN",
-      "edge": "top",
-      "x": 25,
-      "y": 51.5,
-      "w": 33,
-      "d": 5,
-      "h": 8.5,
-      "cut": false
-    }
+    { "id": "usb-c", "type": "usb-c", "edge": "front", "along": 8.5, "protrude": 1 },
+    { "id": "hdmi", "type": "micro-hdmi", "edge": "front", "along": 18.5, "protrude": 1 },
+    { "id": "ethernet", "type": "rj45", "edge": "left", "along": 38, "w": 16, "protrude": 2.5 },
+    { "id": "usb", "type": "usb-a", "edge": "right", "along": 38, "h": 7, "protrude": 2 },
+    { "id": "microsd", "type": "microsd", "edge": "back", "along": 25, "z": -2.9, "protrude": 2 },
+    { "id": "header-26", "type": "header-1xN", "edge": "top", "x": 25, "y": 51.5, "w": 33, "d": 5, "h": 8.5, "cut": false }
   ],
   "source": "https://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-Zero-3.html",
   "verified": false

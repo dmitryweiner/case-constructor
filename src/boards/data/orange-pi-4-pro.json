@@ -3,148 +3,33 @@
   "name": "Orange Pi 4 Pro",
   "vendor": "Orange Pi",
   "kind": "sbc",
-  "size": {
-    "w": 89.06,
-    "d": 56,
-    "t": 1.6
-  },
+  "size": { "w": 89.06, "d": 56, "t": 1.6 },
   "mount": {
     "kind": "holes",
     "holes": [
-      {
-        "x": 7.56,
-        "y": 3.5,
-        "d": 2.7
-      },
-      {
-        "x": 65.56,
-        "y": 3.5,
-        "d": 2.7
-      },
-      {
-        "x": 7.56,
-        "y": 52.5,
-        "d": 2.7
-      },
-      {
-        "x": 65.56,
-        "y": 52.5,
-        "d": 2.7
-      }
+      { "x": 7.56, "y": 3.5, "d": 2.7 },
+      { "x": 65.56, "y": 3.5, "d": 2.7 },
+      { "x": 7.56, "y": 52.5, "d": 2.7 },
+      { "x": 65.56, "y": 52.5, "d": 2.7 }
     ],
     "screw": "M2.5"
   },
   "topHeight": 16,
   "bottomHeight": 5,
   "ports": [
-    {
-      "id": "usb-c",
-      "type": "usb-c",
-      "edge": "front",
-      "along": 15.85,
-      "protrude": 1.35
-    },
-    {
-      "id": "hdmi",
-      "type": "hdmi",
-      "edge": "front",
-      "along": 34.82,
-      "w": 14.5,
-      "protrude": 2.4
-    },
-    {
-      "id": "audio",
-      "type": "audio-3.5",
-      "edge": "front",
-      "along": 57.27,
-      "protrude": 2.47
-    },
-    {
-      "id": "ethernet",
-      "type": "rj45",
-      "edge": "right",
-      "along": 10.19,
-      "w": 16.16,
-      "protrude": 2.3
-    },
-    {
-      "id": "usb-3",
-      "type": "usb-a",
-      "edge": "right",
-      "along": 29.1,
-      "w": 13.2,
-      "h": 16,
-      "d": 17.5,
-      "protrude": 2.45
-    },
-    {
-      "id": "usb-2",
-      "type": "usb-a",
-      "edge": "right",
-      "along": 46.95,
-      "w": 14.5,
-      "h": 16,
-      "d": 17.25,
-      "protrude": 2.6
-    },
-    {
-      "id": "power-button",
-      "type": "switch",
-      "edge": "left",
-      "along": 7.93,
-      "w": 6,
-      "protrude": 1.27
-    },
-    {
-      "id": "microsd",
-      "type": "microsd",
-      "edge": "left",
-      "along": 42.6,
-      "z": -3.1,
-      "protrude": 0
-    },
-    {
-      "id": "gpio",
-      "type": "header-2x20",
-      "edge": "top",
-      "x": 36.56,
-      "y": 52.48,
-      "w": 50.8,
-      "d": 5.08,
-      "h": 8.5
-    },
-    {
-      "id": "lcd",
-      "type": "fpc",
-      "edge": "top",
-      "x": 2.95,
-      "y": 27,
-      "w": 4.61,
-      "d": 23.49
-    },
-    {
-      "id": "cam1",
-      "type": "fpc",
-      "edge": "top",
-      "x": 47.03,
-      "y": 11.14,
-      "w": 2.59,
-      "d": 22.2
-    },
-    {
-      "id": "led-1",
-      "type": "led",
-      "edge": "top",
-      "x": 1.78,
-      "y": 13.1
-    },
-    {
-      "id": "led-2",
-      "type": "led",
-      "edge": "top",
-      "x": 1.78,
-      "y": 15.52
-    }
+    { "id": "usb-c", "type": "usb-c", "edge": "front", "along": 15.85, "protrude": 1.35 },
+    { "id": "hdmi", "type": "hdmi", "edge": "front", "along": 34.82, "w": 14.5, "protrude": 2.4 },
+    { "id": "audio", "type": "audio-3.5", "edge": "front", "along": 57.27, "protrude": 2.47 },
+    { "id": "ethernet", "type": "rj45", "edge": "right", "along": 10.19, "w": 16.16, "protrude": 2.3 },
+    { "id": "usb-3", "type": "usb-a", "edge": "right", "along": 29.1, "w": 13.2, "h": 16, "d": 17.5, "protrude": 2.45 },
+    { "id": "usb-2", "type": "usb-a", "edge": "right", "along": 46.95, "w": 14.5, "h": 16, "d": 17.25, "protrude": 2.6 },
+    { "id": "power-button", "type": "switch", "edge": "left", "along": 7.93, "w": 6, "protrude": 1.27 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 42.6, "z": -3.1, "protrude": 0 },
+    { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 36.56, "y": 52.48, "w": 50.8, "d": 5.08, "h": 8.5 },
+    { "id": "lcd", "type": "fpc", "edge": "top", "x": 2.95, "y": 27, "w": 4.61, "d": 23.49 },
+    { "id": "cam1", "type": "fpc", "edge": "top", "x": 47.03, "y": 11.14, "w": 2.59, "d": 22.2 },
+    { "id": "led-1", "type": "led", "edge": "top", "x": 1.78, "y": 13.1 },
+    { "id": "led-2", "type": "led", "edge": "top", "x": 1.78, "y": 15.52 }
   ],
   "source": "https://drive.google.com/drive/folders/1eb7S3xMriPHYjE6dfLSS5q-cSjVXvbQw",
   "verified": false

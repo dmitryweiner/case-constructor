@@ -3,182 +3,35 @@
   "name": "Orange Pi 5 Plus",
   "vendor": "Orange Pi",
   "kind": "sbc",
-  "size": {
-    "w": 100,
-    "d": 75,
-    "t": 1.6
-  },
+  "size": { "w": 100, "d": 75, "t": 1.6 },
   "mount": {
     "kind": "holes",
     "holes": [
-      {
-        "x": 3.11,
-        "y": 6.16,
-        "d": 3.2
-      },
-      {
-        "x": 90.19,
-        "y": 6.16,
-        "d": 3.2
-      },
-      {
-        "x": 3.11,
-        "y": 55.37,
-        "d": 3.2
-      },
-      {
-        "x": 90.19,
-        "y": 55.37,
-        "d": 3.2
-      }
+      { "x": 3.11, "y": 6.16, "d": 3.2 },
+      { "x": 90.19, "y": 6.16, "d": 3.2 },
+      { "x": 3.11, "y": 55.37, "d": 3.2 },
+      { "x": 90.19, "y": 55.37, "d": 3.2 }
     ],
     "screw": "M3"
   },
   "topHeight": 16.7,
   "bottomHeight": 8.3,
   "ports": [
-    {
-      "id": "usb-c-power",
-      "type": "usb-c",
-      "edge": "back",
-      "along": 4.88,
-      "w": 4.52,
-      "h": 9.93,
-      "d": 15.6,
-      "protrude": 5.25
-    },
-    {
-      "id": "ethernet",
-      "type": "rj45",
-      "edge": "back",
-      "along": 25.89,
-      "w": 34.1,
-      "h": 15.5,
-      "d": 25.8,
-      "protrude": 4.05
-    },
-    {
-      "id": "hdmi-out-1",
-      "type": "hdmi",
-      "edge": "back",
-      "along": 49.7,
-      "w": 7.75,
-      "h": 16.66,
-      "d": 24.4,
-      "protrude": 4.97
-    },
-    {
-      "id": "hdmi-out-2",
-      "type": "hdmi",
-      "edge": "back",
-      "along": 62.39,
-      "w": 7.75,
-      "h": 16.66,
-      "d": 24.4,
-      "protrude": 4.97
-    },
-    {
-      "id": "hdmi-in",
-      "type": "hdmi",
-      "edge": "back",
-      "along": 75.09,
-      "w": 7.75,
-      "h": 16.66,
-      "d": 24.4,
-      "protrude": 4.97
-    },
-    {
-      "id": "usb-2",
-      "type": "usb-a",
-      "edge": "back",
-      "along": 90.45,
-      "w": 14.5,
-      "h": 16.2,
-      "d": 17.5,
-      "protrude": 3.88
-    },
-    {
-      "id": "maskrom",
-      "type": "switch",
-      "edge": "front",
-      "along": 8.15,
-      "w": 4.6,
-      "h": 4.6,
-      "protrude": 1.1,
-      "cut": false
-    },
-    {
-      "id": "usb-c-dp",
-      "type": "usb-c",
-      "edge": "front",
-      "along": 16.05,
-      "h": 3.5,
-      "d": 9.9,
-      "protrude": 2.51
-    },
-    {
-      "id": "usb-3",
-      "type": "usb-a",
-      "edge": "front",
-      "along": 31.04,
-      "w": 14.5,
-      "h": 16.4,
-      "d": 18.3,
-      "protrude": 0.97
-    },
-    {
-      "id": "power-button",
-      "type": "switch",
-      "edge": "front",
-      "along": 44.4,
-      "w": 4.6,
-      "h": 4.6,
-      "protrude": 0.75
-    },
-    {
-      "id": "ir",
-      "type": "generic",
-      "edge": "front",
-      "along": 53.6,
-      "w": 6,
-      "h": 8.35,
-      "d": 6.5,
-      "protrude": 1.5,
-      "cut": true
-    },
-    {
-      "id": "audio",
-      "type": "audio-3.5",
-      "edge": "front",
-      "along": 78.97,
-      "protrude": 4.25
-    },
-    {
-      "id": "microsd",
-      "type": "microsd",
-      "edge": "front",
-      "along": 78.55,
-      "h": 2.1,
-      "z": -3.7,
-      "protrude": 0
-    },
-    {
-      "id": "gpio",
-      "type": "header-2x20",
-      "edge": "top",
-      "x": 96.8,
-      "y": 29.12,
-      "w": 5.08,
-      "d": 50.8,
-      "h": 10
-    },
-    {
-      "id": "led",
-      "type": "led",
-      "edge": "top",
-      "x": 70,
-      "y": 1.53
-    }
+    { "id": "usb-c-power", "type": "usb-c", "edge": "back", "along": 4.88, "w": 4.52, "h": 9.93, "d": 15.6, "protrude": 5.25 },
+    { "id": "ethernet", "type": "rj45", "edge": "back", "along": 25.89, "w": 34.1, "h": 15.5, "d": 25.8, "protrude": 4.05 },
+    { "id": "hdmi-out-1", "type": "hdmi", "edge": "back", "along": 49.7, "w": 7.75, "h": 16.66, "d": 24.4, "protrude": 4.97 },
+    { "id": "hdmi-out-2", "type": "hdmi", "edge": "back", "along": 62.39, "w": 7.75, "h": 16.66, "d": 24.4, "protrude": 4.97 },
+    { "id": "hdmi-in", "type": "hdmi", "edge": "back", "along": 75.09, "w": 7.75, "h": 16.66, "d": 24.4, "protrude": 4.97 },
+    { "id": "usb-2", "type": "usb-a", "edge": "back", "along": 90.45, "w": 14.5, "h": 16.2, "d": 17.5, "protrude": 3.88 },
+    { "id": "maskrom", "type": "switch", "edge": "front", "along": 8.15, "w": 4.6, "h": 4.6, "protrude": 1.1, "cut": false },
+    { "id": "usb-c-dp", "type": "usb-c", "edge": "front", "along": 16.05, "h": 3.5, "d": 9.9, "protrude": 2.51 },
+    { "id": "usb-3", "type": "usb-a", "edge": "front", "along": 31.04, "w": 14.5, "h": 16.4, "d": 18.3, "protrude": 0.97 },
+    { "id": "power-button", "type": "switch", "edge": "front", "along": 44.4, "w": 4.6, "h": 4.6, "protrude": 0.75 },
+    { "id": "ir", "type": "generic", "edge": "front", "along": 53.6, "w": 6, "h": 8.35, "d": 6.5, "protrude": 1.5, "cut": true },
+    { "id": "audio", "type": "audio-3.5", "edge": "front", "along": 78.97, "protrude": 4.25 },
+    { "id": "microsd", "type": "microsd", "edge": "front", "along": 78.55, "h": 2.1, "z": -3.7, "protrude": 0 },
+    { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 96.8, "y": 29.12, "w": 5.08, "d": 50.8, "h": 10 },
+    { "id": "led", "type": "led", "edge": "top", "x": 70, "y": 1.53 }
   ],
   "source": "https://drive.google.com/file/d/1rW0tlabPHQ-_rhFcBBpHRGK9TQmT1JEP/view",
   "verified": true

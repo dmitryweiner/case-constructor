@@ -113,6 +113,11 @@ standard library and `pdftocairo` (poppler) only.
 | KiCad `.kicad_pcb` | `node scripts/board.mjs --kicad f.kicad_pcb` | the same; an outline drawn inside a footprint counts |
 | A photo only | estimate, keep `"verified": false`, say so in the entry's commit | |
 
+After writing or changing a file, `node scripts/board.mjs --format` puts it
+in the catalog layout (one port, hole and variant per line; the test fails
+otherwise). Edit entries as text with that layout in mind, not with
+throw-away scripts.
+
 ## 3. Register
 
 Import the file in `src/boards/catalog.ts` and add it to `RAW_BOARDS`, in

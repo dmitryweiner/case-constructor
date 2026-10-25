@@ -3,91 +3,26 @@
   "name": "Radxa ZERO 3W",
   "vendor": "Radxa",
   "kind": "sbc",
-  "size": {
-    "w": 65,
-    "d": 30,
-    "t": 1.2
-  },
+  "size": { "w": 65, "d": 30, "t": 1.2 },
   "mount": {
     "kind": "holes",
     "holes": [
-      {
-        "x": 3.5,
-        "y": 3.5,
-        "d": 2.7
-      },
-      {
-        "x": 61.5,
-        "y": 3.5,
-        "d": 2.7
-      },
-      {
-        "x": 3.5,
-        "y": 26.5,
-        "d": 2.7
-      },
-      {
-        "x": 61.5,
-        "y": 26.5,
-        "d": 2.7
-      }
+      { "x": 3.5, "y": 3.5, "d": 2.7 },
+      { "x": 61.5, "y": 3.5, "d": 2.7 },
+      { "x": 3.5, "y": 26.5, "d": 2.7 },
+      { "x": 61.5, "y": 26.5, "d": 2.7 }
     ],
     "screw": "M2.5"
   },
   "topHeight": 4,
   "bottomHeight": 1.5,
   "ports": [
-    {
-      "id": "hdmi",
-      "type": "micro-hdmi",
-      "edge": "front",
-      "along": 12.4,
-      "protrude": 0.5
-    },
-    {
-      "id": "usb-c-otg",
-      "type": "usb-c",
-      "edge": "front",
-      "along": 41.4,
-      "protrude": 0.8
-    },
-    {
-      "id": "usb-c-power",
-      "type": "usb-c",
-      "edge": "front",
-      "along": 54,
-      "protrude": 0.8
-    },
-    {
-      "id": "microsd",
-      "type": "microsd",
-      "edge": "left",
-      "along": 16.9,
-      "z": -2.7,
-      "protrude": 2
-    },
-    {
-      "id": "camera",
-      "type": "fpc",
-      "edge": "right",
-      "along": 15,
-      "w": 17,
-      "h": 1.5,
-      "d": 4,
-      "protrude": 0,
-      "cut": false
-    },
-    {
-      "id": "gpio",
-      "type": "header-2x20",
-      "edge": "top",
-      "x": 32.5,
-      "y": 26.5,
-      "w": 51,
-      "d": 5,
-      "h": 1,
-      "cut": false
-    }
+    { "id": "hdmi", "type": "micro-hdmi", "edge": "front", "along": 12.4, "protrude": 0.5 },
+    { "id": "usb-c-otg", "type": "usb-c", "edge": "front", "along": 41.4, "protrude": 0.8 },
+    { "id": "usb-c-power", "type": "usb-c", "edge": "front", "along": 54, "protrude": 0.8 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 16.9, "z": -2.7, "protrude": 2 },
+    { "id": "camera", "type": "fpc", "edge": "right", "along": 15, "w": 17, "h": 1.5, "d": 4, "protrude": 0, "cut": false },
+    { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 32.5, "y": 26.5, "w": 51, "d": 5, "h": 1, "cut": false }
   ],
   "source": "https://dl.radxa.com/zero3/docs/hw/3w/radxa_zero_3w_2d_dxf.zip",
   "verified": false

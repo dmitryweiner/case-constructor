@@ -6,6 +6,7 @@
 //   node scripts/board.mjs --svg <id> --out shots/x.svg
 //   node scripts/board.mjs --svg <id> --png             # also a PNG next to it (rendered by Playwright)
 //   node scripts/board.mjs --svg <id> --variant <v>     # one variant of a family → shots/<id>-<v>.svg
+//   node scripts/board.mjs --format                      # rewrite every catalog file in the one layout
 //   node scripts/board.mjs --brd board.brd               # footprints of an Eagle board, board frame
 //   node scripts/board.mjs --kicad board.kicad_pcb       # the same for KiCad
 //     --match 'SW|LED|USB'   only footprints whose name, value or package matches
@@ -13,12 +14,30 @@
 //     --flip                 the product's top is the file's bottom (mirror x, swap sides)
 
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { parseArgs } from './lib/harness.mjs';
 import { readBrd, readKicad, turnBoard } from './lib/pcb.mjs';
+import { formatBoard } from './lib/boardJson.mjs';
 
 const flags = parseArgs(process.argv.slice(2), ['svg', 'out', 'variant', 'brd', 'kicad', 'match', 'rotate']);
+
+// --format: every catalog file in the layout of scripts/lib/boardJson.mjs (values untouched)
+if (flags.has('format')) {
+  const dir = 'src/boards/data';
+  let changed = 0;
+  for (const name of readdirSync(dir).filter((f) => f.endsWith('.json')).sort()) {
+    const path = `${dir}/${name}`;
+    const text = readFileSync(path, 'utf8');
+    const formatted = formatBoard(JSON.parse(text));
+    if (formatted === text) continue;
+    writeFileSync(path, formatted);
+    changed++;
+    console.log(`formatted ${name}`);
+  }
+  console.log(`${changed} file(s) changed`);
+  process.exit(0);
+}
 
 // --brd / --kicad: a layout file's footprints in the board frame (scripts/lib/pcb.mjs), no vitest needed
 if (flags.has('brd') || flags.has('kicad')) {

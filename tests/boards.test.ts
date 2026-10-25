@@ -5,6 +5,10 @@ import { RAW_BOARDS, CATALOG, catalogBoard } from '../src/boards/catalog';
 import type { PortType } from '../src/boards/schema';
 import { PORT_TYPES, insidePolygon, isPortType, onFace, resolveVariant, sanitizeBoard, sanitizeOutline, sanitizePort } from '../src/boards/schema';
 import { defaultPlacement, sanitizePlacement, portCut, boardOf, entryOf, minBoardZ, placementMinZ, pinsDown } from '../src/boards/placement';
+import { readFileSync, readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { formatBoard } from '../scripts/lib/boardJson.mjs';
 import { garbageLike, rng } from './helpers';
 
 function rec(x: unknown): Record<string, unknown> {
@@ -87,6 +91,16 @@ describe('board catalog', () => {
           expect(port.along + port.w / 2, where).toBeLessThanOrEqual(length + 0.5);
         }
       }
+    }
+  });
+
+  it('every file is in the catalog layout (node scripts/board.mjs --format)', () => {
+    const dir = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'boards', 'data');
+    const files = readdirSync(dir).filter((f) => f.endsWith('.json'));
+    expect(files.length).toBe(RAW_BOARDS.length);
+    for (const name of files) {
+      const text = readFileSync(join(dir, name), 'utf8');
+      expect(text, `${name}: run node scripts/board.mjs --format`).toBe(formatBoard(JSON.parse(text)));
     }
   });
 

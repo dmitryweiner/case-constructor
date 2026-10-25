@@ -3,108 +3,28 @@
   "name": "Repka Pi 4",
   "vendor": "Repka Pi",
   "kind": "sbc",
-  "size": {
-    "w": 85,
-    "d": 56,
-    "t": 1.6
-  },
+  "size": { "w": 85, "d": 56, "t": 1.6 },
   "mount": {
     "kind": "holes",
     "holes": [
-      {
-        "x": 3.5,
-        "y": 3.5,
-        "d": 2.7
-      },
-      {
-        "x": 61.5,
-        "y": 3.5,
-        "d": 2.7
-      },
-      {
-        "x": 3.5,
-        "y": 52.5,
-        "d": 2.7
-      },
-      {
-        "x": 61.5,
-        "y": 52.5,
-        "d": 2.7
-      }
+      { "x": 3.5, "y": 3.5, "d": 2.7 },
+      { "x": 61.5, "y": 3.5, "d": 2.7 },
+      { "x": 3.5, "y": 52.5, "d": 2.7 },
+      { "x": 61.5, "y": 52.5, "d": 2.7 }
     ],
     "screw": "M2.5"
   },
   "topHeight": 16,
   "bottomHeight": 2,
   "ports": [
-    {
-      "id": "usb-c",
-      "type": "usb-c",
-      "edge": "front",
-      "along": 11.2,
-      "protrude": 1.3
-    },
-    {
-      "id": "hdmi",
-      "type": "hdmi",
-      "edge": "front",
-      "along": 32,
-      "h": 6.5,
-      "protrude": 1
-    },
-    {
-      "id": "audio",
-      "type": "audio-3.5",
-      "edge": "front",
-      "along": 54,
-      "protrude": 2.5
-    },
-    {
-      "id": "ethernet",
-      "type": "rj45",
-      "edge": "right",
-      "along": 45.75,
-      "w": 15.5,
-      "protrude": 2.9
-    },
-    {
-      "id": "usb-1",
-      "type": "usb-a",
-      "edge": "right",
-      "along": 9,
-      "w": 13.2,
-      "h": 16,
-      "d": 17.5,
-      "protrude": 2.3
-    },
-    {
-      "id": "usb-2",
-      "type": "usb-a",
-      "edge": "right",
-      "along": 27,
-      "w": 13.2,
-      "h": 16,
-      "d": 17.5,
-      "protrude": 2.3
-    },
-    {
-      "id": "microsd",
-      "type": "microsd",
-      "edge": "left",
-      "along": 28,
-      "z": -2.9,
-      "protrude": 2
-    },
-    {
-      "id": "gpio",
-      "type": "header-2x20",
-      "edge": "top",
-      "x": 32.5,
-      "y": 52.5,
-      "w": 51,
-      "d": 5,
-      "h": 8.5
-    }
+    { "id": "usb-c", "type": "usb-c", "edge": "front", "along": 11.2, "protrude": 1.3 },
+    { "id": "hdmi", "type": "hdmi", "edge": "front", "along": 32, "h": 6.5, "protrude": 1 },
+    { "id": "audio", "type": "audio-3.5", "edge": "front", "along": 54, "protrude": 2.5 },
+    { "id": "ethernet", "type": "rj45", "edge": "right", "along": 45.75, "w": 15.5, "protrude": 2.9 },
+    { "id": "usb-1", "type": "usb-a", "edge": "right", "along": 9, "w": 13.2, "h": 16, "d": 17.5, "protrude": 2.3 },
+    { "id": "usb-2", "type": "usb-a", "edge": "right", "along": 27, "w": 13.2, "h": 16, "d": 17.5, "protrude": 2.3 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 28, "z": -2.9, "protrude": 2 },
+    { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 32.5, "y": 52.5, "w": 51, "d": 5, "h": 8.5 }
   ],
   "source": "https://repka-pi.ru/",
   "verified": false

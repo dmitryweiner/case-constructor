@@ -85,7 +85,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   and every variant (readable list of problems; `npm run boards:check` adds
   the vitest suite), `--svg <id> [--variant <v>] [--png]` draws the board's
   top view with holes, ports, the outline and their coordinates to compare
-  against the drawing.
+  against the drawing. `--format` rewrites every catalog file in the one
+  layout (`scripts/lib/boardJson.mjs`; `tests/boards.test.ts` fails on any
+  other) — edit entries as text, no regex scripts.
 - `scripts/dxf.mjs <file.dxf|file.pdf>` — extents and circles of a vendor
   DXF or vector PDF (through `pdftocairo -svg`; `--page`, `--fit w,d` or
   `--scale` against a known size) — hole candidates, relative to the

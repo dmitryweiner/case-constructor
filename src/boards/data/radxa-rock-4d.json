@@ -3,201 +3,38 @@
   "name": "Radxa ROCK 4D",
   "vendor": "Radxa",
   "kind": "sbc",
-  "size": {
-    "w": 85,
-    "d": 56,
-    "t": 1.6
-  },
+  "size": { "w": 85, "d": 56, "t": 1.6 },
   "mount": {
     "kind": "holes",
     "holes": [
-      {
-        "x": 3.5,
-        "y": 3.5,
-        "d": 2.7
-      },
-      {
-        "x": 61.5,
-        "y": 3.5,
-        "d": 2.7
-      },
-      {
-        "x": 3.5,
-        "y": 52.5,
-        "d": 2.7
-      },
-      {
-        "x": 61.5,
-        "y": 52.5,
-        "d": 2.7
-      }
+      { "x": 3.5, "y": 3.5, "d": 2.7 },
+      { "x": 61.5, "y": 3.5, "d": 2.7 },
+      { "x": 3.5, "y": 52.5, "d": 2.7 },
+      { "x": 61.5, "y": 52.5, "d": 2.7 }
     ],
     "screw": "M2.5"
   },
   "topHeight": 16,
   "bottomHeight": 4,
   "ports": [
-    {
-      "id": "usb-c",
-      "type": "usb-c",
-      "edge": "front",
-      "along": 11.3,
-      "w": 9.1,
-      "protrude": 0.8
-    },
-    {
-      "id": "hdmi",
-      "type": "hdmi",
-      "edge": "front",
-      "along": 32,
-      "w": 14.6,
-      "d": 11.8,
-      "protrude": 3.6
-    },
-    {
-      "id": "audio",
-      "type": "audio-3.5",
-      "edge": "front",
-      "along": 53.65,
-      "w": 7,
-      "d": 14.8,
-      "protrude": 2.6
-    },
-    {
-      "id": "ethernet",
-      "type": "rj45",
-      "edge": "right",
-      "along": 10.15,
-      "w": 16.2,
-      "d": 21.5,
-      "protrude": 2.15
-    },
-    {
-      "id": "usb3",
-      "type": "usb-a",
-      "edge": "right",
-      "along": 28.6,
-      "w": 13.3,
-      "h": 16,
-      "d": 17.4,
-      "protrude": 1.9
-    },
-    {
-      "id": "usb2",
-      "type": "usb-a",
-      "edge": "right",
-      "along": 47,
-      "w": 13,
-      "h": 16,
-      "d": 17.1,
-      "protrude": 2
-    },
-    {
-      "id": "maskrom-button",
-      "type": "switch",
-      "edge": "back",
-      "along": 67.1,
-      "w": 5.2,
-      "h": 3.5,
-      "d": 4,
-      "protrude": 0.45
-    },
-    {
-      "id": "power-button",
-      "type": "switch",
-      "edge": "left",
-      "along": 15.65,
-      "w": 5.2,
-      "h": 3.5,
-      "d": 4,
-      "protrude": 0.45
-    },
-    {
-      "id": "microsd",
-      "type": "microsd",
-      "edge": "left",
-      "along": 28,
-      "z": -3.1,
-      "protrude": 0
-    },
-    {
-      "id": "gpio",
-      "type": "header-2x20",
-      "edge": "top",
-      "x": 32.6,
-      "y": 52.15,
-      "w": 51,
-      "d": 5.2,
-      "h": 8.5
-    },
-    {
-      "id": "poe",
-      "type": "header-2xN",
-      "edge": "top",
-      "x": 61.55,
-      "y": 46.3,
-      "w": 5.1,
-      "d": 5.1,
-      "h": 8.5
-    },
-    {
-      "id": "fan",
-      "type": "generic",
-      "edge": "top",
-      "x": 62.3,
-      "y": 11.9,
-      "w": 5.5,
-      "d": 8.8,
-      "h": 4
-    },
-    {
-      "id": "csi",
-      "type": "fpc",
-      "edge": "top",
-      "x": 44.9,
-      "y": 10.5,
-      "w": 5.9,
-      "d": 20.9
-    },
-    {
-      "id": "pcie",
-      "type": "fpc",
-      "edge": "top",
-      "x": 2.3,
-      "y": 29,
-      "w": 4.5,
-      "d": 13.9
-    },
-    {
-      "id": "antenna-1",
-      "type": "antenna",
-      "edge": "top",
-      "x": 1.9,
-      "y": 40.5
-    },
-    {
-      "id": "antenna-2",
-      "type": "antenna",
-      "edge": "top",
-      "x": 1.9,
-      "y": 44.7
-    },
-    {
-      "id": "user-led",
-      "type": "led",
-      "edge": "top",
-      "x": 1,
-      "y": 7.9,
-      "d": 1.6
-    },
-    {
-      "id": "pwr-led",
-      "type": "led",
-      "edge": "top",
-      "x": 1,
-      "y": 11.45,
-      "d": 1.6
-    }
+    { "id": "usb-c", "type": "usb-c", "edge": "front", "along": 11.3, "w": 9.1, "protrude": 0.8 },
+    { "id": "hdmi", "type": "hdmi", "edge": "front", "along": 32, "w": 14.6, "d": 11.8, "protrude": 3.6 },
+    { "id": "audio", "type": "audio-3.5", "edge": "front", "along": 53.65, "w": 7, "d": 14.8, "protrude": 2.6 },
+    { "id": "ethernet", "type": "rj45", "edge": "right", "along": 10.15, "w": 16.2, "d": 21.5, "protrude": 2.15 },
+    { "id": "usb3", "type": "usb-a", "edge": "right", "along": 28.6, "w": 13.3, "h": 16, "d": 17.4, "protrude": 1.9 },
+    { "id": "usb2", "type": "usb-a", "edge": "right", "along": 47, "w": 13, "h": 16, "d": 17.1, "protrude": 2 },
+    { "id": "maskrom-button", "type": "switch", "edge": "back", "along": 67.1, "w": 5.2, "h": 3.5, "d": 4, "protrude": 0.45 },
+    { "id": "power-button", "type": "switch", "edge": "left", "along": 15.65, "w": 5.2, "h": 3.5, "d": 4, "protrude": 0.45 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 28, "z": -3.1, "protrude": 0 },
+    { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 32.6, "y": 52.15, "w": 51, "d": 5.2, "h": 8.5 },
+    { "id": "poe", "type": "header-2xN", "edge": "top", "x": 61.55, "y": 46.3, "w": 5.1, "d": 5.1, "h": 8.5 },
+    { "id": "fan", "type": "generic", "edge": "top", "x": 62.3, "y": 11.9, "w": 5.5, "d": 8.8, "h": 4 },
+    { "id": "csi", "type": "fpc", "edge": "top", "x": 44.9, "y": 10.5, "w": 5.9, "d": 20.9 },
+    { "id": "pcie", "type": "fpc", "edge": "top", "x": 2.3, "y": 29, "w": 4.5, "d": 13.9 },
+    { "id": "antenna-1", "type": "antenna", "edge": "top", "x": 1.9, "y": 40.5 },
+    { "id": "antenna-2", "type": "antenna", "edge": "top", "x": 1.9, "y": 44.7 },
+    { "id": "user-led", "type": "led", "edge": "top", "x": 1, "y": 7.9, "d": 1.6 },
+    { "id": "pwr-led", "type": "led", "edge": "top", "x": 1, "y": 11.45, "d": 1.6 }
   ],
   "source": "https://dl.radxa.com/rock4/4d/docs/hw/Radxa_ROCK_4D_2D_DXF_V1.11_20250328.zip",
   "verified": true

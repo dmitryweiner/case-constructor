@@ -3,106 +3,28 @@
   "name": "Orange Pi 5",
   "vendor": "Orange Pi",
   "kind": "sbc",
-  "size": {
-    "w": 100,
-    "d": 62,
-    "t": 1.6
-  },
+  "size": { "w": 100, "d": 62, "t": 1.6 },
   "mount": {
     "kind": "holes",
     "holes": [
-      {
-        "x": 3.5,
-        "y": 3.5,
-        "d": 2.7
-      },
-      {
-        "x": 96.5,
-        "y": 3.5,
-        "d": 2.7
-      },
-      {
-        "x": 3.5,
-        "y": 58.5,
-        "d": 2.7
-      },
-      {
-        "x": 96.5,
-        "y": 58.5,
-        "d": 2.7
-      }
+      { "x": 3.5, "y": 3.5, "d": 2.7 },
+      { "x": 96.5, "y": 3.5, "d": 2.7 },
+      { "x": 3.5, "y": 58.5, "d": 2.7 },
+      { "x": 96.5, "y": 58.5, "d": 2.7 }
     ],
     "screw": "M2.5"
   },
   "topHeight": 16,
   "bottomHeight": 4,
   "ports": [
-    {
-      "id": "usb-c-power",
-      "type": "usb-c",
-      "edge": "front",
-      "along": 9,
-      "protrude": 1
-    },
-    {
-      "id": "usb-c",
-      "type": "usb-c",
-      "edge": "front",
-      "along": 20,
-      "protrude": 1
-    },
-    {
-      "id": "hdmi",
-      "type": "hdmi",
-      "edge": "front",
-      "along": 35,
-      "h": 6.5,
-      "protrude": 1
-    },
-    {
-      "id": "audio",
-      "type": "audio-3.5",
-      "edge": "front",
-      "along": 50,
-      "protrude": 2.5
-    },
-    {
-      "id": "ethernet",
-      "type": "rj45",
-      "edge": "front",
-      "along": 88,
-      "w": 16,
-      "protrude": 2.5
-    },
-    {
-      "id": "usb-2",
-      "type": "usb-a",
-      "edge": "front",
-      "along": 70,
-      "w": 13.2,
-      "h": 16,
-      "d": 17.5,
-      "protrude": 2.3
-    },
-    {
-      "id": "microsd",
-      "type": "microsd",
-      "edge": "left",
-      "along": 31,
-      "z": -2.9,
-      "protrude": 2
-    },
-    {
-      "id": "header-26",
-      "type": "header-1xN",
-      "edge": "top",
-      "x": 50,
-      "y": 58.5,
-      "w": 33,
-      "d": 5,
-      "h": 8.5,
-      "cut": true
-    }
+    { "id": "usb-c-power", "type": "usb-c", "edge": "front", "along": 9, "protrude": 1 },
+    { "id": "usb-c", "type": "usb-c", "edge": "front", "along": 20, "protrude": 1 },
+    { "id": "hdmi", "type": "hdmi", "edge": "front", "along": 35, "h": 6.5, "protrude": 1 },
+    { "id": "audio", "type": "audio-3.5", "edge": "front", "along": 50, "protrude": 2.5 },
+    { "id": "ethernet", "type": "rj45", "edge": "front", "along": 88, "w": 16, "protrude": 2.5 },
+    { "id": "usb-2", "type": "usb-a", "edge": "front", "along": 70, "w": 13.2, "h": 16, "d": 17.5, "protrude": 2.3 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 31, "z": -2.9, "protrude": 2 },
+    { "id": "header-26", "type": "header-1xN", "edge": "top", "x": 50, "y": 58.5, "w": 33, "d": 5, "h": 8.5, "cut": true }
   ],
   "source": "https://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-5.html",
   "verified": false
