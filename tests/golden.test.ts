@@ -172,6 +172,10 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     boards: [{ board: 'battery', battery: { kind: 'pack', pack: { w: 50, d: 34, h: 6 }, press: -1 }, z: 3, rot: 90, mount: { size: 'M2.5', hole: 'nut' } }],
   }),
+  'holder-bh2aaa-beside-pi': sanitizeState({
+    ...defaultState(),
+    boards: [defaultState().boards[0], { board: 'mpd-bh2aaa-w', x: 0, y: 70 }],
+  }),
   // R3: the head seat set by the user (plans/PLAN-IMPROVEMENTS-2026-10-25.md)
   'countersunk-head-6.5': sanitizeState({
     ...defaultState(),

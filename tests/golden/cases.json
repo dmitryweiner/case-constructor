@@ -617,6 +617,26 @@
       ]
     }
   },
+  "holder-bh2aaa-beside-pi": {
+    "body": {
+      "triangles": 2640,
+      "volume": 37968.39,
+      "extents": [
+        97.9,
+        105.52,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 1916,
+      "volume": 20838.43,
+      "extents": [
+        97.9,
+        105.52,
+        5
+      ]
+    }
+  },
   "countersunk-head-6.5": {
     "body": {
       "triangles": 3580,

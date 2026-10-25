@@ -141,6 +141,7 @@ export const he: Record<Key, string> = {
   'board.variant.hint': 'ללוחות מאותה משפחה אותו קו מתאר; הדגם קובע היכן הכפתורים והרכיבים שלו',
   'board.rot': 'סיבוב',
   'picker.batteries': "סוללות",
+  'picker.holders': "מחזיקי סוללות",
   'battery.kind': "סוללה",
   'battery.kind.18650': "תאי 18650",
   'battery.kind.21700': "תאי 21700",
@@ -234,6 +235,7 @@ export const he: Record<Key, string> = {
   'port.fpc': 'מחבר סרט',
   'port.antenna': 'מחבר אנטנה',
   'port.generic': 'רכיב',
+  'port.wires': "חוטים",
 
   // --- lid fastening ---
   'lid.screw': 'בורג',

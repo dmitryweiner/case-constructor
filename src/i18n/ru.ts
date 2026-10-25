@@ -140,6 +140,7 @@ export const ru: Record<Key, string> = {
   'board.variant.hint': 'Платы одного семейства имеют общий контур; модель определяет, где её кнопки и детали',
   'board.rot': 'Поворот',
   'picker.batteries': "Аккумуляторы",
+  'picker.holders': "Держатели аккумуляторов",
   'battery.kind': "Аккумулятор",
   'battery.kind.18650': "Элементы 18650",
   'battery.kind.21700': "Элементы 21700",
@@ -233,6 +234,7 @@ export const ru: Record<Key, string> = {
   'port.fpc': 'шлейфовый разъём',
   'port.antenna': 'разъём антенны',
   'port.generic': 'деталь',
+  'port.wires': "провода",
 
   // --- lid fastening ---
   'lid.screw': 'Винт',

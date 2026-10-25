@@ -22,7 +22,8 @@ printing.
   standoffs with tap, heat-set insert or nut holes, or held by grooved rails;
   against any wall with its connectors flush with the case's surface.
 - Batteries — 18650, 21700, AA, AAA cells or a flat LiPo pack — in cradles
-  on the floor under printed clamp bars on screws.
+  on the floor under printed clamp bars on screws, or ready-made holders
+  (MPD, with wire leads) screwed down like a board.
 - Openings for every connector (captioned in the view: a click turns one on
   or off), your own cutouts, ventilation, a fan seat.
 - A lid on any face (the cylinder: top or bottom; the console: any face but

@@ -42,3 +42,12 @@ cylinders, a pack as a block.
 
 The clamps print with the body: turned over, their flat tops on the bed, to
 the right of the other parts — in *Both* and in *Body* (view and STL).
+
+## Ready-made holders
+
+Holders with wire leads, screwed down like a board: the picker lists them
+under *Battery holders* — MPD BH-18650-W (one 18650 cell), BH2AA-W and
+BH4AA-W (two and four AA cells), BH2AAA-W (two AAA cells). They stand on
+standoffs at their own two mounting holes (2-56 in the datasheet; M3 for the
+18650 holder, M2 for the others), and the caption on each end shows where
+the wires leave. No clamp is needed: the holder holds the cells.

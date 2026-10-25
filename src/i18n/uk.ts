@@ -140,6 +140,7 @@ export const uk: Record<Key, string> = {
   'board.variant.hint': 'Плати однієї родини мають спільний контур; модель визначає, де її кнопки й деталі',
   'board.rot': 'Поворот',
   'picker.batteries': "Акумулятори",
+  'picker.holders': "Тримачі акумуляторів",
   'battery.kind': "Акумулятор",
   'battery.kind.18650': "Елементи 18650",
   'battery.kind.21700': "Елементи 21700",
@@ -233,6 +234,7 @@ export const uk: Record<Key, string> = {
   'port.fpc': 'шлейфовий роз’єм',
   'port.antenna': 'роз’єм антени',
   'port.generic': 'деталь',
+  'port.wires': "дроти",
 
   // --- lid fastening ---
   'lid.screw': 'Гвинт',

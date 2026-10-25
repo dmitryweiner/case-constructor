@@ -149,6 +149,7 @@ export const en = {
   'board.variant.hint': 'Boards of one family share the outline; the model decides where its buttons and parts are',
   'board.rot': 'Rotation',
   'picker.batteries': "Batteries",
+  'picker.holders': "Battery holders",
   'battery.kind': "Battery",
   'battery.kind.18650': "18650 cells",
   'battery.kind.21700': "21700 cells",
@@ -242,6 +243,7 @@ export const en = {
   'port.fpc': 'ribbon connector',
   'port.antenna': 'antenna connector',
   'port.generic': 'part',
+  'port.wires': "wire leads",
 
   // --- lid fastening ---
   'lid.screw': 'Screw',

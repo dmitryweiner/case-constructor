@@ -66,6 +66,10 @@ import rakwirelessRak19007 from './data/rakwireless-rak19007.json';
 import seeedXiao from './data/seeed-xiao.json';
 import seeedXiaoEsp32s3Sense from './data/seeed-xiao-esp32s3-sense.json';
 import waveshareZero from './data/waveshare-zero.json';
+import mpdBh18650W from './data/mpd-bh-18650-w.json';
+import mpdBh2aaW from './data/mpd-bh2aa-w.json';
+import mpdBh4aaW from './data/mpd-bh4aa-w.json';
+import mpdBh2aaaW from './data/mpd-bh2aaa-w.json';
 
 /** Raw entries as they are in the files — the tests validate them strictly. */
 export const RAW_BOARDS: readonly unknown[] = [
@@ -130,6 +134,11 @@ export const RAW_BOARDS: readonly unknown[] = [
   seeedXiao,
   seeedXiaoEsp32s3Sense,
   waveshareZero,
+  // battery holders, screwed down like boards (their own group in the picker)
+  mpdBh18650W,
+  mpdBh2aaW,
+  mpdBh4aaW,
+  mpdBh2aaaW,
 ];
 
 export const CATALOG: readonly BoardDef[] = RAW_BOARDS.map((raw) => sanitizeBoard(raw));

@@ -243,3 +243,11 @@ adds a part.
   buttons): the Pi 4 has connectors on two sides, and with one wall only one
   of them could be flush. The layout handles each side on its own anyway.
   New control kind `toggles` (any number pressed).
+- **R8.** A battery is a placement in `state.boards` (`board: 'battery'`)
+  rather than a list of its own: the layout, walls, alignment, arrange and
+  overlap checks take it unchanged, and the Boards card holds it. Its clamp
+  posts take the card's Screw and Hole (the standoffs' drilling, now
+  `postHole`). Holders (R8c) are MPD's wire-lead ones (BH-18650-W, BH2AA-W,
+  BH4AA-W, BH2AAA-W), not Keystone 1042/1043: those solder onto a PCB and
+  have no screw holes. The AA holders' holes along the length are not
+  dimensioned on the drawing (taken as centred): ≈.

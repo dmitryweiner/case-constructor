@@ -67,6 +67,8 @@ export const PORT_TYPES = {
   'fpc': { w: 22, h: 3, d: 3, clearance: 1, shape: 'rect', cut: true, top: true },
   'antenna': { w: 3, h: 1.3, d: 3, clearance: 0.5, shape: 'rect', cut: false, top: true },
   'generic': { w: 5, h: 3, d: 5, clearance: 0.5, shape: 'rect', cut: false, top: true },
+  // a battery holder's wire leads where they leave it: room for the bend, no opening
+  'wires': { w: 4, h: 3, d: 2, clearance: 0.5, shape: 'rect', cut: false, top: false },
 } as const satisfies Record<string, PortType>;
 
 export type PortTypeId = keyof typeof PORT_TYPES;
@@ -178,7 +180,8 @@ export interface BoardDef {
   /** proper noun, never translated; aliases after a slash */
   name: string;
   vendor: string;
-  kind: 'sbc' | 'mcu' | 'battery';
+  /** a battery holder is screwed down like a board; a battery is placed by its spec (boards/battery.ts) */
+  kind: 'sbc' | 'mcu' | 'holder' | 'battery';
   size: { w: number; d: number; t: number };
   /** the PCB's real outline when it is not the rectangle: a simple polygon inside `size`, counter-clockwise */
   outline?: [number, number][];
@@ -453,7 +456,7 @@ export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
     id: str(r.id, fallbackId, 60),
     name: str(r.name, 'Custom board'),
     vendor: str(r.vendor, ''),
-    kind: r.kind === 'sbc' ? 'sbc' : 'mcu',
+    kind: r.kind === 'sbc' || r.kind === 'holder' ? r.kind : 'mcu',
     size: { w, d, t: num(size.t, 0.4, 5, 1.6) },
     ...(outline ? { outline } : {}),
     mount: {

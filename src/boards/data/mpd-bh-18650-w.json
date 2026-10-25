@@ -1,0 +1,23 @@
+{
+  "id": "mpd-bh-18650-w",
+  "name": "MPD BH-18650-W (1 × 18650)",
+  "vendor": "MPD",
+  "kind": "holder",
+  "size": { "w": 77.7, "d": 20.9, "t": 1.5 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 10.68, "y": 10.45, "d": 3.2 },
+      { "x": 66.29, "y": 10.45, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 19.81,
+  "bottomHeight": 0,
+  "ports": [
+    { "id": "wire-minus", "type": "wires", "edge": "left", "along": 10.45, "z": 8, "protrude": 3 },
+    { "id": "wire-plus", "type": "wires", "edge": "right", "along": 10.45, "z": 8, "protrude": 3 }
+  ],
+  "source": "https://memoryprotectiondevices.com/datasheets/BH-18650-W/BH-18650-W-datasheet.pdf",
+  "verified": true
+}

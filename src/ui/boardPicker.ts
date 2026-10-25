@@ -11,7 +11,7 @@ export function renderBoardList(root: HTMLElement, query: string, onPick: (def: 
   root.replaceChildren();
   const needle = query.trim().toLowerCase();
   const matches = CATALOG.filter((def) => !needle
-    || `${def.vendor} ${def.name} ${def.id}`.toLowerCase().includes(needle));
+    || `${def.vendor} ${def.name} ${def.id} ${def.kind === 'holder' ? `${t('picker.holders')} battery` : ''}`.toLowerCase().includes(needle));
   // batteries: one row per kind, the count and size are set on the card
   const batteries = BATTERY_KINDS.filter((kind) => !needle
     || `${t('picker.batteries')} ${t(`battery.kind.${kind}`)} battery ${kind}`.toLowerCase().includes(needle));
@@ -19,10 +19,12 @@ export function renderBoardList(root: HTMLElement, query: string, onPick: (def: 
     root.append(make('p', 'preset-empty', t('picker.none')));
     return;
   }
-  const vendors = [...new Set(matches.map((def) => def.vendor))];
-  for (const vendor of vendors) {
-    root.append(make('p', 'preset-group', vendor));
-    for (const def of matches.filter((item) => item.vendor === vendor)) {
+  // battery holders have a group of their own after the boards, whatever their maker
+  const groupOf = (def: BoardDef): string => (def.kind === 'holder' ? t('picker.holders') : def.vendor);
+  const groups = [...new Set([...matches.filter((def) => def.kind !== 'holder'), ...matches.filter((def) => def.kind === 'holder')].map(groupOf))];
+  for (const group of groups) {
+    root.append(make('p', 'preset-group', group));
+    for (const def of matches.filter((item) => groupOf(item) === group)) {
       const row = make('button', 'picker-row');
       row.type = 'button';
       row.dataset.board = def.id;

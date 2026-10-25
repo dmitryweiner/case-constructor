@@ -221,6 +221,13 @@ await setRange('board1_pack_h', 12);
 await expectWatertight('battery:pack');
 if (await page.locator('#board1_cells').isVisible()) errors.push('[battery] a pack offers a cell count');
 await page.click('#board1_remove');
+// a ready-made holder: its own group in the picker, screwed down like a board
+await page.click('#boardAdd');
+await page.fill('#boardSearch', 'battery');
+if (!(await page.locator('#boardList [data-board="mpd-bh2aa-w"]').count())) errors.push('[holders] "battery" does not find the AA holder');
+await page.click('#boardList [data-board="mpd-bh2aa-w"]');
+await expectWatertight('holders:bh2aa');
+await page.click('#board1_remove');
 label('openings');
 await page.click('#cutAdd');
 await page.click('#cut0_shape_round');
