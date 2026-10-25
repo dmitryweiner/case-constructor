@@ -175,6 +175,8 @@ export const uk: Record<Key, string> = {
   'picker.none': 'Нічого не знайдено.',
   'view.boards': 'Плати',
   'view.boards.title': 'Показувати плати всередині',
+  'view.portNames': "Назви роз’ємів",
+  'view.portNames.title': "Підписувати роз’єми й деталі плат у вигляді; клік по підпису вмикає або вимикає отвір",
   'warn.boardsOverlap': 'Плати {a} і {b} перетинаються.',
   'warn.standoffHitsBoard': 'Стійка плати {a} впирається в плату {b}.',
   'warn.notAgainstWall': "Плата {board} не біля своєї стінки: інша плата відсуває стінку далі. Вирівняйте плати з цього боку.",

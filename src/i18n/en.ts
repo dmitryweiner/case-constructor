@@ -184,6 +184,8 @@ export const en = {
   'picker.none': 'Nothing found.',
   'view.boards': 'Boards',
   'view.boards.title': 'Show the boards inside',
+  'view.portNames': "Connector names",
+  'view.portNames.title': "Name the connectors and parts of the boards in the view; a click on a name turns its opening on or off",
   'warn.boardsOverlap': 'Boards {a} and {b} overlap.',
   'warn.standoffHitsBoard': 'A standoff of board {a} runs into board {b}.',
   'warn.notAgainstWall': "Board {board} is not against its wall: another board takes the wall further out. Align the boards on that side.",

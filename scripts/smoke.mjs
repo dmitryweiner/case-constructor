@@ -177,8 +177,13 @@ else {
   await expectWatertight('captions:undo');
   if (!(await usbCut())) errors.push('[captions] undo did not bring the USB-C opening back');
 }
+await page.uncheck('#viewPortNames');
+await page.waitForTimeout(150);
+if ((await page.evaluate(() => window.__case.captions())).length) errors.push('[captions] names stay with "Connector names" off');
+await page.check('#viewPortNames');
 await page.uncheck('#viewBoards');
 if ((await page.evaluate(() => window.__case.captions())).length) errors.push('[captions] captions stay with the boards hidden');
+if (!(await page.locator('#viewPortNames').isDisabled())) errors.push('[captions] "Connector names" is live with the boards hidden');
 await page.check('#viewBoards');
 // a board against walls: the Pi 4 flush on the front and the right, the case shrinks
 label('walls');

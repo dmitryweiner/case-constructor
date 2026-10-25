@@ -175,6 +175,8 @@ export const ru: Record<Key, string> = {
   'picker.none': 'Ничего не найдено.',
   'view.boards': 'Платы',
   'view.boards.title': 'Показывать платы внутри',
+  'view.portNames': "Названия разъёмов",
+  'view.portNames.title': "Подписывать разъёмы и детали плат в виде; клик по подписи включает или выключает отверстие",
   'warn.boardsOverlap': 'Платы {a} и {b} пересекаются.',
   'warn.standoffHitsBoard': 'Стойка платы {a} упирается в плату {b}.',
   'warn.notAgainstWall': "Плата {board} не у своей стенки: другая плата отодвигает стенку дальше. Выровняйте платы по этой стороне.",

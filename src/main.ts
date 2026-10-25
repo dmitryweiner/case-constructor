@@ -122,6 +122,8 @@ const exportCard = el('exportCard', HTMLElement);
 /** How the case is shown — a view setting, not part of the project. */
 let viewMode: ViewMode = 'exploded';
 const viewXray = el('viewXray', HTMLInputElement);
+const viewPortNames = el('viewPortNames', HTMLInputElement);
+const viewPortNamesLabel = el('viewPortNamesLabel', HTMLLabelElement);
 const langSel = el('langSel', HTMLSelectElement);
 const tabs: Record<ExportMode, HTMLButtonElement> = {
   body: el('tabBody', HTMLButtonElement),
@@ -407,7 +409,7 @@ function drawParts(): void {
     const [ox, oy, oz] = part.offset ?? [0, 0, 0];
     return { ...part, offset: [ox, oy, oz + lift] };
   }) : parts);
-  scene.setCaptions(withBoards ? portCaptions.map((caption) => ({ ...caption, at: [caption.at[0], caption.at[1], caption.at[2] + lift] })) : []);
+  scene.setCaptions(withBoards && viewPortNames.checked ? portCaptions.map((caption) => ({ ...caption, at: [caption.at[0], caption.at[1], caption.at[2] + lift] })) : []);
 }
 
 /**
@@ -470,6 +472,9 @@ function syncView(): void {
   viewBoardsLabel.hidden = parts === 'lid';
   // boards are not printed: the toggle means nothing in the print layout
   viewBoards.disabled = view === 'print';
+  // the names hang over the board ghosts: nothing to name without them
+  viewPortNamesLabel.hidden = parts === 'lid';
+  viewPortNames.disabled = view === 'print' || !viewBoards.checked;
   viewCaption.textContent = describeView(state);
 }
 
@@ -561,6 +566,7 @@ window.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && !boardPicker.hidden) closePicker();
 });
 viewXray.addEventListener('change', () => scene.setXray(viewXray.checked));
+viewPortNames.addEventListener('change', drawParts);
 
 // --- export ---
 

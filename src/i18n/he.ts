@@ -176,6 +176,8 @@ export const he: Record<Key, string> = {
   'picker.none': 'לא נמצא דבר.',
   'view.boards': 'לוחות',
   'view.boards.title': 'הצגת הלוחות שבפנים',
+  'view.portNames': "שמות המחברים",
+  'view.portNames.title': "הצגת שמות המחברים והרכיבים של הלוחות בתצוגה; לחיצה על שם מפעילה או מכבה את הפתח שלו",
   'warn.boardsOverlap': 'הלוחות {a} ו־{b} חופפים.',
   'warn.standoffHitsBoard': 'מעמד של לוח {a} נתקל בלוח {b}.',
   'warn.notAgainstWall': "לוח {board} אינו צמוד לדופן שלו: לוח אחר מרחיק את הדופן. ישרו את הלוחות בצד הזה.",

@@ -7,7 +7,7 @@ A ticked one gets an opening in the case; the defaults come from the part
 type — connectors, headers, displays, ribbon connectors, buttons and LEDs are
 cut, antenna connectors and other parts are not.
 
-With **Boards** on, the view puts a caption with the same name over every
+With **Boards** and **Connector names** on (both are by default), the view puts a caption with the same name over every
 port of the board ghosts (a crossed-out one has no opening), so it is easy to
 tell which line of the list is which connector. A click on a caption turns
 its opening on or off, like its checkbox (undo brings it back); dragging over
