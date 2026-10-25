@@ -10,6 +10,8 @@ import { componentBoxes, extents, havePdftocairo, layerCounts, pdfToSvg, readDxf
 import type { Box, Shape } from '../scripts/lib/drawing.mjs';
 import { readStep } from '../scripts/lib/step.mjs';
 import { readBrd, readKicad, turnBoard } from '../scripts/lib/pcb.mjs';
+import { arcSweep, chainLoops, largestLoop, toOutline } from '../scripts/lib/outline.mjs';
+import { polylines, turned } from '../scripts/lib/drawing.mjs';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures');
 const fixture = (name: string): string => readFileSync(join(FIXTURES, name), 'utf8');
@@ -89,5 +91,60 @@ describe('PCB layouts', () => {
     expect(turned.elements.map((e) => [e.name, e.x, e.y])).toEqual([['K1', 15, 5], ['D1', 5, 20]]);
     const flipped = turnBoard(board, 0, true);
     expect(flipped.elements.map((e) => [e.name, e.x, e.side])).toEqual([['K1', 25, 'bottom'], ['D1', 10, 'top']]);
+  });
+});
+
+describe('outlines', () => {
+  const square: [number, number][][] = [[[0, 0], [10, 0]], [[10, 0], [10, 6]], [[10, 6], [0, 6]], [[0, 6], [0, 0]]];
+
+  it('chains pieces end to end, even where a dimension line starts at a corner', () => {
+    const dimension: [number, number][] = [[10, 6], [14, 6]];
+    const loop = largestLoop(chainLoops([dimension, ...square]));
+    expect(loop && toOutline(loop)).toEqual([[0, 0], [10, 0], [10, 6], [0, 6]]);
+  });
+
+  it('a stroke drawn there and back (closed with Z) is a piece, not a loop', () => {
+    const pieces = square.map(([a, b]) => [a, b, a]);
+    const loop = largestLoop(chainLoops(pieces));
+    expect(loop && toOutline(loop)).toEqual([[0, 0], [10, 0], [10, 6], [0, 6]]);
+  });
+
+  it('corner arcs become a few points; the outline turns counter-clockwise from its lowest point', () => {
+    // a 20 x 10 rounded rectangle, r 2, drawn clockwise
+    const r = 2;
+    const pieces: [number, number][][] = [
+      [[r, 10], [20 - r, 10]], [[20 - r, 10], ...arcSweep([20 - r, 10], [20, 10 - r], -90)],
+      [[20, 10 - r], [20, r]], [[20, r], ...arcSweep([20, r], [20 - r, 0], -90)],
+      [[20 - r, 0], [r, 0]], [[r, 0], ...arcSweep([r, 0], [0, r], -90)],
+      [[0, r], [0, 10 - r]], [[0, 10 - r], ...arcSweep([0, 10 - r], [r, 10], -90)],
+    ];
+    const loop = largestLoop(chainLoops(pieces));
+    const outline = loop ? toOutline(loop) : [];
+    expect(outline[0][1]).toBe(0);
+    let area = 0;
+    outline.forEach(([x0, y0], i) => {
+      const [x1, y1] = outline[(i + 1) % outline.length];
+      area += x0 * y1 - x1 * y0;
+    });
+    expect(area).toBeGreaterThan(0);
+    expect(outline.length).toBeGreaterThan(8);
+    expect(outline.length).toBeLessThanOrEqual(20);
+    for (const [x, y] of outline) {
+      expect(x).toBeGreaterThanOrEqual(0);
+      expect(x).toBeLessThanOrEqual(20);
+      expect(y).toBeGreaterThanOrEqual(0);
+      expect(y).toBeLessThanOrEqual(10);
+    }
+  });
+
+  it('every reader gives its outline: DXF (turned), Eagle, KiCad', () => {
+    const dxf = turned(readDxf(fixture('blocks.dxf')).filter((s) => s.layer === 'OUTLINE'), 90);
+    const loop = largestLoop(chainLoops(polylines(dxf)));
+    const box = extents(dxf);
+    expect(loop && toOutline(loop, box)).toEqual([[0, 0], [20, 0], [20, 30], [0, 30]]);
+    for (const board of [readBrd(fixture('tiny.brd')), readKicad(fixture('tiny.kicad_pcb'))]) {
+      const pcbLoop = largestLoop(chainLoops(board.outlinePieces));
+      expect(pcbLoop && toOutline(pcbLoop)).toEqual([[0, 0], [30, 0], [30, 20], [0, 20]]);
+    }
   });
 });

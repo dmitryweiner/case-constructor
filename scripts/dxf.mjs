@@ -15,6 +15,10 @@
 //   node scripts/dxf.mjs board.pdf [--page 2]           # a vector PDF, through pdftocairo -svg
 //   node scripts/dxf.mjs board.pdf --fit 85,56          # scaled so the extents are 85 mm wide
 //   node scripts/dxf.mjs board.pdf --scale 2            # or by a factor (on top of pt → mm)
+//   node scripts/dxf.mjs board.pdf --flip --rotate 90   # a bottom view, turned: the catalog's top view
+//   node scripts/dxf.mjs board.dxf --outline            # the board's outline as the entry's "outline"
+//                                                       # (the largest closed loop; --eps 0.15 simplifies,
+//                                                       # --tol 0.02 joins pieces whose ends are that close)
 //
 // Coordinates are printed relative to the lower-left corner of the extents
 // of the LINE/ARC/POLYLINE entities (the board outline, usually), which is
@@ -32,12 +36,14 @@ import { readFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { chromium } from 'playwright';
 import { parseArgs } from './lib/harness.mjs';
-import { componentBoxes, extents, layerCounts, pdfToSvg, readDxf, readSvg, scaled } from './lib/drawing.mjs';
+import { componentBoxes, extents, layerCounts, pdfToSvg, polylines, readDxf, readSvg, scaled, turned } from './lib/drawing.mjs';
+import { chainLoops, largestLoop, toOutline } from './lib/outline.mjs';
+import { inline } from './lib/boardJson.mjs';
 
 const file = process.argv[2];
-const flags = parseArgs(process.argv.slice(3), ['png', 'min', 'max', 'layer', 'origin', 'page', 'scale', 'fit']);
+const flags = parseArgs(process.argv.slice(3), ['png', 'min', 'max', 'layer', 'origin', 'page', 'scale', 'fit', 'rotate', 'eps', 'tol']);
 if (!file) {
-  console.error('usage: node scripts/dxf.mjs <file.dxf|file.pdf> [--png out.png] [--min d] [--max d] [--layer name] [--layers] [--boxes] [--origin x,y] [--page n] [--scale k] [--fit w,d]');
+  console.error('usage: node scripts/dxf.mjs <file.dxf|file.pdf> [--png out.png] [--min d] [--max d] [--layer name] [--layers] [--boxes] [--origin x,y] [--page n] [--scale k] [--fit w,d] [--flip] [--rotate deg] [--outline] [--eps mm]');
   process.exit(2);
 }
 
@@ -65,6 +71,13 @@ if (fit) {
   console.log(`fit: × ${k.toFixed(5)} → ${round(after.x1 - after.x0)} × ${round(after.y1 - after.y0)}${d ? ` (asked ${w} × ${d})` : ''}`);
 }
 
+// a bottom view or a turned page: into the catalog's top view before anything is measured
+if (flags.has('flip') || flags.get('rotate')) {
+  const deg = Number(flags.get('rotate') ?? 0);
+  shapes = turned(shapes, deg, flags.has('flip'));
+  all = turned(all, deg, flags.has('flip'));
+}
+
 function round(v) {
   return Math.round(v * 100) / 100;
 }
@@ -81,6 +94,20 @@ if (!Number.isFinite(box.x0)) {
 }
 const { x0, y0, x1, y1 } = box;
 console.log(`${shapes.length} entities; extents ${round(x1 - x0)} × ${round(y1 - y0)} (origin at ${round(x0)}, ${round(y0)})`);
+if (flags.has('outline')) {
+  const loop = largestLoop(chainLoops(polylines(shapes), Number(flags.get('tol') ?? 0.02)));
+  if (!loop) console.log('outline: no closed loop (try --layer, or the drawing draws the outline in pieces that do not meet)');
+  else {
+    // the board frame's origin is the outline's own corner, unless --origin says otherwise
+    const corner = origin ? box : { x0: Math.min(...loop.map(([x]) => x)), y0: Math.min(...loop.map(([, y]) => y)) };
+    const outline = toOutline(loop, corner, Number(flags.get('eps') ?? 0.15));
+    const xs = outline.map(([x]) => x);
+    const ys = outline.map(([, y]) => y);
+    const where = origin ? 'relative to --origin' : `relative to its own corner, at ${round(corner.x0 - box.x0)}, ${round(corner.y0 - box.y0)} in the coordinates above`;
+    console.log(`outline ${round(Math.max(...xs) - Math.min(...xs))} × ${round(Math.max(...ys) - Math.min(...ys))}, ${outline.length} points, ${where}:`);
+    console.log(`"outline": ${inline(outline)},`);
+  }
+}
 const min = Number(flags.get('min') ?? 0);
 const max = Number(flags.get('max') ?? Infinity);
 const circles = shapes.filter((s) => s.kind === 'circle' && 2 * s.r >= min && 2 * s.r <= max)

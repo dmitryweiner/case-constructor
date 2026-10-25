@@ -6,7 +6,7 @@ export interface PcbElement {
   size: { w: number; d: number; cx: number; cy: number } | null;
   nets: string[];
 }
-export interface PcbBoard { outline: { w: number; d: number }; holes: { x: number; y: number; d: number }[]; elements: PcbElement[] }
+export interface PcbBoard { outline: { w: number; d: number }; outlinePieces: [number, number][][]; holes: { x: number; y: number; d: number }[]; elements: PcbElement[] }
 
 export function readBrd(text: string): PcbBoard;
 export function readKicad(text: string): PcbBoard;

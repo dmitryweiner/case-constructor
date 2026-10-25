@@ -18,3 +18,5 @@ export function extents(shapes: Shape[]): Box;
 export function scaled(shapes: Shape[], k: number): Shape[];
 export function shapeBox(shape: Shape): Box;
 export function componentBoxes(shapes: Shape[], origin?: { x0: number; y0: number }): (Box & { name: string })[];
+export function turned(shapes: Shape[], deg?: number, flip?: boolean): Shape[];
+export function polylines(shapes: Shape[]): [number, number][][];

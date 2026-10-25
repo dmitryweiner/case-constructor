@@ -106,10 +106,10 @@ standard library and `pdftocairo` (poppler) only.
 
 | The vendor gives | Tool | Notes |
 |---|---|---|
-| DXF (also Allegro, also Gerber turned into DXF) | `node scripts/dxf.mjs f.dxf` | `--layers`, `--layer L --boxes` (every polyline and every block placement, by block name), `--min/--max`, `--origin x,y` for a panel or a drawing with parts sticking out |
+| DXF (also Allegro, also Gerber turned into DXF) | `node scripts/dxf.mjs f.dxf` | `--layers`, `--layer L --boxes` (every polyline and every block placement, by block name), `--min/--max`, `--origin x,y` for a panel or a drawing with parts sticking out, `--flip`/`--rotate` into the top view, `--outline` for the entry's `"outline"` |
 | Vector PDF ("DXF" in the name, a dimension sheet) | `node scripts/dxf.mjs f.pdf [--page n]` | `--fit w,d` scales the extents to the board's size; check the other axis it prints. A bottom view comes mirrored: compare the holes |
 | STEP model or assembly | `node scripts/step.mjs f.step` | `--match 'USB\|HDMI'`, `--part BOARD` (holes), `--board <name>` when the board part is guessed wrong, `--rotate`, `--flip`. Reads an 80 MB Creo export in seconds |
-| Eagle `.brd` | `node scripts/board.mjs --brd f.brd` | footprints with their side, pad box and nets (a button's net tells RESET from BOOT); `--match`, `--rotate 90`, `--flip` when the product's top is the file's bottom |
+| Eagle `.brd` | `node scripts/board.mjs --brd f.brd` | footprints with their side, pad box and nets (a button's net tells RESET from BOOT), plain mounting holes; `--match`, `--rotate 90`, `--flip` when the product's top is the file's bottom, `--outline` |
 | KiCad `.kicad_pcb` | `node scripts/board.mjs --kicad f.kicad_pcb` | the same; an outline drawn inside a footprint counts |
 | A photo only | estimate, keep `"verified": false`, say so in the entry's commit | |
 

@@ -5,6 +5,8 @@
 // side, its pads' box and the nets on its pads (a button's net tells reset
 // from boot). Standard library only (CLAUDE.md).
 
+import { arcSweep, arcThrough } from './outline.mjs';
+
 // --- frame helpers
 
 function rotated(x, y, deg) {
@@ -52,7 +54,7 @@ function eagleRot(rot) {
 export function readBrd(text) {
   const board = text.slice(text.indexOf('<board'), text.indexOf('</board>'));
   const plain = board.slice(board.indexOf('<plain'), board.indexOf('</plain>'));
-  const outlinePoints = [];
+  const outlinePieces = [];
   const holes = [...plain.matchAll(/<hole\b[^>]*>/g)].map(([tag]) => {
     const a = attrs(tag);
     return { x: Number(a.x), y: Number(a.y), d: Number(a.drill) };
@@ -60,7 +62,10 @@ export function readBrd(text) {
   for (const [tag] of plain.matchAll(/<wire\b[^>]*>/g)) {
     const a = attrs(tag);
     if (a.layer !== '20') continue;
-    outlinePoints.push([Number(a.x1), Number(a.y1)], [Number(a.x2), Number(a.y2)]);
+    const p0 = [Number(a.x1), Number(a.y1)];
+    const p1 = [Number(a.x2), Number(a.y2)];
+    // a curved wire: Eagle's curve is the arc's sweep in degrees, counter-clockwise positive
+    outlinePieces.push(a.curve ? [p0, ...arcSweep(p0, p1, Number(a.curve))] : [p0, p1]);
   }
   // package geometry: pads and smds give the footprint's box
   const packages = new Map();
@@ -107,7 +112,7 @@ export function readBrd(text) {
       nets: [...(nets.get(a.name) ?? [])],
     });
   }
-  return frame(outlinePoints, elements, false, holes);
+  return frame(outlinePieces, elements, false, holes);
 }
 
 // --- KiCad
@@ -140,20 +145,28 @@ const xy = (list, name) => {
   return c ? [Number(c[1]), Number(c[2])] : null;
 };
 
-/** Points of an Edge.Cuts drawing (line, arc, rect, poly, circle), in its parent's frame. */
-function edgePoints(item) {
+/** An Edge.Cuts drawing (line, arc, rect, poly, circle) as a polyline in its parent's frame; null on other layers. */
+function edgePiece(item) {
   const name = head(item);
-  const layer = child(item, 'layer')?.[1];
-  if (layer !== 'Edge.Cuts') return [];
-  if (name.endsWith('_poly')) return childrenNamed(child(item, 'pts') ?? [], 'xy').map((p) => [Number(p[1]), Number(p[2])]);
+  if (child(item, 'layer')?.[1] !== 'Edge.Cuts') return null;
+  if (name.endsWith('_poly')) {
+    const pts = childrenNamed(child(item, 'pts') ?? [], 'xy').map((p) => [Number(p[1]), Number(p[2])]);
+    return pts.length > 2 ? [...pts, pts[0]] : null;
+  }
   if (name.endsWith('_circle')) {
     const c = xy(item, 'center');
     const e = xy(item, 'end');
-    if (!c || !e) return [];
+    if (!c || !e) return null;
     const r = Math.hypot(e[0] - c[0], e[1] - c[1]);
-    return [[c[0] - r, c[1] - r], [c[0] + r, c[1] + r]];
+    return Array.from({ length: 33 }, (_, i) => [c[0] + r * Math.cos((i * Math.PI) / 16), c[1] + r * Math.sin((i * Math.PI) / 16)]);
   }
-  return ['start', 'mid', 'end'].map((k) => xy(item, k)).filter(Boolean);
+  const a = xy(item, 'start');
+  const b = xy(item, 'end');
+  if (!a || !b) return null;
+  if (name.endsWith('_rect')) return [a, [b[0], a[1]], b, [a[0], b[1]], a];
+  const m = xy(item, 'mid');
+  if (name.endsWith('_arc') && m) return [a, ...arcThrough(a, m, b)];
+  return [a, b];
 }
 
 /**
@@ -162,9 +175,10 @@ function edgePoints(item) {
  */
 export function readKicad(text) {
   const pcb = sexp(text);
-  const outlinePoints = [];
+  const outlinePieces = [];
   for (const item of pcb) {
-    if (Array.isArray(item) && /^gr_(line|arc|rect|poly|circle)$/.test(head(item))) outlinePoints.push(...edgePoints(item));
+    const piece = Array.isArray(item) && /^gr_(line|arc|rect|poly|circle)$/.test(head(item)) ? edgePiece(item) : null;
+    if (piece) outlinePieces.push(piece);
   }
   const elements = [];
   for (const fp of pcb) {
@@ -178,7 +192,8 @@ export function readKicad(text) {
       return [fx + rx, fy + ry];
     };
     for (const item of fp) {
-      if (Array.isArray(item) && /^fp_(line|arc|rect|poly|circle)$/.test(head(item))) outlinePoints.push(...edgePoints(item).map(toBoard));
+      const piece = Array.isArray(item) && /^fp_(line|arc|rect|poly|circle)$/.test(head(item)) ? edgePiece(item) : null;
+      if (piece) outlinePieces.push(piece.map(toBoard));
     }
     const property = (name) => childrenNamed(fp, 'property').find((p) => p[1] === name)?.[2]
       ?? childrenNamed(fp, 'fp_text').find((p) => p[1] === name.toLowerCase())?.[2] ?? '';
@@ -208,15 +223,17 @@ export function readKicad(text) {
       nets: [...nets],
     });
   }
-  return frame(outlinePoints, elements, true);
+  return frame(outlinePieces, elements, true);
 }
 
 /** Into the board frame: origin at the outline's lower-left corner, y up. */
-function frame(outlinePoints, elements, yDown, holes = []) {
-  const box = bboxOf(outlinePoints) ?? bboxOf(elements.map((e) => [e.x, e.y])) ?? { x0: 0, y0: 0, x1: 0, y1: 0 };
+function frame(outlinePieces, elements, yDown, holes = []) {
+  const box = bboxOf(outlinePieces.flat()) ?? bboxOf(elements.map((e) => [e.x, e.y])) ?? { x0: 0, y0: 0, x1: 0, y1: 0 };
   const toFrame = (x, y) => [x - box.x0, yDown ? box.y1 - y : y - box.y0];
   return {
     outline: { w: box.x1 - box.x0, d: box.y1 - box.y0 },
+    // the outline's drawing, piece by piece (outline.mjs chains them into the entry's polygon)
+    outlinePieces: outlinePieces.map((piece) => piece.map(([x, y]) => toFrame(x, y))),
     // mounting holes drawn on the board itself (Eagle's plain <hole>)
     holes: holes.map((h) => {
       const [x, y] = toFrame(h.x, h.y);
@@ -249,6 +266,7 @@ export function turnBoard(board, deg = 0, flip = false) {
   const swap = quarter % 2 === 1;
   return {
     outline: swap ? { w: d, d: w } : { w, d },
+    outlinePieces: board.outlinePieces.map((piece) => piece.map(map)),
     holes: board.holes.map((h) => {
       const [x, y] = map([h.x, h.y]);
       return { ...h, x, y };

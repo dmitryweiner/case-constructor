@@ -410,6 +410,28 @@ export function extents(shapes) {
   return box;
 }
 
+/**
+ * Turns every shape to match the catalog's top view: mirrored in x first
+ * when `flip` (a bottom view), then rotated `deg` degrees counter-clockwise.
+ * Arcs become polylines.
+ */
+export function turned(shapes, deg = 0, flip = false) {
+  const a = (deg * Math.PI) / 180;
+  const [c, sn] = [Math.cos(a), Math.sin(a)];
+  const f = flip ? -1 : 1;
+  return shapes.map((s) => place(s, [c * f, sn * f, -sn, c, 0, 0]));
+}
+
+/** The pieces a drawing draws lines with, as polylines (circles left out). */
+export function polylines(shapes) {
+  return shapes.flatMap((s) => {
+    if (s.kind === 'line') return [[[s.x1, s.y1], [s.x2, s.y2]]];
+    if (s.kind === 'arc') return [arcToPoly(s).pts];
+    if (s.kind === 'poly') return [s.closed && s.pts.length > 2 ? [...s.pts, s.pts[0]] : s.pts];
+    return [];
+  });
+}
+
 /** Scales every shape about the origin. */
 export function scaled(shapes, k) {
   return shapes.map((s) => place(s, [k, 0, 0, k, 0, 0]));

@@ -97,15 +97,18 @@ freely; a temporary script that turns out useful becomes a permanent one.
   `--boxes` prints every polyline's and every block placement's bounding box
   with the block's name (component outlines: where a connector is),
   `--origin x,y` sets the board corner when the drawing is a panel with
-  rails. Old-style POLYLINE/VERTEX (Allegro) is read. Parsing:
-  `scripts/lib/drawing.mjs`.
+  rails, `--flip` / `--rotate deg` turn a bottom view or a turned page into
+  the catalog's top view, `--outline` prints the board's outline ready to
+  paste as the entry's `"outline"` (the largest closed loop; `--tol`, `--eps`).
+  Old-style POLYLINE/VERTEX (Allegro) is read. Parsing:
+  `scripts/lib/drawing.mjs`, outlines `scripts/lib/outline.mjs`.
 - `scripts/step.mjs <file.step>` — every part of a STEP assembly in the board
   frame (box, height above the board's top), `--part <name>` its holes,
   `--match`, `--board`, `--rotate`, `--flip`, `--up y` for a Y-up model. Text parser, no CAD kernel
   (`scripts/lib/step.mjs`).
 - `scripts/board.mjs --brd <file>` / `--kicad <file>` — the footprints of an
   Eagle or KiCad layout in the board frame, with side, pad box (and its
-  centre), nets and Eagle's plain mounting holes;
+  centre), nets and Eagle's plain mounting holes; `--outline` as above;
   `--match`, `--rotate`, `--flip` (`scripts/lib/pcb.mjs`). `tests/drawing.test.ts`
   reads a fixture of every format back to known boxes (`tests/fixtures/`).
 - Adding a board: the skill `.claude/skills/add-board/SKILL.md` (its
