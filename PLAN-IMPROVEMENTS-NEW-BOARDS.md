@@ -1,6 +1,9 @@
 # Case Constructor — what the Tier A boards left to do
 
-Status: written on 2026-10-25 after the Tier A boards from
+**Status: done (2026-10-25).** Only the user's visual review of the new
+entries remains (B9). Kept as the record of the decisions and deviations.
+
+Written on 2026-10-25 after the Tier A boards from
 `PERSPECTIVE-BOARDS.md` went into the catalog (25 entries, the Pico 2 as an
 alias). The open questions were settled with the user on the same day
 (below); the work goes in the order

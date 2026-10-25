@@ -6,12 +6,17 @@
 at the top. Deviations from the plan are recorded at its end as they happen.
 `PLAN-IMPROVEMENTS.md` — the improvements after the review (I1…I8), same
 rules.
+`PLAN-IMPROVEMENTS-NEW-BOARDS.md` — what the Tier A boards left (B1…B9):
+done; read it only for its decisions and deviations.
 
 ## Node
 
 Node 22 (`.nvmrc`; vitest 5 needs ≥ 22.12). The login shell has Node 20 by
-default; run commands with
+default (`fnm env` in ~/.zshrc puts it first in every command). A
+SessionStart hook in `.claude/settings.local.json` exports Node 22's path
+through `$CLAUDE_ENV_FILE`; without it, run commands with
 `export PATH=~/.local/share/fnm/node-versions/v22.23.3/installation/bin:$PATH`.
+Check with `node -v` once per session.
 
 ## Deploy
 

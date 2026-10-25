@@ -144,6 +144,40 @@ Open the PNG next to the drawing: outline, holes (their coordinates are
 printed next to them), every port on the right edge at the right place. Ask
 the user to look as well.
 
+### Checking an existing entry (≈ or a review)
+
+The order that worked on the Tier A boards (PLAN-IMPROVEMENTS-NEW-BOARDS.md,
+B9):
+
+1. `node scripts/fetch.mjs --board <id>`; if the `source` is a page, find
+   the drawing on it and fetch that.
+2. **Orientation first.** Compare the holes: `--compare <id>` (board.mjs
+   or dxf.mjs). Mirrored holes mean a bottom view (`--flip`); swapped axes
+   mean a turn (`--rotate 90`). Holes are the most reliable thing on any
+   drawing — fix the frame on them before reading anything else.
+3. **Size and outline**: the `size` line of `--compare`, then `--outline`.
+4. **Parts by their body, not their origin.** A footprint's origin is often
+   a pin (a DC jack's origin is a pin, its axis is the body's centre): use
+   the pad box centre `board.mjs` prints, or the package outline.
+5. Record what the check changed in the commit, set `"verified": true`
+   only when holes, size and the connectors came from the vendor's own
+   file, and put the file's URL in `source`.
+
+Pitfalls met so far:
+- SolidWorks models are often Y-up: `step.mjs --up y`.
+- In a PCBA model many small parts are named "PCBA…": pass `--board`.
+- A castellated board's model is about 0.6 mm wider than the PCB (the
+  half-holes): take x from the board's centre.
+- A module's antenna that overhangs the PCB is not board: keep `size` to
+  the PCB and give the overhang as an edge part with `"cut": false` and a
+  `protrude` (DevKitC).
+- Some PDFs draw every edge there and back, others start dimension lines at
+  the outline's corners: `--outline` copes with both; `--tol` if pieces
+  still do not meet.
+- A drawing with a white page rectangle behind it: `--layer stroke`.
+- Two concentric circles at a hole are its pad and its drill: `--compare`
+  takes the drill.
+
 ## 6. See it in a case
 
 ```bash
