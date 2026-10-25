@@ -165,12 +165,17 @@ for (let i = 0; i < argv.length; i++) {
   checkReload(`${name}:${arg}`);
 }
 
-// The sheet's backdrop cannot be clicked by selector (its centre is under the
-// sheet), so the panel is toggled through its own controls.
+// The sheet closes on a tap on the open part of the canvas,
+// and opens with its own button.
 const panelMode = flags.get('panel');
 if (panelMode) {
   label(`panel:${panelMode}`);
-  if (panelMode === 'hidden') await page.evaluate(() => document.getElementById('panelBackdrop')?.click());
+  if (panelMode === 'hidden') {
+    // halfway between the canvas top and the sheet, at the right (the caption is on the left)
+    const box = await page.locator('#view').boundingBox();
+    const sheet = await page.locator('#panel').boundingBox();
+    await page.mouse.click(box.x + box.width - 20, (box.y + sheet.y) / 2);
+  }
   else if (await page.locator('#panelBtn').isVisible()) await page.click('#panelBtn');
   // the sheet and the picture move for 0.25 s
   await page.waitForTimeout(400);

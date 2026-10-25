@@ -768,13 +768,11 @@ window.addEventListener('keydown', (event) => {
 // --- mobile panel ---
 
 const panelBtn = el('panelBtn', HTMLButtonElement);
-const panelBackdrop = el('panelBackdrop', HTMLDivElement);
 
 const narrow = window.matchMedia('(max-width: 760px)');
 
 function setPanelOpen(open: boolean): void {
   panel.classList.toggle('open', open);
-  panelBackdrop.hidden = !open;
   panelBtn.hidden = open;
   // on a phone the sheet covers the lower part of the view: centre the case above it
   scene.setBottomInset(open && narrow.matches ? panel.offsetHeight : 0);
@@ -785,7 +783,33 @@ narrow.addEventListener('change', () => setPanelOpen(panel.classList.contains('o
 window.addEventListener('resize', () => setPanelOpen(panel.classList.contains('open')));
 
 panelBtn.addEventListener('click', () => setPanelOpen(true));
-panelBackdrop.addEventListener('click', () => setPanelOpen(false));
+// The canvas stays live under the open sheet: drags turn the case, pinches
+// zoom it; only a tap (one finger, short, still) on it closes the sheet.
+const TAP_MOVE_PX = 6;
+const TAP_MS = 300;
+const pressed = new Map<number, { x: number; y: number; t: number }>();
+let gesture = false;
+view.addEventListener('pointerdown', (event) => {
+  pressed.set(event.pointerId, { x: event.clientX, y: event.clientY, t: event.timeStamp });
+  if (pressed.size > 1) gesture = true;
+});
+view.addEventListener('pointermove', (event) => {
+  const start = pressed.get(event.pointerId);
+  if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > TAP_MOVE_PX) gesture = true;
+});
+const release = (event: PointerEvent): void => {
+  const start = pressed.get(event.pointerId);
+  pressed.delete(event.pointerId);
+  const tap = start && !gesture && event.timeStamp - start.t < TAP_MS
+    && Math.hypot(event.clientX - start.x, event.clientY - start.y) <= TAP_MOVE_PX;
+  if (pressed.size === 0) gesture = false;
+  if (tap && narrow.matches && panel.classList.contains('open')) setPanelOpen(false);
+};
+view.addEventListener('pointerup', release);
+view.addEventListener('pointercancel', (event) => {
+  pressed.delete(event.pointerId);
+  if (pressed.size === 0) gesture = false;
+});
 setPanelOpen(true);
 
 // --- language ---

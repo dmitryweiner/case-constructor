@@ -363,7 +363,10 @@ frame keeps the canvas's angle per pixel (its own aspect, a wider fov).
 With the canvas's aspect the picture was stretched and round holes came
 out as ellipses; the smoke measures the case on screen in both states
 (`window.__case.project`).
+The canvas stays live under the open sheet (no backdrop): drags turn the
+case, pinches zoom it, and a tap (one pointer, short, still) on the canvas
+closes the sheet (`main.ts`, `TAP_MOVE_PX` / `TAP_MS`).
 Top bar: `#presetBtn` (list `#presetList [data-preset="b:<id>"|"u:<name>"]`),
 `#saveBtn`, `#fileOpenBtn`, `#fileSaveBtn`, `#fileInput`, `#undoBtn`,
 `#redoBtn`,
-`#langSel`, `#panelBtn`, `#panelBackdrop`.
+`#langSel`, `#panelBtn`.

@@ -523,7 +523,10 @@ const onScreen = () => page.evaluate(() => {
   return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys), cy: (Math.max(...ys) + Math.min(...ys)) / 2 };
 });
 const withSheet = await onScreen();
-await page.click('#panelBackdrop', { position: { x: 200, y: 60 } });
+const canvasBox = await page.locator('#view').boundingBox();
+const [tapX, tapY] = [canvasBox.x + 200, canvasBox.y + 60];
+// a tap on the canvas closes it
+await page.mouse.click(tapX, tapY);
 await page.waitForTimeout(400);
 if (!(await page.locator('#panelBtn').isVisible())) errors.push('[mobile] no settings button after closing the sheet');
 const withoutSheet = await onScreen();
@@ -534,6 +537,16 @@ if (!(withoutSheet.cy > withSheet.cy + 20)) errors.push('[mobile] the case is no
 await page.click('#panelBtn');
 await page.waitForTimeout(400);
 if (!(await page.locator('#case_wall').isVisible())) errors.push('[mobile] the sheet did not open');
+// with the sheet open, a drag on the canvas turns the case and leaves the sheet open
+const turnedBefore = await page.evaluate(() => window.__case.project([[0, 0, 0], [100, 0, 0]]));
+await page.mouse.move(tapX, tapY);
+await page.mouse.down();
+await page.mouse.move(tapX + 60, tapY + 10, { steps: 6 });
+await page.mouse.up();
+await page.waitForTimeout(300);
+const turnedAfter = await page.evaluate(() => window.__case.project([[0, 0, 0], [100, 0, 0]]));
+if (JSON.stringify(turnedBefore) === JSON.stringify(turnedAfter)) errors.push('[mobile] a drag over the open sheet does not turn the case');
+if (!(await page.locator('#panel').evaluate((el) => el.classList.contains('open')))) errors.push('[mobile] a drag closed the sheet');
 if (shotsDir) await page.screenshot({ path: `${shotsDir}/mobile.png` });
 
 await app.close();

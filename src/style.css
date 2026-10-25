@@ -493,8 +493,7 @@ input[type='text'] {
   margin: 4px 2px 0;
 }
 
-#panelBtn,
-#panelBackdrop {
+#panelBtn {
   display: none;
 }
 
@@ -569,19 +568,6 @@ input[type='text'] {
 
   #viewWrap {
     min-height: 0;
-  }
-
-  /*
-   * A real element over the open part of the canvas while the sheet is up:
-   * a tap closes the sheet and never reaches the canvas — otherwise the same
-   * tap would orbit the camera (OrbitControls catches pointerdown). The sheet
-   * is higher in z-index, so taps inside it are its own.
-   */
-  #panelBackdrop {
-    display: block;
-    position: absolute;
-    inset: 0;
-    z-index: 15;
   }
 
   #panel {
