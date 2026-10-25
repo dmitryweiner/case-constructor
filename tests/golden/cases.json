@@ -162,19 +162,19 @@
   "esp32-rails-cylinder": {
     "body": {
       "triangles": 840,
-      "volume": 19131.39,
+      "volume": 18691.12,
       "extents": [
-        72.192,
-        72.192,
+        72.149,
+        72.149,
         19.59
       ]
     },
     "lid": {
       "triangles": 1400,
-      "volume": 8826.98,
+      "volume": 8816.64,
       "extents": [
-        72.192,
-        72.192,
+        72.149,
+        72.149,
         5
       ]
     }

@@ -4,7 +4,9 @@ Status: written on 2026-10-25 after the Tier A boards from
 `PERSPECTIVE-BOARDS.md` went into the catalog (25 entries, the Pico 2 as an
 alias). The open questions were settled with the user on the same day
 (below); the work goes in the order
-**B8 → B1 → B2 → B5 → B4 → B6 → B3 → B7 → B9**.
+**B8 → B1 → B2 → B5 → B4 → B6 → B3 → B7 → B9**. All done the same day;
+left for the user: the visual review (B9), and the Orange Pi 5 Max and Zero
+3W drawings, which Google Drive gives only to a person (B3).
 
 Same rules as PLAN.md: TDD, golden tests for new geometry (a new state per
 feature, old ones untouched), `npm run check` and `npm run smoke` before
@@ -313,6 +315,18 @@ with code 3.
     Wemos D1 mini.
   - New: ESP32 DevKit V1, ESP32-C3 SuperMini, ESP32-2432S028R, QuinLED
     Dig-Uno, XIAO ESP32-S3 Sense.
+  **Done (2026-10-25):** checked and corrected against the vendor's own
+  files — Arduino Uno, Mega, Leonardo (Eagle: headers up to 2.8 mm off, the
+  jack's axis 7.8, ICSP added to Mega and Leonardo), ESP32-DevKitC V4
+  (Espressif's layout PDF: the PCB is 48.2 long, the module's antenna an
+  overhang; the old 54.4 counted it as board), Wemos D1 mini (the v4
+  drawing: 34.3 × 25.4 with a notch and two Ø2 holes, now on M1.6 instead of
+  rails), QuinLED Dig-Uno (its dimension image: terminals within 0.3 mm),
+  XIAO ESP32-S3 Sense (its STEP model through `step.mjs --up y`: the microSD
+  face 6.5 mm inside the edge). They are `verified` now. Still ≈, no vendor
+  drawing found: Orange Pi 5 (orangepi.org unreachable), ESP32 DevKit V1 and
+  ESP32-C3 SuperMini (clones without an official drawing), ESP32-2432S028R
+  (outline and holes match its drawing, the parts come from a photo).
 - **Heights the drawings lack** (accepted as estimates for now):
   - ROCK 5B+: standing HDMI and USB-C.
   - RAK19007: height of the core module.
@@ -321,8 +335,10 @@ with code 3.
   - CM5 IO Board: power button.
 - **Feather ESP32-S3 TFT / Reverse TFT:** done in B6, from Adafruit's
   drawings.
-- **RAK3401 (1 W) core on the RAK19007:** check its height and antennas,
-  then make it a variant of the RAK19007 (B6).
+- **RAK3401 (1 W) core on the RAK19007:** done as a variant. Its datasheet
+  gives the RAK4631's 20 × 30 footprint and the BLE connector where the
+  entry has it; RAK publishes no height and does not show the LoRa
+  connector, so the variant keeps the RAK4631's parts.
 
 ---
 
@@ -367,3 +383,8 @@ with code 3.
   reads both.
 - **B7.** In a PCBA model many small parts are named "PCBA…": the board is
   the largest of the BOARD/PCB-named parts, `--board` overrides.
+- **B9.** `step.mjs` needed `--up y` for the XIAO S3 Sense model (made Y-up)
+  and `board.mjs --brd` the board's plain holes and the pads' centre (a DC
+  jack's origin is a pin): both added while checking the entries.
+- **B9.** The golden `esp32-rails-cylinder` changed again: the DevKitC's
+  PCB is 48.2 long, not 54.4.

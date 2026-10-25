@@ -10,6 +10,7 @@
 //   node scripts/step.mjs board.step --board PCB_ASM     # the part that is the board
 //   node scripts/step.mjs board.step --rotate 90         # turn the model about z first
 //   node scripts/step.mjs board.step --flip              # the model is a bottom view: mirror x
+//   node scripts/step.mjs board.step --up y              # the model's up axis (x, y, z, -x, -y, -z; default z)
 //   node scripts/step.mjs board.step --min 2 --max 30    # parts by their larger side
 //
 // The board frame (the add-board skill): origin at the lower-left corner of
@@ -24,14 +25,39 @@ import { parseArgs } from './lib/harness.mjs';
 import { readStep } from './lib/step.mjs';
 
 const file = process.argv[2];
-const flags = parseArgs(process.argv.slice(3), ['match', 'part', 'board', 'rotate', 'min', 'max']);
+const flags = parseArgs(process.argv.slice(3), ['match', 'part', 'board', 'rotate', 'min', 'max', 'up']);
 if (!file) {
   console.error('usage: node scripts/step.mjs <file.step> [--match re] [--part name] [--board name] [--rotate deg] [--flip] [--min mm] [--max mm]');
   process.exit(2);
 }
 
 const model = readStep(readFileSync(file, 'latin1'));
-const parts = model.parts();
+
+// Models made Y-up (SolidWorks and others) are turned to z up first: a
+// right-handed turn that brings the chosen axis to +z.
+const UP = {
+  'z': ([x, y, z]) => [x, y, z],
+  '-z': ([x, y, z]) => [x, -y, -z],
+  'y': ([x, y, z]) => [x, -z, y],
+  '-y': ([x, y, z]) => [x, z, -y],
+  'x': ([x, y, z]) => [y, z, x],
+  '-x': ([x, y, z]) => [-y, z, -x],
+};
+const up = UP[String(flags.get('up') ?? 'z')];
+if (!up) {
+  console.error(`--up takes ${Object.keys(UP).join(', ')}`);
+  process.exit(2);
+}
+/** A model box turned so that the up axis is z. */
+const upright = ({ lo, hi }) => {
+  const corners = [];
+  for (const x of [lo[0], hi[0]]) for (const y of [lo[1], hi[1]]) for (const z of [lo[2], hi[2]]) corners.push(up([x, y, z]));
+  return {
+    lo: [0, 1, 2].map((k) => Math.min(...corners.map((c) => c[k]))),
+    hi: [0, 1, 2].map((k) => Math.max(...corners.map((c) => c[k]))),
+  };
+};
+const parts = model.parts().map((p) => ({ ...p, ...upright(p) }));
 if (parts.length === 0) {
   console.log('no parts with geometry (a STEP without an assembly, or one this reader cannot follow)');
   process.exit(1);
@@ -83,7 +109,8 @@ for (const r of rows) {
 const partName = flags.get('part');
 if (partName) {
   const seen = new Set();
-  for (const c of model.circles(String(partName))) {
+  for (const raw of model.circles(String(partName))) {
+    const c = { ...raw, centre: up(raw.centre), normal: up(raw.normal) };
     // holes through the board: circles whose axis is vertical
     if (Math.abs(c.normal[2]) < 0.9) continue;
     const [x, y] = turn(c.centre);

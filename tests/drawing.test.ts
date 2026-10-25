@@ -71,6 +71,7 @@ describe('PCB layouts', () => {
   it('Eagle: footprints in the board frame, mirrored ones on the bottom, pad boxes turned, nets', () => {
     const board = readBrd(fixture('tiny.brd'));
     expect(board.outline).toEqual({ w: 30, d: 20 });
+    expect(board.holes).toEqual([{ x: 3, y: 3, d: 3.2 }]);
     const [sw1, sw2] = board.elements;
     expect(sw1).toMatchObject({ name: 'SW1', value: 'RESET', x: 5, y: 5, rot: 90, side: 'top', nets: ['!RESET', 'GND'] });
     expect(sw1.size).toMatchObject({ w: 2, d: 5 });

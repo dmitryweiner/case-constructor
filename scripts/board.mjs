@@ -28,10 +28,12 @@ if (flags.has('brd') || flags.has('kicad')) {
   const board = turnBoard(read, Number(flags.get('rotate') ?? 0), flags.has('flip'));
   const r = (v) => Math.round(v * 100) / 100;
   console.log(`outline ${r(board.outline.w)} × ${r(board.outline.d)}`);
+  for (const h of board.holes) console.log(`hole Ø${r(h.d)} at ${r(h.x)}, ${r(h.y)}`);
   const match = flags.get('match') ? new RegExp(String(flags.get('match')), 'i') : null;
   for (const e of board.elements) {
     if (match && !match.test(`${e.name} ${e.value} ${e.package}`)) continue;
-    const size = e.size ? `  ${r(e.size.w)} × ${r(e.size.d)}` : '';
+    // the pads' box can sit off the footprint's origin (a jack's origin is a pin): its centre too
+    const size = e.size ? `  ${r(e.size.w)} × ${r(e.size.d)} pads centred ${r(e.x + e.size.cx)}, ${r(e.y + e.size.cy)}` : '';
     const nets = e.nets.filter((n) => !/^(GND|VSS|AGND)$/i.test(n)).slice(0, 3);
     console.log(`${e.name.padEnd(8)} ${String(e.value).padEnd(18).slice(0, 18)} ${e.package.padEnd(24).slice(0, 24)} at ${r(e.x)}, ${r(e.y)}  rot ${e.rot}  ${e.side}${size}${nets.length ? `  nets ${nets.join(',')}` : ''}`);
   }

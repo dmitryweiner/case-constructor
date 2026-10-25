@@ -99,10 +99,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   `scripts/lib/drawing.mjs`.
 - `scripts/step.mjs <file.step>` — every part of a STEP assembly in the board
   frame (box, height above the board's top), `--part <name>` its holes,
-  `--match`, `--board`, `--rotate`, `--flip`. Text parser, no CAD kernel
+  `--match`, `--board`, `--rotate`, `--flip`, `--up y` for a Y-up model. Text parser, no CAD kernel
   (`scripts/lib/step.mjs`).
 - `scripts/board.mjs --brd <file>` / `--kicad <file>` — the footprints of an
-  Eagle or KiCad layout in the board frame, with side, pad box and nets;
+  Eagle or KiCad layout in the board frame, with side, pad box (and its
+  centre), nets and Eagle's plain mounting holes;
   `--match`, `--rotate`, `--flip` (`scripts/lib/pcb.mjs`). `tests/drawing.test.ts`
   reads a fixture of every format back to known boxes (`tests/fixtures/`).
 - Adding a board: the skill `.claude/skills/add-board/SKILL.md` (its

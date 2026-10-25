@@ -19,13 +19,14 @@
   "bottomHeight": 2,
   "ports": [
     { "id": "usb", "type": "micro-usb", "edge": "left", "along": 38.1, "protrude": 1 },
-    { "id": "power", "type": "dc-jack-5.5", "edge": "left", "along": 7.5, "protrude": 1.4 },
-    { "id": "digital-high", "type": "header-1xN", "edge": "top", "x": 29.2, "y": 50.8, "w": 25.4, "d": 2.5, "h": 8.5, "cut": true },
-    { "id": "digital-low", "type": "header-1xN", "edge": "top", "x": 53.6, "y": 50.8, "w": 20.3, "d": 2.5, "h": 8.5, "cut": true },
-    { "id": "power-header", "type": "header-1xN", "edge": "top", "x": 36.8, "y": 2.54, "w": 20.3, "d": 2.5, "h": 8.5, "cut": true },
-    { "id": "analog", "type": "header-1xN", "edge": "top", "x": 57.2, "y": 2.54, "w": 15.2, "d": 2.5, "h": 8.5, "cut": true },
-    { "id": "reset", "type": "button", "edge": "top", "x": 6.5, "y": 49.6, "w": 6, "d": 6, "h": 3.5, "shape": "rect" }
+    { "id": "power", "type": "dc-jack-5.5", "edge": "left", "along": 7.8, "protrude": 1.4 },
+    { "id": "digital-high", "type": "header-1xN", "edge": "top", "x": 30.23, "y": 50.8, "w": 25.4, "d": 2.5, "h": 8.5, "cut": true },
+    { "id": "digital-low", "type": "header-1xN", "edge": "top", "x": 54.61, "y": 50.8, "w": 20.3, "d": 2.5, "h": 8.5, "cut": true },
+    { "id": "power-header", "type": "header-1xN", "edge": "top", "x": 36.83, "y": 2.54, "w": 20.3, "d": 2.5, "h": 8.5, "cut": true },
+    { "id": "analog", "type": "header-1xN", "edge": "top", "x": 57.15, "y": 2.54, "w": 15.2, "d": 2.5, "h": 8.5, "cut": true },
+    { "id": "reset", "type": "button", "edge": "top", "x": 6.35, "y": 49.4, "w": 6, "d": 6, "h": 3.5, "shape": "rect" },
+    { "id": "icsp", "type": "header-1xN", "edge": "top", "x": 64.9, "y": 27.94, "w": 5, "d": 7.5, "h": 8.5 }
   ],
-  "source": "https://docs.arduino.cc/hardware/leonardo/",
-  "verified": false
+  "source": "https://docs.arduino.cc/static/fd50e8f3be44a3217bbfd5d123295bdf/A000057-cad-files.zip",
+  "verified": true
 }

@@ -137,20 +137,20 @@ shows the same mark). New boards: the add-board skill
 | ESP32-2432S028R (Cheap Yellow Display) | Espressif | 86 × 50 | 4 × M3 | [source](https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/OriginalDocumentation/3-Structure_Diagram/Dimensions.png) | ≈ |
 | ESP32-C3 SuperMini | Espressif | 18 × 22.5 | rails (long) | [source](https://mischianti.org/wp-content/uploads/2025/07/ESP32-C3-SuperMini-Size.jpg) | ≈ |
 | ESP32-CAM (AI-Thinker) | Espressif | 27 × 40.5 | rails (long) | [source](https://docs.ai-thinker.com/en/esp32-cam) | ≈ |
-| ESP32-DevKitC V4 | Espressif | 54.4 × 27.9 | rails (long) | [source](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/hw-reference/esp32/get-started-devkitc.html) | ≈ |
+| ESP32-DevKitC V4 | Espressif | 48.2 × 27.9 | rails (long) | [source](https://dl.espressif.com/dl/schematics/esp32_devkitc_v4_pcb_layout.pdf) | yes |
 | ESP32 DevKit V1, 30-pin (DOIT and clones) | Espressif | 51.8 × 28.2 | 4 × M2.5 | [source](https://forum.fritzing.org/t/doit-esp32-devkit-v1/6158) | ≈ |
 | ESP32-S3-DevKitC-1 | Espressif | 25.4 × 62.74 | rails (long) | [source](https://dl.espressif.com/dl/schematics/esp_idf/DXF_ESP32-S3-DevKitC-1_V1.1_20220429.pdf) | yes |
-| Wemos D1 mini (ESP8266 / ESP32) | Espressif | 34.2 × 25.6 | rails (short) | [source](https://www.wemos.cc/en/latest/d1/d1_mini.html) | ≈ |
-| Arduino Leonardo | Arduino | 68.58 × 53.34 | 4 × M3 | [source](https://docs.arduino.cc/hardware/leonardo/) | ≈ |
-| Arduino Mega 2560 | Arduino | 101.6 × 53.34 | 6 × M3 | [source](https://docs.arduino.cc/resources/datasheets/A000067-datasheet.pdf) | ≈ |
+| Wemos D1 mini (ESP8266 / ESP32) | Espressif | 34.3 × 25.4 | 2 × M1.6 | [source](https://www.wemos.cc/en/latest/_static/files/dim_d1_mini_v4.0.0.pdf) | yes |
+| Arduino Leonardo | Arduino | 68.58 × 53.34 | 4 × M3 | [source](https://docs.arduino.cc/static/fd50e8f3be44a3217bbfd5d123295bdf/A000057-cad-files.zip) | yes |
+| Arduino Mega 2560 | Arduino | 101.6 × 53.34 | 6 × M3 | [source](https://docs.arduino.cc/static/00ab83283ad8f7aae17832d0fe1b1d51/A000067-cad-files.zip) | yes |
 | Arduino Micro | Arduino | 48 × 18 | rails (long) | [source](https://docs.arduino.cc/hardware/micro/) | ≈ |
 | Arduino Nano / Nano Every | Arduino | 43.18 × 17.78 | rails (long) | [source](https://docs.arduino.cc/resources/datasheets/ABX00028-datasheet.pdf) | yes |
 | Arduino Pro Mini | Arduino | 33 × 18 | rails (long) | [source](https://docs.arduino.cc/retired/boards/arduino-pro-mini/) | ≈ |
-| Arduino Uno R3 / R4 | Arduino | 68.58 × 53.34 | 4 × M3 | [source](https://docs.arduino.cc/resources/datasheets/A000066-datasheet.pdf) | ≈ |
+| Arduino Uno R3 / R4 | Arduino | 68.58 × 53.34 | 4 × M3 | [source](https://docs.arduino.cc/static/6bb7a3ca51ebee82a252f60c0b418787/A000066-cad-files.zip) | yes |
 | Arduino UNO Q | Arduino | 68.58 × 53.34 | 4 × M3 | [source](https://docs.arduino.cc/resources/datasheets/ABX00162-datasheet.pdf) | yes |
 | Heltec WiFi LoRa 32 V3 | Heltec | 50.2 × 25.5 | rails (long) | [source](https://resource.heltec.cn/download/WiFi_LoRa_32_V3/HTIT-WB32LA_V3.2.pdf) | yes |
 | Heltec Mesh Node T114 | Heltec | 50.8 × 22.86 | rails (long) | [source](https://resource.heltec.cn/download/Mesh_Node_T114/Datasheet.pdf) | yes |
-| Heltec WiFi LoRa 32 V4 | Heltec | 51.69 × 25.4 | 4 × M2 | [source](https://resource.heltec.cn/download/WiFi_LoRa_32_V4/datasheet/WiFi_LoRa_32_V4.3.1_Datasheet.pdf) | yes |
+| Heltec WiFi LoRa 32 V4 | Heltec | 51.69 × 25.4 | 4 × M1.6 | [source](https://resource.heltec.cn/download/WiFi_LoRa_32_V4/datasheet/WiFi_LoRa_32_V4.3.1_Datasheet.pdf) | yes |
 | Heltec Wireless Stick Lite V3 | Heltec | 58.08 × 22.6 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Stick_Lite_V3/HTIT-WSL_V3(Rev1.1).pdf) | yes |
 | Heltec Wireless Stick V3 | Heltec | 58.08 × 22.6 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Stick_V3/HTIT-WS_V3(Rev1.0).pdf) | yes |
 | Heltec Wireless Tracker | Heltec | 63.64 × 28 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Tracker/Wireless%20Tracker1.1.pdf) | yes |
@@ -158,8 +158,8 @@ shows the same mark). New boards: the add-board skill
 | Adafruit Feather ESP32-S3 / S2 / C6 (incl. TFT, Reverse TFT) | Adafruit | 50.8 × 22.86 | 4 × M2 | [source](https://github.com/adafruit/Adafruit-Feather-ESP32-S3-PCB) | yes |
 | Olimex ESP32-POE-ISO (rev K and later) | Olimex | 28 × 98.15 | 3 × M2 | [source](https://github.com/OLIMEX/ESP32-POE-ISO/blob/master/HARDWARE/Dimensions/Revision%20J%20and%20newer/ESP32-POE-ISO-revision-J-dimensions.pdf) | yes |
 | QuinLED Dig-Quad v3 | QuinLED | 48.2 × 100.4 | 4 × M2.5 | [source](https://quinled.info/quinled-dig-quad-board-dimensions/) | yes |
-| QuinLED Dig-Uno v3 / v2 | QuinLED | 48.5 × 39.4 | 4 × M2 | [source](https://quinled.info/2020/08/02/quinled-dig-uno-board-dimensions/) | ≈ |
-| RAKwireless RAK19007 + RAK4631 (WisBlock) | RAKwireless | 60 × 30 | 4 × M2.5 | [source](https://docs.rakwireless.com/product-categories/wisblock/rak19007/datasheet/) | yes |
+| QuinLED Dig-Uno v3 / v2 | QuinLED | 48.5 × 39.4 | 4 × M2 | [source](https://quinled.info/2020/08/02/quinled-dig-uno-board-dimensions/) | yes |
+| RAKwireless RAK19007 + RAK4631 / RAK3401 (WisBlock) | RAKwireless | 60 × 30 | 4 × M2.5 | [source](https://docs.rakwireless.com/product-categories/wisblock/rak19007/datasheet/) | yes |
 | Seeed XIAO (ESP32-S3/C3/C6, RP2040/RP2350, nRF52840, SAMD21, MG24) | Seeed | 17.78 × 21.14 | rails (long) | [source](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/XIAO_ESP32S3_v1.1_Dimensioning.dxf) | yes |
-| Seeed XIAO ESP32-S3 Sense (with camera board) | Seeed | 17.78 × 21.14 | rails (long) | [source](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/seeed-studio-xiao-esp32s3-sense-3d_model.zip) | ≈ |
+| Seeed XIAO ESP32-S3 Sense (with camera board) | Seeed | 17.78 × 21.14 | rails (long) | [source](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/seeed-studio-xiao-esp32s3-sense-3d_model.zip) | yes |
 | Waveshare RP2040-Zero / RP2350-Zero / ESP32-S3-Zero | Waveshare | 18 × 23.5 | rails (long) | [source](https://files.waveshare.com/wiki/RP2350-Zero/RP2350_Zero_step.zip) | yes |

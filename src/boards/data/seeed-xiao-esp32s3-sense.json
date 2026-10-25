@@ -10,12 +10,12 @@
   "pins": { "below": 8.5, "edges": ["left", "right"], "inset": 1.27, "soldered": false },
   "ports": [
     { "id": "usb", "type": "usb-c", "edge": "back", "along": 8.89, "protrude": 1.5 },
-    { "id": "microsd", "type": "microsd", "edge": "back", "along": 8.6, "z": 4.1, "w": 11.5, "h": 2.7, "protrude": 0 },
-    { "id": "camera", "type": "generic", "edge": "top", "x": 8.4, "y": 17.1, "d": 7, "h": 12.7, "shape": "round", "cut": true },
+    { "id": "microsd", "type": "microsd", "edge": "back", "along": 8.6, "z": 4.1, "w": 11.5, "h": 2.7, "protrude": -6.5 },
+    { "id": "camera", "type": "generic", "edge": "top", "x": 8.25, "y": 17.1, "d": 7, "h": 12.7, "shape": "round", "cut": true },
     { "id": "reset", "type": "button", "edge": "top", "x": 2.96, "y": 19.36, "w": 1.6, "d": 2.6, "h": 0.8, "shape": "rect" },
     { "id": "boot", "type": "button", "edge": "top", "x": 14.8, "y": 19.36, "w": 1.6, "d": 2.6, "h": 0.8, "shape": "rect" },
     { "id": "u-fl", "type": "antenna", "edge": "top", "x": 4.16, "y": 1.72, "w": 3.1, "d": 3, "h": 1.25 }
   ],
   "source": "https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/seeed-studio-xiao-esp32s3-sense-3d_model.zip",
-  "verified": false
+  "verified": true
 }

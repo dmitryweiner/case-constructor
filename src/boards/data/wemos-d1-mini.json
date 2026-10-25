@@ -3,16 +3,17 @@
   "name": "Wemos D1 mini (ESP8266 / ESP32)",
   "vendor": "Espressif",
   "kind": "mcu",
-  "size": { "w": 34.2, "d": 25.6, "t": 1.2 },
-  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "short" },
+  "size": { "w": 34.3, "d": 25.4, "t": 1.2 },
+  "outline": [[2, 0], [32.3, 0], [33.71, 0.59], [34.3, 2], [34.3, 23.4], [33.71, 24.81], [32.3, 25.4], [7.8, 25.4], [7, 24.13], [2, 24.13], [0.59, 23.54], [0, 22.13], [0, 2], [0.59, 0.59]],
+  "mount": { "kind": "holes", "holes": [{ "x": 31.15, "y": 2.5, "d": 2 }, { "x": 31.15, "y": 22.9, "d": 2 }], "screw": "M1.6" },
   "topHeight": 4,
   "bottomHeight": 2,
-  "pins": { "below": 8.5, "edges": ["front", "back"], "inset": 1.37, "soldered": false },
+  "pins": { "below": 8.5, "edges": ["front", "back"], "inset": 1.27, "soldered": false },
   "ports": [
-    { "id": "usb", "type": "micro-usb", "edge": "left", "along": 12.8, "protrude": 1 },
-    { "id": "reset", "type": "switch", "edge": "front", "along": 3, "w": 4, "h": 2.5, "protrude": 0.5 },
+    { "id": "usb", "type": "micro-usb", "edge": "left", "along": 12.7, "protrude": 1 },
+    { "id": "reset", "type": "switch", "edge": "front", "along": 3.9, "w": 4, "h": 2.5, "protrude": 0.5 },
     { "id": "module", "type": "generic", "edge": "top", "x": 22, "y": 12.8, "w": 16, "d": 24, "h": 3.2 }
   ],
-  "source": "https://www.wemos.cc/en/latest/d1/d1_mini.html",
-  "verified": false
+  "source": "https://www.wemos.cc/en/latest/_static/files/dim_d1_mini_v4.0.0.pdf",
+  "verified": true
 }

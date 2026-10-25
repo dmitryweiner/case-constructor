@@ -8,6 +8,7 @@
 <wire x1="40" y1="5" x2="40" y2="25" width="0" layer="20"/>
 <wire x1="40" y1="25" x2="10" y2="25" width="0" layer="20"/>
 <wire x1="10" y1="25" x2="10" y2="5" width="0" layer="20"/>
+<hole x="13" y="8" drill="3.2"/>
 </plain>
 <libraries>
 <library name="lib">

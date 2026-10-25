@@ -45,7 +45,7 @@ function eagleRot(rot) {
 }
 
 /**
- * An Eagle board: { outline: { w, d }, origin, elements: [...] }. An element
+ * An Eagle board: { outline: { w, d }, holes, elements: [...] }. An element
  * on the bottom side is mirrored in Eagle (rot "MR…"); its position is still
  * given as seen from the top.
  */
@@ -53,6 +53,10 @@ export function readBrd(text) {
   const board = text.slice(text.indexOf('<board'), text.indexOf('</board>'));
   const plain = board.slice(board.indexOf('<plain'), board.indexOf('</plain>'));
   const outlinePoints = [];
+  const holes = [...plain.matchAll(/<hole\b[^>]*>/g)].map(([tag]) => {
+    const a = attrs(tag);
+    return { x: Number(a.x), y: Number(a.y), d: Number(a.drill) };
+  });
   for (const [tag] of plain.matchAll(/<wire\b[^>]*>/g)) {
     const a = attrs(tag);
     if (a.layer !== '20') continue;
@@ -103,7 +107,7 @@ export function readBrd(text) {
       nets: [...(nets.get(a.name) ?? [])],
     });
   }
-  return frame(outlinePoints, elements, false);
+  return frame(outlinePoints, elements, false, holes);
 }
 
 // --- KiCad
@@ -153,7 +157,7 @@ function edgePoints(item) {
 }
 
 /**
- * A KiCad board: { outline: { w, d }, origin, elements: [...] }. KiCad's y
+ * A KiCad board: { outline: { w, d }, holes (none), elements: [...] }. KiCad's y
  * points down; the frame turns it up. A footprint on B.Cu is on the bottom.
  */
 export function readKicad(text) {
@@ -208,11 +212,16 @@ export function readKicad(text) {
 }
 
 /** Into the board frame: origin at the outline's lower-left corner, y up. */
-function frame(outlinePoints, elements, yDown) {
+function frame(outlinePoints, elements, yDown, holes = []) {
   const box = bboxOf(outlinePoints) ?? bboxOf(elements.map((e) => [e.x, e.y])) ?? { x0: 0, y0: 0, x1: 0, y1: 0 };
   const toFrame = (x, y) => [x - box.x0, yDown ? box.y1 - y : y - box.y0];
   return {
     outline: { w: box.x1 - box.x0, d: box.y1 - box.y0 },
+    // mounting holes drawn on the board itself (Eagle's plain <hole>)
+    holes: holes.map((h) => {
+      const [x, y] = toFrame(h.x, h.y);
+      return { ...h, x, y };
+    }),
     elements: elements.map((e) => {
       const [x, y] = toFrame(e.x, e.y);
       return { ...e, x, y };
@@ -240,6 +249,10 @@ export function turnBoard(board, deg = 0, flip = false) {
   const swap = quarter % 2 === 1;
   return {
     outline: swap ? { w: d, d: w } : { w, d },
+    holes: board.holes.map((h) => {
+      const [x, y] = map([h.x, h.y]);
+      return { ...h, x, y };
+    }),
     elements: board.elements.map((e) => {
       const [x, y] = map([e.x, e.y]);
       const size = e.size && swap ? { ...e.size, w: e.size.d, d: e.size.w } : e.size;

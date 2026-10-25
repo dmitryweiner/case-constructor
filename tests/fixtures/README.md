@@ -17,4 +17,5 @@ Tiny drawings for `tests/drawing.test.ts`, each made with known boxes:
   "USB-C; side" (vertices (0, 0, 0) and (4, 3, 2)) placed at (12, 25, 0)
   turned 90° about z. Written by hand.
 - `tiny.brd`, `tiny.kicad_pcb` — a 30 × 20 outline with two footprints, one
-  turned 90°, one on the bottom, nets on the pads.
+  turned 90°, one on the bottom, nets on the pads; the Eagle board also has a
+  Ø3.2 mounting hole at (3, 3).

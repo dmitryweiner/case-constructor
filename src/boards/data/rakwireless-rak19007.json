@@ -1,6 +1,6 @@
 {
   "id": "rakwireless-rak19007",
-  "name": "RAKwireless RAK19007 + RAK4631 (WisBlock)",
+  "name": "RAKwireless RAK19007 + RAK4631 / RAK3401 (WisBlock)",
   "vendor": "RAKwireless",
   "kind": "mcu",
   "size": { "w": 60, "d": 30, "t": 1 },
@@ -29,6 +29,10 @@
     { "id": "led-charge", "type": "led", "edge": "top", "x": 0.8, "y": 27.8, "d": 1 },
     { "id": "led-green", "type": "led", "edge": "top", "x": 0.8, "y": 5.84, "d": 1 },
     { "id": "led-blue", "type": "led", "edge": "top", "x": 0.8, "y": 2.16, "d": 1 }
+  ],
+  "variants": [
+    { "id": "rak4631", "name": "with RAK4631", "ports": {} },
+    { "id": "rak3401", "name": "with RAK3401 (1 W)", "ports": {} }
   ],
   "source": "https://docs.rakwireless.com/product-categories/wisblock/rak19007/datasheet/",
   "verified": true
