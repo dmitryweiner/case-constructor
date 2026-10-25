@@ -10,6 +10,7 @@
 import type { BoardDef, Edge, TopPort } from '../boards/schema';
 import { EDGES, onFace } from '../boards/schema';
 import type { BoardPlacement, Rotation } from '../boards/placement';
+import { CLAMP_POST_ZONE } from '../boards/battery';
 import { boardOf, pinsDown, undersideOf } from '../boards/placement';
 import type { Dims } from './face';
 import { faceFrame } from './face';
@@ -155,6 +156,11 @@ function edgeReach(def: BoardDef): Record<Edge, number> {
   }
   if (def.mount.kind === 'rails') {
     for (const edge of railEdges(def)) reach[edge] = Math.max(reach[edge], RAIL_THICK - RAIL_GRIP + RAIL_GAP);
+  }
+  // a battery's clamp stands on posts in front of it and behind it
+  if (def.battery) {
+    reach.front = CLAMP_POST_ZONE;
+    reach.back = CLAMP_POST_ZONE;
   }
   return reach;
 }

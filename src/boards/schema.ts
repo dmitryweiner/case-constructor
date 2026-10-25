@@ -7,6 +7,7 @@
 // top view, x to the right, y up (away from the viewer). Edges: front
 // (y = 0), back (y = d), left (x = 0), right (x = w).
 
+import type { BatterySpec } from './battery';
 import type { ScrewSize } from '../geo/fasteners';
 import { isScrewSize } from '../geo/fasteners';
 
@@ -177,7 +178,7 @@ export interface BoardDef {
   /** proper noun, never translated; aliases after a slash */
   name: string;
   vendor: string;
-  kind: 'sbc' | 'mcu';
+  kind: 'sbc' | 'mcu' | 'battery';
   size: { w: number; d: number; t: number };
   /** the PCB's real outline when it is not the rectangle: a simple polygon inside `size`, counter-clockwise */
   outline?: [number, number][];
@@ -201,6 +202,8 @@ export interface BoardDef {
   source: string;
   /** dimensions checked against the official drawing */
   verified: boolean;
+  /** a battery placed like a board (boards/battery.ts): never in the catalog */
+  battery?: BatterySpec;
 }
 
 export const BOARD_MAX_MM = 300;

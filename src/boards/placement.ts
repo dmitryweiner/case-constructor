@@ -8,6 +8,8 @@ import { sanitizeFastener } from '../geo/fasteners';
 import type { BoardDef, Edge } from './schema';
 import { EDGES, bottomPartsH, resolveVariant, sanitizeBoard } from './schema';
 import { CATALOG, catalogBoard } from './catalog';
+import type { BatterySpec } from './battery';
+import { batteryDef, defaultBattery, sanitizeBattery } from './battery';
 
 export const ROTATIONS = [0, 90, 180, 270] as const;
 export type Rotation = (typeof ROTATIONS)[number];
@@ -17,6 +19,8 @@ export interface BoardPlacement {
   board: string;
   /** only when board === 'custom' */
   custom?: BoardDef;
+  /** only when board === 'battery' */
+  battery?: BatterySpec;
   x: number;
   y: number;
   /** PCB underside above the inner floor = standoff height */
@@ -46,13 +50,14 @@ export const WALL_OFFSET_MAX = 3;
 export const NEW_BOARD_GAP = 5;
 
 /** The entry behind a placement, its variants unresolved: the catalog entry or the custom board. */
-export function entryOf(placement: Pick<BoardPlacement, 'board' | 'custom'>): BoardDef {
+export function entryOf(placement: Pick<BoardPlacement, 'board' | 'custom' | 'battery'>): BoardDef {
   if (placement.board === 'custom' && placement.custom) return placement.custom;
+  if (placement.board === 'battery') return batteryDef(placement.battery ?? defaultBattery());
   return catalogBoard(placement.board) ?? CATALOG[0];
 }
 
 /** The board a placement builds: its entry with the chosen variant applied. */
-export function boardOf(placement: Pick<BoardPlacement, 'board' | 'custom' | 'variant'>): BoardDef {
+export function boardOf(placement: Pick<BoardPlacement, 'board' | 'custom' | 'battery' | 'variant'>): BoardDef {
   return resolveVariant(entryOf(placement), placement.variant);
 }
 
@@ -84,9 +89,11 @@ export function defaultPlacement(entry: BoardDef, x = 0, y = 0): BoardPlacement 
   const pins = def.pins?.soldered ?? false;
   return {
     board: def.id,
+    ...(def.battery ? { battery: def.battery } : {}),
     x,
     y,
-    z: Math.max(4, minBoardZ(def, pins)),
+    // a battery lies low, in its cradles; a board stands on standoffs
+    z: def.battery ? minBoardZ(def, pins) : Math.max(4, minBoardZ(def, pins)),
     rot: 0,
     mount: { size: def.mount.screw, hole: 'tap', head: 'none' },
     cuts: {},
@@ -105,7 +112,8 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
   const r = typeof raw === 'object' && raw !== null ? raw : {};
   const id: unknown = Reflect.get(r, 'board');
   const custom = id === 'custom' ? sanitizeBoard(Reflect.get(r, 'custom'), 'custom') : undefined;
-  const entry = custom ?? (typeof id === 'string' ? catalogBoard(id) : undefined) ?? CATALOG[0];
+  const battery = id === 'battery' ? sanitizeBattery(Reflect.get(r, 'battery')) : undefined;
+  const entry = custom ?? (battery ? batteryDef(battery) : undefined) ?? (typeof id === 'string' ? catalogBoard(id) : undefined) ?? CATALOG[0];
   const variantRaw: unknown = Reflect.get(r, 'variant');
   const variant = entry.variants?.find((item) => item.id === variantRaw)?.id ?? entry.variants?.[0].id;
   const def = resolveVariant(entry, variant);
@@ -126,6 +134,7 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
   return {
     board: custom ? 'custom' : def.id,
     ...(custom ? { custom: { ...custom, id: 'custom' } } : {}),
+    ...(battery ? { battery } : {}),
     x: num(Reflect.get(r, 'x'), 0, POSITION_MAX, base.x),
     y: num(Reflect.get(r, 'y'), 0, POSITION_MAX, base.y),
     z: num(Reflect.get(r, 'z'), minBoardZ(def, pins), Z_MAX, Math.max(base.z, minBoardZ(def, pins))),

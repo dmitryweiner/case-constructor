@@ -5,13 +5,17 @@ import { make } from './dom';
 import { t } from '../i18n';
 import { CATALOG } from '../boards/catalog';
 import type { BoardDef } from '../boards/schema';
+import { BATTERY_KINDS, CELLS, batteryDef, defaultBattery } from '../boards/battery';
 
 export function renderBoardList(root: HTMLElement, query: string, onPick: (def: BoardDef) => void): void {
   root.replaceChildren();
   const needle = query.trim().toLowerCase();
   const matches = CATALOG.filter((def) => !needle
     || `${def.vendor} ${def.name} ${def.id}`.toLowerCase().includes(needle));
-  if (matches.length === 0) {
+  // batteries: one row per kind, the count and size are set on the card
+  const batteries = BATTERY_KINDS.filter((kind) => !needle
+    || `${t('picker.batteries')} ${t(`battery.kind.${kind}`)} battery ${kind}`.toLowerCase().includes(needle));
+  if (matches.length === 0 && batteries.length === 0) {
     root.append(make('p', 'preset-empty', t('picker.none')));
     return;
   }
@@ -32,5 +36,16 @@ export function renderBoardList(root: HTMLElement, query: string, onPick: (def: 
       row.addEventListener('click', () => onPick(def));
       root.append(row);
     }
+  }
+  if (batteries.length > 0) root.append(make('p', 'preset-group', t('picker.batteries')));
+  for (const kind of batteries) {
+    const def = batteryDef(defaultBattery(kind));
+    const row = make('button', 'picker-row');
+    row.type = 'button';
+    row.dataset.board = `battery-${kind}`;
+    row.append(make('span', undefined, t(`battery.kind.${kind}`)));
+    if (kind !== 'pack') row.append(make('span', 'picker-size', `⌀${CELLS[kind].d} × ${CELLS[kind].l}`));
+    row.addEventListener('click', () => onPick(def));
+    root.append(row);
   }
 }

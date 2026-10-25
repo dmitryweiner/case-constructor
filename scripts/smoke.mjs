@@ -170,10 +170,12 @@ else {
   const viewBox = await page.locator('#view').boundingBox();
   await page.mouse.click(viewBox.x + usbC.x, viewBox.y + usbC.y);
   await expectWatertight('captions:usb-c-off');
-  if (await page.locator('#board0_cut_usb-c').isChecked()) errors.push('[captions] a click on the USB-C caption left its opening on');
+  // read from the state: the card's checkbox may be mid-rebuild
+  const usbCut = () => page.evaluate(() => window.__case.state().boards[0].cuts['usb-c'] ?? true);
+  if (await usbCut()) errors.push('[captions] a click on the USB-C caption left its opening on');
   await page.click('#undoBtn');
   await expectWatertight('captions:undo');
-  if (!(await page.locator('#board0_cut_usb-c').isChecked())) errors.push('[captions] undo did not bring the USB-C opening back');
+  if (!(await usbCut())) errors.push('[captions] undo did not bring the USB-C opening back');
 }
 await page.uncheck('#viewBoards');
 if ((await page.evaluate(() => window.__case.captions())).length) errors.push('[captions] captions stay with the boards hidden');
@@ -195,6 +197,22 @@ await page.click('#board0_wall_right');
 await page.click('#board0_wall_front');
 if (await page.locator('#board0_wallOffset').isVisible()) errors.push('[walls] the offset stays without walls');
 if ((await sizeOf()) !== centred) errors.push(`[walls] back from the walls, the case is ${await sizeOf()}, not ${centred}`);
+// a battery from the picker: placed beside the board, cells to a pack and back
+label('battery');
+await page.click('#boardAdd');
+await page.fill('#boardSearch', '18650');
+await page.click('#boardList [data-board="battery-18650"]');
+await expectWatertight('battery:2x18650');
+const cellsName = (await page.locator('#board1 .board-name').textContent()).trim();
+if (!cellsName.includes('2 × 18650')) errors.push(`[battery] the card says "${cellsName}"`);
+if ((await page.evaluate(() => window.__case.ghosts().length)) < 3) errors.push('[battery] no ghost for the battery');
+await page.click('#board1_cells_4');
+await expectWatertight('battery:4x18650');
+await page.selectOption('#board1_battery', 'pack');
+await setRange('board1_pack_h', 12);
+await expectWatertight('battery:pack');
+if (await page.locator('#board1_cells').isVisible()) errors.push('[battery] a pack offers a cell count');
+await page.click('#board1_remove');
 label('openings');
 await page.click('#cutAdd');
 await page.click('#cut0_shape_round');
