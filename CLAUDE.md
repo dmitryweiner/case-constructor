@@ -138,7 +138,8 @@ freely; a temporary script that turns out useful becomes a permanent one.
   downloaded by hand (Google Drive asks a person), `--list`. Fetch here, not
   with curl into the scratchpad: the next session finds the same files.
 - Adding a board: the skill `.claude/skills/add-board/SKILL.md` (its
-  "which tool for which drawing"). No new dependencies without the user's
+  "which tool for which drawing"), also for the catalog review: drawings a
+  person downloads, the review page's captions, the user's OK/BAD report. No new dependencies without the user's
   explicit approval, subagents included.
 - `scripts/lib/harness.mjs` — flags, a vite server on ports 5273 / 4273
   (not ClayForm's), console error collection, CPU throttle, browser locale.
