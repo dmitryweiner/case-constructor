@@ -18,3 +18,27 @@ battery and 8 mm in front of it and behind it for the clamp that holds it.
 
 In the view a battery is drawn see-through, like a board: its cells as
 cylinders, a pack as a block.
+
+## How it is held
+
+- **Cells** lie in two **cradles** on the floor (6 mm wide, near the ends of
+  the cells): seats 0.3 mm larger than a cell, up to 35 % of its diameter.
+- **A pack** sits between four **corner stops** (L-shaped, 1.6 mm thick, up
+  to 5 mm high); raised above the floor it also stands on a pad under each
+  corner.
+- Over the battery go **printed clamp bars** — one, or two for cells 55 mm
+  or longer — each on two posts in front of the battery and behind it. A bar
+  wraps the cells by up to 30 % of their diameter; on a pack it lies flat.
+- The posts take the board card's **Screw** and **Hole** (tap / insert /
+  nut, as for standoffs); the bar has a through hole over each post.
+
+| Control | Range | Default | Notes |
+|---|---|---|---|
+| Battery | the kinds above | — | |
+| Cells | 1–4 | 2 | cells only |
+| Length, width, thickness | see above | 60 × 35 × 8 | a pack only |
+| Clamp presses | −3 … 1 mm | 0.3 | how far a tightened clamp presses into the battery; negative leaves that much room for a foam pad |
+| Above the floor | 1–60 mm | 1 | the battery's underside; the cradles fill the room under it |
+
+The clamps print with the body: turned over, their flat tops on the bed, to
+the right of the other parts — in *Both* and in *Body* (view and STL).

@@ -12,7 +12,7 @@ import type { BoardPlacement } from '../boards/placement';
 import { NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, WALL_OFFSET_MAX, WALL_OFFSET_MIN, Z_MAX, boardOf, entryOf, pinsDown, placementMinZ, portCut, withPortCut } from '../boards/placement';
 import type { BoardDef } from '../boards/schema';
 import type { BatterySpec } from '../boards/battery';
-import { BATTERY_KINDS, CELL_COUNT_MAX, PACK_MAX, PACK_MIN, defaultBattery, sanitizeBattery } from '../boards/battery';
+import { BATTERY_KINDS, CELL_COUNT_MAX, PACK_MAX, PACK_MIN, PRESS_MAX, PRESS_MIN, defaultBattery, sanitizeBattery } from '../boards/battery';
 import { EDGES } from '../boards/schema';
 import type { Align, ArrangeMode } from '../geo/arrange';
 import { caseLayout } from '../geo/layout';
@@ -67,6 +67,12 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
         return setBattery(state, { pack: { ...spec.pack, [dim]: value } });
       },
     })),
+    {
+      kind: 'range', key: 'press', label: 'battery.press', hint: 'battery.press.hint', min: PRESS_MIN, max: PRESS_MAX, step: 0.1,
+      when: (state) => battery(state) !== undefined,
+      get: (state) => battery(state)?.press ?? 0,
+      set: (state, value) => setBattery(state, { press: value }),
+    },
     {
       kind: 'select', key: 'variant', label: 'board.variant', hint: 'board.variant.hint',
       when: () => (entry.variants?.length ?? 0) > 1,
@@ -299,6 +305,7 @@ export function renderBoardsCard(
       head.append(remove);
       box.append(head);
       if (def.mount.kind === 'rails') box.append(make('p', 'board-note', t('board.rails')));
+      if (def.battery) box.append(make('p', 'board-note', t('battery.note')));
       const controls = make('div');
       box.append(controls);
       if (state.boards.length >= 2) box.append(alignBox(index, state));

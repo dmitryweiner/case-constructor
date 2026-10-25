@@ -204,7 +204,12 @@ freely; a temporary script that turns out useful becomes a permanent one.
   `board: 'battery'` and a `battery` spec; `entryOf` makes them a board
   entry (`batteryDef`: no PCB, no holes, no ports, `def.battery` set), so
   the layout, walls, alignment and overlap checks need nothing new. Code
-  that must tell them apart checks `def.battery` (the ghost draws cells).
+  that must tell them apart checks `def.battery` (the ghost draws cells,
+  the worker builds cradles or a pack's corner stops and clamp posts instead
+  of standoffs, `batterySolids.ts`). The clamp bars are a part of their own
+  (`clamp`, case frame, as screwed down): exploded they lift, in the print
+  layout they lie on their tops right of the rest (`withClamps`), and they
+  go with the body (Body and Both).
 - Nut slots point towards the board's centre: pointing outwards they cut the
   wall next to a corner standoff.
 - Cutters get a few microns of different growth each (`cut.ts`,
@@ -317,7 +322,7 @@ Add a state when a feature lands, never edit an old one.
 ## Presets
 
 Built-in presets (`src/state/presets.ts`): `pi4-desktop`, `pi-zero-gpio`,
-`esp32-sensor-box`, `arduino-uno-box`, `cylinder-puck`, `plain-box`. Each is
+`esp32-sensor-box`, `esp32-18650-box`, `arduino-uno-box`, `cylinder-puck`, `plain-box`. Each is
 built by `tests/presetsBuild.test.ts` (closed, no slivers, no overlap, no
 layout warnings). A preset's name is one English string in `presets.ts`
 (not translated: the review asked for one name); its note is the

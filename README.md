@@ -19,8 +19,12 @@ printing.
   top, sized automatically around the boards.
 - A catalog of 35 boards — Raspberry Pi, Banana Pi, Orange Pi, Radxa, Repka
   Pi, Walnut Pi, Espressif ESP32, Arduino, Heltec — or your own board, on
-  standoffs with tap, heat-set insert or nut holes, or held by grooved rails.
-- Openings for every connector, your own cutouts, ventilation, a fan seat.
+  standoffs with tap, heat-set insert or nut holes, or held by grooved rails;
+  against any wall with its connectors flush with the case's surface.
+- Batteries — 18650, 21700, AA, AAA cells or a flat LiPo pack — in cradles
+  on the floor under printed clamp bars on screws.
+- Openings for every connector (captioned in the view: a click turns one on
+  or off), your own cutouts, ventilation, a fan seat.
 - A lid on any face (the cylinder: top or bottom; the console: any face but
   the slope), flat or taking part of the walls, with a skirt and a printing
   clearance, on snaps, screws, magnets or printed screws (thumb screws in the

@@ -559,6 +559,64 @@
       ]
     }
   },
+  "battery-2x18650-clamps": {
+    "body": {
+      "triangles": 1836,
+      "volume": 29940.36,
+      "extents": [
+        77,
+        68.8,
+        30.59
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 11584.28,
+      "extents": [
+        77,
+        68.8,
+        5
+      ]
+    },
+    "clamp": {
+      "triangles": 408,
+      "volume": 5082.64,
+      "extents": [
+        28.7,
+        58,
+        7
+      ]
+    }
+  },
+  "battery-lipo-pack-raised": {
+    "body": {
+      "triangles": 1386,
+      "volume": 17628,
+      "extents": [
+        62,
+        58,
+        19.99
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 7994.3,
+      "extents": [
+        62,
+        58,
+        5
+      ]
+    },
+    "clamp": {
+      "triangles": 148,
+      "volume": 815.85,
+      "extents": [
+        52.6,
+        8,
+        2
+      ]
+    }
+  },
   "countersunk-head-6.5": {
     "body": {
       "triangles": 3580,

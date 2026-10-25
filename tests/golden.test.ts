@@ -25,7 +25,7 @@ interface PartEntry {
   extents: number[];
 }
 
-type Entry = Record<'body' | 'lid', PartEntry>;
+type Entry = Record<'body' | 'lid', PartEntry> & { clamp?: PartEntry };
 
 /** The M0 base: no boards, the manual 100 × 70 × 35 size. */
 function base(): AppState {
@@ -163,6 +163,15 @@ const STATES: Record<string, AppState> = {
     lid: { ...defaultState().lid, fastening: 'screws' },
     boards: [{ ...defaultState().boards[0], walls: ['right'], wallOffset: -0.5 }],
   }),
+  // R8: batteries in cradles under printed clamps (plans/PLAN-IMPROVEMENTS-2026-10-25.md)
+  'battery-2x18650-clamps': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'battery', battery: { kind: '18650', count: 2, press: 0.3 }, mount: { size: 'M3', hole: 'insert' } }],
+  }),
+  'battery-lipo-pack-raised': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'battery', battery: { kind: 'pack', pack: { w: 50, d: 34, h: 6 }, press: -1 }, z: 3, rot: 90, mount: { size: 'M2.5', hole: 'nut' } }],
+  }),
   // R3: the head seat set by the user (plans/PLAN-IMPROVEMENTS-2026-10-25.md)
   'countersunk-head-6.5': sanitizeState({
     ...defaultState(),
@@ -191,7 +200,7 @@ describe('golden cases', () => {
     const actual: Record<string, Entry> = {};
     for (const [name, state] of Object.entries(STATES)) {
       const built = buildCase(csg, state, SEGMENTS);
-      actual[name] = { body: part(built.body), lid: part(built.lid) };
+      actual[name] = { body: part(built.body), lid: part(built.lid), ...(built.clamps ? { clamp: part(built.clamps) } : {}) };
     }
     if (process.env.UPDATE_GOLDEN || !existsSync(GOLDEN_PATH)) {
       // say what moved, so a regeneration is a decision and not a blind overwrite

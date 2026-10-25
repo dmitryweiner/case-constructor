@@ -14,6 +14,7 @@ import { plateOf, shapeSpec } from './shape';
 import { outerSolid, shellSolid } from './shell';
 import type { Support } from './standoffs';
 import { rails, standoffs } from './standoffs';
+import { batteryClamps, batterySupports } from './batterySolids';
 import { cuttersSolid } from './cut';
 import { postSpots } from './fastening';
 import { postSolids, snapSolids } from './lip';
@@ -36,6 +37,8 @@ export interface CaseBuild {
   lid: SurfaceMesh;
   /** printed screws: one screw in its own frame (head below z = 0, shank up); the main thread places the copies */
   screw: SurfaceMesh | null;
+  /** the batteries' clamp bars, case frame, as screwed down; null without batteries */
+  clamps: SurfaceMesh | null;
   dims: Dims;
 }
 
@@ -78,9 +81,11 @@ export function buildCase(
     // plane never cuts a standoff; before any cutout, so a vent under a
     // standoff does not open it.
     onStage(BUILD_STAGES[2]);
-    const supports: Support[] = layout.boards.flatMap((board) => (board.def.mount.kind === 'holes'
-      ? standoffs(csg, scope, board, shape.floor, segments)
-      : rails(csg, scope, board, shape.floor)));
+    const supports: Support[] = layout.boards.flatMap((board) => (board.def.battery
+      ? batterySupports(csg, scope, board, board.def.battery, shape.floor, segments)
+      : board.def.mount.kind === 'holes'
+        ? standoffs(csg, scope, board, shape.floor, segments)
+        : rails(csg, scope, board, shape.floor)));
     // The owner is the part under the support's base; whatever of it reaches
     // into the other part's material (a deep side lid over a manually placed
     // board) is cut away, so the parts never overlap.
@@ -169,7 +174,9 @@ export function buildCase(
     const screw = lid.fastening === 'printed'
       ? fromManifold(screwSolid(csg, scope, screwShape(lid.thread.size, plate, lid.fit), threadPoints(segments)))
       : null;
-    return { body: fromManifold(body), lid: fromManifold(lidSolid), screw, dims };
+    const clampBars = layout.boards.flatMap((board) => (board.def.battery ? [batteryClamps(csg, scope, board, board.def.battery, segments)] : []));
+    const clamps = clampBars.length > 0 ? fromManifold(unionAll(csg, scope, clampBars)) : null;
+    return { body: fromManifold(body), lid: fromManifold(lidSolid), screw, clamps, dims };
   } finally {
     scope.dispose();
   }

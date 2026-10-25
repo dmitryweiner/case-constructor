@@ -1,7 +1,12 @@
 // Batteries: the spec and its sanitizer, a battery placed like a board (the
 // layout, the walls, the overlap checks), its ghost.
 
-import { CELLS, CLAMP_ABOVE, CLAMP_POST_ZONE, batteryDef, batterySize, cellCentres, defaultBattery, sanitizeBattery } from '../src/boards/battery';
+import { CELLS, CLAMP_ABOVE, CLAMP_POST_ZONE, batteryDef, batteryHold, batterySize, cellCentres, defaultBattery, sanitizeBattery } from '../src/boards/battery';
+import type { BatterySpec } from '../src/boards/battery';
+import { initCSG, toManifold } from '../src/geo/csg';
+import type { CsgApi } from '../src/geo/csg';
+import { buildCase } from '../src/geo/build';
+import type { Manifold } from 'manifold-3d';
 import { boardOf, defaultPlacement } from '../src/boards/placement';
 import { WALL_GAP, caseLayout, collisions } from '../src/geo/layout';
 import { boardGhost } from '../src/geo/ghost';
@@ -86,5 +91,59 @@ describe('a battery in the case', () => {
       expect(report.volume).toBeGreaterThan(0.95 * volume);
       expect(report.volume).toBeLessThan(1.01 * volume);
     }
+  });
+});
+
+describe('cradles and the clamp', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+  const base = defaultState();
+  const stateWith = (spec: BatterySpec, extra: Record<string, unknown> = {}) => sanitizeState({
+    ...base,
+    boards: [{ ...defaultPlacement(batteryDef(spec)), battery: spec, ...extra }],
+  });
+
+  /** The battery itself as a solid, case frame: its cells, or its pack. */
+  function batterySolid(state: ReturnType<typeof stateWith>): Manifold {
+    const ghost = boardGhost(caseLayout(state).boards[0]);
+    return toManifold(csg, ghost.pcb);
+  }
+
+  it.each([
+    ['2 × 18650', defaultBattery('18650')],
+    ['3 × AAA, raised 3 mm, nut holes', { ...defaultBattery('10440'), count: 3 }],
+    ['a pack, a foam gap', { ...defaultBattery('pack'), press: -1.5 }],
+  ] as const)('%s: closed parts, the clamp presses the battery by `press` and touches nothing else', (_name, spec) => {
+    const extra = spec.kind === '10440' ? { z: 3, mount: { size: 'M3', hole: 'nut', head: 'none' } } : {};
+    const state = stateWith(spec, extra);
+    const built = buildCase(csg, state, 12);
+    if (!built.clamps) throw new Error('no clamp');
+    for (const mesh of [built.body, built.lid, built.clamps]) {
+      const report = validateMesh(mesh);
+      expect(report.watertight).toBe(true);
+      expect(report.degenerateTriangles).toBe(0);
+    }
+    const body = toManifold(csg, built.body);
+    const clamp = toManifold(csg, built.clamps);
+    const cells = batterySolid(state);
+    // the clamp rests on the posts: no shared volume with the body
+    const onBody = clamp.intersect(body);
+    expect(onBody.volume()).toBeLessThan(1e-3);
+    // the battery sits in its cradles without touching them
+    const inBody = cells.intersect(body);
+    expect(inBody.volume()).toBeLessThan(1e-3);
+    // pressing: a thin overlap with the battery; a foam gap: none
+    const pressed = clamp.intersect(cells);
+    if (spec.press > 0) expect(pressed.volume()).toBeGreaterThan(0.01);
+    else expect(pressed.volume()).toBeLessThan(1e-3);
+    // the clamps are the hold's bars: as many as it says, over the battery
+    expect(clamp.decompose().length).toBe(batteryHold(spec).clamps.length);
+    for (const solid of [body, clamp, cells, onBody, inBody, pressed]) solid.delete();
+  });
+
+  it('no battery, no clamp part', () => {
+    expect(buildCase(csg, base, 8).clamps).toBeNull();
   });
 });

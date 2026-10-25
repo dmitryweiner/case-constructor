@@ -45,11 +45,11 @@ import type { Key } from './i18n';
 import { faceFrame } from './geo/face';
 import type { Dims, Face } from './geo/face';
 import type { PrintShape } from './geo/print';
-import { caseDims, caseLayout, collisions, lidDepthMax, placeBoards } from './geo/layout';
+import { caseLayout, collisions, lidDepthMax, placeBoards } from './geo/layout';
 import { boardGhost, portCaptionAnchor } from './geo/ghost';
 import { MAX_BOARDS, NEW_BOARD_GAP, boardOf, defaultPlacement, portCut, withPortCut } from './boards/placement';
 import type { BoardDef } from './boards/schema';
-import { bodyForPrint, lidWithScrews, printLayout, screwsForPrint, screwsInCase, PRINT_GAP_MM } from './geo/print';
+import { bodyForPrint, lidWithScrews, printLayout, screwsForPrint, screwsInCase, withClamps, PRINT_GAP_MM } from './geo/print';
 import type { SurfaceMesh } from './geo/surface';
 import { meshBounds, mergeMeshes } from './geo/surface';
 import { encodeSTL } from './geo/stl';
@@ -207,7 +207,7 @@ let generation = 0;
 /** The generation whose build has answered (a preview or an error) — for scripts/snap.mjs. */
 let settled = 0;
 /** The last preview from the worker, kept so view toggles redraw without a rebuild. */
-let lastParts: { body: SurfaceMesh; lid: SurfaceMesh; screw: SurfaceMesh | null; state: AppState } | null = null;
+let lastParts: { body: SurfaceMesh; lid: SurfaceMesh; screw: SurfaceMesh | null; clamps: SurfaceMesh | null; state: AppState } | null = null;
 /** The label's raster for the current state — the worker gets it with every job. */
 let currentLabel: LabelRaster | null = null;
 /** Board ghosts of the current state — drawn at once, the case follows from the worker. */
@@ -304,11 +304,11 @@ async function showPreview(stamp: number): Promise<void> {
     settled = stamp;
     const body = toMesh(partById(result.parts, 'body'));
     const lid = toMesh(partById(result.parts, 'lid'));
-    const screwPart = result.parts.find((part) => part.id === 'screw');
-    const screw = screwPart ? toMesh(screwPart) : null;
-    lastParts = { body, lid, screw, state: requested };
+    const screw = optionalPart(result.parts, 'screw');
+    const clamps = optionalPart(result.parts, 'clamp');
+    lastParts = { body, lid, screw, clamps, state: requested };
     drawParts();
-    audit(screw ? [body, lid, screw] : [body, lid], result.ms);
+    audit([body, lid, ...(screw ? [screw] : []), ...(clamps ? [clamps] : [])], result.ms);
   } catch (error) {
     if (stamp !== generation) return;
     settled = stamp;
@@ -327,6 +327,31 @@ function bothForPrint(
   return screws ? [...parts, screws] : parts;
 }
 
+/**
+ * The parts on the bed as the parts tab picks them — the print layout of the
+ * view and of the STL: Both is body, lid, printed screws and battery clamps;
+ * Body is the body and the clamps (they go into it); Lid is the lid and its
+ * screws.
+ */
+function printParts(
+  built: AppState, body: SurfaceMesh, lid: SurfaceMesh, screw: SurfaceMesh | null, clamps: SurfaceMesh | null,
+): ScenePart[] {
+  const layout = caseLayout(built);
+  const { dims } = layout;
+  const shape = { kind: built.shape.kind, console: layout.console };
+  const face = built.lid.face;
+  const count = screw ? lidPosts(built).spots.length : 0;
+  const roles = (meshes: SurfaceMesh[], names: ScenePart['role'][]): ScenePart[] =>
+    meshes.map((mesh, i): ScenePart => ({ role: names[i] ?? 'screw', mesh }));
+  if (built.exportMode === 'lid') return roles(lidWithScrews(lid, screw, count, face, dims), ['lid', 'screw']);
+  const placed = built.exportMode === 'both'
+    ? bothForPrint(body, lid, screw, count, face, dims, shape)
+    : [bodyForPrint(body, face, dims, shape)];
+  const names: ScenePart['role'][] = built.exportMode === 'both' ? ['body', 'lid', 'screw'] : ['body'];
+  const withClampBars = withClamps(placed, clamps);
+  return roles(withClampBars, [...names.slice(0, placed.length), 'clamp']);
+}
+
 /** The lid's corner posts as the worker builds them (in the lid's face frame) — for warnings and the printed screws. */
 function lidPosts(current: AppState) {
   const layout = caseLayout(current);
@@ -338,6 +363,12 @@ function lidPosts(current: AppState) {
   const zp = -(plate + lid.depth);
   const opening = openingPolygon(shapeSpec(shape, dims), frame, zp, lid.lip.h, 8);
   return { frame, plate, zp, spots: lid.fastening === 'snaps' ? [] : postSpots(opening, lid, shape.wall) };
+}
+
+/** A part the worker sends only sometimes (printed screws, battery clamps), as a mesh. */
+function optionalPart(parts: JobPart[], id: JobPart['id']): SurfaceMesh | null {
+  const found = parts.find((part) => part.id === id);
+  return found ? toMesh(found) : null;
 }
 
 function partById(parts: JobPart[], id: JobPart['id']): JobPart {
@@ -354,7 +385,7 @@ function partById(parts: JobPart[], id: JobPart['id']): JobPart {
  */
 function drawParts(): void {
   if (!lastParts) return;
-  const { body, lid, screw, state: built } = lastParts;
+  const { body, lid, screw, clamps, state: built } = lastParts;
   const layout = caseLayout(built);
   const { dims } = layout;
   const showBody = built.exportMode !== 'lid';
@@ -362,16 +393,7 @@ function drawParts(): void {
   const mode = effectiveView(built.exportMode);
   const posts = screw ? lidPosts(built).spots.map((spot) => spot.centre) : [];
   if (mode === 'print') {
-    const shape = { kind: built.shape.kind, console: layout.console };
-    const face = built.lid.face;
-    const roles = (meshes: SurfaceMesh[], first: ScenePart['role'][]): ScenePart[] =>
-      meshes.map((mesh, i): ScenePart => ({ role: first[i] ?? 'screw', mesh }));
-    const parts: ScenePart[] = built.exportMode === 'both'
-      ? roles(bothForPrint(body, lid, screw, posts.length, face, dims, shape), ['body', 'lid'])
-      : built.exportMode === 'lid'
-        ? roles(lidWithScrews(lid, screw, posts.length, face, dims), ['lid'])
-        : [{ role: 'body', mesh: bodyForPrint(body, face, dims, shape) }];
-    show(parts);
+    show(printParts(built, body, lid, screw, clamps));
     scene.setCaptions([]);
     return;
   }
@@ -380,6 +402,8 @@ function drawParts(): void {
   if (showBody) {
     parts.push({ role: 'body', mesh: body });
     if (withBoards) parts.push(...ghosts);
+    // battery clamps on their posts; exploded, lifted off the battery
+    if (clamps) parts.push({ role: 'clamp', mesh: clamps, offset: [0, 0, mode === 'exploded' ? LIFT_MM / 2 : 0] });
   }
   if (showLid && showBody) {
     const n = faceFrame(built.lid.face, dims).n;
@@ -588,21 +612,11 @@ async function runExport(): Promise<void> {
       return;
     }
     blockersEl.textContent = '';
-    const dims = caseDims(requested);
-    const face = requested.lid.face;
     const body = toMesh(partById(result.parts, 'body'));
     const lid = toMesh(partById(result.parts, 'lid'));
-    const screwPart = result.parts.find((part) => part.id === 'screw');
-    const screw = screwPart ? toMesh(screwPart) : null;
-    const count = screw ? lidPosts(requested).spots.length : 0;
-    const layout = caseLayout(requested);
-    const shape = { kind: requested.shape.kind, console: layout.console };
-    // printed screws travel with the lid: same print job, same material
-    const mesh = requested.exportMode === 'body'
-      ? bodyForPrint(body, face, dims, shape)
-      : requested.exportMode === 'lid'
-        ? mergeMeshes(lidWithScrews(lid, screw, count, face, dims))
-        : mergeMeshes(bothForPrint(body, lid, screw, count, face, dims, shape));
+    // printed screws travel with the lid, battery clamps with the body: same print job, same material
+    const placed = printParts(requested, body, lid, optionalPart(result.parts, 'screw'), optionalPart(result.parts, 'clamp'));
+    const mesh = mergeMeshes(placed.map((part) => part.mesh));
     download(encodeSTL(mesh, { name: requested.exportMode }), `case-constructor-${requested.exportMode}.stl`);
   } catch (error) {
     blockersEl.textContent = t('error.export', { error: message(error) });

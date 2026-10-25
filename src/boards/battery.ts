@@ -30,6 +30,8 @@ export interface BatterySpec {
   count: number;
   /** a pack's size, mm: w along its length, d across, h high */
   pack: { w: number; d: number; h: number };
+  /** how far the clamp presses into the battery, mm; negative leaves room for a foam pad */
+  press: number;
 }
 
 export const CELL_COUNT_MAX = 4;
@@ -45,13 +47,27 @@ export const SEAT_CLEARANCE = 0.3;
  * case grows by it, so the clamp never meets the lid.
  */
 export const CLAMP_ABOVE = 6;
-/** Where the clamp posts go: this far beyond the battery on its front and back, mm. */
-export const CLAMP_POST_ZONE = 8;
+/** Where the clamp posts go: this far beyond the battery on its front and back (an M4 insert's boss fits), mm. */
+export const CLAMP_POST_ZONE = 10;
+/** The clamp bar: its width along the battery and its thickness over it, mm. */
+export const CLAMP_W = 8;
+export const CLAMP_T = 3;
+/** A cradle under cells: its width along them, and how high it wraps them (a share of the diameter). */
+export const SADDLE_W = 6;
+export const SADDLE_WRAP = 0.35;
+/** A pack's corner stops: how long their legs are, how thick, how high at most, mm. */
+export const STOP_LEG = 8;
+export const STOP_T = 1.6;
+export const STOP_H = 5;
+/** Cells this long or longer get two clamps. */
+const TWO_CLAMPS = 55;
+export const PRESS_MIN = -3;
+export const PRESS_MAX = 1;
 /** Default screw for the clamp. */
 export const CLAMP_SCREW: ScrewSize = 'M3';
 
 export function defaultBattery(kind: BatteryKind = '18650'): BatterySpec {
-  return { kind, count: kind === 'pack' ? 1 : 2, pack: { w: 60, d: 35, h: 8 } };
+  return { kind, count: kind === 'pack' ? 1 : 2, pack: { w: 60, d: 35, h: 8 }, press: 0.3 };
 }
 
 function num(x: unknown, min: number, max: number, fallback: number): number {
@@ -74,6 +90,7 @@ export function sanitizeBattery(raw: unknown): BatterySpec {
       d: num(Reflect.get(pack, 'd'), PACK_MIN.d, PACK_MAX.d, d.pack.d),
       h: num(Reflect.get(pack, 'h'), PACK_MIN.h, PACK_MAX.h, d.pack.h),
     },
+    press: num(Reflect.get(r, 'press'), PRESS_MIN, PRESS_MAX, d.press),
   };
 }
 
@@ -117,5 +134,39 @@ export function batteryDef(spec: BatterySpec): BoardDef {
     source: '',
     verified: true,
     battery: spec,
+  };
+}
+
+/**
+ * How the battery is held, in its own frame (x along it, y across, z up from
+ * its underside): cradles under it, clamp bars across it at `clamps`, each
+ * on two posts at `posts` (y) whose tops are at `postTop`; the bar's seats
+ * (cells) sit `press` lower than the cells, so a tightened clamp presses
+ * them by that much.
+ */
+export interface BatteryHold {
+  /** cradles under cells, x centres; a pack has corner stops instead */
+  saddles: number[];
+  /** clamp bars, x centres */
+  clamps: number[];
+  /** the two posts of every clamp, y */
+  posts: [number, number];
+  /** the clamp bar's underside and the posts' tops, z */
+  postTop: number;
+  /** the clamp bar's top, z */
+  barTop: number;
+}
+
+export function batteryHold(spec: BatterySpec): BatteryHold {
+  const size = batterySize(spec);
+  const two = size.w >= TWO_CLAMPS;
+  // the bar wraps cells by up to 30 % of their diameter; on a pack it lies flat, pressed in
+  const wrap = spec.kind === 'pack' ? spec.press : Math.min(0.3 * size.h, 4);
+  return {
+    saddles: spec.kind === 'pack' ? [] : [0.15 * size.w, 0.85 * size.w],
+    clamps: two ? [0.35 * size.w, 0.65 * size.w] : [0.5 * size.w],
+    posts: [-CLAMP_POST_ZONE / 2, size.d + CLAMP_POST_ZONE / 2],
+    postTop: size.h - wrap,
+    barTop: size.h + CLAMP_T,
   };
 }
