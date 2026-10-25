@@ -5,6 +5,8 @@
 import type { Dims, Face } from './face';
 import { faceFrame } from './face';
 import type { LabelState } from './extras';
+import { flatRegion } from './extras';
+import type { ShapeState } from './shape';
 
 export interface LabelRaster {
   w: number;
@@ -56,13 +58,30 @@ export function rasterRuns(raster: LabelRaster): [number, number][][] {
   return out;
 }
 
-/** Where the label sits: its centre on the lid face (u, v) and its size in mm. */
-export function labelPlacement(label: LabelState, raster: LabelRaster, face: Face, dims: Dims): { u: number; v: number; w: number; h: number } {
+/** Half the size of the label's box once turned by `angle`, mm. */
+export function labelBox(w: number, h: number, angle: number): { hw: number; hh: number } {
+  const c = Math.abs(Math.cos((angle * Math.PI) / 180));
+  const s = Math.abs(Math.sin((angle * Math.PI) / 180));
+  return { hw: (c * w + s * h) / 2, hh: (s * w + c * h) / 2 };
+}
+
+/**
+ * Where the label sits: its centre on the lid face (u, v) and its size in mm.
+ * The anchor puts its turned box against an edge or into a corner of the
+ * face's flat part, `margin` in; the offset moves it from there.
+ */
+export function labelPlacement(label: LabelState, raster: LabelRaster, face: Face, dims: Dims, shape: ShapeState): { u: number; v: number; w: number; h: number } {
   const extent = faceFrame(face, dims).extent;
-  return {
-    u: extent.w / 2 + label.x,
-    v: extent.h / 2 + label.y,
-    w: raster.w * raster.mmPerPx,
-    h: raster.h * raster.mmPerPx,
-  };
+  const w = raster.w * raster.mmPerPx;
+  const h = raster.h * raster.mmPerPx;
+  const { hw, hh } = labelBox(w, h, label.angle);
+  const flat = flatRegion(shape, dims, face, label.margin);
+  const anchor = label.anchor;
+  const u = anchor.endsWith('Left') || anchor === 'left' ? flat.u0 + hw
+    : anchor.endsWith('Right') || anchor === 'right' ? flat.u1 - hw
+      : extent.w / 2;
+  const v = anchor.startsWith('top') ? flat.v1 - hh
+    : anchor.startsWith('bottom') ? flat.v0 + hh
+      : extent.h / 2;
+  return { u: u + label.x, v: v + label.y, w, h };
 }

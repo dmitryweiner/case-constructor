@@ -8,9 +8,10 @@ import type { Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { make } from './dom';
 import { FACES } from '../geo/face';
-import type { FanState, LabelState, VentState, WallMountState } from '../geo/extras';
+import type { FanState, LabelAnchor, LabelState, VentState, WallMountState } from '../geo/extras';
 import {
-  EAR_ALONG, EAR_COUNT_MAX, EAR_SIDES, EAR_WALLS, FAN_SIZES, KEYHOLE_STYLES, LABEL_FONTS, LABEL_MAX_CHARS, MOUNT_KINDS, VENT_PATTERNS,
+  EAR_ALONG, EAR_COUNT_MAX, EAR_SIDES, EAR_WALLS, FAN_SIZES, KEYHOLE_STYLES, LABEL_ANCHORS, LABEL_FONTS, LABEL_MARGIN_MAX, LABEL_MAX_CHARS,
+  MOUNT_KINDS, VENT_PATTERNS,
 } from '../geo/extras';
 import { LABEL_FONT_FILES } from './fonts';
 import type { AppState } from '../state/schema';
@@ -147,6 +148,12 @@ function mountControls(): Control<AppState>[] {
   ];
 }
 
+/** The anchors as a 3 × 3 grid of arrows, in LABEL_ANCHORS order. */
+const ANCHOR_ARROWS: Readonly<Record<LabelAnchor, string>> = {
+  topLeft: '↖', top: '↑', topRight: '↗', left: '←', centre: '•', right: '→', bottomLeft: '↙', bottom: '↓', bottomRight: '↘',
+};
+const QUARTER_TURNS = [0, 90, 180, 270] as const;
+
 function labelControls(): Control<AppState>[] {
   return [
     {
@@ -172,12 +179,31 @@ function labelControls(): Control<AppState>[] {
       get: (state) => state.label.depth, set: (state, value) => label(state, { depth: value }),
     },
     {
+      kind: 'segmented', key: 'anchor', label: 'label.anchor', hint: 'label.anchor.hint',
+      options: LABEL_ANCHORS.map((value) => ({ value, text: ANCHOR_ARROWS[value] })),
+      get: (state) => state.label.anchor,
+      // a new anchor starts without the old fine offset
+      set: (state, value) => label(state, { anchor: LABEL_ANCHORS.find((a) => a === value) ?? state.label.anchor, x: 0, y: 0 }),
+    },
+    {
+      kind: 'range', key: 'margin', label: 'label.margin', hint: 'label.margin.hint', min: 0, max: LABEL_MARGIN_MAX, step: 0.5,
+      when: (state) => state.label.anchor !== 'centre',
+      get: (state) => state.label.margin, set: (state, value) => label(state, { margin: value }),
+    },
+    {
       kind: 'range', key: 'x', label: 'fan.x', hint: 'label.xy.hint', min: -100, max: 100, step: 0.5,
       get: (state) => state.label.x, set: (state, value) => label(state, { x: value }),
     },
     {
       kind: 'range', key: 'y', label: 'fan.y', hint: 'label.xy.hint', min: -100, max: 100, step: 0.5,
       get: (state) => state.label.y, set: (state, value) => label(state, { y: value }),
+    },
+    {
+      kind: 'segmented', key: 'turn', label: 'label.turn',
+      options: QUARTER_TURNS.map((value) => ({ value: String(value), text: `${value}°` })),
+      get: (state) => String((((Math.round(state.label.angle) % 360) + 360) % 360)),
+      // 270° is −90° on the slider's −180…180
+      set: (state, value) => label(state, { angle: Number(value) > 180 ? Number(value) - 360 : Number(value) }),
     },
     {
       kind: 'range', key: 'angle', label: 'label.angle', min: -180, max: 180, step: 1,

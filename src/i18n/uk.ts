@@ -301,11 +301,17 @@ export const uk: Record<Key, string> = {
   'label.raised': 'Опукла',
   'label.raised.hint': 'увімк. — літери виступають; вимк. — гравіювання',
   'label.depth': 'Глибина',
-  'label.xy.hint': 'від центру кришки, якщо дивитися ззовні, мм',
+  'label.xy.hint': "точний зсув від обраного місця, якщо дивитися ззовні, мм",
   'label.angle': 'Поворот',
+  'label.turn': "Повернути",
+  'label.margin.hint': "наскільки напис відступає від заокруглень кришки, мм",
+  'label.margin': "Від краю",
+  'label.anchor.hint': "центр, край або кут кришки, якщо дивитися ззовні",
+  'label.anchor': "Місце",
   'warn.fanTooBig': 'Вентилятор {size} мм не вміщується на пласкій частині грані.',
   'warn.keyholeNearStandoff': 'Замкова шпарина поруч зі стійкою — рознесіть їх.',
   'warn.labelTooBig': 'Напис виходить за пласку частину кришки.',
+  'warn.labelOverScrew': "Напис наїжджає на головку гвинта на кришці.",
   'progress.extras': 'Вушка й напис',
 
   // --- built-in presets ---

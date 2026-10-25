@@ -310,11 +310,17 @@ export const en = {
   'label.raised': 'Raised',
   'label.raised.hint': 'on — the letters stand out; off — engraved',
   'label.depth': 'Depth',
-  'label.xy.hint': 'from the centre of the lid as seen from outside, mm',
+  'label.xy.hint': "a fine shift from the chosen place, as seen from outside, mm",
   'label.angle': 'Angle',
+  'label.turn': "Turn",
+  'label.margin.hint': "how far the label keeps from the lid's rounded edges, mm",
+  'label.margin': "From the edge",
+  'label.anchor.hint': "the centre, an edge or a corner of the lid as seen from outside",
+  'label.anchor': "Place",
   'warn.fanTooBig': 'The {size} mm fan does not fit the flat part of its face.',
   'warn.keyholeNearStandoff': 'A keyhole is next to a standoff — move them apart.',
   'warn.labelTooBig': 'The label runs off the flat part of the lid.',
+  'warn.labelOverScrew': "The label runs over a screw head on the lid.",
   'progress.extras': 'Ears and label',
 
   // --- built-in presets ---

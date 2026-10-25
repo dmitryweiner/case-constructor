@@ -366,6 +366,15 @@ const trianglesAfter = await page.evaluate(() => window.__case.parts()?.lid.indi
 if (!flags.has('preview') && trianglesAfter <= trianglesBefore) errors.push('[label] the lid did not change');
 await page.check('#label_raised');
 await expectWatertight('label:raised');
+// a quick place: a corner and a quarter turn; the margin row shows only off the centre
+if (await page.locator('#label_margin').isVisible()) errors.push('[label] the margin shows for the centre');
+await page.click('#label_anchor_bottomRight');
+await page.click('#label_turn_270');
+await expectWatertight('label:corner');
+const placed = await page.evaluate(() => window.__case.state().label);
+if (placed.anchor !== 'bottomRight' || placed.angle !== -90) errors.push(`[label] anchor/turn not applied: ${JSON.stringify(placed)}`);
+if (!(await page.locator('#label_margin').isVisible())) errors.push('[label] no margin for a corner');
+await page.click('#label_anchor_centre');
 await page.uncheck('#on_label');
 await page.uncheck('#on_vents');
 await page.uncheck('#on_fan');

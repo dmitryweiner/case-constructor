@@ -301,11 +301,17 @@ export const ru: Record<Key, string> = {
   'label.raised': 'Выпуклая',
   'label.raised.hint': 'вкл. — буквы выступают; выкл. — гравировка',
   'label.depth': 'Глубина',
-  'label.xy.hint': 'от центра крышки, если смотреть снаружи, мм',
+  'label.xy.hint': "точный сдвиг от выбранного места, если смотреть снаружи, мм",
   'label.angle': 'Поворот',
+  'label.turn': "Повернуть",
+  'label.margin.hint': "насколько надпись отступает от скруглений крышки, мм",
+  'label.margin': "От края",
+  'label.anchor.hint': "центр, край или угол крышки, если смотреть снаружи",
+  'label.anchor': "Место",
   'warn.fanTooBig': 'Вентилятор {size} мм не помещается на плоской части грани.',
   'warn.keyholeNearStandoff': 'Замочная скважина рядом со стойкой — разнесите их.',
   'warn.labelTooBig': 'Надпись выходит за плоскую часть крышки.',
+  'warn.labelOverScrew': "Надпись наезжает на головку винта на крышке.",
   'progress.extras': 'Ушки и надпись',
 
   // --- built-in presets ---

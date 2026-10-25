@@ -22,7 +22,9 @@ import { renderExtras } from './ui/extrasCards';
 import type { ExtrasHandle } from './ui/extrasCards';
 import { labelRaster } from './ui/labelRaster';
 import type { LabelRaster } from './geo/label';
-import { labelPlacement } from './geo/label';
+import { labelBox, labelPlacement } from './geo/label';
+import { SCREWS } from './geo/fasteners';
+import { screwShape } from './geo/thread';
 import { extrasWarnings, flatRegion } from './geo/extras';
 import type { CutsCardHandle } from './ui/cutsCard';
 import { cutWarnings, outerTopAt, portCutters } from './geo/ports';
@@ -247,14 +249,21 @@ function refresh(): void {
   baseWarnings.push(...printedScrewWarnings(lidBuilt).map(tm));
   baseWarnings.push(...extrasWarnings(state, shapeBuilt, layout, lidBuilt).map(tm));
   if (currentLabel) {
-    const place = labelPlacement(state.label, currentLabel, lidBuilt.face, dims);
+    const place = labelPlacement(state.label, currentLabel, lidBuilt.face, dims, shapeBuilt);
     const region = flatRegion(shapeBuilt, dims, lidBuilt.face, 0);
-    const reach = Math.hypot(place.w, place.h) / 2;
-    const turned = Math.abs(Math.sin((state.label.angle * Math.PI) / 180));
-    const hw = place.w / 2 * (1 - turned) + reach * turned;
-    const hh = place.h / 2 * (1 - turned) + reach * turned;
+    const { hw, hh } = labelBox(place.w, place.h, state.label.angle);
     if (place.u - hw < region.u0 || place.u + hw > region.u1 || place.v - hh < region.v0 || place.v + hh > region.v1) {
       baseWarnings.push(tm({ code: 'warn.labelTooBig' }));
+    }
+    // a screw head on the lid: the label must keep clear of it
+    const head = lidBuilt.fastening === 'screws' ? (lidBuilt.screw.head === 'none' ? SCREWS[lidBuilt.screw.size].headD : headSeat(lidBuilt).d) / 2 + 0.5
+      : lidBuilt.fastening === 'printed' ? screwShape(lidBuilt.thread.size, 0, 0).headD / 2 + 0.5 : 0;
+    if (head > 0 && lidPosts(state).spots.some((spot) => {
+      const du = Math.max(0, Math.abs(spot.centre[0] - place.u) - hw);
+      const dv = Math.max(0, Math.abs(spot.centre[1] - place.v) - hh);
+      return Math.hypot(du, dv) < head;
+    })) {
+      baseWarnings.push(tm({ code: 'warn.labelOverScrew' }));
     }
   }
   showWarnings([]);

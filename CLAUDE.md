@@ -340,7 +340,7 @@ Extras: toggled cards `#on_vents`, `#on_fan`, `#on_label`; vents
 `#mount_earCount_1…4`, `#mount_earWalls_leftRight|frontBack|one`,
 `#mount_earWall` (select), `#mount_earAlong_centre|ends`, `#mount_spacing`, `#mount_screwD`; label
 `#label_text`, `#label_font`, `#label_size`, `#label_raised`, `#label_depth`,
-`#label_x|_y|_angle`.
+`#label_anchor_<anchor>` (a 3 × 3 grid: topLeft … bottomRight), `#label_margin` (off the centre), `#label_x|_y`, `#label_turn_0|90|180|270`, `#label_angle`.
 Openings: `#cutAdd`; per cut `#cut<i>_face` (select), `#cut<i>_shape_rect|round`,
 `#cut<i>_x|_y|_w|_d|_h|_r` (`_d` is the diameter of a round cut), `#cut<i>_remove`.
 Case card: `#case_kind_box|cylinder|console`, `#case_cornerR`, `#case_edgeR`,

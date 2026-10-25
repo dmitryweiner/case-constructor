@@ -676,6 +676,19 @@ input[type='text'] {
   border-color: var(--accent);
 }
 
+/* the label's anchors: a 3 × 3 grid of arrows */
+#label_anchor {
+  display: grid;
+  grid-template-columns: repeat(3, 2.6em);
+  justify-content: start;
+}
+
+/* the quarter turns in one row */
+#label_turn {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
 .seg-btn.active {
   color: var(--accent);
   border-color: var(--accent);

@@ -36,6 +36,7 @@ export type MessageCode =
   | 'warn.keyholeClosedRound'
   | 'warn.keyholePadsOnBed'
   | 'warn.labelTooBig'
+  | 'warn.labelOverScrew'
   // worker job stages
   | 'progress.loading'
   | 'progress.shell'

@@ -302,11 +302,17 @@ export const he: Record<Key, string> = {
   'label.raised': 'בולט',
   'label.raised.hint': 'מופעל — האותיות בולטות; כבוי — חריטה',
   'label.depth': 'עומק',
-  'label.xy.hint': 'ממרכז המכסה כשמסתכלים מבחוץ, מ״מ',
+  'label.xy.hint': "הזזה עדינה מהמיקום שנבחר, כשמסתכלים מבחוץ, מ״מ",
   'label.angle': 'זווית',
+  'label.turn': "סיבוב",
+  'label.margin.hint': "כמה הכיתוב מתרחק מהקצוות המעוגלים של המכסה, מ״מ",
+  'label.margin': "מהקצה",
+  'label.anchor.hint': "המרכז, קצה או פינה של המכסה כשמסתכלים מבחוץ",
+  'label.anchor': "מיקום",
   'warn.fanTooBig': 'מאוורר {size} מ״מ אינו נכנס בחלק השטוח של הצד.',
   'warn.keyholeNearStandoff': 'חור תלייה נמצא ליד מעמד — הרחיקו ביניהם.',
   'warn.labelTooBig': 'הכיתוב חורג מהחלק השטוח של המכסה.',
+  'warn.labelOverScrew': "הכיתוב עולה על ראש בורג במכסה.",
   'progress.extras': 'אוזניים וכיתוב',
 
   // --- built-in presets ---

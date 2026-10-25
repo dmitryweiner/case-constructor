@@ -159,7 +159,7 @@ export function buildCase(
       else body = owner;
     }
     if (state.label.on && label) {
-      const place = labelPlacement(state.label, label, lid.face, dims);
+      const place = labelPlacement(state.label, label, lid.face, dims, shape);
       // an engraving never goes through the plate
       const depth = state.label.raised ? state.label.depth : Math.min(state.label.depth, plate - 0.6);
       const relief = labelSolid(csg, scope, state.label, label, frame, place, depth);
