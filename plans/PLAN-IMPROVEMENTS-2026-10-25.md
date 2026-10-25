@@ -267,3 +267,20 @@ adds a part.
   case's holes keep their construction (`threadHole` stays for the test
   prints). Finer pitch, more turns: the preview with printed screws went
   from 237 to 274 ms, under the 300 ms limit.
+- **Catalog review (user, 2026-10-25).** Photos of boards were tried first
+  and dropped: hand-straightened, they are a millimetre or two off and say
+  less than the vendor's drawing. `board.mjs --review` lays every entry over
+  its cached drawing instead, aligned without a person where it can be (the
+  holes, the edge, the connectors; a STEP model as its parts' boxes; a
+  layout's pads), and the person marks each board. Drawings the user
+  downloaded by hand (Google Drive, RAR archives: `fetch.mjs` unpacks them
+  with the system `bsdtar`) are tied to their boards by
+  `<source>#<file> --board <id>`. Orange Pi 4 Pro is verified by a printed
+  case that fits; Banana Pi M64, Orange Pi Zero 2W and Radxa Zero 3W match
+  their drawings and are verified. Marked BAD, to re-transcribe from the
+  drawings now cached: Orange Pi 3 LTS, 5 (holes up to 0.6 mm off the
+  model), Zero 3 (holes 45.06 × 49.94 apart on the DXF, the entry has
+  44 × 49; Ethernet and USB elsewhere), Radxa ROCK 3A, ROCK 4 SE (only the
+  ROCK 4 A/B DXF and the SE's placement PDF exist), ESP32-2432S028R,
+  ESP32-C3 SuperMini, MPD BH2AA-W and BH4AA-W. Not looked at yet: the
+  boards whose drawing needs two points by hand, and the photo-only ones.
