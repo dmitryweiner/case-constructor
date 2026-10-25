@@ -82,23 +82,32 @@ freely; a temporary script that turns out useful becomes a permanent one.
   `--set lid.face=bottom`. In zsh quote JSON
   values: `--set 'boards=[]'`.
 - `scripts/board.mjs` — catalog tools: `--check` validates every board file
-  (readable list of problems; `npm run boards:check` adds the vitest
-  suite), `--svg <id> [--png]` draws the board's top view with holes, ports
-  and their coordinates to compare against the drawing.
-- `scripts/dxf.mjs <file.dxf>` — extents and circles of a vendor DXF (hole
-  candidates, relative to the outline's corner), `--png` renders it,
-  `--min/--max` filter circle diameters (and box sizes), `--layer` picks a
-  layer, `--layers` counts entities per layer, `--boxes` prints every
-  polyline's bounding box (component outlines: where a connector is),
+  and every variant (readable list of problems; `npm run boards:check` adds
+  the vitest suite), `--svg <id> [--variant <v>] [--png]` draws the board's
+  top view with holes, ports, the outline and their coordinates to compare
+  against the drawing.
+- `scripts/dxf.mjs <file.dxf|file.pdf>` — extents and circles of a vendor
+  DXF or vector PDF (through `pdftocairo -svg`; `--page`, `--fit w,d` or
+  `--scale` against a known size) — hole candidates, relative to the
+  outline's corner. INSERT blocks are expanded (nested, moved, turned,
+  scaled). `--png` renders it, `--min/--max` filter circle diameters (and box
+  sizes), `--layer` picks a layer, `--layers` counts entities per layer,
+  `--boxes` prints every polyline's and every block placement's bounding box
+  with the block's name (component outlines: where a connector is),
   `--origin x,y` sets the board corner when the drawing is a panel with
-  rails. Old-style POLYLINE/VERTEX (Allegro) is read; blocks (INSERT) are
-  not expanded.
-- Adding a board: the skill `.claude/skills/add-board/SKILL.md`.
-- `scripts/proto/` — prototype drawing readers (STEP, vector PDF, KiCad,
-  Eagle) waiting to be rewritten as permanent scripts
-  (`PLAN-IMPROVEMENTS-NEW-BOARDS.md`, B7). Not wired into npm or the tests.
-  No new dependencies without the user's explicit approval, subagents
-  included.
+  rails. Old-style POLYLINE/VERTEX (Allegro) is read. Parsing:
+  `scripts/lib/drawing.mjs`.
+- `scripts/step.mjs <file.step>` — every part of a STEP assembly in the board
+  frame (box, height above the board's top), `--part <name>` its holes,
+  `--match`, `--board`, `--rotate`, `--flip`. Text parser, no CAD kernel
+  (`scripts/lib/step.mjs`).
+- `scripts/board.mjs --brd <file>` / `--kicad <file>` — the footprints of an
+  Eagle or KiCad layout in the board frame, with side, pad box and nets;
+  `--match`, `--rotate`, `--flip` (`scripts/lib/pcb.mjs`). `tests/drawing.test.ts`
+  reads a fixture of every format back to known boxes (`tests/fixtures/`).
+- Adding a board: the skill `.claude/skills/add-board/SKILL.md` (its
+  "which tool for which drawing"). No new dependencies without the user's
+  explicit approval, subagents included.
 - `scripts/lib/harness.mjs` — flags, a vite server on ports 5273 / 4273
   (not ClayForm's), console error collection, CPU throttle, browser locale.
   `CASE_BROWSER` overrides the chromium executable.

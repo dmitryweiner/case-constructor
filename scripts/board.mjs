@@ -6,13 +6,37 @@
 //   node scripts/board.mjs --svg <id> --out shots/x.svg
 //   node scripts/board.mjs --svg <id> --png             # also a PNG next to it (rendered by Playwright)
 //   node scripts/board.mjs --svg <id> --variant <v>     # one variant of a family → shots/<id>-<v>.svg
+//   node scripts/board.mjs --brd board.brd               # footprints of an Eagle board, board frame
+//   node scripts/board.mjs --kicad board.kicad_pcb       # the same for KiCad
+//     --match 'SW|LED|USB'   only footprints whose name, value or package matches
+//     --rotate 90            turn the board (counter-clockwise) to match the catalog's top view
+//     --flip                 the product's top is the file's bottom (mirror x, swap sides)
 
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { parseArgs } from './lib/harness.mjs';
+import { readBrd, readKicad, turnBoard } from './lib/pcb.mjs';
 
-const flags = parseArgs(process.argv.slice(2), ['svg', 'out', 'variant']);
+const flags = parseArgs(process.argv.slice(2), ['svg', 'out', 'variant', 'brd', 'kicad', 'match', 'rotate']);
+
+// --brd / --kicad: a layout file's footprints in the board frame (scripts/lib/pcb.mjs), no vitest needed
+if (flags.has('brd') || flags.has('kicad')) {
+  const path = flags.get('brd') ?? flags.get('kicad');
+  const text = readFileSync(path, 'utf8');
+  const read = flags.has('brd') ? readBrd(text) : readKicad(text);
+  const board = turnBoard(read, Number(flags.get('rotate') ?? 0), flags.has('flip'));
+  const r = (v) => Math.round(v * 100) / 100;
+  console.log(`outline ${r(board.outline.w)} × ${r(board.outline.d)}`);
+  const match = flags.get('match') ? new RegExp(String(flags.get('match')), 'i') : null;
+  for (const e of board.elements) {
+    if (match && !match.test(`${e.name} ${e.value} ${e.package}`)) continue;
+    const size = e.size ? `  ${r(e.size.w)} × ${r(e.size.d)}` : '';
+    const nets = e.nets.filter((n) => !/^(GND|VSS|AGND)$/i.test(n)).slice(0, 3);
+    console.log(`${e.name.padEnd(8)} ${String(e.value).padEnd(18).slice(0, 18)} ${e.package.padEnd(24).slice(0, 24)} at ${r(e.x)}, ${r(e.y)}  rot ${e.rot}  ${e.side}${size}${nets.length ? `  nets ${nets.join(',')}` : ''}`);
+  }
+  process.exit(0);
+}
 const args = Object.fromEntries(flags);
 if (args.svg && !args.out) args.out = args.variant ? `shots/${args.svg}-${args.variant}.svg` : `shots/${args.svg}.svg`;
 const result = spawnSync('npx', ['vitest', 'run', '--config', 'scripts/vitest.board.config.ts', '--silent=false', '--reporter=dot'], {

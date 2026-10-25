@@ -98,6 +98,21 @@ shows; do not mirror a bottom view.
 - Where the drawing gives no heights, the type defaults stand and
   `"verified"` stays `false` until someone measures.
 
+## 2b. Which tool for which drawing
+
+Every tool prints in the board frame (origin at the outline's lower-left
+corner, x right, y up) or says how to get there. No new dependencies: the
+standard library and `pdftocairo` (poppler) only.
+
+| The vendor gives | Tool | Notes |
+|---|---|---|
+| DXF (also Allegro, also Gerber turned into DXF) | `node scripts/dxf.mjs f.dxf` | `--layers`, `--layer L --boxes` (every polyline and every block placement, by block name), `--min/--max`, `--origin x,y` for a panel or a drawing with parts sticking out |
+| Vector PDF ("DXF" in the name, a dimension sheet) | `node scripts/dxf.mjs f.pdf [--page n]` | `--fit w,d` scales the extents to the board's size; check the other axis it prints. A bottom view comes mirrored: compare the holes |
+| STEP model or assembly | `node scripts/step.mjs f.step` | `--match 'USB\|HDMI'`, `--part BOARD` (holes), `--board <name>` when the board part is guessed wrong, `--rotate`, `--flip`. Reads an 80 MB Creo export in seconds |
+| Eagle `.brd` | `node scripts/board.mjs --brd f.brd` | footprints with their side, pad box and nets (a button's net tells RESET from BOOT); `--match`, `--rotate 90`, `--flip` when the product's top is the file's bottom |
+| KiCad `.kicad_pcb` | `node scripts/board.mjs --kicad f.kicad_pcb` | the same; an outline drawn inside a footprint counts |
+| A photo only | estimate, keep `"verified": false`, say so in the entry's commit | |
+
 ## 3. Register
 
 Import the file in `src/boards/catalog.ts` and add it to `RAW_BOARDS`, in

@@ -125,9 +125,11 @@ big. The ghost is wrong, though, and the overlap check is pessimistic.
 
 **Done** for Arduino Uno, Leonardo, Mega (layer 20 of their Eagle files),
 UNO Q (the UNO outline: its Allegro files are binary), Heltec V4 (its
-datasheet drawing) and RAK19007 (the notches above). The Orange Pi 5 Max /
-Pro notches and the Zero 3W chamfers wait for B7: their drawings are vector
-PDFs (and a Drive folder), which `dxf.mjs` reads only after it.
+datasheet drawing), RAK19007 (the notches above) and, after B7, the Orange
+Pi 5 Pro (its vector PDF through `dxf.mjs`: a bottom view, the power key's
+notch 1.25 × 6.1 mm on the right edge). Left for B9: the Orange Pi 5 Max
+(Drive asks for a confirmation the tools cannot give) and the Zero 3W (a
+Drive folder) — download them by hand.
 
 ## B4. Parts on the underside
 
@@ -276,6 +278,12 @@ delete it from `scripts/proto/`:
 **Tests.** A tiny fixture per format in `tests/fixtures/` (a block DXF, a
 one-page vector PDF, a two-part STEP), each read back to known boxes.
 
+**Done.** `scripts/lib/drawing.mjs` (DXF with blocks, pdftocairo SVG),
+`scripts/lib/step.mjs`, `scripts/lib/pcb.mjs` (Eagle, KiCad) behind
+`dxf.mjs`, the new `step.mjs` and `board.mjs --brd / --kicad`; fixtures for
+all five formats in `tests/drawing.test.ts`; `scripts/proto/` deleted. The
+ROCK 5B+ Creo export (79 MB) reads in 2.6 s with 0.7 GB: no STEP kernel.
+
 ## B8. `snap.mjs` loses clicks while the dev server reloads
 
 **Now.** While another process edits files, Vite's HMR reloads the page
@@ -343,11 +351,19 @@ with code 3.
   bottom silkscreen): its variant keeps the entry's ports, buttons closed.
 - **B6.** ESP32-S3-Zero: the STEP model has both buttons as one part and the
   2D drawing is a bottom view; BOOT is taken as the left one, as on the
-  other Zeros. XIAO C6 / MG24 keep the S3's button size (1.6 × 2.6): the
-  KiCad footprints' axes do not say which way the long side runs.
+  other Zeros. (XIAO C6 / MG24 first kept the S3's 1.6 × 2.6 buttons; the
+  pad boxes of `board.mjs --kicad` (B7) then showed them turned: 2.6 × 1.6.)
 - **B6.** The Feather ESP32-S3 TFT has its module on the underside next to
   the right-hand holes: the layout warns that a 5 mm standoff reaches it.
   That is the board, not the data; the variant test expects the warning.
 - **B3.** The board check requires the holes inside the outline, not the
   parts: a part on a module may overhang the base board (the RAK4631's BLE
   connector sits above the RAK19007's notch).
+- **B7.** Allegro block names are not always package names: the ROCK 4D's
+  are `PART_TOP_<n>`. Each placement still comes out as its own box.
+- **B7.** The prototype's circle boxes ignored the circle's plane (a
+  vertical hole counted as a flat ring) and it crashed on a 2D point (the
+  RP2350-Zero model); `step.mjs` places each circle in its own plane and
+  reads both.
+- **B7.** In a PCBA model many small parts are named "PCBA…": the board is
+  the largest of the BOARD/PCB-named parts, `--board` overrides.

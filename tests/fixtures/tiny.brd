@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE eagle SYSTEM "eagle.dtd">
+<eagle version="9.6.2">
+<drawing>
+<board>
+<plain>
+<wire x1="10" y1="5" x2="40" y2="5" width="0" layer="20"/>
+<wire x1="40" y1="5" x2="40" y2="25" width="0" layer="20"/>
+<wire x1="40" y1="25" x2="10" y2="25" width="0" layer="20"/>
+<wire x1="10" y1="25" x2="10" y2="5" width="0" layer="20"/>
+</plain>
+<libraries>
+<library name="lib">
+<packages>
+<package name="BTN">
+<smd name="1" x="-2" y="0" dx="1" dy="2" layer="1"/>
+<smd name="2" x="2" y="0" dx="1" dy="2" layer="1"/>
+</package>
+</packages>
+</library>
+</libraries>
+<elements>
+<element name="SW1" library="lib" package="BTN" value="RESET" x="15" y="10" rot="R90"/>
+<element name="SW2" library="lib" package="BTN" value="BOOT" x="30" y="20" rot="MR0"/>
+</elements>
+<signals>
+<signal name="!RESET"><contactref element="SW1" pad="1"/></signal>
+<signal name="GND"><contactref element="SW1" pad="2"/><contactref element="SW2" pad="2"/></signal>
+<signal name="BOOT0"><contactref element="SW2" pad="1"/></signal>
+</signals>
+</board>
+</drawing>
+</eagle>
