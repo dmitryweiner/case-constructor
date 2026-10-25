@@ -237,6 +237,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   (`magnetPockets`); a magnet post stops a fit below the lid's boss, and its
   corner fill stops `POST_STEP` below its top — reaching it, the top face met
   the outer corner's edge on the diagonal: slivers.
+  The lid's holes are cut after the skirt is added: the skirt reaches up
+  into the plate and filled a deep counterbore back in (a crescent at the
+  corner). A head's seat stays `SEAT_WALL` inside the lid's face
+  (`lidPosts.ts`, `headLimits`); the sliders stop there, the worker clamps
+  a file.
 - Printed screws (`thread.ts` pure, `screwSolids.ts` worker): a single-start
   thread has one horizontal section at every height, turned 360° per pitch,
   so a thread is `CrossSection.extrude` with a twist (one slice per point and

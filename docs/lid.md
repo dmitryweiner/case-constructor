@@ -15,8 +15,8 @@ the lid.
 | Screw | M2 / M2.5 / M3 / M4 | M3 | screws only |
 | Hole in the posts | tap / insert / nut | tap | as for board standoffs (docs/boards.md) |
 | Head | flat / counterbore / countersunk | counterbore | flat — the head sits on the lid; counterbore — a pocket the head's diameter + 0.4 mm, its height deep; countersunk — a 90° cone |
-| Head diameter | 2–16 mm | from the table | counterbore and countersunk; the screw head's diameter (the seat adds 0.4 mm), at least the screw + 1 mm. The table: a pan head for a counterbore (M2 3.8, M2.5 4.5, M3 5.5, M4 7), a countersunk head by DIN 7991 (M2 4, M2.5 5, M3 6, M4 8) |
-| Counterbore depth | 0.5–10 mm | the pan head's height | counterbore only; never deeper than the lid plate less 0.6 mm (the panel says when it is cut short) |
+| Head diameter | 2–16 mm | from the table | counterbore and countersunk; the screw head's diameter (the seat adds 0.4 mm), at least the screw + 1 mm, at most what leaves 0.8 mm of plastic to the lid's edge (the slider stops there; a file asking for more gets a warning). The table: a pan head for a counterbore (M2 3.8, M2.5 4.5, M3 5.5, M4 7), a countersunk head by DIN 7991 (M2 4, M2.5 5, M3 6, M4 8) |
+| Counterbore depth | 0.5–10 mm | the pan head's height | counterbore only; never deeper than the lid plate less 0.6 mm (the slider stops there; the panel says when a file asks for more) |
 | Magnet | 5 × 2 … 10 × 3 mm | 6 × 3 | magnets only: disc diameter × height |
 | Magnet fit | 0–0.5 mm | 0.2 | magnets only: added to the magnet's diameter for its pocket |
 | Thread | 4 × 1 / 6 × 1.5 / 8 × 2 / 10 × 2.5 mm | 6 × 1.5 | printed screws only: major diameter × pitch |

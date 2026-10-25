@@ -31,10 +31,8 @@ import { cutWarnings, outerTopAt, portCutters } from './geo/ports';
 import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
 import { effectiveLid } from './geo/layout';
 import { HEAD_FLOOR, headSeat, lidFaces } from './geo/lidSpec';
-import { faceFrame as frameOf } from './geo/face';
-import { postCollisions, postSpots, postsInOpenings, printedScrewWarnings } from './geo/fastening';
-import { openingPolygon } from './geo/opening';
-import { plateOf, shapeSpec } from './geo/shape';
+import { headLimitsOf, lidPosts } from './geo/lidPosts';
+import { postCollisions, postsInOpenings, printedScrewWarnings } from './geo/fastening';
 import { setupAdjustmentButtons } from './ui/adjust';
 import { createProgress } from './ui/progress';
 import { renderPresetList } from './ui/presetList';
@@ -240,6 +238,10 @@ function refresh(): void {
   baseWarnings.push(...cutWarnings(layout, shapeBuilt, lidBuilt, cutters, state.extraCuts).map(tm));
   if (lidBuilt.fastening !== 'snaps') {
     const { frame, plate, zp, spots } = lidPosts(state);
+    const limits = headLimitsOf(state);
+    if (lidBuilt.fastening === 'screws' && lidBuilt.screw.head !== 'none' && headSeat(lidBuilt).d > limits.d + 1e-6) {
+      baseWarnings.push(t('warn.headDClamped', { max: limits.d.toFixed(1) }));
+    }
     // the table's depth was always capped quietly; a depth the user set is worth a word
     if (lidBuilt.fastening === 'screws' && lidBuilt.screw.head === 'counterbore' && lidBuilt.head.depth !== null
       && headSeat(lidBuilt).depth > plate - HEAD_FLOOR) {
@@ -350,19 +352,6 @@ function printParts(
   const names: ScenePart['role'][] = built.exportMode === 'both' ? ['body', 'lid', 'screw'] : ['body'];
   const withClampBars = withClamps(placed, clamps);
   return roles(withClampBars, [...names.slice(0, placed.length), 'clamp']);
-}
-
-/** The lid's corner posts as the worker builds them (in the lid's face frame) — for warnings and the printed screws. */
-function lidPosts(current: AppState) {
-  const layout = caseLayout(current);
-  const { dims } = layout;
-  const shape = { ...current.shape, console: layout.console };
-  const lid = effectiveLid(shape, current.lid, dims);
-  const frame = frameOf(lid.face, dims);
-  const plate = plateOf(shape, lid.face);
-  const zp = -(plate + lid.depth);
-  const opening = openingPolygon(shapeSpec(shape, dims), frame, zp, lid.lip.h, 8);
-  return { frame, plate, zp, spots: lid.fastening === 'snaps' ? [] : postSpots(opening, lid, shape.wall) };
 }
 
 /** A part the worker sends only sometimes (printed screws, battery clamps), as a mesh. */

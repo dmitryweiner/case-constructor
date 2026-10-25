@@ -251,3 +251,10 @@ adds a part.
   BH4AA-W, BH2AAA-W), not Keystone 1042/1043: those solder onto a PCB and
   have no screw holes. The AA holders' holes along the length are not
   dimensioned on the drawing (taken as centred): ≈.
+- **Review (2026-10-25).** A counterbore deeper than 1 mm got a crescent of
+  the skirt back in it at the corner: the lid's holes were cut before the
+  skirt, which reaches up into the plate, was added. The holes are cut last
+  now; the head seat's diameter and depth sliders stop at what the lid
+  takes (a 0.8 mm wall to the lid's edge, the plate less 0.6 mm). The label
+  "not shown" did not reproduce on the branch (dev and production build):
+  a dev server left running from before the branch was checked out.

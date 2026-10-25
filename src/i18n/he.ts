@@ -251,6 +251,7 @@ export const he: Record<Key, string> = {
   'lid.headDepth.hint': 'כמה עמוק הראש שוקע במכסה, מ״מ; לכל היותר עובי המכסה פחות 0.6 מ״מ',
   'lid.headReset': 'ראש לפי הטבלה',
   'warn.headDepthClamped': 'השקע הגלילי הוגבל ל־{max} מ״מ בגלל עובי המכסה.',
+  'warn.headDClamped': "שקע הראש הוגבל ל־{max} מ״מ בגלל קצה המכסה.",
   'warn.postHitsBoard': 'מעמד בורג של המכסה נתקל בלוח {board}.',
   'progress.fastening': 'תפסים ומעמדים',
   'warn.postInOpening': "מעמד בורג {n} עומד בדרכו של פתח ונחתך על ידו.",

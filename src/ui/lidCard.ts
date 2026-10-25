@@ -3,6 +3,7 @@
 import type { Control } from './controls';
 import { FACES } from '../geo/face';
 import type { LidState } from '../geo/lidSpec';
+import { headLimitsOf } from '../geo/lidPosts';
 import { DEPTH_MAX, FASTENINGS, HEAD_DEPTH_MAX, HEAD_DEPTH_MIN, HEAD_D_MAX, HEAD_D_MIN, THREAD_FIT_MAX, headSeat, lidFaces } from '../geo/lidSpec';
 import { HEAD_KINDS, HOLE_KINDS, LID_SCREW_SIZES, MAGNETS, MAGNET_SIZES } from '../geo/fasteners';
 import { THREADS, THREAD_SIZES } from '../geo/thread';
@@ -65,13 +66,15 @@ export function lidControls(): Control<AppState>[] {
       kind: 'range', key: 'headD', label: 'lid.headD', hint: 'lid.headD.hint', min: HEAD_D_MIN, max: HEAD_D_MAX, step: 0.1,
       when: (state) => screws(state) && state.lid.screw.head !== 'none',
       get: (state) => headSeat(state.lid).d,
-      set: (state, value) => lidOf(state, { head: { ...state.lid.head, d: value } }),
+      // never past the lid's edge: the seat keeps a wall to it
+      set: (state, value) => lidOf(state, { head: { ...state.lid.head, d: Math.min(value, Math.max(HEAD_D_MIN, headLimitsOf(state).d)) } }),
     },
     {
       kind: 'range', key: 'headDepth', label: 'lid.headDepth', hint: 'lid.headDepth.hint', min: HEAD_DEPTH_MIN, max: HEAD_DEPTH_MAX, step: 0.1,
       when: (state) => screws(state) && state.lid.screw.head === 'counterbore',
       get: (state) => headSeat(state.lid).depth,
-      set: (state, value) => lidOf(state, { head: { ...state.lid.head, depth: value } }),
+      // never through the plate: it keeps HEAD_FLOOR under the head
+      set: (state, value) => lidOf(state, { head: { ...state.lid.head, depth: Math.min(value, Math.max(HEAD_DEPTH_MIN, headLimitsOf(state).depth)) } }),
     },
     {
       kind: 'button', key: 'headReset', label: { text: '' }, button: 'lid.headReset',

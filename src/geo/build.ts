@@ -18,6 +18,8 @@ import { batteryClamps, batterySupports } from './batterySolids';
 import { cuttersSolid } from './cut';
 import { postSpots } from './fastening';
 import { postSolids, snapSolids } from './lip';
+import { headLimits } from './lidPosts';
+import { headSeat } from './lidSpec';
 import { openingPolygon } from './opening';
 import { loftSlice } from './section';
 import { extraCutters } from './cutters';
@@ -115,15 +117,21 @@ export function buildCase(
     onStage(BUILD_STAGES[4]);
     if (lid.fastening !== 'snaps') {
       const upper = loftSlice(spec.inner, spec.innerCut, frame, -plate - lid.fit, segments);
-      const posts = postSolids(csg, scope, postSpots(opening, lid, shape.wall), opening, upper, frame, zp, plate, lid, segments);
+      const spots = postSpots(opening, lid, shape.wall);
+      // a head's seat never reaches the lid's edge, whatever a file asks for
+      const limits = headLimits(spots, shape, dims, lid);
+      const seated = { ...lid, head: { d: Math.min(headSeat(lid).d, limits.d), depth: lid.head.depth } };
+      const posts = postSolids(csg, scope, spots, opening, upper, frame, zp, plate, seated, segments);
       if (posts) {
         if (skirt) skirt = scope.keep(skirt.subtract(posts.skirtClearance));
         const material = scope.keep(scope.keep(posts.posts.intersect(outer)).subtract(lidSolid));
         body = scope.keep(scope.keep(body.add(material)).subtract(posts.postHoles));
         if (posts.lidBosses) lidSolid = scope.keep(lidSolid.add(posts.lidBosses));
-        lidSolid = scope.keep(lidSolid.subtract(posts.lidHoles));
       }
       if (skirt) lidSolid = scope.keep(lidSolid.add(skirt));
+      // the holes last: the skirt reaches up into the plate, and added after
+      // them it filled a deep counterbore back in, a crescent at the corner
+      if (posts) lidSolid = scope.keep(lidSolid.subtract(posts.lidHoles));
     } else {
       if (skirt) lidSolid = scope.keep(lidSolid.add(skirt));
       const snaps = snapSolids(csg, scope, opening, frame, zp, lid, shape.kind === 'cylinder', cutters, segments);

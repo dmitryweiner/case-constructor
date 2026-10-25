@@ -250,6 +250,7 @@ export const uk: Record<Key, string> = {
   'lid.headDepth.hint': 'наскільки головка втоплена в кришку, мм; не більше за товщину кришки мінус 0.6 мм',
   'lid.headReset': 'Головка за таблицею',
   'warn.headDepthClamped': 'Цековку обмежено товщиною кришки: {max} мм.',
+  'warn.headDClamped': "Гніздо під головку обмежене краєм кришки: {max} мм.",
   'warn.postHitsBoard': 'Стійка гвинта кришки впирається в плату {board}.',
   'progress.fastening': 'Клямки й стійки',
   'warn.postInOpening': "Стійка гвинта {n} стоїть на шляху отвору й прорізана ним.",

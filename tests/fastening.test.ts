@@ -9,6 +9,7 @@ import { buildCase } from '../src/geo/build';
 import { caseLayout, effectiveLid } from '../src/geo/layout';
 import { faceFrame } from '../src/geo/face';
 import { HEAD_DEPTH_MIN, HEAD_D_MAX, headSeat, lidFaces } from '../src/geo/lidSpec';
+import { SEAT_WALL, headLimitsOf, lidPosts } from '../src/geo/lidPosts';
 import { openingPolygon } from '../src/geo/opening';
 import { MAGNET_SKIN, POST_LEN, SNAP_R, magnetPockets, postCollisions, postSpots, postsInOpenings, snapSpots } from '../src/geo/fastening';
 import { portCutters } from '../src/geo/ports';
@@ -280,5 +281,59 @@ describe('head seats of lid screws', () => {
     expect(lidWith({ size: 'M3' }).head).toEqual({ d: null, depth: null });
     expect(lidWith({ size: 'M3' }, { d: 'big', depth: -4 }).head).toEqual({ d: null, depth: HEAD_DEPTH_MIN });
     expect(lidWith({ size: 'M3' }, { d: 99 }).head.d).toBe(HEAD_D_MAX);
+  });
+});
+
+describe('head seats keep inside the lid', () => {
+  // the review's case: a 7.7 mm counterbore next to a 4 mm corner broke out through the lid's side
+  const base = defaultState();
+  const withHead = (d: number, depth: number | null = null, cornerR = 4) => sanitizeState({
+    ...base,
+    shape: { ...base.shape, cornerR },
+    lid: { ...base.lid, fastening: 'screws', screw: { size: 'M3', hole: 'tap', head: 'counterbore' }, head: { d, depth } },
+  });
+
+  it('a deep counterbore is empty all the way down: the skirt, reaching up into the plate, does not fill it back in', () => {
+    const state = withHead(7.7, 2.4);
+    const { spots, frame } = lidPosts(state);
+    const lid = toManifold(csg, buildCase(csg, state, 12).lid);
+    const r = (7.7 + 0.4) / 2;
+    for (const spot of spots) {
+      // around the seat's floor, just above it (the plate leaves 0.6 under a 1.4 mm counterbore)
+      for (let k = 0; k < 8; k++) {
+        const a = (k * Math.PI) / 4;
+        const p = applyAffine(frame.fromFace, [spot.centre[0] + Math.cos(a) * (r - 0.4), spot.centre[1] + Math.sin(a) * (r - 0.4), -1.2]);
+        expect(solidAt(lid, p), `post ${spot.centre.map((v) => v.toFixed(1))}, ${k * 45}°`).toBe(false);
+      }
+    }
+    lid.delete();
+  });
+
+  it('the seat stops a wall short of the lid\'s edge; asking for more builds the same lid', () => {
+    const limit = headLimitsOf(withHead(12)).d;
+    expect(limit).toBeLessThan(12);
+    expect(limit).toBeGreaterThan(SCREWS.M3.headD);
+    const asked = validateMesh(buildCase(csg, withHead(12, 2.4), 12).lid);
+    const capped = validateMesh(buildCase(csg, withHead(limit, 1.4), 12).lid);
+    expect(asked.watertight).toBe(true);
+    expect(asked.degenerateTriangles).toBe(0);
+    expect(asked.volume).toBeCloseTo(capped.volume, 1);
+  });
+
+  it('with a wall to the edge: the lid is solid just outside the seat, towards the corner', () => {
+    const state = withHead(12, 2.4);
+    const { spots, frame, dims } = lidPosts(state);
+    const lid = toManifold(csg, buildCase(csg, state, 12).lid);
+    const seatR = (headLimitsOf(state).d + 0.4) / 2;
+    for (const spot of spots) {
+      const [cu, cv] = spot.centre;
+      const extent = frame.extent;
+      const du = cu < extent.w / 2 ? -1 : 1;
+      const dv = cv < extent.h / 2 ? -1 : 1;
+      const k = (seatR + SEAT_WALL / 2) / Math.SQRT2;
+      const p = applyAffine(frame.fromFace, [cu + du * k, cv + dv * k, -0.3]);
+      expect(solidAt(lid, p), `corner of ${dims.w}×${dims.d} at ${spot.centre.map((v) => v.toFixed(1))}`).toBe(true);
+    }
+    lid.delete();
   });
 });

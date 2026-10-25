@@ -250,6 +250,7 @@ export const ru: Record<Key, string> = {
   'lid.headDepth.hint': 'насколько головка утоплена в крышку, мм; не больше толщины крышки минус 0.6 мм',
   'lid.headReset': 'Головка по таблице',
   'warn.headDepthClamped': 'Цековка ограничена толщиной крышки: {max} мм.',
+  'warn.headDClamped': "Гнездо под головку ограничено краем крышки: {max} мм.",
   'warn.postHitsBoard': 'Стойка винта крышки упирается в плату {board}.',
   'progress.fastening': 'Защёлки и стойки',
   'warn.postInOpening': "Стойка винта {n} стоит на пути отверстия и прорезана им.",

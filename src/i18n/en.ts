@@ -259,6 +259,7 @@ export const en = {
   'lid.headDepth.hint': 'how deep the head sinks into the lid, mm; at most the lid plate less 0.6 mm',
   'lid.headReset': 'Head from the table',
   'warn.headDepthClamped': 'The counterbore is limited to {max} mm by the lid plate.',
+  'warn.headDClamped': "The head seat is limited to {max} mm by the lid's edge.",
   'warn.postHitsBoard': 'A screw post of the lid runs into board {board}.',
   'progress.fastening': 'Snaps and posts',
   'warn.postInOpening': "Screw post {n} stands in the way of an opening and is cut by it.",

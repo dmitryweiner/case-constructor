@@ -351,9 +351,15 @@ if (await page.locator('#lid_headDepth').isVisible()) errors.push('[head] a coun
 await setRange('lid_headD', 7);
 await expectWatertight('fastening:head:countersunk-7');
 await page.click('#lid_head_counterbore');
+// the sliders stop at what the lid takes: the plate less 0.6 mm, a wall to the lid's edge
 await setRange('lid_headDepth', 5);
 await expectWatertight('fastening:head:counterbore-deep');
-if (!(await page.locator('#warnings').textContent()).includes('counterbore is limited')) errors.push('[head] no warning about a counterbore deeper than the plate');
+const deepest = await page.evaluate(() => window.__case.state().lid.head.depth);
+if (!(deepest > 1 && deepest < 2)) errors.push(`[head] the counterbore depth went to ${deepest} on a 2 mm plate`);
+await setRange('lid_headD', 16);
+await expectWatertight('fastening:head:widest');
+const widest = await page.evaluate(() => window.__case.state().lid.head.d);
+if (!(widest > 5.5 && widest < 12)) errors.push(`[head] the head seat went to ${widest} mm`);
 await page.click('#lid_headReset');
 if (await page.locator('#lid_headReset').isVisible()) errors.push('[head] the reset button stays after a reset');
 if (Number(await page.locator('#lid_headD').inputValue()) !== 5.5) errors.push('[head] the reset does not bring the pan head back');
