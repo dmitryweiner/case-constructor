@@ -209,6 +209,12 @@ the table moved (QuinLED, BTT Pi, Feather, CYD, RAK19007, UNO Q, ROCK 5C /
 override and an added port show up, the others stay), the board check over
 every variant, a golden state with a non-default variant.
 
+**Done.** XIAO (8 models), Waveshare Zero (3), Feather (6), Feather
+ESP32-S3 (S3, S2, C6, TFT, Reverse TFT), each button placed from the
+vendor's own board file (Eagle `.brd`, KiCad, STEP, DXF), with its net to
+tell reset from boot. Every variant builds closed and sliver-free in
+`tests/cutouts.test.ts`.
+
 The overhang workaround stays. Write it into the add-board skill.
 
 ## B7. CAD tools: make the agents' throw-away readers permanent
@@ -299,7 +305,7 @@ with code 3.
   - QuinLED: terminal heights.
   - Orange Pi 5 Max / Pro: USB-C.
   - CM5 IO Board: power button.
-- **Feather ESP32-S3 TFT / Reverse TFT:** variants (B6), from Adafruit's
+- **Feather ESP32-S3 TFT / Reverse TFT:** done in B6, from Adafruit's
   drawings.
 - **RAK3401 (1 W) core on the RAK19007:** check its height and antennas,
   then make it a variant of the RAK19007 (B6).
@@ -323,3 +329,16 @@ with code 3.
   did not name: `cutH`, the opening's height from the port's bottom
   (`terminal` defaults to 5.5). The QuinLED Dig-Quad's 14 mm power
   terminals have `cutH: 8`, an estimate like their heights (B9).
+- **B6.** Variants may also `remove` ports (the XIAO SAMD21 has no buttons,
+  the RP2040 no shield), which the plan did not list.
+- **B6.** A port's `type` cannot be overridden: the Feather RP2350's boot
+  button stays the `boot` port of type `switch`, moved to the top.
+- **B6.** No top drawing of the XIAO RP2350 was found (its DXF is the
+  bottom silkscreen): its variant keeps the entry's ports, buttons closed.
+- **B6.** ESP32-S3-Zero: the STEP model has both buttons as one part and the
+  2D drawing is a bottom view; BOOT is taken as the left one, as on the
+  other Zeros. XIAO C6 / MG24 keep the S3's button size (1.6 × 2.6): the
+  KiCad footprints' axes do not say which way the long side runs.
+- **B6.** The Feather ESP32-S3 TFT has its module on the underside next to
+  the right-hand holes: the layout warns that a 5 mm standoff reaches it.
+  That is the board, not the data; the variant test expects the warning.

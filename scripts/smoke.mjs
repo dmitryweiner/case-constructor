@@ -141,6 +141,15 @@ await page.check('#board0_pins');
 await expectWatertight('pins:bed');
 const pinZ = await page.evaluate(() => window.__case?.state().boards[0].z);
 if (bareZ !== undefined && !(pinZ > bareZ + 5)) errors.push(`[pins] z ${bareZ} → ${pinZ}: the board did not go up with its pins`);
+// a family entry: the model brings its own parts and their toggles
+label('variant');
+await page.click('#board0_remove');
+await page.click('#boardAdd');
+await page.click('#boardList [data-board="seeed-xiao"]');
+await page.selectOption('#board0_variant', 'rp2040');
+await expectWatertight('variant:rp2040');
+if (!(await page.locator('#board0_cut_rgb-led').count())) errors.push('[variant] the XIAO RP2040 has no RGB LED toggle');
+if (await page.locator('#board0_cut_shield').count()) errors.push('[variant] the XIAO RP2040 kept the S3 shield');
 label('ports');
 await page.click('#board0_remove');
 await page.click('#boardAdd');

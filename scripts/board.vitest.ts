@@ -7,10 +7,10 @@ import { it } from 'vitest';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { RAW_BOARDS, catalogBoard } from '../src/boards/catalog';
-import { isPortType, onFace, sanitizeBoard } from '../src/boards/schema';
+import { OVERRIDE_NUMBERS, isPortType, onFace, resolveVariant, sanitizeBoard } from '../src/boards/schema';
 import type { BoardDef } from '../src/boards/schema';
 
-interface Args { check?: string; svg?: string; out?: string }
+interface Args { check?: string; svg?: string; out?: string; variant?: string }
 
 function rec(x: unknown): Record<string, unknown> {
   return typeof x === 'object' && x !== null ? Object.fromEntries(Object.entries(x)) : {};
@@ -41,7 +41,29 @@ function problems(raw: unknown): string[] {
     if (typeof p.id !== 'string' || ids.has(p.id)) out.push(`port id ${String(p.id)} missing or repeated`);
     ids.add(String(p.id));
   }
-  for (const port of board.ports) {
+  // every variant is built as resolved: check its ports as the entry's
+  const variants = Array.isArray(r.variants) ? r.variants : [];
+  const portIds = new Set(board.ports.map((port) => port.id));
+  const known = new Set<string>([...OVERRIDE_NUMBERS, 'cut', 'edge', 'shape']);
+  for (const rawVariant of variants) {
+    const v = rec(rawVariant);
+    for (const [portId, override] of Object.entries(rec(v.ports))) {
+      if (!portIds.has(portId)) out.push(`variant ${String(v.id)}: no port ${portId} to override`);
+      for (const key of Object.keys(rec(override))) if (!known.has(key)) out.push(`variant ${String(v.id)}: ${portId}.${key} cannot be overridden`);
+    }
+    for (const portId of Array.isArray(v.remove) ? v.remove : []) {
+      if (!portIds.has(String(portId))) out.push(`variant ${String(v.id)}: no port ${String(portId)} to remove`);
+    }
+    const added = Array.isArray(v.add) ? v.add : [];
+    for (const rawPort of added) {
+      const p = rec(rawPort);
+      if (!isPortType(p.type)) out.push(`variant ${String(v.id)}: port ${String(p.id)}: unknown type ${String(p.type)}`);
+      if (typeof p.id !== 'string' || portIds.has(p.id)) out.push(`variant ${String(v.id)}: port id ${String(p.id)} missing or taken`);
+    }
+  }
+  if (variants.length !== (board.variants?.length ?? 0)) out.push('variants dropped or renamed by the sanitizer');
+  const builds = board.variants ? board.variants.map((variant) => resolveVariant(board, variant.id)) : [board];
+  for (const port of builds.flatMap((build) => build.ports)) {
     if (onFace(port)) {
       if (port.x - port.w / 2 < -0.5 || port.x + port.w / 2 > w + 0.5 || port.y - port.d / 2 < -0.5 || port.y + port.d / 2 > d + 0.5) {
         out.push(`${port.edge} part ${port.id} leaves the outline`);
@@ -54,7 +76,7 @@ function problems(raw: unknown): string[] {
   return out;
 }
 
-function svg(def: BoardDef): string {
+function svg(def: BoardDef, variant?: string): string {
   const s = 6; // px per mm
   const pad = 30;
   const reach = 12;
@@ -91,7 +113,7 @@ function svg(def: BoardDef): string {
     const where = onFace(port) ? `${port.x}, ${port.y}${port.edge === 'bottom' ? ', under' : ''}` : `${port.edge} @${port.along}`;
     parts.push(`<text x="${X((x0 + x1) / 2)}" y="${Y((y0 + y1) / 2) + 3}" font-size="9" text-anchor="middle" fill="#000">${port.id} (${where})</text>`);
   }
-  parts.push(`<text x="${X(def.size.w / 2)}" y="${Y(def.size.d) - 6 - reach * s + 20}" font-size="12" text-anchor="middle" fill="#ddd">${def.name}: ${def.size.w} × ${def.size.d} × ${def.size.t} mm${def.verified ? '' : ' (unverified)'}</text>`);
+  parts.push(`<text x="${X(def.size.w / 2)}" y="${Y(def.size.d) - 6 - reach * s + 20}" font-size="12" text-anchor="middle" fill="#ddd">${def.name}${variant ? ` · ${variant}` : ''}: ${def.size.w} × ${def.size.d} × ${def.size.t} mm${def.verified ? '' : ' (unverified)'}</text>`);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="#15181c"/>${parts.join('')}</svg>\n`;
 }
 
@@ -112,11 +134,15 @@ it('board', () => {
     if (bad > 0) throw new Error('catalog check failed');
   }
   if (args.svg) {
-    const def = catalogBoard(args.svg);
-    if (!def) throw new Error(`no board ${args.svg}`);
+    const entry = catalogBoard(args.svg);
+    if (!entry) throw new Error(`no board ${args.svg}`);
+    if (args.variant && !entry.variants?.some((variant) => variant.id === args.variant)) {
+      throw new Error(`${args.svg} has no variant ${args.variant}: ${(entry.variants ?? []).map((variant) => variant.id).join(', ') || 'none'}`);
+    }
+    const def = resolveVariant(entry, args.variant);
     const out = args.out ?? `shots/${def.id}.svg`;
     mkdirSync(dirname(out), { recursive: true });
-    writeFileSync(out, svg(def));
+    writeFileSync(out, svg(def, entry.variants?.find((variant) => variant.id === args.variant)?.name));
     console.log(`svg → ${out}`);
   }
 });

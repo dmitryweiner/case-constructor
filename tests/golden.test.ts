@@ -148,6 +148,11 @@ const STATES: Record<string, AppState> = {
     lid: { ...defaultState().lid, face: 'bottom' },
     boards: [{ board: 'esp32-2432s028r' }],
   }),
+  // B6: a family entry in a variant that is not the default (PLAN-IMPROVEMENTS-NEW-BOARDS.md)
+  'feather-reverse-tft': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'adafruit-feather-esp32-s3', variant: 'reverse-tft' }],
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

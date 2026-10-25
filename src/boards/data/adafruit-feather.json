@@ -29,6 +29,14 @@
     { "id": "header-16", "type": "header-1xN", "edge": "top", "x": 25.4, "y": 1.27, "w": 40.64, "d": 2.54, "h": 1.5 },
     { "id": "header-12", "type": "header-1xN", "edge": "top", "x": 30.48, "y": 21.59, "w": 30.48, "d": 2.54, "h": 1.5 }
   ],
+  "variants": [
+    { "id": "rp2040", "name": "Feather RP2040", "ports": {} },
+    { "id": "rp2350", "name": "Feather RP2350", "ports": { "reset": { "x": 9.46, "y": 5.08 }, "boot": { "edge": "top", "x": 15.88, "y": 5.08, "w": 4.2, "d": 2.8, "h": 1.9, "shape": "rect", "cut": true }, "neopixel": { "x": 30.91, "y": 4.42, "w": 1.5, "d": 1.8 } } },
+    { "id": "m4", "name": "Feather M4 Express", "ports": { "reset": { "x": 9.4, "y": 6.54 }, "neopixel": { "x": 16.48, "y": 6.11 } }, "remove": ["boot"] },
+    { "id": "m0", "name": "Feather M0 Express", "ports": { "reset": { "x": 9.4, "y": 6.48 }, "neopixel": { "x": 33.78, "y": 16.76 } }, "remove": ["boot"] },
+    { "id": "nrf52840", "name": "Feather nRF52840 Express", "ports": { "reset": { "x": 11.1, "y": 6.22 }, "neopixel": { "x": 19.39, "y": 6.15 } }, "remove": ["boot"], "add": [{ "id": "user", "type": "button", "edge": "top", "x": 29.93, "y": 6.17, "w": 4.2, "d": 2.8, "h": 1.9, "shape": "rect", "cut": false }] },
+    { "id": "esp32-v2", "name": "Feather ESP32 V2", "ports": { "reset": { "x": 11.75, "y": 6.35 }, "neopixel": { "x": 31.24, "y": 6.1 } }, "remove": ["boot"], "add": [{ "id": "user", "type": "button", "edge": "top", "x": 26.23, "y": 6.35, "w": 4.2, "d": 2.8, "h": 1.9, "shape": "rect", "cut": false }] }
+  ],
   "source": "https://github.com/adafruit/Adafruit-Feather-RP2040-PCB",
   "verified": true
 }

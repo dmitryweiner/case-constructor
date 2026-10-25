@@ -7,7 +7,7 @@ import { initCSG, toManifold } from '../src/geo/csg';
 import type { CsgApi } from '../src/geo/csg';
 import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
-import { caseLayout } from '../src/geo/layout';
+import { caseLayout, collisions } from '../src/geo/layout';
 import { onFace } from '../src/boards/schema';
 import { portAxis, portCutters, portToWall } from '../src/geo/ports';
 import { extraCutters } from '../src/geo/cutters';
@@ -141,6 +141,25 @@ describe('user openings', () => {
     const p = cutter.origin.map((v, k) => v - cutter.ez[k] * plate / 2);
     expect(solidAt(parts, p[0], p[1], p[2])).toBe(false);
     for (const part of parts) part.delete();
+  });
+});
+
+describe('every variant of a family', () => {
+  // the TFT Feather's module is on the underside, next to the right-hand holes: a 5 mm standoff reaches it
+  const EXPECTED: Record<string, string[]> = { 'adafruit-feather-esp32-s3:tft': ['warn.bottomPartOnSupport'] };
+  const variants = CATALOG.flatMap((board) => (board.variants ?? []).map((variant) => [`${board.id}:${variant.id}`, board.id, variant.id]));
+  it.each(variants)('%s: a closed, sliver-free case, its ports open, no layout warnings', (name, board, variant) => {
+    const state = sanitizeState({ ...defaultState(), boards: [{ board, variant }] });
+    expect(state.boards[0].variant).toBe(variant);
+    const built = buildCase(csg, state, 8);
+    for (const mesh of [built.body, built.lid]) {
+      const report = validateMesh(mesh);
+      expect(report.watertight).toBe(true);
+      expect(report.degenerateTriangles).toBe(0);
+    }
+    const layout = caseLayout(state);
+    expect(collisions(layout).map((message) => message.code)).toEqual(EXPECTED[name] ?? []);
+    if (layout.boards[0].def.ports.some((port) => !onFace(port) && port.cut)) expectEdgePortsOpen(state);
   });
 });
 

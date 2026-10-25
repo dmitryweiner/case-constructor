@@ -6,7 +6,7 @@
 import type { FastenerSpec } from '../geo/fasteners';
 import { sanitizeFastener } from '../geo/fasteners';
 import type { BoardDef } from './schema';
-import { bottomPartsH, sanitizeBoard } from './schema';
+import { bottomPartsH, resolveVariant, sanitizeBoard } from './schema';
 import { CATALOG, catalogBoard } from './catalog';
 
 export const ROTATIONS = [0, 90, 180, 270] as const;
@@ -28,6 +28,8 @@ export interface BoardPlacement {
   cuts: Record<string, boolean>;
   /** boards with header rows only: the pins are soldered pointing down */
   pins?: boolean;
+  /** entries with variants only: which model */
+  variant?: string;
 }
 
 export const MAX_BOARDS = 8;
@@ -36,10 +38,15 @@ export const Z_MAX = 60;
 /** Gap between a new board and the ones already placed, mm. */
 export const NEW_BOARD_GAP = 5;
 
-/** The definition behind a placement: the catalog entry or the custom board. */
-export function boardOf(placement: Pick<BoardPlacement, 'board' | 'custom'>): BoardDef {
+/** The entry behind a placement, its variants unresolved: the catalog entry or the custom board. */
+export function entryOf(placement: Pick<BoardPlacement, 'board' | 'custom'>): BoardDef {
   if (placement.board === 'custom' && placement.custom) return placement.custom;
   return catalogBoard(placement.board) ?? CATALOG[0];
+}
+
+/** The board a placement builds: its entry with the chosen variant applied. */
+export function boardOf(placement: Pick<BoardPlacement, 'board' | 'custom' | 'variant'>): BoardDef {
+  return resolveVariant(entryOf(placement), placement.variant);
 }
 
 /** Whether the placed board has its pins soldered pointing down. */
@@ -64,7 +71,9 @@ export function placementMinZ(placement: BoardPlacement): number {
   return minBoardZ(def, pinsDown(def, placement));
 }
 
-export function defaultPlacement(def: BoardDef, x = 0, y = 0): BoardPlacement {
+export function defaultPlacement(entry: BoardDef, x = 0, y = 0): BoardPlacement {
+  const variant = entry.variants?.[0].id;
+  const def = resolveVariant(entry, variant);
   const pins = def.pins?.soldered ?? false;
   return {
     board: def.id,
@@ -75,6 +84,7 @@ export function defaultPlacement(def: BoardDef, x = 0, y = 0): BoardPlacement {
     mount: { size: def.mount.screw, hole: 'tap', head: 'none' },
     cuts: {},
     ...(def.pins ? { pins } : {}),
+    ...(variant !== undefined ? { variant } : {}),
   };
 }
 
@@ -88,8 +98,11 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
   const r = typeof raw === 'object' && raw !== null ? raw : {};
   const id: unknown = Reflect.get(r, 'board');
   const custom = id === 'custom' ? sanitizeBoard(Reflect.get(r, 'custom'), 'custom') : undefined;
-  const def = custom ?? (typeof id === 'string' ? catalogBoard(id) : undefined) ?? CATALOG[0];
-  const base = defaultPlacement(def);
+  const entry = custom ?? (typeof id === 'string' ? catalogBoard(id) : undefined) ?? CATALOG[0];
+  const variantRaw: unknown = Reflect.get(r, 'variant');
+  const variant = entry.variants?.find((item) => item.id === variantRaw)?.id ?? entry.variants?.[0].id;
+  const def = resolveVariant(entry, variant);
+  const base = defaultPlacement(entry);
   const cutsRaw: unknown = Reflect.get(r, 'cuts');
   const cuts: Record<string, boolean> = {};
   if (typeof cutsRaw === 'object' && cutsRaw !== null) {
@@ -111,6 +124,7 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
     mount: { ...sanitizeFastener(Reflect.get(r, 'mount'), base.mount), head: 'none' },
     cuts,
     ...(def.pins ? { pins } : {}),
+    ...(variant !== undefined ? { variant } : {}),
   };
 }
 

@@ -498,5 +498,25 @@
         7
       ]
     }
+  },
+  "feather-reverse-tft": {
+    "body": {
+      "triangles": 2066,
+      "volume": 8141.42,
+      "extents": [
+        59.9,
+        30.86,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1392,
+      "volume": 4211.22,
+      "extents": [
+        59.9,
+        30.86,
+        5
+      ]
+    }
   }
 }

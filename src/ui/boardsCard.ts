@@ -9,7 +9,8 @@ import type { Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';
 import type { BoardPlacement } from '../boards/placement';
-import { NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, Z_MAX, boardOf, pinsDown, placementMinZ, portCut } from '../boards/placement';
+import { NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, Z_MAX, boardOf, entryOf, pinsDown, placementMinZ, portCut } from '../boards/placement';
+import type { BoardDef } from '../boards/schema';
 import type { Align, ArrangeMode } from '../geo/arrange';
 import { ALIGN_X, ALIGN_Y, ARRANGE_MODES, alignBoard, arrangeBoards } from '../geo/arrange';
 import type { Key } from '../i18n';
@@ -23,10 +24,21 @@ function patchBoard(state: AppState, index: number, patch: Partial<BoardPlacemen
   return { ...state, boards: state.boards.map((board, i) => (i === index ? { ...board, ...patch } : board)) };
 }
 
-function boardControls(index: number): Control<AppState>[] {
+function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
   const at = (state: AppState): BoardPlacement => state.boards[index];
   const holes = (state: AppState): boolean => boardOf(at(state)).mount.kind === 'holes';
   return [
+    {
+      kind: 'select', key: 'variant', label: 'board.variant', hint: 'board.variant.hint',
+      when: () => (entry.variants?.length ?? 0) > 1,
+      options: (entry.variants ?? []).map((variant) => ({ value: variant.id, text: variant.name })),
+      get: (state) => at(state).variant ?? '',
+      // the variant's parts may sit lower: the board keeps clear of them
+      set: (state, value) => {
+        const next = { ...at(state), variant: value };
+        return patchBoard(state, index, { variant: value, z: Math.max(placementMinZ(next), next.z) });
+      },
+    },
     {
       kind: 'range', key: 'x', label: 'board.x', hint: 'board.xy.hint', min: 0, max: POSITION_MAX, step: 0.5,
       get: (state) => at(state).x,
@@ -127,7 +139,8 @@ export interface BoardsCardHandle {
 
 /** What the card's layout depends on; a change rebuilds it (a value edit does not). */
 function signatureOf(state: AppState): string {
-  return state.boards.map((board) => (board.board === 'custom' ? `custom:${customSignature(boardOf(board))}` : board.board)).join('|');
+  // a variant brings its own ports, and so its own cut toggles
+  return state.boards.map((board) => (board.board === 'custom' ? `custom:${customSignature(boardOf(board))}` : `${board.board}:${board.variant ?? ''}`)).join('|');
 }
 
 export function renderBoardsCard(
@@ -244,7 +257,7 @@ export function renderBoardsCard(
         portRows = renderControls(list, ports, read, onChange, `board${index}`);
       }
       container.append(box);
-      const main = renderControls(controls, boardControls(index), read, onChange, `board${index}`);
+      const main = renderControls(controls, boardControls(index, entryOf(placement)), read, onChange, `board${index}`);
       return {
         sync: (current: AppState) => {
           main.sync(current);

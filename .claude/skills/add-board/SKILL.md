@@ -77,6 +77,17 @@ shows; do not mirror a bottom view.
   card shows **Pins soldered downwards**, its default is `soldered` (how the
   board ships), and rails on those edges become a pin bed. `inset` is
   (board width − row spacing) / 2 when the rows sit symmetric.
+- **A family with one outline and parts that move** (XIAO, Feather,
+  Waveshare Zero) is one entry with `variants`, the first the default:
+  `{ "id": "rp2040", "name": "XIAO RP2040", "ports": { "reset": { "x": 4.83,
+  "cut": true } }, "remove": ["shield"], "add": [ …ports… ] }`. Overrides
+  change `x y along z w h d protrude clearance cutH cut edge shape` of an
+  entry's port (not its type); `topHeight`/`bottomHeight` may differ too.
+  Give the entry's ports as the default variant has them. Draw one variant
+  with `node scripts/board.mjs --svg <id> --variant <v> --png`.
+- **A part on top that overhangs an edge** (a plug-in ESP32's antenna on the
+  QuinLED, Olimex) is an edge port with `"cut": false` and a `protrude`: it
+  keeps the wall clear of it without opening anything.
 - Boards that share an outline (Uno R3/R4) are one entry: aliases in `name`
   after a slash.
 - Where the drawing gives no heights, the type defaults stand and

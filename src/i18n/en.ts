@@ -145,6 +145,8 @@ export const en = {
   'board.z.hint': 'PCB underside above the floor, mm; never below the parts under the board',
   'board.pins': 'Pins soldered downwards',
   'board.pins.hint': 'Header pins point down under the board: it sits higher, and rails carry the header on a bed with a slot for the pins',
+  'board.variant': 'Model',
+  'board.variant.hint': 'Boards of one family share the outline; the model decides where its buttons and parts are',
   'board.rot': 'Rotation',
   'board.screw': 'Screw',
   'board.hole': 'Hole',

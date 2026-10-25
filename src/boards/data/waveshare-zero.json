@@ -14,6 +14,11 @@
     { "id": "reset", "type": "button", "edge": "top", "x": 13.5, "y": 7.55, "w": 3, "d": 4.6, "h": 2.5, "shape": "rect", "cut": false },
     { "id": "rgb-led", "type": "led", "edge": "top", "x": 9, "y": 8.05, "w": 1.5, "d": 1.8, "h": 1, "shape": "rect", "cut": false }
   ],
+  "variants": [
+    { "id": "rp2040", "name": "RP2040-Zero", "ports": { "boot": { "x": 4.45, "y": 7.6, "cut": true }, "reset": { "x": 13.45, "y": 7.6, "cut": true } } },
+    { "id": "rp2350", "name": "RP2350-Zero", "ports": { "boot": { "cut": true }, "reset": { "cut": true } } },
+    { "id": "esp32s3", "name": "ESP32-S3-Zero", "ports": { "boot": { "x": 4.87, "y": 14.84, "w": 3, "d": 2.5, "h": 1.6, "cut": true }, "reset": { "x": 13.22, "y": 14.84, "w": 3, "d": 2.5, "h": 1.6, "cut": true }, "rgb-led": { "x": 9.09, "y": 14.82 } } }
+  ],
   "source": "https://files.waveshare.com/wiki/RP2350-Zero/RP2350_Zero_step.zip",
   "verified": true
 }

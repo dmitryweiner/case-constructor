@@ -37,7 +37,7 @@ freely; a temporary script that turns out useful becomes a permanent one.
 
 - `scripts/smoke.mjs` — browser smoke: every shape, slider extremes, every
   catalog board from the picker (with nut/insert holes, a rotation and its
-  pins toggled), soldered pins raising the board, port
+  pins toggled), soldered pins raising the board, a family's model, port
   toggles, user openings, the custom board editor and its catalog JSON,
   board search and overlap warnings, arranging and aligning two boards (and
   undo), every lid face, cylinder/console lid restrictions, snaps and screws
@@ -152,6 +152,10 @@ freely; a temporary script that turns out useful becomes a permanent one.
   body's floor. A side lid's skirt has no floor strip (it would hit the
   supports); its cut starts at the opening's real lowest point, which an
   edge fillet lifts above the floor.
+- Family entries (`variants`): `entryOf(placement)` is the entry as
+  written, `boardOf(placement)` the variant resolved (`resolveVariant`):
+  layout, ghosts, cutters and the worker only ever see the resolved board.
+  The board card rebuilds when the variant changes (its cut toggles do).
 - Header pins (`pins` in an entry, `pins` in the placement): an entry is the
   bare board; soldered pins raise the lowest standoff to `pins.below + 1`,
   and a rail on a pinned edge is the **pin bed** (`pinBedProfile`): one
@@ -281,7 +285,7 @@ per board
 `#board<i>_x|_y|_z`, alignment (two boards or more) `#board<i>_align`
 (details), `#board<i>_alignRef`,
 `#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_screw`,
-`#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_remove`, port toggles
+`#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), `#board<i>_remove`, port toggles
 `#board<i>_cut_<portId>`.
 Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHeight|_bottomHeight`,
 `#board<i>_custom_mount` (select), `_rails`, `_screw`, holes `_hole<h>_x|_y|_d|_remove`,

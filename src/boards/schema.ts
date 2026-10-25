@@ -146,6 +146,32 @@ export interface BoardPins {
   soldered: boolean;
 }
 
+/** Fields a variant may change on a port of its entry. */
+export const OVERRIDE_NUMBERS = ['x', 'y', 'along', 'z', 'w', 'h', 'd', 'protrude', 'clearance', 'cutH'] as const;
+export type PortOverride = Partial<Record<(typeof OVERRIDE_NUMBERS)[number], number>> & {
+  cut?: boolean;
+  edge?: PortDef['edge'];
+  shape?: PortShape;
+};
+
+/**
+ * A model of a family that shares one outline (XIAO, Feather): what differs
+ * from the entry. The placement picks one; `resolveVariant` applies it.
+ */
+export interface BoardVariant {
+  id: string;
+  /** proper noun, never translated */
+  name: string;
+  /** port id → the fields that differ */
+  ports: Record<string, PortOverride>;
+  /** ports only this variant has */
+  add: PortDef[];
+  /** ports this variant lacks */
+  remove: string[];
+  topHeight?: number;
+  bottomHeight?: number;
+}
+
 export interface BoardDef {
   id: string;
   /** proper noun, never translated; aliases after a slash */
@@ -168,6 +194,8 @@ export interface BoardDef {
   /** header rows that may carry pins below the board */
   pins?: BoardPins;
   ports: PortDef[];
+  /** models of the family, the first is the default */
+  variants?: BoardVariant[];
   source: string;
   /** dimensions checked against the official drawing */
   verified: boolean;
@@ -176,6 +204,7 @@ export interface BoardDef {
 export const BOARD_MAX_MM = 300;
 export const MAX_PORTS = 40;
 export const MAX_HOLES = 8;
+export const MAX_VARIANTS = 16;
 
 function rec(x: unknown): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -259,6 +288,89 @@ export function sanitizePins(raw: unknown): BoardPins | undefined {
   };
 }
 
+function isPortEdge(value: unknown): value is PortDef['edge'] {
+  return value === 'top' || value === 'bottom' || isEdge(value);
+}
+
+/** The fields of one override that exist and have the right type. */
+function sanitizeOverride(raw: unknown): PortOverride {
+  const r = rec(raw);
+  const out: PortOverride = {};
+  for (const key of OVERRIDE_NUMBERS) {
+    const value = r[key];
+    if (typeof value === 'number' && Number.isFinite(value)) out[key] = value;
+  }
+  if (typeof r.cut === 'boolean') out.cut = r.cut;
+  if (isPortEdge(r.edge)) out.edge = r.edge;
+  if (r.shape === 'rect' || r.shape === 'round') out.shape = r.shape;
+  return out;
+}
+
+/** A port list with unique ids: the per-port cut toggles are keyed by them. */
+function uniquePorts(items: readonly unknown[], size: { w: number; d: number }, taken: ReadonlySet<string> = new Set()): PortDef[] {
+  const ports: PortDef[] = [];
+  const ids = new Set(taken);
+  for (const [index, item] of items.slice(0, MAX_PORTS).entries()) {
+    const port = sanitizePort(item, size, index);
+    if (!port) continue;
+    let id = port.id;
+    for (let n = 2; ids.has(id); n++) id = `${port.id}-${n}`;
+    ids.add(id);
+    ports.push({ ...port, id });
+  }
+  return ports;
+}
+
+/** Variants of an entry: overrides only for its ports, unique ids; none when the list is empty. */
+export function sanitizeVariants(raw: unknown, size: { w: number; d: number }, ports: readonly PortDef[]): BoardVariant[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const portIds = new Set(ports.map((port) => port.id));
+  const out: BoardVariant[] = [];
+  const ids = new Set<string>();
+  for (const [index, item] of raw.slice(0, MAX_VARIANTS).entries()) {
+    const r = rec(item);
+    let id = str(r.id, `variant-${index + 1}`, 40);
+    for (let n = 2; ids.has(id); n++) id = `${str(r.id, `variant-${index + 1}`, 40)}-${n}`;
+    ids.add(id);
+    const overrides: Record<string, PortOverride> = {};
+    for (const [portId, value] of Object.entries(rec(r.ports))) {
+      if (portIds.has(portId)) overrides[portId] = sanitizeOverride(value);
+    }
+    out.push({
+      id,
+      name: str(r.name, id),
+      ports: overrides,
+      add: uniquePorts(Array.isArray(r.add) ? r.add : [], size, portIds),
+      remove: Array.isArray(r.remove) ? [...portIds].filter((portId) => Array.isArray(r.remove) && r.remove.includes(portId)) : [],
+      ...(typeof r.topHeight === 'number' ? { topHeight: num(r.topHeight, 0, 100, 10) } : {}),
+      ...(typeof r.bottomHeight === 'number' ? { bottomHeight: num(r.bottomHeight, 0, 30, 2) } : {}),
+    });
+  }
+  return out.length > 0 ? out : undefined;
+}
+
+/**
+ * The entry as one variant of it is built: its overrides applied to the
+ * ports, its ports added and removed, its heights. Without variants, or for
+ * an unknown id, the first variant (or the entry itself).
+ */
+export function resolveVariant(def: BoardDef, variantId: string | undefined): BoardDef {
+  const variant = def.variants?.find((item) => item.id === variantId) ?? def.variants?.[0];
+  if (!variant) return def;
+  const ports = def.ports.filter((port) => !variant.remove.includes(port.id)).map((port) => {
+    const override = variant.ports[port.id];
+    if (!override) return port;
+    const merged = sanitizePort({ ...port, ...override }, def.size, 0);
+    return merged ? { ...merged, id: port.id } : port;
+  });
+  return {
+    ...def,
+    topHeight: variant.topHeight ?? def.topHeight,
+    bottomHeight: variant.bottomHeight ?? def.bottomHeight,
+    ports: [...ports, ...variant.add],
+  };
+}
+
 export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
   const r = rec(raw);
   const size = rec(r.size);
@@ -271,17 +383,8 @@ export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
     holes.push({ x: num(hole.x, 0, w, w / 2), y: num(hole.y, 0, d, d / 2), d: num(hole.d, 1, 8, 2.7) });
   }
   const kind: MountKind = mount.kind === 'rails' || holes.length === 0 ? 'rails' : 'holes';
-  const ports: PortDef[] = [];
-  const ids = new Set<string>();
-  for (const [index, item] of (Array.isArray(r.ports) ? r.ports.slice(0, MAX_PORTS) : []).entries()) {
-    const port = sanitizePort(item, { w, d }, index);
-    if (!port) continue;
-    // ids are keys of the per-port cut toggles: they must be unique
-    let id = port.id;
-    for (let n = 2; ids.has(id); n++) id = `${port.id}-${n}`;
-    ids.add(id);
-    ports.push({ ...port, id });
-  }
+  const ports = uniquePorts(Array.isArray(r.ports) ? r.ports : [], { w, d });
+  const variants = sanitizeVariants(r.variants, { w, d }, ports);
   return {
     id: str(r.id, fallbackId, 60),
     name: str(r.name, 'Custom board'),
@@ -298,6 +401,7 @@ export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
     bottomHeight: num(r.bottomHeight, 0, 30, 2),
     ...withPins(sanitizePins(r.pins)),
     ports,
+    ...(variants ? { variants } : {}),
     source: typeof r.source === 'string' ? r.source.slice(0, 300) : '',
     verified: r.verified === true,
   };

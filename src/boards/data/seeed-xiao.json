@@ -15,6 +15,16 @@
     { "id": "shield", "type": "generic", "edge": "top", "x": 8.89, "y": 8.94, "w": 12.6, "d": 10.6, "h": 2 },
     { "id": "u-fl", "type": "antenna", "edge": "top", "x": 4.16, "y": 1.72, "w": 3.1, "d": 3, "h": 1.25 }
   ],
+  "variants": [
+    { "id": "esp32s3", "name": "XIAO ESP32-S3", "ports": { "reset": { "cut": true }, "boot": { "cut": true } } },
+    { "id": "esp32c3", "name": "XIAO ESP32-C3", "ports": { "boot": { "x": 4.45, "y": 1.52, "w": 3.45, "d": 2.6, "h": 1.5, "cut": true }, "reset": { "x": 13.34, "y": 1.52, "w": 3.45, "d": 2.6, "h": 1.5, "cut": true } } },
+    { "id": "esp32c6", "name": "XIAO ESP32-C6", "ports": { "reset": { "x": 2.31, "y": 19.87, "cut": true }, "boot": { "x": 15.47, "y": 19.87, "cut": true } } },
+    { "id": "rp2040", "name": "XIAO RP2040", "ports": { "reset": { "x": 4.83, "y": 1.44, "w": 3.45, "d": 2.6, "h": 1.5, "cut": true }, "boot": { "x": 12.95, "y": 1.44, "w": 3.45, "d": 2.6, "h": 1.5, "cut": true } }, "remove": ["shield", "u-fl"], "add": [{ "id": "rgb-led", "type": "led", "edge": "top", "x": 8.89, "y": 1.44, "w": 2.5, "d": 2.5, "h": 1, "shape": "rect", "cut": false }] },
+    { "id": "rp2350", "name": "XIAO RP2350", "ports": {} },
+    { "id": "nrf52840", "name": "XIAO nRF52840 / Sense", "ports": { "reset": { "x": 3.18, "y": 19.05, "cut": true } }, "remove": ["boot"] },
+    { "id": "samd21", "name": "XIAO SAMD21", "ports": {}, "remove": ["reset", "boot", "shield", "u-fl"] },
+    { "id": "mg24", "name": "XIAO MG24 / Sense", "ports": { "reset": { "x": 2.31, "y": 19.87, "cut": true } }, "remove": ["boot"] }
+  ],
   "source": "https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/XIAO_ESP32S3_v1.1_Dimensioning.dxf",
   "verified": true
 }

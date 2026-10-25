@@ -3,8 +3,8 @@
 
 import { RAW_BOARDS, CATALOG, catalogBoard } from '../src/boards/catalog';
 import type { PortType } from '../src/boards/schema';
-import { PORT_TYPES, isPortType, onFace, sanitizeBoard, sanitizePort } from '../src/boards/schema';
-import { defaultPlacement, sanitizePlacement, portCut, boardOf, minBoardZ, placementMinZ, pinsDown } from '../src/boards/placement';
+import { PORT_TYPES, isPortType, onFace, resolveVariant, sanitizeBoard, sanitizePort } from '../src/boards/schema';
+import { defaultPlacement, sanitizePlacement, portCut, boardOf, entryOf, minBoardZ, placementMinZ, pinsDown } from '../src/boards/placement';
 import { garbageLike, rng } from './helpers';
 
 function rec(x: unknown): Record<string, unknown> {
@@ -59,6 +59,26 @@ describe('board catalog', () => {
         expect(port.along - port.w / 2, port.id).toBeGreaterThanOrEqual(-0.5);
         expect(port.along + port.w / 2, port.id).toBeLessThanOrEqual(length + 0.5);
         expect(p.along, port.id).toBe(port.along);
+      }
+    }
+    // every variant as written, and every port of it inside the outline once resolved
+    const variants = Array.isArray(r.variants) ? r.variants : [];
+    expect(board.variants?.length ?? 0).toBe(variants.length);
+    for (const [i, rawVariant] of variants.entries()) {
+      const v = rec(rawVariant);
+      const variant = board.variants?.[i];
+      expect(variant?.id).toBe(v.id);
+      expect(Object.keys(variant?.ports ?? {})).toEqual(Object.keys(rec(v.ports)));
+      expect(variant?.remove.length ?? 0).toBe(Array.isArray(v.remove) ? v.remove.length : 0);
+      for (const port of resolveVariant(board, variant?.id).ports) {
+        const where = `${String(v.id)}: ${port.id}`;
+        if (onFace(port)) {
+          expect(port.x - port.w / 2, where).toBeGreaterThanOrEqual(-0.5);
+          expect(port.x + port.w / 2, where).toBeLessThanOrEqual(w + 0.5);
+        } else {
+          const length = port.edge === 'front' || port.edge === 'back' ? w : d;
+          expect(port.along + port.w / 2, where).toBeLessThanOrEqual(length + 0.5);
+        }
       }
     }
   });
@@ -118,6 +138,66 @@ describe('sanitizeBoard', () => {
     expect(terminal).toMatchObject({ h: PORT_TYPES.terminal.h, cutH: PORT_TYPES.terminal.cutH });
     expect(sanitizePort({ id: 't', type: 'terminal', edge: 'front', h: 4 }, { w: 30, d: 20 }, 0)).toMatchObject({ h: 4, cutH: 4 });
     expect(sanitizePort({ id: 'u', type: 'usb-c', edge: 'front' }, { w: 30, d: 20 }, 0)).not.toHaveProperty('cutH');
+  });
+});
+
+const FAMILY = {
+  id: 'family', name: 'Family', size: { w: 20, d: 20, t: 1 }, mount: { kind: 'rails', holes: [] },
+  topHeight: 3, bottomHeight: 1,
+  ports: [
+    { id: 'usb', type: 'usb-c', edge: 'back', along: 10 },
+    { id: 'boot', type: 'button', edge: 'top', x: 4, y: 16, cut: false },
+    { id: 'reset', type: 'button', edge: 'top', x: 16, y: 16, cut: false },
+  ],
+  variants: [
+    { id: 'a', name: 'Model A', ports: { boot: { cut: true }, reset: { cut: true } } },
+    { id: 'b', name: 'Model B', ports: { reset: { cut: true, x: 10, ghost: 1 }, nope: { cut: true } }, remove: ['boot'],
+      add: [{ id: 'display', type: 'display', edge: 'bottom', x: 10, y: 8, w: 12, d: 10, h: 2 }], bottomHeight: 1.5 },
+  ],
+};
+
+describe('variants', () => {
+  it('fuzz: never throws and is idempotent', () => {
+    const random = rng(13);
+    for (let i = 0; i < 500; i++) {
+      const once = sanitizeBoard(garbageLike(FAMILY, random));
+      expect(sanitizeBoard(once)).toEqual(once);
+      expect(sanitizeBoard(JSON.parse(JSON.stringify(once)))).toEqual(once);
+    }
+  });
+
+  it('keep overrides of real ports only, with known fields', () => {
+    const family = sanitizeBoard(FAMILY);
+    expect(family.variants?.map((variant) => variant.id)).toEqual(['a', 'b']);
+    expect(family.variants?.[1].ports).toEqual({ reset: { cut: true, x: 10 } });
+    expect(family.variants?.[1].remove).toEqual(['boot']);
+  });
+
+  it('a variant overrides, removes and adds ports; the first is the default', () => {
+    const family = sanitizeBoard(FAMILY);
+    const a = resolveVariant(family, 'a');
+    expect(a.ports.map((port) => [port.id, port.cut])).toEqual([['usb', true], ['boot', true], ['reset', true]]);
+    expect(resolveVariant(family, undefined)).toEqual(a);
+    expect(resolveVariant(family, 'zzz')).toEqual(a);
+    const b = resolveVariant(family, 'b');
+    expect(b.ports.map((port) => port.id)).toEqual(['usb', 'reset', 'display']);
+    expect(b.ports.find((port) => port.id === 'reset')).toMatchObject({ x: 10, y: 16, cut: true });
+    expect(b.bottomHeight).toBe(1.5);
+    expect(resolveVariant(sanitizeBoard({ ...FAMILY, variants: undefined }), 'a').ports.every((port) => port.id === 'usb' || !port.cut)).toBe(true);
+  });
+
+  it('the placement keeps a real variant, the board it builds is resolved', () => {
+    const custom = sanitizeBoard(FAMILY, 'custom');
+    const placement = sanitizePlacement({ board: 'custom', custom, variant: 'b', cuts: { boot: false, display: false } });
+    expect(placement.variant).toBe('b');
+    expect(boardOf(placement).ports.map((port) => port.id)).toEqual(['usb', 'reset', 'display']);
+    expect(entryOf(placement).ports.map((port) => port.id)).toEqual(['usb', 'boot', 'reset']);
+    // the cuts follow the variant's ports
+    expect(placement.cuts).toEqual({ display: false });
+    // the display hangs 2 mm under the board: it stands at least 3 mm up
+    expect(placementMinZ(sanitizePlacement({ board: 'custom', custom, variant: 'b', z: 0 }))).toBe(3);
+    expect(sanitizePlacement({ board: 'custom', custom, variant: 'zzz' }).variant).toBe('a');
+    expect('variant' in sanitizePlacement({ board: 'raspberry-pi-4b', variant: 'a' })).toBe(false);
   });
 });
 

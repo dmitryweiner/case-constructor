@@ -8,6 +8,7 @@ Each board has:
 
 | Control | Range | Notes |
 |---|---|---|
+| Model | the family's models | entries for a family on one outline (XIAO, Feather, Waveshare Zero): where its buttons and parts are, and which openings it gets |
 | X, Y | 0–300 mm | position relative to the other boards; the layout as a whole is centred in the case, so with one board these do nothing |
 | Standoff height | the board's underside parts + 1 mm … 60 mm | PCB underside above the floor |
 | Pins soldered downwards | on / off | boards with header rows; the default is how the board ships; the board goes up with its pins (8.5 mm with the plastic) |

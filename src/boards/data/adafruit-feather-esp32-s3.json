@@ -30,6 +30,13 @@
     { "id": "header-16", "type": "header-1xN", "edge": "top", "x": 25.4, "y": 1.27, "w": 40.64, "d": 2.54, "h": 1.5 },
     { "id": "header-12", "type": "header-1xN", "edge": "top", "x": 30.48, "y": 21.59, "w": 30.48, "d": 2.54, "h": 1.5 }
   ],
+  "variants": [
+    { "id": "s3", "name": "Feather ESP32-S3", "ports": { "boot": { "cut": true } } },
+    { "id": "s2", "name": "Feather ESP32-S2", "ports": { "boot": { "cut": true } } },
+    { "id": "c6", "name": "Feather ESP32-C6", "ports": { "reset": { "x": 10.8, "y": 5.08 }, "boot": { "x": 16.13, "y": 5.08, "cut": true }, "neopixel": { "x": 30.54, "y": 5.84, "w": 3.5, "d": 3.5 } } },
+    { "id": "tft", "name": "Feather ESP32-S3 TFT", "ports": { "reset": { "x": 9.02, "y": 6.22, "w": 2.8, "d": 4.2 }, "boot": { "x": 13.72, "y": 6.22, "w": 2.8, "d": 4.2, "cut": true }, "neopixel": { "x": 5.21, "y": 17.53 }, "stemma-qt": { "x": 10.92, "y": 11.56 }, "module": { "edge": "bottom" } }, "add": [{ "id": "display", "type": "display", "edge": "top", "x": 29.53, "y": 11.43, "w": 24.9, "d": 14.8, "h": 3, "shape": "rect" }] },
+    { "id": "reverse-tft", "name": "Feather ESP32-S3 Reverse TFT", "ports": { "reset": { "x": 10.8, "y": 5.33 }, "boot": { "edge": "bottom", "x": 7.62, "y": 4.45, "cut": true }, "neopixel": { "x": 29.08, "y": 7.68 }, "stemma-qt": { "x": 23.62, "y": 11.43 }, "module": { "x": 39.57, "w": 22.4, "d": 15.6 } }, "add": [{ "id": "display", "type": "display", "edge": "bottom", "x": 25.34, "y": 11.3, "w": 24.9, "d": 14.8, "h": 3, "shape": "rect" }, { "id": "d1", "type": "button", "edge": "bottom", "x": 7.62, "y": 11.43, "w": 4.2, "d": 2.8, "h": 1.9, "shape": "rect" }, { "id": "d2", "type": "button", "edge": "bottom", "x": 7.62, "y": 18.42, "w": 4.2, "d": 2.8, "h": 1.9, "shape": "rect" }, { "id": "reset-back", "type": "button", "edge": "bottom", "x": 44.45, "y": 11.43, "w": 2.8, "d": 4.2, "h": 1.9, "shape": "rect" }] }
+  ],
   "source": "https://github.com/adafruit/Adafruit-Feather-ESP32-S3-PCB",
   "verified": true
 }

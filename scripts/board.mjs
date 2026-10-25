@@ -5,14 +5,16 @@
 //   node scripts/board.mjs --svg raspberry-pi-4b        # top view → shots/<id>.svg
 //   node scripts/board.mjs --svg <id> --out shots/x.svg
 //   node scripts/board.mjs --svg <id> --png             # also a PNG next to it (rendered by Playwright)
+//   node scripts/board.mjs --svg <id> --variant <v>     # one variant of a family → shots/<id>-<v>.svg
 
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { parseArgs } from './lib/harness.mjs';
 
-const flags = parseArgs(process.argv.slice(2), ['svg', 'out']);
+const flags = parseArgs(process.argv.slice(2), ['svg', 'out', 'variant']);
 const args = Object.fromEntries(flags);
+if (args.svg && !args.out) args.out = args.variant ? `shots/${args.svg}-${args.variant}.svg` : `shots/${args.svg}.svg`;
 const result = spawnSync('npx', ['vitest', 'run', '--config', 'scripts/vitest.board.config.ts', '--silent=false', '--reporter=dot'], {
   env: { ...process.env, BOARD_ARGS: JSON.stringify(args) },
   encoding: 'utf8',
@@ -21,7 +23,7 @@ const lines = `${result.stdout}\n${result.stderr}`.split('\n')
   .filter((line) => line.trim() && !/^(stdout \||\s*RUN|\s*Test Files|\s*Tests|\s*Start at|\s*Duration|·|×|⎯|\s*FAIL\s+scripts|\s*❯)/.test(line.trim()));
 console.log(lines.join('\n'));
 if (flags.has('png') && flags.has('svg') && result.status === 0) {
-  const svg = args.out ?? `shots/${args.svg}.svg`;
+  const svg = args.out;
   const png = svg.replace(/\.svg$/, '.png');
   const text = readFileSync(svg, 'utf8');
   const [, w, h] = text.match(/width="([\d.]+)" height="([\d.]+)"/) ?? [];
