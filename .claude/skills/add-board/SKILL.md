@@ -45,6 +45,7 @@ shows; do not mirror a bottom view.
     // edge connector: centre along the edge from its start (x for front/back, y for left/right)
     { "id": "usb-c", "type": "usb-c", "edge": "left", "along": 11.2, "z": 0, "protrude": 1.3 },
     // part on top: centre x, y; size w (along x) × d (along y) × h (above the PCB)
+    // a part on the underside: "edge": "bottom", centre x, y as seen from the top, h below the PCB
     { "id": "gpio", "type": "header-2x20", "edge": "top", "x": 32.5, "y": 52.5, "w": 51, "d": 5, "h": 8.5 }
   ],
   "source": "https://…",
@@ -63,6 +64,10 @@ shows; do not mirror a bottom view.
   `microsd`). `generic` is for what none of the types describe.
 - A **standing connector** (HDMI or USB-C on its end: ROCK 5B+, Orange Pi 5
   Max / Pro / Plus) keeps its type with `w` and `h` swapped.
+- A part the user reaches from below (CYD buttons, a bottom LED, a
+  Reverse TFT display) is `"edge": "bottom"`: the floor gets a column under
+  it, and its `h` counts towards the underside, so `bottomHeight` need not
+  repeat it. Give x, y in the top view's frame (mirror a bottom view).
 - `z` is the bottom of an edge connector above the PCB top; negative for
   something under the board (a microSD slot: `-(t + h)`).
 - `protrude` is how far the connector sticks out past the edge (USB/Ethernet

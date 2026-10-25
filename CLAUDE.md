@@ -166,7 +166,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   along an axis. An edge port is a channel from the connector's face outwards
   along the edge normal — one rule for flat, round and sloped walls, and
   nothing behind the face is touched. A top element is a vertical column from
-  just above it through the ceiling. A user cut goes through the wall of its
+  just above it through the ceiling; a part on the underside (`edge:
+  "bottom"`), one from just below it down through the floor (with a bottom
+  lid, through the lid: the common cutter pass). A user cut goes through the wall of its
   face along the face normal (deeper on a cylinder's curve; a vertical column
   on the console's slope). All cutters are unioned and subtracted once from
   each part, after the skirt, so the skirt and both halves are cut alike.

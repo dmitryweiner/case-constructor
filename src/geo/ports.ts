@@ -4,9 +4,11 @@
 // at the connector's face: whatever wall stands in front of it — flat, round,
 // the console's — gets an opening exactly where the plug goes in, and nothing
 // behind the face is touched. A top element becomes a column from just above
-// it up through the ceiling.
+// it up through the ceiling; a part on the underside, a column from just
+// below it down through the floor.
 
 import type { PortDef } from '../boards/schema';
+import { onFace } from '../boards/schema';
 import { portCut } from '../boards/placement';
 import type { CutterSpec, ExtraCut } from './cutters';
 import { VERTICAL_AXES, horizontalAxes } from './cutters';
@@ -44,7 +46,7 @@ export function outerTopAt(shape: ShapeState, dims: Dims, frontH: number, backH:
 
 /** How high an edge port's opening is: the part, or its bottom `cutH` (a terminal's wire slot). */
 function openingH(port: PortDef): number {
-  return port.edge === 'top' ? port.h : port.cutH ?? port.h;
+  return onFace(port) ? port.h : port.cutH ?? port.h;
 }
 
 function sectionOf(port: PortDef): { shape: 'rect' | 'round'; w: number; h: number; r: number } {
@@ -78,22 +80,16 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
       if (!portCut(board.placement, port.id, port.cut)) continue;
       const source = { kind: 'port' as const, board: board.index, port: port.id };
       const section = sectionOf(port);
-      if (port.edge === 'top') {
+      if (onFace(port)) {
         const [cx, cy] = applyAffine(board.toCase, [port.x, port.y, 0]);
         const turned = board.placement.rot === 90 || board.placement.rot === 270;
-        const elementTop = board.z0 + board.def.size.t + port.h;
         const w = port.shape === 'round' ? section.w : (turned ? port.d : port.w) + 2 * port.clearance;
         const h = port.shape === 'round' ? section.w : (turned ? port.w : port.d) + 2 * port.clearance;
-        out.push({
-          origin: [cx, cy, 0],
-          ...VERTICAL_AXES,
-          s0: Math.min(elementTop + COLUMN_GAP, ceiling(cx, cy) - 0.2),
-          s1: top(cx, cy) + 1,
-          ...section,
-          w,
-          h,
-          source,
-        });
+        // up through the ceiling from just above a top element, down through the floor from just below an underside one
+        const [s0, s1] = port.edge === 'top'
+          ? [Math.min(board.z0 + board.def.size.t + port.h + COLUMN_GAP, ceiling(cx, cy) - 0.2), top(cx, cy) + 1]
+          : [-1, Math.max(board.z0 - port.h - COLUMN_GAP, shape.floor + 0.2)];
+        out.push({ origin: [cx, cy, 0], ...VERTICAL_AXES, s0, s1, ...section, w, h, source });
       } else {
         const { face, dir } = portAxis(board, port);
         out.push({ origin: face, ...horizontalAxes(dir[0], dir[1]), s0: -CHANNEL_BACK, s1: reach, ...section, source });
@@ -146,7 +142,7 @@ export function cutWarnings(
   const { dims } = layout;
   for (const board of layout.boards) {
     for (const port of board.def.ports) {
-      if (port.edge === 'top' || !portCut(board.placement, port.id, port.cut)) continue;
+      if (onFace(port) || !portCut(board.placement, port.id, port.cut)) continue;
       const { face, dir } = portAxis(board, port);
       const gap = portToWall(shape, dims, face, dir);
       if (gap > PORT_FAR_MM) out.push({ code: 'warn.portFar', params: { board: board.index + 1, port: port.id, mm: gap.toFixed(0) } });

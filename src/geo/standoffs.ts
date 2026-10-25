@@ -12,7 +12,7 @@ import { extrude, transformSolid } from './csg';
 import { NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE, bossDiameter } from './fasteners';
 import type { PlacedBoard } from './layout';
 import {
-  PIN_SLOT, PIN_SPACER, PIN_SPACER_W, PIN_TIP_GAP, RAIL_GAP, RAIL_GRIP, RAIL_LIP, RAIL_SHORTEN, RAIL_THICK, pinEdges, railEdges,
+  PIN_SLOT, PIN_SPACER, PIN_TIP_GAP, RAIL_GAP, RAIL_GRIP, RAIL_LIP, RAIL_SHORTEN, RAIL_THICK, pinEdges, railEdges, railReach,
 } from './layout';
 import { applyAffine } from './surface';
 
@@ -90,9 +90,6 @@ export function standoffs(csg: CsgApi, scope: CsgScope, board: PlacedBoard, floo
   });
 }
 
-/** The narrowest wall the pin bed keeps inside the slot for the pins. */
-const PIN_BED_WALL = 1.2;
-
 /**
  * The pin bed's profile across the edge, (s outward, z up from the PCB
  * underside): the outer column and the upper lip as on a plain rail, no
@@ -103,7 +100,7 @@ function pinBedProfile(t: number, height: number, below: number, inset: number):
   const s0 = RAIL_GAP - RAIL_GRIP;
   const slotIn = -inset - PIN_SLOT / 2;
   const slotOut = -inset + PIN_SLOT / 2;
-  const sIn = Math.min(-inset - PIN_SPACER_W / 2, slotIn - PIN_BED_WALL);
+  const sIn = -railReach({ inset });
   const shelf = -PIN_SPACER - RAIL_GAP;
   const tips = -below - PIN_TIP_GAP;
   const bottom = -height - SINK;

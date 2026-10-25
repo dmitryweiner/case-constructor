@@ -7,7 +7,7 @@ import { it } from 'vitest';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { RAW_BOARDS, catalogBoard } from '../src/boards/catalog';
-import { isPortType, sanitizeBoard } from '../src/boards/schema';
+import { isPortType, onFace, sanitizeBoard } from '../src/boards/schema';
 import type { BoardDef } from '../src/boards/schema';
 
 interface Args { check?: string; svg?: string; out?: string }
@@ -42,9 +42,9 @@ function problems(raw: unknown): string[] {
     ids.add(String(p.id));
   }
   for (const port of board.ports) {
-    if (port.edge === 'top') {
+    if (onFace(port)) {
       if (port.x - port.w / 2 < -0.5 || port.x + port.w / 2 > w + 0.5 || port.y - port.d / 2 < -0.5 || port.y + port.d / 2 > d + 0.5) {
-        out.push(`top part ${port.id} leaves the outline`);
+        out.push(`${port.edge} part ${port.id} leaves the outline`);
       }
     } else {
       const length = port.edge === 'front' || port.edge === 'back' ? w : d;
@@ -74,7 +74,7 @@ function svg(def: BoardDef): string {
     let y0: number;
     let x1: number;
     let y1: number;
-    if (port.edge === 'top') {
+    if (onFace(port)) {
       [x0, y0, x1, y1] = [port.x - port.w / 2, port.y - port.d / 2, port.x + port.w / 2, port.y + port.d / 2];
     } else {
       const inward = port.d;
@@ -84,9 +84,11 @@ function svg(def: BoardDef): string {
       else if (port.edge === 'left') [x0, y0, x1, y1] = [-out, port.along - port.w / 2, inward - out, port.along + port.w / 2];
       else [x0, y0, x1, y1] = [def.size.w - inward + out, port.along - port.w / 2, def.size.w + out, port.along + port.w / 2];
     }
-    const fill = port.edge === 'top' ? '#d9b45a' : '#9aa7b4';
-    parts.push(`<rect x="${X(x0)}" y="${Y(y1)}" width="${(x1 - x0) * s}" height="${(y1 - y0) * s}" fill="${fill}" fill-opacity="0.8" stroke="#333"/>`);
-    const where = port.edge === 'top' ? `${port.x}, ${port.y}` : `${port.edge} @${port.along}`;
+    // a part on the underside is seen through the board: dashed, paler
+    const fill = port.edge === 'top' ? '#d9b45a' : port.edge === 'bottom' ? '#c9a0dc' : '#9aa7b4';
+    const dash = port.edge === 'bottom' ? ' stroke-dasharray="4 3"' : '';
+    parts.push(`<rect x="${X(x0)}" y="${Y(y1)}" width="${(x1 - x0) * s}" height="${(y1 - y0) * s}" fill="${fill}" fill-opacity="${port.edge === 'bottom' ? 0.5 : 0.8}" stroke="#333"${dash}/>`);
+    const where = onFace(port) ? `${port.x}, ${port.y}${port.edge === 'bottom' ? ', under' : ''}` : `${port.edge} @${port.along}`;
     parts.push(`<text x="${X((x0 + x1) / 2)}" y="${Y((y0 + y1) / 2) + 3}" font-size="9" text-anchor="middle" fill="#000">${port.id} (${where})</text>`);
   }
   parts.push(`<text x="${X(def.size.w / 2)}" y="${Y(def.size.d) - 6 - reach * s + 20}" font-size="12" text-anchor="middle" fill="#ddd">${def.name}: ${def.size.w} × ${def.size.d} × ${def.size.t} mm${def.verified ? '' : ' (unverified)'}</text>`);

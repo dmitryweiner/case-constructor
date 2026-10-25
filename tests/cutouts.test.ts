@@ -8,6 +8,7 @@ import type { CsgApi } from '../src/geo/csg';
 import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
 import { caseLayout } from '../src/geo/layout';
+import { onFace } from '../src/boards/schema';
 import { portAxis, portCutters, portToWall } from '../src/geo/ports';
 import { extraCutters } from '../src/geo/cutters';
 import { defaultState, sanitizeState } from '../src/state/schema';
@@ -47,7 +48,7 @@ function expectEdgePortsOpen(state: AppState): void {
   let checked = 0;
   for (const board of layout.boards) {
     for (const port of board.def.ports) {
-      if (port.edge === 'top' || !port.cut) continue;
+      if (onFace(port) || !port.cut) continue;
       const { face, dir } = portAxis(board, port);
       const s = portToWall(shape, layout.dims, face, dir) + state.shape.wall / 2;
       const [x, y, z] = [face[0] + dir[0] * s, face[1] + dir[1] * s, face[2]];
@@ -80,7 +81,7 @@ describe('port openings', () => {
     const layout = caseLayout(state);
     const board = layout.boards[0];
     const port = board.def.ports.find((p) => p.id === 'ethernet');
-    if (!port || port.edge === 'top') throw new Error('no ethernet');
+    if (!port || onFace(port)) throw new Error('no ethernet');
     const { face, dir } = portAxis(board, port);
     const s = portToWall(state.shape, layout.dims, face, dir) + state.shape.wall / 2;
     expect(solidAt(parts, face[0] + dir[0] * s, face[1] + dir[1] * s, face[2])).toBe(true);
@@ -98,6 +99,33 @@ describe('port openings', () => {
     const gpio = portCutters(layout, state.shape).find((c) => c.source.kind === 'port' && c.source.port === 'gpio');
     expect(gpio?.s0).toBeGreaterThan(board.z0 + board.def.size.t + 8.5);
     for (const part of parts) part.delete();
+  });
+
+  it('a part on the underside gets a column down through the floor, with either lid', () => {
+    for (const face of ['top', 'bottom'] as const) {
+      const state = sanitizeState({ ...defaultState(), lid: { ...defaultState().lid, face }, boards: [{ board: 'esp32-2432s028r' }] });
+      const parts = buildCase(csg, state, 8);
+      for (const mesh of [parts.body, parts.lid]) {
+        const report = validateMesh(mesh);
+        expect(report.watertight, face).toBe(true);
+        expect(report.degenerateTriangles, face).toBe(0);
+      }
+      const solids = [toManifold(csg, parts.body), toManifold(csg, parts.lid)];
+      const layout = caseLayout(state);
+      const board = layout.boards[0];
+      const reset = board.def.ports.find((port) => port.id === 'reset');
+      if (!reset || reset.edge !== 'bottom') throw new Error('the CYD has its reset underneath');
+      const [x, y] = applyAffine(board.toCase, [reset.x, reset.y, 0]);
+      expect(solidAt(solids, x, y, state.shape.floor / 2), `${face}: the floor under the button`).toBe(false);
+      // the column stops below the part: the board and the cavity above stay untouched
+      const column = portCutters(layout, state.shape).find((c) => c.source.kind === 'port' && c.source.port === 'reset');
+      expect(column?.s0).toBeLessThan(0);
+      expect(column?.s1).toBeLessThan(board.z0 - reset.h);
+      // beside the button the floor is whole
+      const [bx, by] = applyAffine(board.toCase, [reset.x, reset.y + 6, 0]);
+      expect(solidAt(solids, bx, by, state.shape.floor / 2), `${face}: the floor beside it`).toBe(true);
+      for (const part of solids) part.delete();
+    }
   });
 });
 
@@ -125,6 +153,6 @@ describe('every catalog board', () => {
       expect(report.watertight).toBe(true);
       expect(report.degenerateTriangles).toBe(0);
     }
-    if (caseLayout(state).boards[0].def.ports.some((port) => port.edge !== 'top' && port.cut)) expectEdgePortsOpen(state);
+    if (caseLayout(state).boards[0].def.ports.some((port) => !onFace(port) && port.cut)) expectEdgePortsOpen(state);
   });
 });

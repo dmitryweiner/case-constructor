@@ -154,6 +154,7 @@ export const he: Record<Key, string> = {
   'view.boards.title': 'הצגת הלוחות שבפנים',
   'warn.boardsOverlap': 'הלוחות {a} ו־{b} חופפים.',
   'warn.standoffHitsBoard': 'מעמד של לוח {a} נתקל בלוח {b}.',
+  'warn.bottomPartOnSupport': 'לוח {board}, {port}: הרכיב שמתחת ללוח נופל על עמוד או על מסילה.',
   'progress.supports': 'מעמדים ומסילות',
 
   // --- openings ---

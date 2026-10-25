@@ -88,6 +88,26 @@ describe('collisions', () => {
     expect(codes).toContain('warn.standoffHitsBoard');
   });
 
+  it('a part on the underside landing on a standoff or a rail is reported, and it lifts the board', () => {
+    const custom = (mount: object, x: number, y: number) => sanitizeState({
+      ...defaultState(),
+      boards: [{ board: 'custom', custom: {
+        size: { w: 40, d: 30, t: 1.6 }, mount, bottomHeight: 1,
+        ports: [{ id: 'led', type: 'led', edge: 'bottom', x, y, w: 2, d: 2, h: 5, shape: 'rect' }],
+      }, z: 0 }],
+    });
+    const holes = { kind: 'holes', holes: [{ x: 3, y: 3, d: 2.7 }, { x: 37, y: 27, d: 2.7 }], screw: 'M2.5' };
+    const codes = (state: ReturnType<typeof custom>) => collisions(caseLayout(state)).map((m) => m.code);
+    expect(codes(custom(holes, 4, 4))).toContain('warn.bottomPartOnSupport');
+    expect(codes(custom(holes, 20, 15))).toEqual([]);
+    const rails = { kind: 'rails', holes: [], screw: 'M2', rails: 'long' };
+    expect(codes(custom(rails, 20, 0.8))).toContain('warn.bottomPartOnSupport');
+    expect(codes(custom(rails, 20, 15))).toEqual([]);
+    // the part is 5 mm tall, the entry says 1: the board still stands 6 mm up
+    expect(custom(holes, 20, 15).boards[0].z).toBe(6);
+    expect(codes(sanitizeState({ ...defaultState(), boards: [{ board: 'esp32-2432s028r' }] }))).toEqual([]);
+  });
+
   it('standoff columns sit at the holes', () => {
     const layout = caseLayout(defaultState());
     const columns = standoffColumns(layout.boards[0]);

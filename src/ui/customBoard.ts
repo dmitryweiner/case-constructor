@@ -11,7 +11,7 @@ import { make } from './dom';
 import type { Key } from '../i18n';
 import { t, tDynamic } from '../i18n';
 import type { BoardDef, PortDef, PortType } from '../boards/schema';
-import { EDGES, PORT_TYPES, PORT_TYPE_IDS, isPortType, sanitizePort } from '../boards/schema';
+import { EDGES, PORT_TYPES, PORT_TYPE_IDS, isPortType, onFace, sanitizePort } from '../boards/schema';
 import { SCREW_SIZES } from '../geo/fasteners';
 import type { AppState } from '../state/schema';
 
@@ -52,8 +52,8 @@ export function catalogJson(def: BoardDef): string {
       w: port.w, h: port.h, ...(port.shape === 'rect' ? { d: port.d } : {}),
       ...(port.cutH !== undefined && port.cutH !== base.cutH ? { cutH: port.cutH } : {}),
     };
-    return port.edge === 'top'
-      ? { ...common, edge: 'top', x: port.x, y: port.y, ...size }
+    return onFace(port)
+      ? { ...common, edge: port.edge, x: port.x, y: port.y, ...size }
       : { ...common, edge: port.edge, along: port.along, z: port.z, ...size, protrude: port.protrude };
   });
   return `${JSON.stringify({
@@ -255,7 +255,7 @@ export function renderCustomEditor(
     head.append(selectInput(`${prefix}_port${p}_type`, PORT_TYPE_IDS.map((id) => ({ value: id, text: tDynamic(`port.${id}`) })), port.type,
       // a new type brings its own sizes: drop the old ones, the sanitizer fills the defaults
       (value) => setPort((item) => ({ id: item.id, type: isPortType(value) ? value : item.type, edge: item.edge, along: item.along, x: item.x, y: item.y, z: item.z }))));
-    head.append(selectInput(`${prefix}_port${p}_edge`, [...EDGES, 'top'].map((edge) => ({ value: edge, text: tDynamic(`face.${edge}`) })), port.edge,
+    head.append(selectInput(`${prefix}_port${p}_edge`, [...EDGES, 'top', 'bottom'].map((edge) => ({ value: edge, text: tDynamic(`face.${edge}`) })), port.edge,
       (value) => setPort((item) => ({ ...item, edge: value }))));
     const del = make('button', 'tb-btn row-del', '✕');
     del.type = 'button';
@@ -265,7 +265,7 @@ export function renderCustomEditor(
     head.append(del);
     wrap.append(head);
 
-    const fields: readonly [string, Key][] = port.edge === 'top'
+    const fields: readonly [string, Key][] = onFace(port)
       ? [['x', 'col.x'], ['y', 'col.y'], ['w', 'col.w'], ['d', 'col.depth'], ['h', 'col.h']]
       : [['along', 'col.along'], ['z', 'col.z'], ['w', 'col.w'], ['h', 'col.h'], ['protrude', 'col.protrude']];
     const values = make('div', 'table-row');

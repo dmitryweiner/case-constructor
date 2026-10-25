@@ -153,6 +153,7 @@ export const ru: Record<Key, string> = {
   'view.boards.title': 'Показывать платы внутри',
   'warn.boardsOverlap': 'Платы {a} и {b} пересекаются.',
   'warn.standoffHitsBoard': 'Стойка платы {a} упирается в плату {b}.',
+  'warn.bottomPartOnSupport': 'Плата {board}, {port}: деталь под платой попадает на стойку или рельс.',
   'progress.supports': 'Стойки и направляющие',
 
   // --- openings ---

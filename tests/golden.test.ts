@@ -142,6 +142,12 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     boards: [{ board: 'heltec-wifi-lora-32-v4' }],
   }),
+  // B4: parts on the underside, columns through a bottom lid (PLAN-IMPROVEMENTS-NEW-BOARDS.md)
+  'cyd-bottom-parts': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, face: 'bottom' },
+    boards: [{ board: 'esp32-2432s028r' }],
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

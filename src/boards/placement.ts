@@ -6,7 +6,7 @@
 import type { FastenerSpec } from '../geo/fasteners';
 import { sanitizeFastener } from '../geo/fasteners';
 import type { BoardDef } from './schema';
-import { sanitizeBoard } from './schema';
+import { bottomPartsH, sanitizeBoard } from './schema';
 import { CATALOG, catalogBoard } from './catalog';
 
 export const ROTATIONS = [0, 90, 180, 270] as const;
@@ -47,9 +47,10 @@ export function pinsDown(def: BoardDef, placement: Pick<BoardPlacement, 'pins'>)
   return def.pins !== undefined && (placement.pins ?? def.pins.soldered);
 }
 
-/** The tallest thing under the PCB: its parts, or its pins when they are soldered. */
+/** The tallest thing under the PCB: its parts (bottom ports too), or its pins when they are soldered. */
 export function undersideOf(def: BoardDef, pins: boolean): number {
-  return pins && def.pins ? Math.max(def.bottomHeight, def.pins.below) : def.bottomHeight;
+  const parts = Math.max(def.bottomHeight, bottomPartsH(def.ports));
+  return pins && def.pins ? Math.max(parts, def.pins.below) : parts;
 }
 
 /** Lowest the board may sit: its underside plus a millimetre. */

@@ -24,7 +24,10 @@
     { "id": "microsd", "type": "microsd", "edge": "back", "along": 38.4, "h": 1.8, "z": -3.4, "protrude": 0.3 },
     { "id": "gpio-cn1", "type": "jst", "edge": "back", "along": 55, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
     { "id": "gpio-p3", "type": "jst", "edge": "back", "along": 71.2, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
-    { "id": "speaker-p4", "type": "jst", "edge": "front", "along": 27.2, "w": 5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false }
+    { "id": "speaker-p4", "type": "jst", "edge": "front", "along": 27.2, "w": 5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "boot", "type": "button", "edge": "bottom", "x": 74, "y": 11.2, "w": 3, "d": 4, "h": 2, "shape": "rect" },
+    { "id": "reset", "type": "button", "edge": "bottom", "x": 78.2, "y": 11.2, "w": 3, "d": 4, "h": 2, "shape": "rect" },
+    { "id": "rgb-led", "type": "led", "edge": "bottom", "x": 56.6, "y": 41.5, "w": 3, "d": 3, "h": 1, "shape": "rect" }
   ],
   "source": "https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/OriginalDocumentation/3-Structure_Diagram/Dimensions.png",
   "verified": false

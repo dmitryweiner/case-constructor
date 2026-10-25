@@ -153,6 +153,7 @@ export const uk: Record<Key, string> = {
   'view.boards.title': 'Показувати плати всередині',
   'warn.boardsOverlap': 'Плати {a} і {b} перетинаються.',
   'warn.standoffHitsBoard': 'Стійка плати {a} впирається в плату {b}.',
+  'warn.bottomPartOnSupport': 'Плата {board}, {port}: деталь під платою потрапляє на стійку або рейку.',
   'progress.supports': 'Стійки й напрямні',
 
   // --- openings ---

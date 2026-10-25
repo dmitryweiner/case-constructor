@@ -162,6 +162,7 @@ export const en = {
   'view.boards.title': 'Show the boards inside',
   'warn.boardsOverlap': 'Boards {a} and {b} overlap.',
   'warn.standoffHitsBoard': 'A standoff of board {a} runs into board {b}.',
+  'warn.bottomPartOnSupport': 'Board {board}, {port}: the part under the board lands on a standoff or a rail.',
   'progress.supports': 'Standoffs and rails',
 
   // --- openings ---

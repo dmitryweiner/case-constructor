@@ -99,11 +99,24 @@ export interface EdgePort extends PortCommon {
   protrude: number;
 }
 
-/** An element on the top face: a rectangle (or circle) centred at (x, y), h above the PCB. */
+/**
+ * An element on a face of the PCB: a rectangle (or circle) centred at
+ * (x, y), h above the top face — or, on the underside, h below the PCB.
+ */
 export interface TopPort extends PortCommon {
-  edge: 'top';
+  edge: 'top' | 'bottom';
   x: number;
   y: number;
+}
+
+/** A part on the top or the underside rather than on an edge. */
+export function onFace(port: PortDef): port is TopPort {
+  return port.edge === 'top' || port.edge === 'bottom';
+}
+
+/** The tallest part under the PCB that the entry lists as a port. */
+export function bottomPartsH(ports: readonly PortDef[]): number {
+  return Math.max(0, ...ports.filter((port) => port.edge === 'bottom').map((port) => port.h));
 }
 
 export type PortDef = EdgePort | TopPort;
@@ -150,7 +163,7 @@ export interface BoardDef {
   };
   /** tallest part above the PCB — sizes the case height */
   topHeight: number;
-  /** tallest part below the PCB, pins left out — the lowest the bare board may sit */
+  /** tallest part below the PCB, pins left out — the lowest the bare board may sit (bottom ports count too) */
   bottomHeight: number;
   /** header rows that may carry pins below the board */
   pins?: BoardPins;
@@ -217,10 +230,10 @@ export function sanitizePort(raw: unknown, size: { w: number; d: number }, index
       protrude: num(r.protrude, -20, 30, 0),
     };
   }
-  if (edge === 'top' || (edge === undefined && base.top)) {
+  if (edge === 'top' || edge === 'bottom' || (edge === undefined && base.top)) {
     return {
       ...common,
-      edge: 'top',
+      edge: edge === 'bottom' ? 'bottom' : 'top',
       x: num(r.x, 0, size.w, size.w / 2),
       y: num(r.y, 0, size.d, size.d / 2),
     };

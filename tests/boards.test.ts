@@ -3,7 +3,7 @@
 
 import { RAW_BOARDS, CATALOG, catalogBoard } from '../src/boards/catalog';
 import type { PortType } from '../src/boards/schema';
-import { PORT_TYPES, isPortType, sanitizeBoard, sanitizePort } from '../src/boards/schema';
+import { PORT_TYPES, isPortType, onFace, sanitizeBoard, sanitizePort } from '../src/boards/schema';
 import { defaultPlacement, sanitizePlacement, portCut, boardOf, minBoardZ, placementMinZ, pinsDown } from '../src/boards/placement';
 import { garbageLike, rng } from './helpers';
 
@@ -49,7 +49,7 @@ describe('board catalog', () => {
       expect(typeof p.id === 'string' && !ids.has(p.id), `${String(p.id)} unique`).toBe(true);
       ids.add(String(p.id));
       const port = board.ports[i];
-      if (port.edge === 'top') {
+      if (onFace(port)) {
         expect(port.x - port.w / 2, port.id).toBeGreaterThanOrEqual(-0.5);
         expect(port.x + port.w / 2, port.id).toBeLessThanOrEqual(w + 0.5);
         expect(port.y - port.d / 2, port.id).toBeGreaterThanOrEqual(-0.5);

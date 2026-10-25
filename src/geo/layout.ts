@@ -7,7 +7,8 @@
 // or larger (manual), and the layout is centred in it: board positions never
 // depend on the case size, which breaks the circular dependency.
 
-import type { BoardDef, Edge } from '../boards/schema';
+import type { BoardDef, Edge, TopPort } from '../boards/schema';
+import { onFace } from '../boards/schema';
 import type { BoardPlacement, Rotation } from '../boards/placement';
 import { boardOf, pinsDown, undersideOf } from '../boards/placement';
 import type { Dims } from './face';
@@ -39,6 +40,14 @@ export const PIN_SPACER_W = 2.54;
 /** The pin bed's slot for a row of pins, its width and the room under the pin tips. */
 export const PIN_SLOT = 1.2;
 export const PIN_TIP_GAP = 0.5;
+/** The narrowest wall the pin bed keeps inside the slot for the pins. */
+export const PIN_BED_WALL = 1.2;
+
+/** How far inside the board edge a rail reaches under it: the lower lip, or the pin bed's shelf. */
+export function railReach(pins: { inset: number } | null): number {
+  if (!pins) return RAIL_GRIP - RAIL_GAP;
+  return Math.max(pins.inset + PIN_SPACER_W / 2, pins.inset + PIN_SLOT / 2 + PIN_BED_WALL);
+}
 
 export interface Rect {
   x0: number;
@@ -121,7 +130,7 @@ export function pinEdges(board: Pick<PlacedBoard, 'def' | 'placement'>): Edge[] 
 function edgeReach(def: BoardDef): Record<Edge, number> {
   const reach: Record<Edge, number> = { front: 0, back: 0, left: 0, right: 0 };
   for (const port of def.ports) {
-    if (port.edge !== 'top') reach[port.edge] = Math.max(reach[port.edge], port.protrude);
+    if (!onFace(port)) reach[port.edge] = Math.max(reach[port.edge], port.protrude);
   }
   if (def.mount.kind === 'rails') {
     for (const edge of railEdges(def)) reach[edge] = Math.max(reach[edge], RAIL_THICK - RAIL_GRIP + RAIL_GAP);
@@ -317,7 +326,8 @@ export function standoffColumns(board: PlacedBoard): { x: number; y: number; r: 
 
 /**
  * Warnings about the layout: boards overlapping in 3D, a standoff running
- * into another board. The user is the designer — none of these blocks.
+ * into another board, a part on a board's underside landing on its own
+ * standoff or rail. The user is the designer — none of these blocks.
  */
 export function collisions(layout: CaseLayout): Message[] {
   const out: Message[] = [];
@@ -332,6 +342,13 @@ export function collisions(layout: CaseLayout): Message[] {
       }
     }
   }
+  for (const board of boards) {
+    for (const port of board.def.ports) {
+      if (port.edge === 'bottom' && bottomPartOnSupport(board, port)) {
+        out.push({ code: 'warn.bottomPartOnSupport', params: { board: board.index + 1, port: port.id } });
+      }
+    }
+  }
   for (const a of boards) {
     for (const column of standoffColumns(a)) {
       const rect: Rect = { x0: column.x - column.r, y0: column.y - column.r, x1: column.x + column.r, y1: column.y + column.r };
@@ -342,6 +359,31 @@ export function collisions(layout: CaseLayout): Message[] {
     }
   }
   return dedupe(out);
+}
+
+/** Whether a part on the underside lands on its board's standoffs or rails (board frame). */
+function bottomPartOnSupport(board: PlacedBoard, port: TopPort): boolean {
+  const { w, d } = board.def.size;
+  const hw = port.w / 2;
+  const hd = (port.shape === 'round' ? port.w : port.d) / 2;
+  const part: Rect = { x0: port.x - hw, y0: port.y - hd, x1: port.x + hw, y1: port.y + hd };
+  if (board.def.mount.kind === 'holes') {
+    const r = bossDiameter(board.placement.mount) / 2;
+    return board.def.mount.holes.some((hole) => {
+      const dx = Math.max(part.x0 - hole.x, 0, hole.x - part.x1);
+      const dy = Math.max(part.y0 - hole.y, 0, hole.y - part.y1);
+      return Math.hypot(dx, dy) < r;
+    });
+  }
+  const pinned = pinEdges(board);
+  return railEdges(board.def).some((edge) => {
+    const reach = railReach(pinned.includes(edge) && board.def.pins ? board.def.pins : null);
+    const strip: Rect = edge === 'front' ? { x0: RAIL_SHORTEN, y0: 0, x1: w - RAIL_SHORTEN, y1: reach }
+      : edge === 'back' ? { x0: RAIL_SHORTEN, y0: d - reach, x1: w - RAIL_SHORTEN, y1: d }
+        : edge === 'left' ? { x0: 0, y0: RAIL_SHORTEN, x1: reach, y1: d - RAIL_SHORTEN }
+          : { x0: w - reach, y0: RAIL_SHORTEN, x1: w, y1: d - RAIL_SHORTEN };
+    return overlap(part, strip) > 0;
+  });
 }
 
 function dedupe(messages: Message[]): Message[] {

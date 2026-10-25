@@ -478,5 +478,25 @@
         5
       ]
     }
+  },
+  "cyd-bottom-parts": {
+    "body": {
+      "triangles": 1148,
+      "volume": 15038.69,
+      "extents": [
+        95,
+        58.3,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 2138,
+      "volume": 12339.01,
+      "extents": [
+        95,
+        58.3,
+        7
+      ]
+    }
   }
 }

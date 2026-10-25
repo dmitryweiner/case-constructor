@@ -17,6 +17,7 @@ export type MessageCode =
   // layout checks (layout)
   | 'warn.boardsOverlap'
   | 'warn.standoffHitsBoard'
+  | 'warn.bottomPartOnSupport'
   // cutouts (ports)
   | 'warn.portFar'
   | 'info.cutSplit'

@@ -147,6 +147,11 @@ Today the user adds a bottom opening by hand.
 else is cut), a golden state, and fastening/degenerate checks on a bottom
 lid.
 
+**Done.** `TopPort` takes `edge: 'top' | 'bottom'` (`onFace`); bottom
+parts count in `undersideOf`; `warn.bottomPartOnSupport`. The CYD has its
+BOOT, RESET and RGB LED underneath, placed from a photo (the entry stays
+≈). The Reverse TFT comes with B6.
+
 ## B5. Port types the boards needed
 
 **Now.** The agents used `generic` (and other types) with explicit sizes:

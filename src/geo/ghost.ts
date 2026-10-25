@@ -6,6 +6,7 @@
 
 import earcut from 'earcut';
 import type { BoardDef, PortDef } from '../boards/schema';
+import { onFace } from '../boards/schema';
 import type { PlacedBoard } from './layout';
 import { PIN_SPACER, PIN_SPACER_W, edgeNormal, pinEdges } from './layout';
 import type { SurfaceMesh, Vec3 } from './surface';
@@ -118,8 +119,9 @@ function prismMesh(board: PlacedBoard, outer: [number, number][], holes: [number
 /** The block of one port in the board frame (z = 0 at the PCB underside). */
 export function portBlock(board: PlacedBoard, port: PortDef): [number, number, number, number, number, number] {
   const { w, d, t } = board.def.size;
-  if (port.edge === 'top') {
-    return [port.x - port.w / 2, port.y - port.d / 2, t, port.x + port.w / 2, port.y + port.d / 2, t + port.h];
+  if (onFace(port)) {
+    const [z0, z1] = port.edge === 'top' ? [t, t + port.h] : [-port.h, 0];
+    return [port.x - port.w / 2, port.y - port.d / 2, z0, port.x + port.w / 2, port.y + port.d / 2, z1];
   }
   const [nx, ny] = edgeNormal(port.edge);
   const z0 = t + port.z;
