@@ -19,6 +19,8 @@
 //   node scripts/dxf.mjs board.dxf --outline            # the board's outline as the entry's "outline"
 //                                                       # (the largest closed loop; --eps 0.15 simplifies,
 //                                                       # --tol 0.02 joins pieces whose ends are that close)
+//   node scripts/dxf.mjs board.pdf --compare <id>       # the entry's holes and size against the drawing's
+//                                                       # (in the frame above: --origin/--flip/--rotate first)
 //
 // Coordinates are printed relative to the lower-left corner of the extents
 // of the LINE/ARC/POLYLINE entities (the board outline, usually), which is
@@ -39,9 +41,10 @@ import { parseArgs } from './lib/harness.mjs';
 import { componentBoxes, extents, layerCounts, pdfToSvg, polylines, readDxf, readSvg, scaled, turned } from './lib/drawing.mjs';
 import { chainLoops, largestLoop, toOutline } from './lib/outline.mjs';
 import { inline } from './lib/boardJson.mjs';
+import { compareHoles, readEntry } from './lib/compare.mjs';
 
 const file = process.argv[2];
-const flags = parseArgs(process.argv.slice(3), ['png', 'min', 'max', 'layer', 'origin', 'page', 'scale', 'fit', 'rotate', 'eps', 'tol']);
+const flags = parseArgs(process.argv.slice(3), ['png', 'min', 'max', 'layer', 'origin', 'page', 'scale', 'fit', 'rotate', 'eps', 'tol', 'compare']);
 if (!file) {
   console.error('usage: node scripts/dxf.mjs <file.dxf|file.pdf> [--png out.png] [--min d] [--max d] [--layer name] [--layers] [--boxes] [--origin x,y] [--page n] [--scale k] [--fit w,d] [--flip] [--rotate deg] [--outline] [--eps mm]');
   process.exit(2);
@@ -107,6 +110,17 @@ if (flags.has('outline')) {
     console.log(`outline ${round(Math.max(...xs) - Math.min(...xs))} × ${round(Math.max(...ys) - Math.min(...ys))}, ${outline.length} points, ${where}:`);
     console.log(`"outline": ${inline(outline)},`);
   }
+}
+if (flags.get('compare')) {
+  const holes = shapes.filter((s) => s.kind === 'circle').map((c) => ({ x: c.x - x0, y: c.y - y0, d: 2 * c.r }));
+  // the same circle is often drawn twice (pad and drill): one is enough
+  const unique = holes.filter((h, i) => holes.findIndex((o) => Math.hypot(o.x - h.x, o.y - h.y) < 0.05 && Math.abs(o.d - h.d) < 0.05) === i);
+  // the board's size from its outline when one closes, else the extents
+  const loop = largestLoop(chainLoops(polylines(shapes), Number(flags.get('tol') ?? 0.02)));
+  const lx = loop ? loop.map(([x]) => x) : [x0, x1];
+  const ly = loop ? loop.map(([, y]) => y) : [y0, y1];
+  const size = { w: Math.max(...lx) - Math.min(...lx), d: Math.max(...ly) - Math.min(...ly) };
+  for (const line of compareHoles(readEntry(flags.get('compare')), unique, { size })) console.log(line);
 }
 const min = Number(flags.get('min') ?? 0);
 const max = Number(flags.get('max') ?? Infinity);

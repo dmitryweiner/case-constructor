@@ -110,7 +110,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   (`scripts/lib/step.mjs`).
 - `scripts/board.mjs --brd <file>` / `--kicad <file>` — the footprints of an
   Eagle or KiCad layout in the board frame, with side, pad box (and its
-  centre), nets and Eagle's plain mounting holes; `--outline` as above;
+  centre), nets and mounting holes; `--outline` as above, `--compare <id>`
+  the entry's holes and size against the file's (also in `dxf.mjs`, in its
+  frame after `--origin/--flip/--rotate`; `scripts/lib/compare.mjs`);
   `--match`, `--rotate`, `--flip` (`scripts/lib/pcb.mjs`). `tests/drawing.test.ts`
   reads a fixture of every format back to known boxes (`tests/fixtures/`).
 - `scripts/fetch.mjs <url> | --board <id> | --all` — vendor drawings in the

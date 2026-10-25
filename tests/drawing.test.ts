@@ -12,6 +12,7 @@ import { readStep } from '../scripts/lib/step.mjs';
 import { readBrd, readKicad, turnBoard } from '../scripts/lib/pcb.mjs';
 import { arcSweep, chainLoops, largestLoop, toOutline } from '../scripts/lib/outline.mjs';
 import { polylines, turned } from '../scripts/lib/drawing.mjs';
+import { compareHoles } from '../scripts/lib/compare.mjs';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures');
 const fixture = (name: string): string => readFileSync(join(FIXTURES, name), 'utf8');
@@ -146,5 +147,21 @@ describe('outlines', () => {
       const pcbLoop = largestLoop(chainLoops(board.outlinePieces));
       expect(pcbLoop && toOutline(pcbLoop)).toEqual([[0, 0], [30, 0], [30, 20], [0, 20]]);
     }
+  });
+});
+
+describe('comparing an entry with its drawing', () => {
+  it('matches each hole to the drill on its centre, not the pad ring, and lists what the entry lacks', () => {
+    const entry = { size: { w: 30, d: 20 }, mount: { holes: [{ x: 3, y: 3, d: 2.7 }, { x: 27, y: 17, d: 2.7 }] } };
+    const found = [
+      { x: 3.02, y: 3, d: 6 }, { x: 3.02, y: 3, d: 2.7 },
+      { x: 27.5, y: 17, d: 2.7 },
+      { x: 15, y: 10, d: 3 },
+    ];
+    const lines = compareHoles(entry, found, { size: { w: 30, d: 20.4 } });
+    expect(lines[0]).toMatch(/^size .*Δ 0, 0\.4\) +← check$/);
+    expect(lines[1]).toMatch(/drawing 3\.02, 3 Ø2\.7 .*Δ 0\.02, 0, Ø 0\)$/);
+    expect(lines[2]).toMatch(/drawing 27\.5, 17 .*← check$/);
+    expect(lines.slice(3)).toEqual(['extra drawing hole 15, 10 Ø3: not in the entry']);
   });
 });

@@ -13,6 +13,7 @@
 //     --rotate 90            turn the board (counter-clockwise) to match the catalog's top view
 //     --flip                 the product's top is the file's bottom (mirror x, swap sides)
 //     --outline              the board outline as the entry's "outline" (--eps 0.15 simplifies)
+//     --compare <id>         the entry's holes and size against the drawing's
 
 import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -21,8 +22,9 @@ import { parseArgs } from './lib/harness.mjs';
 import { readBrd, readKicad, turnBoard } from './lib/pcb.mjs';
 import { formatBoard, inline } from './lib/boardJson.mjs';
 import { chainLoops, largestLoop, toOutline } from './lib/outline.mjs';
+import { compareHoles, readEntry } from './lib/compare.mjs';
 
-const flags = parseArgs(process.argv.slice(2), ['svg', 'out', 'variant', 'brd', 'kicad', 'match', 'rotate', 'eps']);
+const flags = parseArgs(process.argv.slice(2), ['svg', 'out', 'variant', 'brd', 'kicad', 'match', 'rotate', 'eps', 'compare']);
 
 // --format: every catalog file in the layout of scripts/lib/boardJson.mjs (values untouched)
 if (flags.has('format')) {
@@ -50,6 +52,10 @@ if (flags.has('brd') || flags.has('kicad')) {
   const r = (v) => Math.round(v * 100) / 100;
   console.log(`outline ${r(board.outline.w)} × ${r(board.outline.d)}`);
   for (const h of board.holes) console.log(`hole Ø${r(h.d)} at ${r(h.x)}, ${r(h.y)}`);
+  if (flags.get('compare')) {
+    for (const line of compareHoles(readEntry(flags.get('compare')), board.holes, { size: board.outline })) console.log(line);
+    process.exit(0);
+  }
   if (flags.has('outline')) {
     const loop = largestLoop(chainLoops(board.outlinePieces));
     if (loop) console.log(`"outline": ${inline(toOutline(loop, { x0: 0, y0: 0 }, Number(flags.get('eps') ?? 0.15)))},`);

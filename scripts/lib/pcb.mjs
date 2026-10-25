@@ -170,7 +170,7 @@ function edgePiece(item) {
 }
 
 /**
- * A KiCad board: { outline: { w, d }, holes (none), elements: [...] }. KiCad's y
+ * A KiCad board: { outline: { w, d }, holes (MountingHole footprints), elements: [...] }. KiCad's y
  * points down; the frame turns it up. A footprint on B.Cu is on the bottom.
  */
 export function readKicad(text) {
@@ -181,6 +181,7 @@ export function readKicad(text) {
     if (piece) outlinePieces.push(piece);
   }
   const elements = [];
+  const kicadHoles = [];
   for (const fp of pcb) {
     if (!Array.isArray(fp) || (head(fp) !== 'footprint' && head(fp) !== 'module')) continue;
     const at = child(fp, 'at') ?? ['at', 0, 0, 0];
@@ -215,6 +216,18 @@ export function readKicad(text) {
       const net = child(pad, 'net');
       if (net && net[2]) nets.add(net[2]);
     }
+    // a mounting hole is a footprint of its own (MountingHole…, H1): its drilled pad
+    if (/mount|hole/i.test(String(fp[1] ?? '')) || /^H\d+$/.test(property('Reference'))) {
+      for (const pad of pads) {
+        const drill = child(pad, 'drill');
+        const pat = child(pad, 'at');
+        const d = drill ? Number(drill.find((v) => typeof v === 'string' && /^[\d.]+$/.test(v))) : 0;
+        if (d >= 1 && pat) {
+          const [hx, hy] = toBoard([Number(pat[1]), Number(pat[2])]);
+          kicadHoles.push({ x: hx, y: hy, d });
+        }
+      }
+    }
     elements.push({
       name: property('Reference'), value: property('Value'), package: String(fp[1] ?? ''),
       x: fx, y: fy, rot: frot, side,
@@ -223,7 +236,7 @@ export function readKicad(text) {
       nets: [...nets],
     });
   }
-  return frame(outlinePieces, elements, true);
+  return frame(outlinePieces, elements, true, kicadHoles);
 }
 
 /** Into the board frame: origin at the outline's lower-left corner, y up. */
