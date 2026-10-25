@@ -1,6 +1,6 @@
 ---
 name: add-board
-description: Add a board (SBC or microcontroller) to the Case Constructor catalog from its official mechanical drawing — transcribe outline, holes, ports and parts into src/boards/data/<id>.json, register it, check it and compare it against the drawing.
+description: Add a board (SBC or microcontroller) to the Case Constructor catalog from its official mechanical drawing — transcribe outline, holes, ports and parts into src/boards/data/<id>.json, register it, check it and compare it against the drawing. Also the catalog review: the page that lays every entry over its vendor drawing (board.mjs --review), getting drawings a person must download, and acting on the user's OK/BAD report.
 ---
 
 # Add a board to the catalog
@@ -99,9 +99,20 @@ shows; do not mirror a bottom view.
   `"verified"` stays `false` until someone measures.
 
 Get the drawing with `node scripts/fetch.mjs <url>` (or `--board <id>` for
-an entry's `source`): it lands in `drawings/`, unpacked, and stays there for
-the next check. A Google Drive file or folder needs a person: download it in
-a browser, then `node scripts/fetch.mjs <url> --file ~/Downloads/<file>`.
+an entry's `source`): it lands in `drawings/`, unpacked (zip, and rar
+through the system `bsdtar`), and stays there for the next check.
+
+What a person must download (Google Drive, a site this machine cannot
+reach) goes through the user:
+- Give links that open. An old Drive folder link without its
+  `resourcekey=…` parameter asks for access; the vendor's wiki or forum
+  usually has the same link with the key, or a direct file link.
+- Register each file under the entry's board, the file name after a `#`
+  so one board can have several (TOP and BOT):
+  `node scripts/fetch.mjs '<source>#<file name>' --board <id> --file ~/Downloads/<file>`.
+  A file at its own URL: `node scripts/fetch.mjs <url> --board <id>`.
+- Radxa (`dl.radxa.com`), Espressif, Arduino and GitHub download by
+  script: fetch those yourself, do not send the user.
 
 ## 2b. Which tool for which drawing
 
@@ -116,7 +127,7 @@ standard library and `pdftocairo` (poppler) only.
 | STEP model or assembly | `node scripts/step.mjs f.step` | `--match 'USB\|HDMI'`, `--part BOARD` (holes), `--board <name>` when the board part is guessed wrong, `--rotate`, `--flip`. Reads an 80 MB Creo export in seconds |
 | Eagle `.brd` | `node scripts/board.mjs --brd f.brd` | footprints with their side, pad box and nets (a button's net tells RESET from BOOT), plain mounting holes; `--match`, `--rotate 90`, `--flip` when the product's top is the file's bottom, `--outline` |
 | KiCad `.kicad_pcb` | `node scripts/board.mjs --kicad f.kicad_pcb` | the same; an outline drawn inside a footprint counts |
-| A photo only | estimate, keep `"verified": false`, say so in the entry's commit | |
+| A photo only | estimate, keep `"verified": false`, say so in the entry's commit | on the review page it is a picture aligned by two points: good for a connector on the wrong side, never for `verified` |
 
 After writing or changing a file, `node scripts/board.mjs --format` puts it
 in the catalog layout (one port, hole and variant per line; the test fails
@@ -141,8 +152,21 @@ node scripts/board.mjs --svg <id> --png    # shots/<id>.svg and .png
 ```
 
 Open the PNG next to the drawing: outline, holes (their coordinates are
-printed next to them), every port on the right edge at the right place. Ask
-the user to look as well.
+printed next to them), every port on the right edge at the right place.
+
+Then lay it over the drawing and ask the user to look:
+
+```bash
+node scripts/board.mjs --review --only <id>   # updates shots/review/index.html
+```
+
+The caption over the drawing says how it was aligned. `by holes 4/4 (rms
+0.02 mm)` with the edge near 100 % is the drawing's frame; `HOLES OFF by up
+to … mm` means the entry's holes disagree with the drawing (a real finding,
+not an alignment fault); `WEAK` or a low `connectors` percentage on a
+symmetric hole pattern may be a wrong half turn or mirror — the page's
+↻ 90° and ⇋ settle it by eye. `not aligned: two points by hand` (modules
+without holes, pictures) needs the user's two clicks.
 
 ### Checking an existing entry (≈ or a review)
 
@@ -177,6 +201,22 @@ Pitfalls met so far:
 - A drawing with a white page rectangle behind it: `--layer stroke`.
 - Two concentric circles at a hole are its pad and its drill: `--compare`
   takes the drill.
+
+### The user's review report
+
+The review page's "Копировать отчёт" gives one line per marked board:
+`OK  <id>`, `BAD <id> — note`, `?   <id> — note`. Act on it:
+- **OK**: `"verified": true` — the entry matched the vendor's own file on
+  the page (a picture does not count: keep `false` for those). Say so in
+  the commit.
+- **BAD**: re-transcribe the entry from its cached drawing by this skill
+  (the frame from the holes first). A line without a note means the whole
+  entry: holes, size, every port — not just what looks off. Record the
+  list in the current plan's deviations before starting, so a session that
+  stops halfway leaves it.
+- **?**: ask the user what they saw before changing anything.
+- A board the page could only align by hand, or not at all: say which, so
+  the user knows the report did not cover it.
 
 ## 6. See it in a case
 
