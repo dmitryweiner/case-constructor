@@ -1,7 +1,7 @@
 // Board ghosts: the PCB slab with its mounting holes, a pad ring around
 // each hole, port blocks. Closed meshes, no slivers.
 
-import { GHOST_CIRCLE, ghostHoles, boardGhost, pinBlocks } from '../src/geo/ghost';
+import { GHOST_CIRCLE, ghostHoles, boardGhost, pinBlocks, portCaptionAnchor } from '../src/geo/ghost';
 import { caseLayout } from '../src/geo/layout';
 import { validateMesh } from '../src/geo/validate';
 import { catalogBoard, CATALOG } from '../src/boards/catalog';
@@ -91,5 +91,26 @@ describe('board ghosts', () => {
       const holes = ghostHoles(board.def).reduce((sum, hole) => sum + ngon(hole.r + hole.pad), 0);
       expect(report.volume, id).toBeCloseTo((signedArea2(outline) / 2 - holes) * board.def.size.t, 2);
     }
+  });
+});
+
+describe('port captions', () => {
+  it('hang over the middle of each port: on top of an edge connector, over a top part, under a bottom one', () => {
+    const layout = caseLayout(defaultState());
+    const board = layout.boards[0];
+    const ghost = boardGhost(board).ports;
+    if (!ghost) throw new Error('no ports');
+    const report = validateMesh(ghost);
+    for (const port of board.def.ports) {
+      const at = portCaptionAnchor(board, port);
+      // inside the ghost's bounding box: on the drawn block, not somewhere else
+      for (let k = 0; k < 3; k++) {
+        expect(at[k]).toBeGreaterThanOrEqual(report.bbox.min[k] - 1e-6);
+        expect(at[k]).toBeLessThanOrEqual(report.bbox.max[k] + 1e-6);
+      }
+    }
+    const ethernet = board.def.ports.find((port) => port.id === 'ethernet');
+    if (!ethernet) throw new Error('no ethernet');
+    expect(portCaptionAnchor(board, ethernet)[2]).toBeCloseTo(board.z0 + board.def.size.t + 13.5, 0);
   });
 });

@@ -8,7 +8,7 @@
 import './style.css';
 import { el, make } from './ui/dom';
 import { createScene } from './render/scene';
-import type { ScenePart } from './render/scene';
+import type { SceneCaption, ScenePart } from './render/scene';
 import { renderControls } from './ui/controls';
 import type { ControlsHandle } from './ui/controls';
 import { caseControls } from './ui/caseCard';
@@ -46,8 +46,8 @@ import { faceFrame } from './geo/face';
 import type { Dims, Face } from './geo/face';
 import type { PrintShape } from './geo/print';
 import { caseDims, caseLayout, collisions, lidDepthMax, placeBoards } from './geo/layout';
-import { boardGhost } from './geo/ghost';
-import { MAX_BOARDS, NEW_BOARD_GAP, defaultPlacement } from './boards/placement';
+import { boardGhost, portCaptionAnchor } from './geo/ghost';
+import { MAX_BOARDS, NEW_BOARD_GAP, boardOf, defaultPlacement, portCut, withPortCut } from './boards/placement';
 import type { BoardDef } from './boards/schema';
 import { bodyForPrint, lidWithScrews, printLayout, screwsForPrint, screwsInCase, PRINT_GAP_MM } from './geo/print';
 import type { SurfaceMesh } from './geo/surface';
@@ -136,7 +136,7 @@ const progress = createProgress({
   label: el('progressLabel', HTMLSpanElement),
 });
 
-const scene = createScene(view);
+const scene = createScene(view, el('portCaptions', HTMLDivElement));
 const csg = new CsgClient();
 const history = new History<AppState>(defaultState());
 let state: AppState = history.value;
@@ -212,6 +212,8 @@ let lastParts: { body: SurfaceMesh; lid: SurfaceMesh; screw: SurfaceMesh | null;
 let currentLabel: LabelRaster | null = null;
 /** Board ghosts of the current state — drawn at once, the case follows from the worker. */
 let ghosts: ScenePart[] = [];
+/** A caption per port of every board, drawn with the ghosts. */
+let portCaptions: SceneCaption[] = [];
 /** Warnings the panel computes itself, before the worker answers. */
 let baseWarnings: string[] = [];
 
@@ -267,6 +269,13 @@ function refresh(): void {
     }
   }
   showWarnings([]);
+  const numbered = layout.boards.length > 1;
+  portCaptions = layout.boards.flatMap((board) => board.def.ports.map((port): SceneCaption => ({
+    key: `${board.index}:${port.id}`,
+    text: `${numbered ? `${board.index + 1}: ` : ''}${tDynamic(`port.${port.type}`)} · ${port.id}`,
+    at: portCaptionAnchor(board, port),
+    dim: !portCut(board.placement, port.id, port.cut),
+  })));
   ghosts = layout.boards.flatMap((board): ScenePart[] => {
     const ghost = boardGhost(board);
     return [{ role: 'board', mesh: ghost.pcb }, ...(ghost.ports ? [{ role: 'port' as const, mesh: ghost.ports }] : [])];
@@ -363,12 +372,14 @@ function drawParts(): void {
         ? roles(lidWithScrews(lid, screw, posts.length, face, dims), ['lid'])
         : [{ role: 'body', mesh: bodyForPrint(body, face, dims, shape) }];
     show(parts);
+    scene.setCaptions([]);
     return;
   }
   const parts: ScenePart[] = [];
+  const withBoards = showBody && viewBoards.checked;
   if (showBody) {
     parts.push({ role: 'body', mesh: body });
-    if (viewBoards.checked) parts.push(...ghosts);
+    if (withBoards) parts.push(...ghosts);
   }
   if (showLid && showBody) {
     const n = faceFrame(built.lid.face, dims).n;
@@ -378,25 +389,26 @@ function drawParts(): void {
     const screws = screw ? screwsInCase(screw, posts, built.lid.face, dims, 2 * lift) : null;
     if (screws) parts.push({ role: 'screw', mesh: screws });
   }
-  show(standOnGrid(parts));
+  const lift = gridLift(parts);
+  show(lift > 0 ? parts.map((part): ScenePart => {
+    const [ox, oy, oz] = part.offset ?? [0, 0, 0];
+    return { ...part, offset: [ox, oy, oz + lift] };
+  }) : parts);
+  scene.setCaptions(withBoards ? portCaptions.map((caption) => ({ ...caption, at: [caption.at[0], caption.at[1], caption.at[2] + lift] })) : []);
 }
 
 /**
- * Parts raised together so that nothing goes under the grid: a bottom lid,
- * exploded, floats below the body — both above the grid.
+ * How far the parts go up together so that nothing is under the grid: a
+ * bottom lid, exploded, floats below the body — both above the grid.
  */
-function standOnGrid(parts: ScenePart[]): ScenePart[] {
+function gridLift(parts: ScenePart[]): number {
   let low = 0;
   for (const part of parts) {
     const dz = part.offset?.[2] ?? 0;
     const positions = part.mesh.positions;
     for (let i = 2; i < positions.length; i += 3) low = Math.min(low, positions[i] + dz);
   }
-  if (low >= 0) return parts;
-  return parts.map((part): ScenePart => {
-    const [ox, oy, oz] = part.offset ?? [0, 0, 0];
-    return { ...part, offset: [ox, oy, oz - low] };
-  });
+  return -low;
 }
 
 /** Roles of what was drawn last — for the smoke (window.__case.drawn()). */
@@ -797,6 +809,17 @@ narrow.addEventListener('change', () => setPanelOpen(panel.classList.contains('o
 window.addEventListener('resize', () => setPanelOpen(panel.classList.contains('open')));
 
 panelBtn.addEventListener('click', () => setPanelOpen(true));
+/** A tap on a port's caption: its opening on or off, as its checkbox in the board card does. */
+function togglePortCut(key: string): void {
+  const colon = key.indexOf(':');
+  const index = Number(key.slice(0, colon));
+  const placement = state.boards[index];
+  const port = placement ? boardOf(placement).ports.find((one) => one.id === key.slice(colon + 1)) : undefined;
+  if (!placement || !port) return;
+  const boards = state.boards.map((one, i) => (i === index ? withPortCut(one, port, !portCut(one, port.id, port.cut)) : one));
+  applyState({ ...state, boards });
+}
+
 // The canvas stays live under the open sheet: drags turn the case, pinches
 // zoom it; only a tap (one finger, short, still) on it closes the sheet.
 const TAP_MOVE_PX = 6;
@@ -817,7 +840,11 @@ const release = (event: PointerEvent): void => {
   const tap = start && !gesture && event.timeStamp - start.t < TAP_MS
     && Math.hypot(event.clientX - start.x, event.clientY - start.y) <= TAP_MOVE_PX;
   if (pressed.size === 0) gesture = false;
-  if (tap && narrow.matches && panel.classList.contains('open')) setPanelOpen(false);
+  if (!tap) return;
+  const box = view.getBoundingClientRect();
+  const caption = scene.captionAt(event.clientX - box.left, event.clientY - box.top);
+  if (caption) togglePortCut(caption);
+  else if (narrow.matches && panel.classList.contains('open')) setPanelOpen(false);
 };
 view.addEventListener('pointerup', release);
 view.addEventListener('pointercancel', (event) => {
@@ -858,6 +885,8 @@ if (import.meta.env.DEV) {
     state: () => state,
     parts: () => lastParts,
     ghosts: () => ghosts,
+    /** the port captions shown now and where on the canvas */
+    captions: () => scene.shownCaptions(),
     drawn: () => drawnRoles,
     drawnParts: () => drawnParts,
     project: (points: [number, number, number][]) => scene.project(points),

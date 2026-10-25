@@ -159,6 +159,25 @@ await page.click('#boardList [data-board="raspberry-pi-4b"]');
 await page.uncheck('#board0_cut_ethernet');
 await expectWatertight('ports:ethernet-off');
 await page.check('#board0_cut_ethernet');
+// port captions over the ghosts: a click on one toggles its opening, undo brings it back
+label('captions');
+await expectWatertight('captions:shown');
+const captions = await page.evaluate(() => window.__case.captions());
+if (captions.length < 4) errors.push(`[captions] only ${captions.length} port captions shown`);
+const usbC = captions.find((caption) => caption.key === '0:usb-c');
+if (!usbC) errors.push(`[captions] no USB-C caption: ${captions.map((caption) => caption.key)}`);
+else {
+  const viewBox = await page.locator('#view').boundingBox();
+  await page.mouse.click(viewBox.x + usbC.x, viewBox.y + usbC.y);
+  await expectWatertight('captions:usb-c-off');
+  if (await page.locator('#board0_cut_usb-c').isChecked()) errors.push('[captions] a click on the USB-C caption left its opening on');
+  await page.click('#undoBtn');
+  await expectWatertight('captions:undo');
+  if (!(await page.locator('#board0_cut_usb-c').isChecked())) errors.push('[captions] undo did not bring the USB-C opening back');
+}
+await page.uncheck('#viewBoards');
+if ((await page.evaluate(() => window.__case.captions())).length) errors.push('[captions] captions stay with the boards hidden');
+await page.check('#viewBoards');
 label('openings');
 await page.click('#cutAdd');
 await page.click('#cut0_shape_round');

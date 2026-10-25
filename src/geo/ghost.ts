@@ -141,6 +141,12 @@ export function portBlock(board: PlacedBoard, port: PortDef): [number, number, n
   return [port.along - port.w / 2, Math.min(outer, inner), z0, port.along + port.w / 2, Math.max(outer, inner), z1];
 }
 
+/** Where a port's caption hangs in the view: the middle of its block's top (its bottom for a part underneath), case frame. */
+export function portCaptionAnchor(board: PlacedBoard, port: PortDef): Vec3 {
+  const [x0, y0, z0, x1, y1, z1] = portBlock(board, port);
+  return applyAffine(board.toCase, [(x0 + x1) / 2, (y0 + y1) / 2, port.edge === 'bottom' ? z0 : z1]);
+}
+
 /** Square pins as drawn, mm. */
 const PIN_SIZE = 0.64;
 

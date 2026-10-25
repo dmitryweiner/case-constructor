@@ -137,3 +137,11 @@ export function sanitizePlacements(raw: unknown): BoardPlacement[] {
 export function portCut(placement: BoardPlacement, portId: string, fallback: boolean): boolean {
   return placement.cuts[portId] ?? fallback;
 }
+
+/** The placement with a port's opening on or off; the entry's own default is not stored. */
+export function withPortCut(placement: BoardPlacement, port: { id: string; cut: boolean }, value: boolean): BoardPlacement {
+  const cuts = { ...placement.cuts };
+  if (value === port.cut) delete cuts[port.id];
+  else cuts[port.id] = value;
+  return { ...placement, cuts };
+}

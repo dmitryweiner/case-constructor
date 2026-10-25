@@ -9,7 +9,7 @@ import type { Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';
 import type { BoardPlacement } from '../boards/placement';
-import { NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, Z_MAX, boardOf, entryOf, pinsDown, placementMinZ, portCut } from '../boards/placement';
+import { NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, Z_MAX, boardOf, entryOf, pinsDown, placementMinZ, portCut, withPortCut } from '../boards/placement';
 import type { BoardDef } from '../boards/schema';
 import type { Align, ArrangeMode } from '../geo/arrange';
 import { ALIGN_X, ALIGN_Y, ARRANGE_MODES, alignBoard, arrangeBoards } from '../geo/arrange';
@@ -97,12 +97,7 @@ function portControls(index: number, state: AppState): Control<AppState>[] {
     key: `cut_${port.id}`,
     label: { text: `${tDynamic(`port.${port.type}`)} · ${port.id}` },
     get: (current) => portCut(current.boards[index], port.id, port.cut),
-    set: (current, value) => {
-      const cuts = { ...current.boards[index].cuts };
-      if (value === port.cut) delete cuts[port.id];
-      else cuts[port.id] = value;
-      return patchBoard(current, index, { cuts });
-    },
+    set: (current, value) => patchBoard(current, index, { cuts: withPortCut(current.boards[index], port, value).cuts }),
   }));
 }
 

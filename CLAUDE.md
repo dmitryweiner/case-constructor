@@ -357,7 +357,12 @@ View and export card (`#exportCard`): parts `#tabBoth` (first, default),
 `#viewPrint`; `#viewBoards`, `#viewXray`; `#resolution`, `#exportBtn`. The
 caption over the canvas `#viewCaption` says what is shown and scrolls to the
 card. Dev builds: `window.__case.drawn()` lists the roles drawn last,
-`drawnParts()` the meshes with their offsets.
+`drawnParts()` the meshes with their offsets. Port captions (`#portCaptions`, an overlay over
+the canvas with no pointer events: `scene.setCaptions`, placed every frame,
+nearest first, overlapping ones hidden) show with the board ghosts; a tap on
+one (the canvas's tap handler, `scene.captionAt`) toggles its port's
+opening. `window.__case.captions()` lists the shown ones with their canvas
+positions.
 Mobile: on a narrow screen the view centres the case above the settings
 sheet (`scene.setBottomInset`): the canvas stays full size under the sheet,
 and the inset only moves the picture, eased like the sheet — the virtual
