@@ -5,8 +5,7 @@ Status: written on 2026-10-25 after the Tier A boards from
 alias). The open questions were settled with the user on the same day
 (below); the work goes in the order
 **B8 → B1 → B2 → B5 → B4 → B6 → B3 → B7 → B9**. All done the same day;
-left for the user: the visual review (B9), and the Orange Pi 5 Max and Zero
-3W drawings, which Google Drive gives only to a person (B3).
+left for the user: the visual review (B9).
 
 Same rules as PLAN.md: TDD, golden tests for new geometry (a new state per
 feature, old ones untouched), `npm run check` and `npm run smoke` before
@@ -129,9 +128,10 @@ big. The ghost is wrong, though, and the overlap check is pessimistic.
 UNO Q (the UNO outline: its Allegro files are binary), Heltec V4 (its
 datasheet drawing), RAK19007 (the notches above) and, after B7, the Orange
 Pi 5 Pro (its vector PDF through `dxf.mjs`: a bottom view, the power key's
-notch 1.25 × 6.1 mm on the right edge). Left for B9: the Orange Pi 5 Max
-(Drive asks for a confirmation the tools cannot give) and the Zero 3W (a
-Drive folder) — download them by hand.
+notch 1.25 × 6.1 mm on the right edge). The Orange Pi 5 Max and Zero 3W
+drawings came from the user (Drive gives them only to a person): the Max
+has the same kind of notch (1.16 × 5.6 mm, y 46.17…51.78, top view); the
+Zero 3W has no chamfers after all, only R 2.03 corners like the others.
 
 ## B4. Parts on the underside
 
