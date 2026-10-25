@@ -308,9 +308,9 @@ browser is within ~10 % of it):
 | `pi4-desktop` — export | 24 | 0.5 s | 44k |
 | `pi4-desktop` — finest export | 64 | 2.0 s | 150k |
 | `cylinder-puck` — finest export | 64 | 1.2 s | 130k |
-| default Pi 4 on printed P6 screws — preview | 12 | 230 ms | 20k + a 4.5k screw |
-| printed P6 screws — export | 24 | 0.9 s | 120k + a 33k screw |
-| printed P6 screws — finest export | 64 | 2.2 s | 215k + a 58k screw |
+| default Pi 4 on printed P6 screws — preview | 12 | 275 ms | 27k + a 6.3k screw |
+| printed P6 screws — export | 24 | 1.3 s | 175k + a 50k screw |
+| printed P6 screws — finest export | 64 | 2.8 s | 317k + an 87k screw |
 
 Decided at M1 and confirmed at M8: the preview is the exact case (the same
 pipeline as the export, 12 segments per quarter arc), rebuilt 120 ms after

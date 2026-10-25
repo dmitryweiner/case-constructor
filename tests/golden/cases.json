@@ -361,8 +361,8 @@
   },
   "printed-screws-top": {
     "body": {
-      "triangles": 16164,
-      "volume": 40604.5,
+      "triangles": 22228,
+      "volume": 40535.97,
       "extents": [
         115.7,
         84.3,

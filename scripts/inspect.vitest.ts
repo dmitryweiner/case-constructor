@@ -54,12 +54,15 @@ function parseValue(text: string): unknown {
   return Number.isFinite(Number(text)) ? Number(text) : text;
 }
 
-/** Thread forms to print and compare (plans/PLAN-IMPROVEMENTS-2026-10-25.md, R4). */
+/**
+ * Thread forms to print and compare (plans/PLAN-IMPROVEMENTS-2026-10-25.md,
+ * R4: the first print chose 6 × 1 at a 0.35 mm fit).
+ */
 const TEST_FORMS: { id: string; note: string; form: ThreadForm }[] = [
-  { id: 'a', note: 'today: 6 × 1.5, 60°, half a pitch deep', form: threadForm('P6') },
+  { id: 'a', note: 'today: 6 × 1, 60°, half a pitch deep', form: threadForm('P6') },
   { id: 'b', note: 'print-friendly: 6 × 1.5, the overhanging flank at 45°, 0.4 pitch deep',
     form: { d: 6, pitch: 1.5, depth: 0.4, rise: 0.4, fall: 0.4 * Math.tan(Math.PI / 6) } },
-  { id: 'c', note: 'fine ISO pitch: 6 × 1, 60°, half a pitch deep', form: { ...threadForm('P6'), pitch: 1 } },
+  { id: 'c', note: 'the first default: 6 × 1.5, 60°, half a pitch deep', form: { ...threadForm('P6'), pitch: 1.5 } },
 ];
 /** The fits of the three holes in each test nut, 1, 2 and 3 dots. */
 const TEST_FITS = [0.25, 0.35, 0.45];

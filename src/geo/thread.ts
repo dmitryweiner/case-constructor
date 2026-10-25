@@ -2,12 +2,15 @@
 // thread's cross-section, where a screw stands. The worker turns them into
 // solids (screwSolids.ts).
 //
-// Both the screw and its hole are printed, so the thread is not ISO: a 60°
-// profile, half a pitch deep, with flat crests and roots — coarse enough for
-// a 0.4 mm nozzle. Below 6 mm (pitch 1.5) a printed thread wears out in a
-// few turns and the shank, printed standing, snaps at the head: P6 is the
-// smallest that holds reliably. P4 (4 × 1, a thread half a millimetre deep)
-// is offered at the user's risk, with a warning.
+// Both the screw and its hole are printed: a 60° profile half a pitch deep,
+// with flat crests and roots, on the ISO pitches (6 × 1, 8 × 1.25,
+// 10 × 1.5). A test print (plans/PLAN-IMPROVEMENTS-2026-10-25.md, R4) chose
+// them over the coarser 6 × 1.5 the case had at first (it needed a 0.45 mm
+// fit and still felt rough) and over a shallower print-friendly flank (it
+// went in loose); 6 × 1 held well at the 0.35 mm fit. Below 6 mm a printed
+// thread wears out in a few turns and the shank, printed standing, snaps at
+// the head: P6 is the smallest that holds reliably. P4 (4 × 1, a thread half
+// a millimetre deep) is offered at the user's risk, with a warning.
 //
 // A single-start helical thread has the same horizontal cross-section at
 // every height, turned by 360° per pitch: the thread is that section
@@ -21,9 +24,9 @@ export type ThreadSize = (typeof THREAD_SIZES)[number];
 /** Major diameter and pitch, mm. */
 export const THREADS: Readonly<Record<ThreadSize, { d: number; pitch: number }>> = {
   P4: { d: 4, pitch: 1 },
-  P6: { d: 6, pitch: 1.5 },
-  P8: { d: 8, pitch: 2 },
-  P10: { d: 10, pitch: 2.5 },
+  P6: { d: 6, pitch: 1 },
+  P8: { d: 8, pitch: 1.25 },
+  P10: { d: 10, pitch: 1.5 },
 };
 
 /** Sizes below this may strip or snap: the panel warns. */

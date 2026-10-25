@@ -1,6 +1,6 @@
 # Case Constructor — improvements after the user trial
 
-**Status: done except the thread form (R4), which waits for the user's test print of `inspect.mjs --thread-test`.**
+**Status: done (2026-10-25).**
 
 Written on 2026-10-25 from the notes of a trial of the live site with real
 users (the draft `REVIEW-RESULTS.md`, deleted once this plan is agreed).
@@ -258,3 +258,12 @@ adds a part.
   takes (a 0.8 mm wall to the lid's edge, the plate less 0.6 mm). The label
   "not shown" did not reproduce on the branch (dev and production build):
   a dev server left running from before the branch was checked out.
+- **R4, the test print (user, 2026-10-25).** (a) today's 6 × 1.5 went in
+  only at 0.45; (b) the print-friendly flank went in easily but felt worn
+  and loose; (c) 6 × 1 held well at 0.35, too tight at 0.25, too loose at
+  0.45. The default is now the ISO pitch with today's 60° profile: P6 6 × 1,
+  and by the same rule (not printed) P8 8 × 1.25, P10 10 × 1.5; P4 stays
+  4 × 1. The fit default 0.35 stands. The profile is symmetric, so the
+  case's holes keep their construction (`threadHole` stays for the test
+  prints). Finer pitch, more turns: the preview with printed screws went
+  from 237 to 274 ms, under the 300 ms limit.

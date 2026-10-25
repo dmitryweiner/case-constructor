@@ -19,7 +19,7 @@ the lid.
 | Counterbore depth | 0.5–10 mm | the pan head's height | counterbore only; never deeper than the lid plate less 0.6 mm (the slider stops there; the panel says when a file asks for more) |
 | Magnet | 5 × 2 … 10 × 3 mm | 6 × 3 | magnets only: disc diameter × height |
 | Magnet fit | 0–0.5 mm | 0.2 | magnets only: added to the magnet's diameter for its pocket |
-| Thread | 4 × 1 / 6 × 1.5 / 8 × 2 / 10 × 2.5 mm | 6 × 1.5 | printed screws only: major diameter × pitch |
+| Thread | 4 × 1 / 6 × 1 / 8 × 1.25 / 10 × 1.5 mm | 6 × 1 | printed screws only: major diameter × pitch |
 | Thread fit | 0.1–0.8 mm | 0.35 | printed screws only: radial clearance of the threaded hole; raise it if the screw goes in hard |
 | Skirt height | 1.5–10 mm | 3 | how far the skirt drops into the body |
 | Skirt thickness | 0.8–4 mm | 1.2 | |
@@ -74,10 +74,12 @@ in the lid's STL (and in Both), standing on their heads next to the lid. The
 corner posts get the matching thread; the lid a clearance hole (+ 0.6 mm),
 and the head stands proud on it.
 
-The thread is not ISO — both halves are printed, so it is a coarse 60°
-profile half a pitch deep, with flat crests and roots, right-hand. 6 mm with
-a 1.5 mm pitch is the smallest that holds reliably: below that a printed
-thread wears out in a few turns and the shank, printed standing, snaps at
+The thread is a 60° profile half a pitch deep, with flat crests and roots,
+right-hand, on the ISO pitches: a test print chose 6 × 1 at the 0.35 mm fit
+over a coarser 6 × 1.5 (it needed a 0.45 mm fit and felt rough) and over a
+shallower thread (it went in loose). 6 mm is the smallest that holds
+reliably: below that a printed thread wears out in a few turns and the
+shank, printed standing, snaps at
 the head. 4 × 1 is offered at your own risk — its thread is half a
 millimetre deep, at the limit of a 0.4 mm nozzle; the panel warns. Print it
 slowly, in a tough plastic (PETG), and do not overtighten. The screw
