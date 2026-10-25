@@ -6,7 +6,8 @@
   "size": { "w": 25.4, "d": 44.3, "t": 1.6 },
   "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
   "topHeight": 3.5,
-  "bottomHeight": 8.5,
+  "bottomHeight": 1,
+  "pins": { "below": 8.5, "edges": ["left", "right"], "inset": 1.27, "soldered": true },
   "ports": [
     { "id": "usb", "type": "micro-usb", "edge": "front", "along": 12.7, "protrude": 0.8 },
     { "id": "boot", "type": "button", "edge": "top", "x": 5.4, "y": 2.6, "w": 3, "d": 3, "shape": "rect" },

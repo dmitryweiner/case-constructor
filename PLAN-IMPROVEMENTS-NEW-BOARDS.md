@@ -80,6 +80,9 @@ gets a new state (a Nano on rails with pins down); old states keep their
 numbers, because a missing `pins` keeps today's behaviour. The smoke ticks
 the box on a rail board.
 
+**Done.** 24 entries carry `pins` (bare `bottomHeight` estimated where the
+8.5 was the pins). See the deviations for what differs from the plan.
+
 ## B2. Screws below M2
 
 **Now.** `SCREW_SIZES` is M2…M4 (`src/geo/fasteners.ts`). The Heltec WiFi
@@ -294,4 +297,14 @@ with code 3.
 
 ## Deviations
 
-(none yet)
+- **B1.** The golden `esp32-rails-cylinder` changed (body 808 → 840
+  triangles): the DevKitC ships with pins soldered, so its rails are a pin
+  bed now. That is the feature, not a regression; the other states kept
+  their numbers.
+- **B1.** The ghost draws a pin row along the whole edge (less `inset` at
+  each end): the entry does not say where a row ends, and the bed's slot
+  runs the rail's length anyway.
+- **B1.** The custom board editor has no pins controls; a custom board's
+  catalog JSON keeps `pins` when it has them.
+- **B1.** `pins.inset` is at least 0.8 mm: closer to the edge the slot
+  would meet the groove's face.

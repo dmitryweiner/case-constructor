@@ -16,6 +16,7 @@
   },
   "topHeight": 6,
   "bottomHeight": 2.5,
+  "pins": { "below": 8.5, "edges": ["front", "back"], "inset": 1.27, "soldered": false },
   "ports": [
     { "id": "usb-c", "type": "usb-c", "edge": "left", "along": 18.3, "protrude": 0.8 },
     { "id": "reset", "type": "switch", "edge": "left", "along": 10.3, "w": 3.1, "h": 2.5, "d": 3, "z": -0.8 },

@@ -7,7 +7,7 @@
 // connector faces.
 
 import type { BoardPlacement } from '../boards/placement';
-import { boardOf, minBoardZ } from '../boards/placement';
+import { placementMinZ } from '../boards/placement';
 import type { LayoutInput, PlacedBoard } from './layout';
 import { placeBoards, sideMargin } from './layout';
 
@@ -124,7 +124,7 @@ export function alignBoard(input: LayoutInput, index: number, ref: number, how: 
   const boards = [...input.boards];
   if (index === ref || !boards[index] || !boards[ref]) return boards;
   if (how === 'height') {
-    boards[index] = { ...boards[index], z: Math.max(minBoardZ(boardOf(boards[index])), boards[ref].z) };
+    boards[index] = { ...boards[index], z: Math.max(placementMinZ(boards[index]), boards[ref].z) };
     return boards;
   }
   const placed = placeBoards(input);

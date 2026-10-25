@@ -10,6 +10,7 @@ Each board has:
 |---|---|---|
 | X, Y | 0–300 mm | position relative to the other boards; the layout as a whole is centred in the case, so with one board these do nothing |
 | Standoff height | the board's underside parts + 1 mm … 60 mm | PCB underside above the floor |
+| Pins soldered downwards | on / off | boards with header rows; the default is how the board ships; the board goes up with its pins (8.5 mm with the plastic) |
 | Rotation | 0° / 90° / 180° / 270° | |
 | Screw | M2 / M2.5 / M3 / M4 | boards with mounting holes; the default comes from the board |
 | Hole | tap / insert / nut | see below |
@@ -83,10 +84,11 @@ along its long edges: bars 3 mm thick with a groove the board's thickness +
 and 2 mm shorter than the edge at each end: put the board in at an angle and
 click it into both grooves.
 
-Boards with soldered pin headers along the gripped edges (the
-ESP32-DevKitC as shipped) collide with the lower rail lip — remove the
-headers or mount the board another way. This is open for a printed test
-(PLAN.md §11).
+With **Pins soldered downwards** on, a rail along an edge with a pin row
+has no lower lip: it becomes a **pin bed**. The header's plastic rests on
+a shelf 2.5 mm below the PCB, the pins go into a slot along the row, and
+the upper lip still clicks over the edge. Without pins the rail is the plain
+one, gripping the edge from both sides.
 
 ## Catalog
 

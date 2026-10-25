@@ -7,6 +7,7 @@
   "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
   "topHeight": 4.6,
   "bottomHeight": 3.5,
+  "pins": { "below": 8.5, "edges": ["front", "back"], "inset": 1.27, "soldered": false },
   "ports": [
     { "id": "usb-c", "type": "usb-c", "edge": "left", "along": 11.43, "protrude": 1.5 },
     { "id": "display", "type": "display", "edge": "top", "x": 23.53, "y": 11.43, "w": 31.25, "d": 17.7, "h": 4.6 },

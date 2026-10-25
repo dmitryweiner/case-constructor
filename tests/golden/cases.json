@@ -161,8 +161,8 @@
   },
   "esp32-rails-cylinder": {
     "body": {
-      "triangles": 808,
-      "volume": 19103.67,
+      "triangles": 840,
+      "volume": 19131.39,
       "extents": [
         72.192,
         72.192,
@@ -435,6 +435,26 @@
       "extents": [
         97.9,
         66.5,
+        5
+      ]
+    }
+  },
+  "nano-pin-bed": {
+    "body": {
+      "triangles": 828,
+      "volume": 11064.82,
+      "extents": [
+        52.18,
+        29.08,
+        20.59
+      ]
+    },
+    "lid": {
+      "triangles": 1124,
+      "volume": 3489.88,
+      "extents": [
+        52.18,
+        29.08,
         5
       ]
     }

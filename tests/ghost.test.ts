@@ -1,7 +1,7 @@
 // Board ghosts: the PCB slab with its mounting holes, a pad ring around
 // each hole, port blocks. Closed meshes, no slivers.
 
-import { GHOST_CIRCLE, ghostHoles, boardGhost } from '../src/geo/ghost';
+import { GHOST_CIRCLE, ghostHoles, boardGhost, pinBlocks } from '../src/geo/ghost';
 import { caseLayout } from '../src/geo/layout';
 import { validateMesh } from '../src/geo/validate';
 import { catalogBoard, CATALOG } from '../src/boards/catalog';
@@ -10,8 +10,8 @@ import { defaultState, sanitizeState } from '../src/state/schema';
 /** Area of the regular polygon a circle of radius r is drawn as. */
 const ngon = (r: number): number => (GHOST_CIRCLE / 2) * r * r * Math.sin((2 * Math.PI) / GHOST_CIRCLE);
 
-function placed(id: string, rot = 0) {
-  const state = sanitizeState({ ...defaultState(), boards: [{ board: id, rot }] });
+function placed(id: string, rot = 0, pins?: boolean) {
+  const state = sanitizeState({ ...defaultState(), boards: [{ board: id, rot, pins }] });
   return caseLayout(state).boards[0];
 }
 
@@ -65,5 +65,16 @@ describe('board ghosts', () => {
     const { w, d, t } = board.def.size;
     expect(pcb.indices.length).toBe(36);
     expect(validateMesh(pcb).volume).toBeCloseTo(w * d * t, 2);
+  });
+
+  it('soldered pins hang under the board along their edges, down to their tips', () => {
+    const board = placed('arduino-nano', 0, true);
+    const pins = board.def.pins;
+    if (!pins) throw new Error('the Nano has pins');
+    const blocks = pinBlocks(board);
+    expect(blocks).toHaveLength(2 * pins.edges.length);
+    expect(Math.min(...blocks.map((block) => block[2]))).toBeCloseTo(-pins.below);
+    expect(Math.max(...blocks.map((block) => block[5]))).toBe(0);
+    expect(pinBlocks(placed('arduino-nano', 0, false))).toEqual([]);
   });
 });

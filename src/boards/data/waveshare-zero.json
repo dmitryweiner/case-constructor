@@ -7,6 +7,7 @@
   "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
   "topHeight": 3,
   "bottomHeight": 1,
+  "pins": { "below": 8.5, "edges": ["left", "right"], "inset": 1.38, "soldered": false },
   "ports": [
     { "id": "usb", "type": "usb-c", "edge": "back", "along": 9, "z": -0.3, "protrude": 1.1 },
     { "id": "boot", "type": "button", "edge": "top", "x": 4.5, "y": 7.55, "w": 3, "d": 4.6, "h": 2.5, "shape": "rect", "cut": false },

@@ -122,7 +122,25 @@ for (const id of catalog) {
     await page.click('#board0_rot_90');
     await expectWatertight(`board:${id}:insert:90`);
   }
+  if (await page.locator('#board0_pins').isVisible()) {
+    await page.click('#board0_pins');
+    await expectWatertight(`board:${id}:pins`);
+  }
 }
+// pins soldered downwards: the board goes up with them, rails get a pin bed
+label('pins');
+await page.click('#board0_remove');
+await page.click('#boardAdd');
+await page.click('#boardList [data-board="arduino-nano"]');
+if (!(await page.isChecked('#board0_pins'))) errors.push('[pins] the Nano ships with its pins soldered');
+await page.uncheck('#board0_pins');
+await setRange('board0_z', 0);
+await expectWatertight('pins:bare');
+const bareZ = await page.evaluate(() => window.__case?.state().boards[0].z);
+await page.check('#board0_pins');
+await expectWatertight('pins:bed');
+const pinZ = await page.evaluate(() => window.__case?.state().boards[0].z);
+if (bareZ !== undefined && !(pinZ > bareZ + 5)) errors.push(`[pins] z ${bareZ} → ${pinZ}: the board did not go up with its pins`);
 label('ports');
 await page.click('#board0_remove');
 await page.click('#boardAdd');

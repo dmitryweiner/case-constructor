@@ -6,7 +6,8 @@
   "size": { "w": 54.4, "d": 27.9, "t": 1.6 },
   "mount": { "kind": "rails", "holes": [], "screw": "M2.5", "rails": "long" },
   "topHeight": 3.5,
-  "bottomHeight": 8.5,
+  "bottomHeight": 1.5,
+  "pins": { "below": 8.5, "edges": ["front", "back"], "inset": 1.25, "soldered": true },
   "ports": [
     { "id": "usb", "type": "micro-usb", "edge": "left", "along": 13.95, "protrude": 1.7 },
     { "id": "en", "type": "button", "edge": "top", "x": 3.6, "y": 22.1, "w": 3, "d": 3, "shape": "rect" },

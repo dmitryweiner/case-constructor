@@ -7,6 +7,7 @@
   "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
   "topHeight": 12.8,
   "bottomHeight": 1,
+  "pins": { "below": 8.5, "edges": ["left", "right"], "inset": 1.27, "soldered": false },
   "ports": [
     { "id": "usb", "type": "usb-c", "edge": "back", "along": 8.89, "protrude": 1.5 },
     { "id": "microsd", "type": "microsd", "edge": "back", "along": 8.6, "z": 4.1, "w": 11.5, "h": 2.7, "protrude": 0 },

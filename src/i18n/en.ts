@@ -143,6 +143,8 @@ export const en = {
   'board.xy.hint': 'position relative to the other boards, mm; the layout as a whole is centred in the case',
   'board.z': 'Standoff height',
   'board.z.hint': 'PCB underside above the floor, mm; never below the parts under the board',
+  'board.pins': 'Pins soldered downwards',
+  'board.pins.hint': 'Header pins point down under the board: it sits higher, and rails carry the header on a bed with a slot for the pins',
   'board.rot': 'Rotation',
   'board.screw': 'Screw',
   'board.hole': 'Hole',

@@ -6,7 +6,8 @@
   "size": { "w": 27, "d": 40.5, "t": 1.2 },
   "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
   "topHeight": 6,
-  "bottomHeight": 8.5,
+  "bottomHeight": 2,
+  "pins": { "below": 8.5, "edges": ["left", "right"], "inset": 2.07, "soldered": true },
   "ports": [
     { "id": "microsd", "type": "microsd", "edge": "front", "along": 13.5, "z": 0, "protrude": 1 },
     { "id": "camera", "type": "generic", "edge": "top", "x": 13.5, "y": 27, "w": 8.5, "h": 6, "shape": "round", "cut": true },

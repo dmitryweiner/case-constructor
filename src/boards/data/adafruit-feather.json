@@ -15,7 +15,8 @@
     "screw": "M2.5"
   },
   "topHeight": 5,
-  "bottomHeight": 8.5,
+  "bottomHeight": 1.5,
+  "pins": { "below": 8.5, "edges": ["front", "back"], "inset": 1.27, "soldered": false },
   "ports": [
     { "id": "usb", "type": "usb-c", "edge": "left", "along": 11.43, "z": 0, "protrude": 1.2 },
     { "id": "battery", "type": "generic", "edge": "back", "along": 10.92, "w": 6, "h": 4.8, "d": 6, "z": 0, "protrude": -0.5, "cut": false },

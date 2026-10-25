@@ -26,6 +26,8 @@ export interface BoardPlacement {
   mount: FastenerSpec;
   /** port id → cut an opening; a missing id takes the port type's default */
   cuts: Record<string, boolean>;
+  /** boards with header rows only: the pins are soldered pointing down */
+  pins?: boolean;
 }
 
 export const MAX_BOARDS = 8;
@@ -40,20 +42,38 @@ export function boardOf(placement: Pick<BoardPlacement, 'board' | 'custom'>): Bo
   return catalogBoard(placement.board) ?? CATALOG[0];
 }
 
-/** Lowest the board may sit: its underside parts plus a millimetre. */
-export function minBoardZ(def: BoardDef): number {
-  return def.bottomHeight + 1;
+/** Whether the placed board has its pins soldered pointing down. */
+export function pinsDown(def: BoardDef, placement: Pick<BoardPlacement, 'pins'>): boolean {
+  return def.pins !== undefined && (placement.pins ?? def.pins.soldered);
+}
+
+/** The tallest thing under the PCB: its parts, or its pins when they are soldered. */
+export function undersideOf(def: BoardDef, pins: boolean): number {
+  return pins && def.pins ? Math.max(def.bottomHeight, def.pins.below) : def.bottomHeight;
+}
+
+/** Lowest the board may sit: its underside plus a millimetre. */
+export function minBoardZ(def: BoardDef, pins = false): number {
+  return undersideOf(def, pins) + 1;
+}
+
+/** Lowest a placed board may sit, its pins as the placement has them. */
+export function placementMinZ(placement: BoardPlacement): number {
+  const def = boardOf(placement);
+  return minBoardZ(def, pinsDown(def, placement));
 }
 
 export function defaultPlacement(def: BoardDef, x = 0, y = 0): BoardPlacement {
+  const pins = def.pins?.soldered ?? false;
   return {
     board: def.id,
     x,
     y,
-    z: Math.max(4, minBoardZ(def)),
+    z: Math.max(4, minBoardZ(def, pins)),
     rot: 0,
     mount: { size: def.mount.screw, hole: 'tap', head: 'none' },
     cuts: {},
+    ...(def.pins ? { pins } : {}),
   };
 }
 
@@ -78,15 +98,18 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
     }
   }
   const rot: unknown = Reflect.get(r, 'rot');
+  const pinsRaw: unknown = Reflect.get(r, 'pins');
+  const pins = def.pins ? (typeof pinsRaw === 'boolean' ? pinsRaw : def.pins.soldered) : false;
   return {
     board: custom ? 'custom' : def.id,
     ...(custom ? { custom: { ...custom, id: 'custom' } } : {}),
     x: num(Reflect.get(r, 'x'), 0, POSITION_MAX, base.x),
     y: num(Reflect.get(r, 'y'), 0, POSITION_MAX, base.y),
-    z: num(Reflect.get(r, 'z'), minBoardZ(def), Z_MAX, base.z),
+    z: num(Reflect.get(r, 'z'), minBoardZ(def, pins), Z_MAX, Math.max(base.z, minBoardZ(def, pins))),
     rot: ROTATIONS.find((value) => value === rot) ?? base.rot,
     mount: { ...sanitizeFastener(Reflect.get(r, 'mount'), base.mount), head: 'none' },
     cuts,
+    ...(def.pins ? { pins } : {}),
   };
 }
 

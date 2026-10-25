@@ -7,7 +7,7 @@
 import earcut from 'earcut';
 import type { BoardDef, PortDef } from '../boards/schema';
 import type { PlacedBoard } from './layout';
-import { edgeNormal } from './layout';
+import { PIN_SPACER, PIN_SPACER_W, edgeNormal, pinEdges } from './layout';
 import type { SurfaceMesh, Vec3 } from './surface';
 import { applyAffine, mergeMeshes } from './surface';
 import { meshNormals } from './normals';
@@ -138,17 +138,41 @@ export function portBlock(board: PlacedBoard, port: PortDef): [number, number, n
   return [port.along - port.w / 2, Math.min(outer, inner), z0, port.along + port.w / 2, Math.max(outer, inner), z1];
 }
 
+/** Square pins as drawn, mm. */
+const PIN_SIZE = 0.64;
+
+/**
+ * Soldered header rows under the board, board frame: the plastic and the
+ * pins as one thin slab below it. A row runs the length of its edge (the
+ * entry does not say where it ends).
+ */
+export function pinBlocks(board: PlacedBoard): [number, number, number, number, number, number][] {
+  const pins = board.def.pins;
+  if (!pins) return [];
+  const { w, d } = board.def.size;
+  const { inset, below } = pins;
+  return pinEdges(board).flatMap((edge): [number, number, number, number, number, number][] => {
+    const along = edge === 'front' || edge === 'back';
+    const length = along ? w : d;
+    // the row's centre line across the edge, in the board frame
+    const c = edge === 'front' ? inset : edge === 'back' ? d - inset : edge === 'left' ? inset : w - inset;
+    const row = (half: number, z0: number, z1: number): [number, number, number, number, number, number] => (along
+      ? [inset, c - half, z0, length - inset, c + half, z1]
+      : [c - half, inset, z0, c + half, length - inset, z1]);
+    return [row(PIN_SPACER_W / 2, -PIN_SPACER, 0), row(PIN_SIZE / 2, -below, -PIN_SPACER)];
+  });
+}
+
 /**
  * A board's ghost, case frame: the PCB slab with its mounting holes through
- * it; its ports and parts as blocks and a pad ring around each hole (drawn
+ * it; its ports and parts as blocks, soldered pin rows under it, and a pad
+ * ring around each hole (drawn
  * in the ports' colour, so the holes read at a glance).
  */
 export function boardGhost(board: PlacedBoard): { pcb: SurfaceMesh; ports: SurfaceMesh | null } {
   const { w, d, t } = board.def.size;
-  const blocks = board.def.ports.map((port) => {
-    const [x0, y0, z0, x1, y1, z1] = portBlock(board, port);
-    return boxMesh(board, x0, y0, z0, x1, y1, z1);
-  });
+  const blocks = [...board.def.ports.map((port) => portBlock(board, port)), ...pinBlocks(board)]
+    .map(([x0, y0, z0, x1, y1, z1]) => boxMesh(board, x0, y0, z0, x1, y1, z1));
   const holes = ghostHoles(board.def);
   const pcb = holes.length === 0
     ? boxMesh(board, 0, 0, 0, w, d, t)

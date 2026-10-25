@@ -7,6 +7,7 @@
   "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
   "topHeight": 3,
   "bottomHeight": 1.5,
+  "pins": { "below": 8.5, "edges": ["front", "back"], "inset": 1.27, "soldered": false },
   "ports": [
     { "id": "ftdi", "type": "header-1xN", "edge": "top", "x": 31.7, "y": 9, "w": 2.5, "d": 15.2, "h": 8.5, "cut": true },
     { "id": "reset", "type": "button", "edge": "top", "x": 6, "y": 9, "w": 3, "d": 3, "shape": "rect" }

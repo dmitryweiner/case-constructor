@@ -36,7 +36,11 @@ shows; do not mirror a bottom view.
   "mount": { "kind": "holes", "holes": [{ "x": 3.5, "y": 3.5, "d": 2.7 }], "screw": "M2.5" },
   // or "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" | "short" }
   "topHeight": 16,      // tallest part above the PCB
-  "bottomHeight": 2,    // tallest part below (header pins pointing down count)
+  "bottomHeight": 2,    // tallest part below the bare board — header pins do not count
+  // through-hole header rows: how far soldered pins reach below the PCB (plastic
+  // included), the edges the rows run along (in front, back, left, right order),
+  // the row centre's distance from its edge, and whether the board ships with them
+  "pins": { "below": 8.5, "edges": ["front", "back"], "inset": 1.27, "soldered": true },
   "ports": [
     // edge connector: centre along the edge from its start (x for front/back, y for left/right)
     { "id": "usb-c", "type": "usb-c", "edge": "left", "along": 11.2, "z": 0, "protrude": 1.3 },
@@ -55,6 +59,11 @@ shows; do not mirror a bottom view.
   something under the board (a microSD slot: `-(t + h)`).
 - `protrude` is how far the connector sticks out past the edge (USB/Ethernet
   on a Pi: 2–3 mm).
+- `pins`: give it to every board with 2.54 mm through-hole rows that a user
+  may solder pointing down (DevKits, Nano, Pico, XIAO, Feather…). The board
+  card shows **Pins soldered downwards**, its default is `soldered` (how the
+  board ships), and rails on those edges become a pin bed. `inset` is
+  (board width − row spacing) / 2 when the rows sit symmetric.
 - Boards that share an outline (Uno R3/R4) are one entry: aliases in `name`
   after a slash.
 - Where the drawing gives no heights, the type defaults stand and

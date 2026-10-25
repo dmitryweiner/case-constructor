@@ -106,6 +106,22 @@ export interface Hole {
   d: number;
 }
 
+/**
+ * Through-hole header rows whose pins may be soldered pointing down. The
+ * entry describes the bare board (`bottomHeight` without them); the
+ * placement says whether they are there.
+ */
+export interface BoardPins {
+  /** how far the pins reach below the PCB underside, plastic included */
+  below: number;
+  /** the edges the rows run along */
+  edges: Edge[];
+  /** the row centre's distance from its edge */
+  inset: number;
+  /** how the board ships: the placement's default */
+  soldered: boolean;
+}
+
 export interface BoardDef {
   id: string;
   /** proper noun, never translated; aliases after a slash */
@@ -123,8 +139,10 @@ export interface BoardDef {
   };
   /** tallest part above the PCB — sizes the case height */
   topHeight: number;
-  /** tallest part below the PCB — the lowest the board may sit */
+  /** tallest part below the PCB, pins left out — the lowest the bare board may sit */
   bottomHeight: number;
+  /** header rows that may carry pins below the board */
+  pins?: BoardPins;
   ports: PortDef[];
   source: string;
   /** dimensions checked against the official drawing */
@@ -196,6 +214,24 @@ export function sanitizePort(raw: unknown, size: { w: number; d: number }, index
   return null;
 }
 
+function withPins(pins: BoardPins | undefined): { pins?: BoardPins } {
+  return pins ? { pins } : {};
+}
+
+/** Header rows of an entry; none without a valid edge. */
+export function sanitizePins(raw: unknown): BoardPins | undefined {
+  if (typeof raw !== 'object' || raw === null) return undefined;
+  const r = rec(raw);
+  const edges = EDGES.filter((edge) => Array.isArray(r.edges) && r.edges.includes(edge));
+  if (edges.length === 0) return undefined;
+  return {
+    below: num(r.below, 0.5, 30, 8.5),
+    edges,
+    inset: num(r.inset, 0.8, 10, 1.27),
+    soldered: r.soldered === true,
+  };
+}
+
 export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
   const r = rec(raw);
   const size = rec(r.size);
@@ -233,6 +269,7 @@ export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
     },
     topHeight: num(r.topHeight, 0, 100, 10),
     bottomHeight: num(r.bottomHeight, 0, 30, 2),
+    ...withPins(sanitizePins(r.pins)),
     ports,
     source: typeof r.source === 'string' ? r.source.slice(0, 300) : '',
     verified: r.verified === true,

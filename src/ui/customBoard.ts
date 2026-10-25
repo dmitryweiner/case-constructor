@@ -63,6 +63,7 @@ export function catalogJson(def: BoardDef): string {
       : { kind: 'rails', holes: [], screw: def.mount.screw, rails: def.mount.rails },
     topHeight: def.topHeight,
     bottomHeight: def.bottomHeight,
+    ...(def.pins ? { pins: def.pins } : {}),
     ports,
     source: def.source,
     verified: false,

@@ -8,10 +8,12 @@
 
 import type { Manifold } from 'manifold-3d';
 import type { CsgApi, CsgScope } from './csg';
-import { transformSolid } from './csg';
+import { extrude, transformSolid } from './csg';
 import { NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE, bossDiameter } from './fasteners';
 import type { PlacedBoard } from './layout';
-import { RAIL_GAP, RAIL_GRIP, RAIL_LIP, RAIL_SHORTEN, RAIL_THICK, railEdges } from './layout';
+import {
+  PIN_SLOT, PIN_SPACER, PIN_SPACER_W, PIN_TIP_GAP, RAIL_GAP, RAIL_GRIP, RAIL_LIP, RAIL_SHORTEN, RAIL_THICK, pinEdges, railEdges,
+} from './layout';
 import { applyAffine } from './surface';
 
 export interface Support {
@@ -88,22 +90,56 @@ export function standoffs(csg: CsgApi, scope: CsgScope, board: PlacedBoard, floo
   });
 }
 
+/** The narrowest wall the pin bed keeps inside the slot for the pins. */
+const PIN_BED_WALL = 1.2;
+
+/**
+ * The pin bed's profile across the edge, (s outward, z up from the PCB
+ * underside): the outer column and the upper lip as on a plain rail, no
+ * lower lip; under it a shelf for the header's plastic, reaching inwards
+ * past it, with a slot along the pin row down to just below the pin tips.
+ */
+function pinBedProfile(t: number, height: number, below: number, inset: number): [number, number][] {
+  const s0 = RAIL_GAP - RAIL_GRIP;
+  const slotIn = -inset - PIN_SLOT / 2;
+  const slotOut = -inset + PIN_SLOT / 2;
+  const sIn = Math.min(-inset - PIN_SPACER_W / 2, slotIn - PIN_BED_WALL);
+  const shelf = -PIN_SPACER - RAIL_GAP;
+  const tips = -below - PIN_TIP_GAP;
+  const bottom = -height - SINK;
+  return [
+    [sIn, bottom], [s0 + RAIL_THICK, bottom], [s0 + RAIL_THICK, t + RAIL_LIP], [s0, t + RAIL_LIP],
+    [s0, t + RAIL_GAP], [RAIL_GAP, t + RAIL_GAP], [RAIL_GAP, shelf], [slotOut, shelf],
+    [slotOut, tips], [slotIn, tips], [slotIn, shelf], [sIn, shelf],
+  ];
+}
+
 /**
  * Rails of one board without holes: a bar along each of two edges, from the
  * floor to `RAIL_LIP` above the PCB, with a groove `t + 2·gap` wide that
  * grips the edge `RAIL_GRIP` deep. Open at both ends and shorter than the
- * edge, so the board goes in diagonally and clicks into both grooves.
+ * edge, so the board goes in diagonally and clicks into both grooves. An
+ * edge with soldered pins gets the pin bed instead (`pinBedProfile`).
  */
 export function rails(csg: CsgApi, scope: CsgScope, board: PlacedBoard, floor: number): Support[] {
   const { w, d, t } = board.def.size;
   const height = board.z0 - floor;
+  const pinned = pinEdges(board);
+  const pins = board.def.pins;
   return railEdges(board.def).map((edge) => {
     // build along +x in a local frame: s across the edge (outward +), z up from the PCB underside
     const length = (edge === 'front' || edge === 'back' ? w : d) - 2 * RAIL_SHORTEN;
     const s0 = RAIL_GAP - RAIL_GRIP;
-    const bar = box(csg, scope, 0, s0, -height - SINK, length, s0 + RAIL_THICK, t + RAIL_LIP);
-    const groove = box(csg, scope, -EPS, s0 - EPS, -RAIL_GAP, length + EPS, RAIL_GAP, t + RAIL_GAP);
-    const local = scope.keep(bar.subtract(groove));
+    let local: Manifold;
+    if (pins && pinned.includes(edge)) {
+      // the profile in (s, z) extruded along u: (a, b, c) → (u, s, z) = (c, a, b)
+      const prism = extrude(csg, scope, [pinBedProfile(t, height, pins.below, pins.inset)], 0, length);
+      local = transformSolid(scope, prism, [0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0]);
+    } else {
+      const bar = box(csg, scope, 0, s0, -height - SINK, length, s0 + RAIL_THICK, t + RAIL_LIP);
+      const groove = box(csg, scope, -EPS, s0 - EPS, -RAIL_GAP, length + EPS, RAIL_GAP, t + RAIL_GAP);
+      local = scope.keep(bar.subtract(groove));
+    }
     // local (u along the edge, s outward) → board frame
     // x = ux·u + sx·s + ox, y = uy·u + sy·s + oy; u runs so that (u, s, z) stays right-handed
     const place: Record<typeof edge, [number, number, number, number, number, number]> = {

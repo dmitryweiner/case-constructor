@@ -16,6 +16,7 @@
   },
   "topHeight": 14,
   "bottomHeight": 2,
+  "pins": { "below": 8.5, "edges": ["left", "right"], "inset": 1.27, "soldered": false },
   "ports": [
     { "id": "ethernet-poe", "type": "rj45", "edge": "front", "along": 19.05, "w": 16, "d": 13.9, "protrude": 8.1 },
     { "id": "usb", "type": "micro-usb", "edge": "left", "along": 35.5, "w": 7.4, "protrude": 0 },

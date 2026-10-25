@@ -132,6 +132,11 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     wallMount: { kind: 'keyholes', keyhole: 'closed', spacing: 58, screwD: 4 },
   }),
+  // B1: header pins soldered downwards, a pin bed on the rails (PLAN-IMPROVEMENTS-NEW-BOARDS.md)
+  'nano-pin-bed': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'arduino-nano', pins: true }],
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

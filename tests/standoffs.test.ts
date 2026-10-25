@@ -6,7 +6,7 @@ import { initCSG, toManifold } from '../src/geo/csg';
 import type { CsgApi } from '../src/geo/csg';
 import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
-import { caseLayout, standoffColumns, RAIL_GRIP } from '../src/geo/layout';
+import { caseLayout, standoffColumns, PIN_SPACER, RAIL_GRIP } from '../src/geo/layout';
 import { SCREWS, NUT_CLEARANCE } from '../src/geo/fasteners';
 import { HOLE_SKIN, NUT_LIFT } from '../src/geo/standoffs';
 import { validateMesh } from '../src/geo/validate';
@@ -104,6 +104,40 @@ describe('rails', () => {
     expect(solidAt(body, x, y, board.z0 + t / 2)).toBe(false); // the groove
     expect(solidAt(body, x, y, board.z0 + t + 0.6)).toBe(true); // the upper lip
     expect(solidAt(body, x, y, board.z0 - 0.6)).toBe(true); // below the board
+    body.delete();
+  });
+
+  it('a soldered board sits on a pin bed: the pins and the header pass, the shelf carries it', () => {
+    const state = sanitizeState({ ...defaultState(), boards: [{ board: 'arduino-nano', pins: true }] });
+    const built = buildCase(csg, state, 8);
+    const report = validateMesh(built.body);
+    expect(report.watertight).toBe(true);
+    expect(report.degenerateTriangles).toBe(0);
+    const body = toManifold(csg, built.body);
+    const board = caseLayout(state).boards[0];
+    const { w, t } = board.def.size;
+    const pins = board.def.pins;
+    if (!pins) throw new Error('the Nano has pins');
+    const at = (s: number, z: number): boolean => {
+      // s: distance inside the front edge, z: above the PCB underside
+      const [x, y] = applyAffine(board.toCase, [w / 2, s, 0]);
+      return solidAt(body, x, y, board.z0 + z);
+    };
+    for (const z of [-0.6, -PIN_SPACER / 2, -PIN_SPACER - 1, -pins.below + 0.3]) expect(at(pins.inset, z), `pins at ${z}`).toBe(false);
+    expect(at(pins.inset + 1, -1), 'the header plastic').toBe(false);
+    expect(at(0.3, -PIN_SPACER - 0.6), 'the shelf outside the slot').toBe(true);
+    expect(at(pins.inset + 1.2, -PIN_SPACER - 0.6), 'the shelf inside the slot').toBe(true);
+    expect(at(RAIL_GRIP - 0.9, t + 0.6), 'the upper lip').toBe(true);
+    expect(at(RAIL_GRIP - 0.9, t / 2), 'the groove').toBe(false);
+    body.delete();
+  });
+
+  it('bare pins change nothing: the rail keeps its lower lip', () => {
+    const state = sanitizeState({ ...defaultState(), boards: [{ board: 'arduino-nano', pins: false, z: 5 }] });
+    const body = toManifold(csg, buildCase(csg, state, 8).body);
+    const board = caseLayout(state).boards[0];
+    const [x, y] = applyAffine(board.toCase, [board.def.size.w / 2, RAIL_GRIP - 0.9, 0]);
+    expect(solidAt(body, x, y, board.z0 - 0.6)).toBe(true);
     body.delete();
   });
 });

@@ -6,7 +6,8 @@
   "size": { "w": 34.2, "d": 25.6, "t": 1.2 },
   "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "short" },
   "topHeight": 4,
-  "bottomHeight": 8.5,
+  "bottomHeight": 2,
+  "pins": { "below": 8.5, "edges": ["front", "back"], "inset": 1.37, "soldered": false },
   "ports": [
     { "id": "usb", "type": "micro-usb", "edge": "left", "along": 12.8, "protrude": 1 },
     { "id": "reset", "type": "switch", "edge": "front", "along": 3, "w": 4, "h": 2.5, "protrude": 0.5 },

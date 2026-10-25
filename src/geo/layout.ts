@@ -9,7 +9,7 @@
 
 import type { BoardDef, Edge } from '../boards/schema';
 import type { BoardPlacement, Rotation } from '../boards/placement';
-import { boardOf } from '../boards/placement';
+import { boardOf, pinsDown, undersideOf } from '../boards/placement';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import { bossDiameter } from './fasteners';
@@ -33,6 +33,12 @@ export const RAIL_GAP = 0.15;
 export const RAIL_LIP = 1.2;
 /** Rails are shorter than the board edge by this much at each end. */
 export const RAIL_SHORTEN = 2;
+/** Soldered pins: the header's plastic under the PCB, its width across the row. */
+export const PIN_SPACER = 2.5;
+export const PIN_SPACER_W = 2.54;
+/** The pin bed's slot for a row of pins, its width and the room under the pin tips. */
+export const PIN_SLOT = 1.2;
+export const PIN_TIP_GAP = 0.5;
 
 export interface Rect {
   x0: number;
@@ -106,6 +112,11 @@ export function railEdges(def: BoardDef): Edge[] {
   return alongX ? ['front', 'back'] : ['left', 'right'];
 }
 
+/** The edges whose pins hang below the board: none unless they are soldered. */
+export function pinEdges(board: Pick<PlacedBoard, 'def' | 'placement'>): Edge[] {
+  return board.def.pins && pinsDown(board.def, board.placement) ? board.def.pins.edges : [];
+}
+
 /** How far beyond each edge the board's footprint reaches (ports, rails). */
 function edgeReach(def: BoardDef): Record<Edge, number> {
   const reach: Record<Edge, number> = { front: 0, back: 0, left: 0, right: 0 };
@@ -138,7 +149,7 @@ function place(input: LayoutInput, offsetX: number, offsetY: number): PlacedBoar
       footprint: rectOf([corner(-reach.left, -reach.front), corner(w + reach.right, d + reach.back)]),
       z0,
       zTop: z0 + def.size.t + def.topHeight,
-      zBottom: z0 - def.bottomHeight,
+      zBottom: z0 - undersideOf(def, pinsDown(def, placement)),
     };
   });
 }

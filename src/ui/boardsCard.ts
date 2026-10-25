@@ -9,7 +9,7 @@ import type { Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';
 import type { BoardPlacement } from '../boards/placement';
-import { NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, Z_MAX, boardOf, minBoardZ, portCut } from '../boards/placement';
+import { NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, Z_MAX, boardOf, pinsDown, placementMinZ, portCut } from '../boards/placement';
 import type { Align, ArrangeMode } from '../geo/arrange';
 import { ALIGN_X, ALIGN_Y, ARRANGE_MODES, alignBoard, arrangeBoards } from '../geo/arrange';
 import type { Key } from '../i18n';
@@ -40,7 +40,17 @@ function boardControls(index: number): Control<AppState>[] {
     {
       kind: 'range', key: 'z', label: 'board.z', hint: 'board.z.hint', min: 0, max: Z_MAX, step: 0.5,
       get: (state) => at(state).z,
-      set: (state, value) => patchBoard(state, index, { z: Math.max(minBoardZ(boardOf(at(state))), value) }),
+      set: (state, value) => patchBoard(state, index, { z: Math.max(placementMinZ(at(state)), value) }),
+    },
+    {
+      kind: 'check', key: 'pins', label: 'board.pins', hint: 'board.pins.hint',
+      when: (state) => boardOf(at(state)).pins !== undefined,
+      get: (state) => pinsDown(boardOf(at(state)), at(state)),
+      // soldered pins need the room under the board: the board goes up with them
+      set: (state, value) => {
+        const next = { ...at(state), pins: value };
+        return patchBoard(state, index, { pins: value, z: Math.max(placementMinZ(next), next.z) });
+      },
     },
     {
       kind: 'segmented', key: 'rot', label: 'board.rot',

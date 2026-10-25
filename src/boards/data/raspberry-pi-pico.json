@@ -16,6 +16,7 @@
   },
   "topHeight": 3,
   "bottomHeight": 1,
+  "pins": { "below": 8.5, "edges": ["left", "right"], "inset": 1.61, "soldered": false },
   "ports": [
     { "id": "usb", "type": "micro-usb", "edge": "back", "along": 10.5, "protrude": 1.3 },
     { "id": "bootsel", "type": "button", "edge": "top", "x": 7, "y": 39, "w": 3.5, "d": 4.4, "shape": "rect", "cut": false },
