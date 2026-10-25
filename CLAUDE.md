@@ -111,6 +111,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   centre), nets and Eagle's plain mounting holes; `--outline` as above;
   `--match`, `--rotate`, `--flip` (`scripts/lib/pcb.mjs`). `tests/drawing.test.ts`
   reads a fixture of every format back to known boxes (`tests/fixtures/`).
+- `scripts/fetch.mjs <url> | --board <id> | --all` — vendor drawings in the
+  local cache `drawings/` (not committed; zips unpacked, `drawings/index.json`
+  maps URL → file), downloaded once; `--file <path>` registers a file
+  downloaded by hand (Google Drive asks a person), `--list`. Fetch here, not
+  with curl into the scratchpad: the next session finds the same files.
 - Adding a board: the skill `.claude/skills/add-board/SKILL.md` (its
   "which tool for which drawing"). No new dependencies without the user's
   explicit approval, subagents included.

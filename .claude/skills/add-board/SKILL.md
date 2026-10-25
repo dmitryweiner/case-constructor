@@ -98,6 +98,11 @@ shows; do not mirror a bottom view.
 - Where the drawing gives no heights, the type defaults stand and
   `"verified"` stays `false` until someone measures.
 
+Get the drawing with `node scripts/fetch.mjs <url>` (or `--board <id>` for
+an entry's `source`): it lands in `drawings/`, unpacked, and stays there for
+the next check. A Google Drive file or folder needs a person: download it in
+a browser, then `node scripts/fetch.mjs <url> --file ~/Downloads/<file>`.
+
 ## 2b. Which tool for which drawing
 
 Every tool prints in the board frame (origin at the outline's lower-left

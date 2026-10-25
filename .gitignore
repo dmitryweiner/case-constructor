@@ -4,3 +4,6 @@ shots/
 .DS_Store
 *.local
 .vite/
+
+# vendor drawings, cached by scripts/fetch.mjs
+drawings/
