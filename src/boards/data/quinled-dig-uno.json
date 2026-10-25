@@ -18,8 +18,8 @@
   "topHeight": 26.5,
   "bottomHeight": 2,
   "ports": [
-    { "id": "power-in", "type": "generic", "edge": "left", "along": 19.7, "w": 10.7, "h": 10, "d": 8, "protrude": 0.5, "cut": true },
-    { "id": "led-out", "type": "generic", "edge": "right", "along": 19.8, "w": 20.3, "h": 10, "d": 8, "protrude": 0.5, "cut": true },
+    { "id": "power-in", "type": "terminal", "edge": "left", "along": 19.7, "w": 10.7, "h": 10, "d": 8, "protrude": 0.5, "cut": true },
+    { "id": "led-out", "type": "terminal", "edge": "right", "along": 19.8, "w": 20.3, "h": 10, "d": 8, "protrude": 0.5, "cut": true },
     { "id": "esp32-antenna", "type": "generic", "edge": "right", "along": 19.8, "w": 18.4, "h": 3.2, "d": 5, "z": 12.6, "protrude": 4.7, "cut": false },
     { "id": "esp32-board", "type": "generic", "edge": "top", "x": 31.6, "y": 19.8, "w": 33, "d": 31, "h": 16 },
     { "id": "gpio-top", "type": "header-1xN", "edge": "top", "x": 23.9, "y": 36.6, "w": 12.7, "d": 5, "h": 8.5 },

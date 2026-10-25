@@ -18,10 +18,10 @@
   "bottomHeight": 5,
   "ports": [
     { "id": "usb-c", "type": "usb-c", "edge": "left", "along": 37.86, "h": 3, "protrude": 0.5 },
-    { "id": "qwiic", "type": "generic", "edge": "right", "along": 14.36, "w": 6, "h": 3, "d": 4.25, "protrude": -0.5, "cut": true },
+    { "id": "qwiic", "type": "jst", "edge": "right", "along": 14.36, "w": 6, "h": 3, "d": 4.25, "protrude": -0.5, "cut": true },
     { "id": "digital", "type": "header-1xN", "edge": "top", "x": 41.16, "y": 50.81, "w": 47.74, "d": 2.5, "h": 8.5, "cut": true },
     { "id": "power-analog", "type": "header-1xN", "edge": "top", "x": 45.78, "y": 2.55, "w": 38.69, "d": 2.5, "h": 8.5, "cut": true },
-    { "id": "header-2x5", "type": "header-1xN", "edge": "top", "x": 18.5, "y": 44.46, "w": 12.7, "d": 5.08, "h": 10 },
+    { "id": "header-2x5", "type": "header-2xN", "edge": "top", "x": 18.5, "y": 44.46, "w": 12.7, "d": 5.08, "h": 10 },
     { "id": "icsp", "type": "header-1xN", "edge": "top", "x": 64.94, "y": 27.96, "w": 5, "d": 7.6, "h": 8 },
     { "id": "button", "type": "button", "edge": "top", "x": 5.84, "y": 49.41, "w": 6.2, "d": 6.4, "h": 2.1, "shape": "rect" },
     { "id": "led-matrix", "type": "display", "edge": "top", "x": 44.75, "y": 12.4, "w": 27, "d": 16, "h": 1 },

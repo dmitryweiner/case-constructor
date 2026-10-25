@@ -25,7 +25,7 @@
     { "id": "esp32-module", "type": "generic", "edge": "top", "x": 14.0, "y": 85.6, "w": 18, "d": 25.1, "h": 3.2 },
     { "id": "but1", "type": "button", "edge": "top", "x": 25.81, "y": 88.33, "w": 3, "d": 4, "h": 2, "shape": "rect" },
     { "id": "rst1", "type": "button", "edge": "top", "x": 2.17, "y": 88.33, "w": 3, "d": 4, "h": 2, "shape": "rect" },
-    { "id": "uext", "type": "generic", "edge": "top", "x": 13.99, "y": 63.95, "w": 20.3, "d": 9.2, "h": 9 },
+    { "id": "uext", "type": "header-2xN", "edge": "top", "x": 13.99, "y": 63.95, "w": 20.3, "d": 9.2, "h": 9 },
     { "id": "battery", "type": "generic", "edge": "top", "x": 2.25, "y": 4.38, "w": 4.5, "d": 6, "h": 6 },
     { "id": "act-led", "type": "led", "edge": "top", "x": 1.42, "y": 28.51, "cut": false },
     { "id": "lnk-led", "type": "led", "edge": "top", "x": 1.42, "y": 22.8, "cut": false },

@@ -2,6 +2,7 @@
 // typo, the catalog must not need fixing.
 
 import { RAW_BOARDS, CATALOG, catalogBoard } from '../src/boards/catalog';
+import type { PortType } from '../src/boards/schema';
 import { PORT_TYPES, isPortType, sanitizeBoard, sanitizePort } from '../src/boards/schema';
 import { defaultPlacement, sanitizePlacement, portCut, boardOf, minBoardZ, placementMinZ, pinsDown } from '../src/boards/placement';
 import { garbageLike, rng } from './helpers';
@@ -66,6 +67,8 @@ describe('board catalog', () => {
     for (const [id, type] of Object.entries(PORT_TYPES)) {
       for (const value of [type.w, type.h, type.d]) expect(value, id).toBeGreaterThan(0);
       expect(type.clearance, id).toBeGreaterThanOrEqual(0);
+      const base: PortType = type;
+      if (base.cutH !== undefined) expect(base.cutH, id).toBeLessThanOrEqual(type.h);
     }
   });
 });
@@ -108,6 +111,13 @@ describe('sanitizeBoard', () => {
     const usb = sanitizePort({ id: 'u', type: 'usb-c', edge: 'front', along: 5 }, { w: 10, d: 10 }, 0);
     expect(usb).toMatchObject({ w: PORT_TYPES['usb-c'].w, h: PORT_TYPES['usb-c'].h, z: 0, protrude: 0 });
     expect(sanitizePort({ type: 'usb-c' }, { w: 10, d: 10 }, 0)).toBeNull();
+  });
+
+  it('a terminal opens only its wire entries; cutH never exceeds the part', () => {
+    const terminal = sanitizePort({ id: 't', type: 'terminal', edge: 'front', along: 10 }, { w: 30, d: 20 }, 0);
+    expect(terminal).toMatchObject({ h: PORT_TYPES.terminal.h, cutH: PORT_TYPES.terminal.cutH });
+    expect(sanitizePort({ id: 't', type: 'terminal', edge: 'front', h: 4 }, { w: 30, d: 20 }, 0)).toMatchObject({ h: 4, cutH: 4 });
+    expect(sanitizePort({ id: 'u', type: 'usb-c', edge: 'front' }, { w: 30, d: 20 }, 0)).not.toHaveProperty('cutH');
   });
 });
 

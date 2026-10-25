@@ -19,8 +19,8 @@
   "pins": { "below": 8.5, "edges": ["front", "back"], "inset": 1.27, "soldered": false },
   "ports": [
     { "id": "usb", "type": "usb-c", "edge": "left", "along": 11.43, "z": 0, "protrude": 1.2 },
-    { "id": "battery", "type": "generic", "edge": "back", "along": 10.92, "w": 6, "h": 4.8, "d": 6, "z": 0, "protrude": -0.5, "cut": false },
-    { "id": "stemma-qt", "type": "generic", "edge": "right", "along": 8.26, "w": 6, "h": 3, "d": 4.3, "z": 0, "protrude": -0.5, "cut": false },
+    { "id": "battery", "type": "jst", "edge": "back", "along": 10.92, "w": 6, "h": 4.8, "d": 6, "z": 0, "protrude": -0.5, "cut": false },
+    { "id": "stemma-qt", "type": "jst", "edge": "right", "along": 8.26, "w": 6, "h": 3, "d": 4.3, "z": 0, "protrude": -0.5, "cut": false },
     { "id": "boot", "type": "switch", "edge": "right", "along": 15.3, "w": 4, "h": 2, "z": 0, "protrude": 0.8, "cut": false },
     { "id": "reset", "type": "button", "edge": "top", "x": 11.81, "y": 6.41, "w": 4.2, "d": 2.8, "h": 1.9, "shape": "rect" },
     { "id": "led-13", "type": "led", "edge": "top", "x": 1.82, "y": 17.42 },

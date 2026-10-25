@@ -20,11 +20,11 @@
     { "id": "display", "type": "display", "edge": "top", "x": 45.75, "y": 25, "w": 57.6, "d": 43.2, "h": 4 },
     { "id": "ldr", "type": "generic", "edge": "top", "x": 82.3, "y": 39.1, "w": 3.6, "d": 5.6, "h": 1.5, "cut": false },
     { "id": "usb", "type": "micro-usb", "edge": "left", "along": 34.5, "z": -4.2, "protrude": 1 },
-    { "id": "serial-p1", "type": "generic", "edge": "left", "along": 15.7, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "serial-p1", "type": "jst", "edge": "left", "along": 15.7, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
     { "id": "microsd", "type": "microsd", "edge": "back", "along": 38.4, "h": 1.8, "z": -3.4, "protrude": 0.3 },
-    { "id": "gpio-cn1", "type": "generic", "edge": "back", "along": 55, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
-    { "id": "gpio-p3", "type": "generic", "edge": "back", "along": 71.2, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
-    { "id": "speaker-p4", "type": "generic", "edge": "front", "along": 27.2, "w": 5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false }
+    { "id": "gpio-cn1", "type": "jst", "edge": "back", "along": 55, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "gpio-p3", "type": "jst", "edge": "back", "along": 71.2, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "speaker-p4", "type": "jst", "edge": "front", "along": 27.2, "w": 5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false }
   ],
   "source": "https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/OriginalDocumentation/3-Structure_Diagram/Dimensions.png",
   "verified": false

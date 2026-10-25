@@ -169,6 +169,10 @@ swap w and h. Document that in the add-board skill.
 **Tests.** Today's ones: `tests/boards.test.ts` checks every type's
 defaults and every entry.
 
+**Done.** The four types, their names in the dictionaries, the entries in
+the table moved (QuinLED, BTT Pi, Feather, CYD, RAK19007, UNO Q, ROCK 5C /
+4D, Q6A, Olimex, ROCK 5B+).
+
 ## B6. Family entries with parts that move between variants
 
 **Now.**
@@ -310,3 +314,7 @@ with code 3.
   catalog JSON keeps `pins` when it has them.
 - **B1.** `pins.inset` is at least 0.8 mm: closer to the edge the slot
   would meet the groove's face.
+- **B5.** The terminal's "slot for the wires" needed a port field the plan
+  did not name: `cutH`, the opening's height from the port's bottom
+  (`terminal` defaults to 5.5). The QuinLED Dig-Quad's 14 mm power
+  terminals have `cutH: 8`, an estimate like their heights (B9).

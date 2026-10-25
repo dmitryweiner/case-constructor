@@ -42,10 +42,15 @@ export function outerTopAt(shape: ShapeState, dims: Dims, frontH: number, backH:
   return (_x, y) => frontH + k * y;
 }
 
+/** How high an edge port's opening is: the part, or its bottom `cutH` (a terminal's wire slot). */
+function openingH(port: PortDef): number {
+  return port.edge === 'top' ? port.h : port.cutH ?? port.h;
+}
+
 function sectionOf(port: PortDef): { shape: 'rect' | 'round'; w: number; h: number; r: number } {
   const c = port.clearance;
   if (port.shape === 'round') return { shape: 'round', w: port.w + 2 * c, h: port.w + 2 * c, r: 0 };
-  return { shape: 'rect', w: port.w + 2 * c, h: port.h + 2 * c, r: Math.min(1.5, c) };
+  return { shape: 'rect', w: port.w + 2 * c, h: openingH(port) + 2 * c, r: Math.min(1.5, c) };
 }
 
 /** The connector face point and the outward direction of an edge port, case frame. */
@@ -56,7 +61,7 @@ export function portAxis(board: PlacedBoard, port: PortDef & { edge: 'front' | '
     : port.edge === 'back' ? [port.along, d]
       : port.edge === 'left' ? [0, port.along]
         : [w, port.along];
-  const zc = t + port.z + port.h / 2;
+  const zc = t + port.z + openingH(port) / 2;
   const face = applyAffine(board.toCase, [ex + nx * port.protrude, ey + ny * port.protrude, zc]);
   const dir = rotateVec(board.toCase, [nx, ny, 0]);
   return { face, dir: [dir[0], dir[1]] };

@@ -23,8 +23,8 @@
     { "id": "core", "type": "generic", "edge": "top", "x": 22, "y": 15, "w": 20, "d": 30, "h": 4.3 },
     { "id": "lora-antenna", "type": "antenna", "edge": "top", "x": 27.8, "y": 24.1, "h": 4.3 },
     { "id": "ble-antenna", "type": "antenna", "edge": "top", "x": 16.5, "y": 6.1, "h": 4.3 },
-    { "id": "battery", "type": "generic", "edge": "top", "x": 9, "y": 26.8, "w": 4.7, "d": 6, "h": 6 },
-    { "id": "solar", "type": "generic", "edge": "top", "x": 9.4, "y": 2.3, "w": 3, "d": 4.5, "h": 4.5 },
+    { "id": "battery", "type": "jst", "edge": "top", "x": 9, "y": 26.8, "w": 4.7, "d": 6, "h": 6 },
+    { "id": "solar", "type": "jst", "edge": "top", "x": 9.4, "y": 2.3, "w": 3, "d": 4.5, "h": 4.5 },
     { "id": "led-charge", "type": "led", "edge": "top", "x": 0.8, "y": 27.8, "d": 1 },
     { "id": "led-green", "type": "led", "edge": "top", "x": 0.8, "y": 5.84, "d": 1 },
     { "id": "led-blue", "type": "led", "edge": "top", "x": 0.8, "y": 2.16, "d": 1 }

@@ -30,6 +30,8 @@ export interface PortType {
   cut: boolean;
   /** an element on the board's top face rather than on an edge */
   top: boolean;
+  /** an opening lower than the part: only its bottom this high (a terminal's wire entries) */
+  cutH?: number;
 }
 
 /** Defaults per port type; a board entry may override any of them. */
@@ -49,8 +51,15 @@ export const PORT_TYPES = {
   'sd': { w: 24, h: 2.5, d: 30, clearance: 1, shape: 'rect', cut: true, top: false },
   'sma': { w: 6.5, h: 6.5, d: 8, clearance: 0.3, shape: 'round', cut: true, top: false },
   'switch': { w: 8, h: 3, d: 4, clearance: 0.6, shape: 'rect', cut: true, top: false },
+  // 5.08 mm screw terminal, two poles; the wires leave through a slot at the entries
+  'terminal': { w: 10.16, h: 10, d: 8, clearance: 0.5, shape: 'rect', cut: true, top: false, cutH: 5.5 },
+  // JST PH / SH (Qwiic, STEMMA QT) battery, speaker and I2C sockets
+  'jst': { w: 6, h: 4.5, d: 5, clearance: 0.5, shape: 'rect', cut: false, top: false },
+  'sim': { w: 12.5, h: 1.5, d: 14, clearance: 1, shape: 'rect', cut: true, top: false },
   'header-2x20': { w: 51, h: 8.5, d: 5, clearance: 0.6, shape: 'rect', cut: true, top: true },
   'header-1xN': { w: 25.4, h: 8.5, d: 2.5, clearance: 0.6, shape: 'rect', cut: false, top: true },
+  // a 2-row header other than the Pi's GPIO: PoE 2x2, UEXT 2x5, 2x3
+  'header-2xN': { w: 12.7, h: 8.5, d: 5.08, clearance: 0.6, shape: 'rect', cut: false, top: true },
   'display': { w: 30, h: 3, d: 15, clearance: 0.3, shape: 'rect', cut: true, top: true },
   'button': { w: 3.5, h: 1.5, d: 3.5, clearance: 0.6, shape: 'round', cut: true, top: true },
   'led': { w: 1.6, h: 0.8, d: 1.6, clearance: 0.5, shape: 'round', cut: true, top: true },
@@ -75,6 +84,8 @@ interface PortCommon {
   clearance: number;
   shape: PortShape;
   cut: boolean;
+  /** the opening covers only the part's bottom this high */
+  cutH?: number;
 }
 
 /** A connector on an edge, its face at the board edge plus `protrude`. */
@@ -182,15 +193,18 @@ export function sanitizePort(raw: unknown, size: { w: number; d: number }, index
   // a round element may give its diameter as `d` alone (an LED: "d": 1.5)
   const round = shape === 'round';
   const w = num(r.w ?? (round ? r.d : undefined), 0.5, BOARD_MAX_MM, base.w);
+  const h = num(r.h ?? (round ? w : undefined), 0.2, 100, round ? w : base.h);
+  const cutH = typeof r.cutH === 'number' ? r.cutH : base.cutH;
   const common = {
     id: str(r.id, `${type}-${index}`, 40),
     type,
     w,
-    h: num(r.h ?? (round ? w : undefined), 0.2, 100, round ? w : base.h),
+    h,
     d: num(round ? w : r.d, 0.2, BOARD_MAX_MM, round ? w : base.d),
     clearance: num(r.clearance, 0, 10, base.clearance),
     shape,
     cut: typeof r.cut === 'boolean' ? r.cut : base.cut,
+    ...(cutH !== undefined ? { cutH: num(cutH, 0.2, h, h) } : {}),
   };
   const edge = r.edge;
   if (isEdge(edge)) {

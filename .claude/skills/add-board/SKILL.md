@@ -55,6 +55,14 @@ shows; do not mirror a bottom view.
 - Port types and their defaults are `PORT_TYPES` in `src/boards/schema.ts`;
   give `w`/`h`/`d` only where the board differs (stacked USB, a tall jack).
   A round part (LED, round button) may give just `"d"`: its diameter.
+- Types for what boards often carry: `terminal` (5.08 mm screw terminal on
+  an edge; its opening is a slot at the wire entries, `cutH` high, 5.5 by
+  default), `jst` (JST PH/SH, Qwiic, STEMMA QT; on an edge or `"edge":
+  "top"`, no opening by default), `header-2xN` (a 2-row header other than
+  the Pi's GPIO: PoE 2×2, UEXT 2×5), `sim` (a SIM slot on an edge, like
+  `microsd`). `generic` is for what none of the types describe.
+- A **standing connector** (HDMI or USB-C on its end: ROCK 5B+, Orange Pi 5
+  Max / Pro / Plus) keeps its type with `w` and `h` swapped.
 - `z` is the bottom of an edge connector above the PCB top; negative for
   something under the board (a microSD slot: `-(t + h)`).
 - `protrude` is how far the connector sticks out past the edge (USB/Ethernet

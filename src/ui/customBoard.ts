@@ -10,8 +10,8 @@
 import { make } from './dom';
 import type { Key } from '../i18n';
 import { t, tDynamic } from '../i18n';
-import type { BoardDef, PortDef } from '../boards/schema';
-import { EDGES, PORT_TYPE_IDS, isPortType, sanitizePort } from '../boards/schema';
+import type { BoardDef, PortDef, PortType } from '../boards/schema';
+import { EDGES, PORT_TYPES, PORT_TYPE_IDS, isPortType, sanitizePort } from '../boards/schema';
 import { SCREW_SIZES } from '../geo/fasteners';
 import type { AppState } from '../state/schema';
 
@@ -46,8 +46,12 @@ export function customSignature(def: BoardDef): string {
 export function catalogJson(def: BoardDef): string {
   const slug = def.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'custom-board';
   const ports = def.ports.map((port) => {
+    const base: PortType = PORT_TYPES[port.type];
     const common = { id: port.id, type: port.type };
-    const size = { w: port.w, h: port.h, ...(port.shape === 'rect' ? { d: port.d } : {}) };
+    const size = {
+      w: port.w, h: port.h, ...(port.shape === 'rect' ? { d: port.d } : {}),
+      ...(port.cutH !== undefined && port.cutH !== base.cutH ? { cutH: port.cutH } : {}),
+    };
     return port.edge === 'top'
       ? { ...common, edge: 'top', x: port.x, y: port.y, ...size }
       : { ...common, edge: port.edge, along: port.along, z: port.z, ...size, protrude: port.protrude };

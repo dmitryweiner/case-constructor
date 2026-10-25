@@ -118,7 +118,7 @@
     },
     {
       "id": "poe",
-      "type": "header-1xN",
+      "type": "header-2xN",
       "edge": "top",
       "x": 23.5,
       "y": 9.65,
