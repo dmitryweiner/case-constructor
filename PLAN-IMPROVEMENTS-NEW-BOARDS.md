@@ -2,7 +2,9 @@
 
 Status: written on 2026-10-25 after the Tier A boards from
 `PERSPECTIVE-BOARDS.md` went into the catalog (25 entries, the Pico 2 as an
-alias). Nothing here is started. The next iteration picks the order.
+alias). The open questions were settled with the user on the same day
+(below); the work goes in the order
+**B8 → B1 → B2 → B5 → B4 → B6 → B3 → B7 → B9**.
 
 Same rules as PLAN.md: TDD, golden tests for new geometry (a new state per
 feature, old ones untouched), `npm run check` and `npm run smoke` before
@@ -13,15 +15,24 @@ The transcription agents worked around the gaps below and said so in their
 reports. The workarounds are in the data, so each item lists the entries it
 touches.
 
-## Open questions
+## Decisions (2026-10-25, with the user)
 
-To settle with the user before the item starts:
-
-- **Q1 (B1).** What a header-pin board defaults to: pins down (the case is
-  ~7 mm taller than needed for a bare board) or bare (a soldered board does
-  not fit)?
-- **Q2 (B2).** Should the lid screw select offer M1.6, or should boards only?
-- **Q3 (B6).** For a family entry, a variant select or separate entries?
+- **Q1 (B1).** The default of **Pins soldered downwards** is how the board
+  ships: the entry says so (`pins.soldered`). DevKitC, Nano, DevKit V1 come
+  with pins; Pico, XIAO, Zero, Feather come bare.
+- **B1, rails.** With pins soldered on a gripped edge the rail gets a **pin
+  bed** instead of its lower lip (see B1). A warning alone was rejected: it
+  leaves every soldered rail board without a mount.
+- **Q2 (B2).** M1.6 is for **boards only**. The lid keeps M2…M4.
+- **Q3 (B6).** **Variants in one entry** (`variants`), with a select on the
+  board card. The Feather ESP32-S3 TFT and Reverse TFT become variants of
+  the Feather ESP32-S3 entry.
+- **Order:** B8, B1, B2, B5, B4, B6, B3, B7, B9.
+- **B7:** everything, with no new dependencies; `scripts/proto/` is deleted
+  at the end.
+- **B9:** the ≈ entries are checked against drawings found online (the ones
+  without a drawing stay ≈), RAK3401 on the RAK19007 and the Feather TFT
+  variants are done here. The visual review stays with the user.
 
 ---
 
@@ -44,21 +55,30 @@ with the lower lip (`docs/boards.md`, Rails).
 - An entry describes the **bare** board: `bottomHeight` without pins, plus
   an optional `pins: { below: 8.5, edges: ["front", "back"] }` (how far the
   pins reach under the PCB, and which edges carry the rows).
-- The board card gets **Pins soldered downwards** (a checkbox). It is shown
-  only for boards with `pins`, its default comes from Q1, and it is kept in
-  the placement (sanitized like every other field).
+  `pins.soldered` says how the board ships (Q1); `pins.inset` is the row
+  centre from the edge (default 1.27).
+- The board card gets **Pins soldered downwards** (a checkbox,
+  `#board<i>_pins`). It is shown only for boards with `pins`, its default is
+  `pins.soldered`, and it is kept in the placement (sanitized like every
+  other field; a missing value takes the default).
 - Effective underside = `max(bottomHeight, pins.below)` when the box is
-  ticked.
-- Rails: with pins on a gripped edge, a warning (the code exists:
-  `layout warnings`). Raising the board above the lip, or offering the other
-  pair of edges, is open to discussion.
+  ticked; the lowest standoff and `zBottom` follow it.
+- **Rails: the pin bed.** On a gripped edge that carries pins, with the box
+  ticked, the rail loses its lower lip. Under the groove it stops at the
+  header's plastic (`PIN_SPACER` = 2.5 mm below the PCB), reaches inwards
+  far enough to carry it, and has a slot along the pin row (from the
+  plastic down to the floor) for the pins. The upper lip still clicks over
+  the edge. Pins on a gripped edge of a bare board change nothing. The other
+  pair of edges is not offered: the short edges carry the USB.
 - Migrate every entry in the table: move the 8.5 to `pins`, and give
   `pins` to the boards that have rows but no count yet.
 
 **Tests.** A sanitizer round trip with and without `pins`. The standoff
-height follows the checkbox. The golden test gets a new state (a Nano on
-rails with pins down); old states keep their numbers, because a missing
-`pins` keeps today's behaviour.
+height follows the checkbox. The pin bed leaves the pin rows free (a pin
+box per row does not touch the rail) and has no slivers. The golden test
+gets a new state (a Nano on rails with pins down); old states keep their
+numbers, because a missing `pins` keeps today's behaviour. The smoke ticks
+the box on a rail board.
 
 ## B2. Screws below M2
 
@@ -66,14 +86,17 @@ rails with pins down); old states keep their numbers, because a missing
 LoRa 32 V4 has Ø1.9 holes (they hold the display bracket), and the entry
 says M2, which does not pass.
 
-**Plan.** Add **M1.6** to the table: tap 1.3, insert 2.4 (the length to
-check against a real M1.6 insert), nut 3.2 AF × 1.3, head 3.0 × 1.0. The
-standoff diameter keeps its 5 mm minimum. Answer Q2 for the lid. Set the
-Heltec V4 entry to M1.6. Keep M1.2 out: the RAK19007's M1.2 holes are for
+**Plan.** Add **M1.6** to the table: tap 1.3, insert 2.4 × 3 (an estimate
+until a real M1.6 insert is measured), nut 3.2 AF × 1.3 (ISO 4032), head
+3.2 × 1.3 (ISO 7045). The standoff diameter keeps its 5 mm minimum. The lid
+keeps M2…M4 (Q2): its select and its sanitizer use their own list, and an
+M1.6 in a lid from a file falls back to the default. Set the Heltec V4
+entry to M1.6. Keep M1.2 out: the RAK19007's M1.2 holes are for
 its modules, not for mounting the board.
 
 **Tests.** The fasteners table test covers the new row (every diameter > 0,
-tap < d < insert). The golden test gets a new state with a board on M1.6.
+tap < d < insert). The lid sanitizer refuses M1.6. The golden test gets a
+new state with a board on M1.6.
 
 ## B3. Non-rectangular outlines
 
@@ -152,15 +175,25 @@ defaults and every entry.
   edge (the plug-in ESP32's antenna) is entered as an edge port with
   `cut: false` and a `protrude`, which keeps the wall clear.
 
-**Plan (Q3).**
-- **(a) Separate entries** per variant when the parts differ. This is
-  cheap, but the picker gets longer.
-- **(b) `variants: [{ id, name, ports: { <portId>: { …overrides } } }]`** in
-  an entry, with a variant select on the board card. It is kept in the
-  placement, and only the overrides differ.
+**Plan (Q3: variants).**
+- `variants: [{ id, name, ports?: { <portId>: { …overrides } }, add?: [ports],
+  topHeight?, bottomHeight? }]` in an entry. The overrides change fields of
+  existing ports (`cut`, position, `edge`), `add` brings ports only that
+  variant has. Names are English strings in the JSON, like board names.
+- The board card gets a select (`#board<i>_variant`), shown only for
+  entries with variants; the placement keeps `variant` (sanitized against
+  the entry, a missing or unknown one takes the first variant).
+- `boardOf` resolves the variant, so layout, ghosts, cutters and the
+  worker all see one resolved `BoardDef`. The board check validates every
+  variant resolved.
+- XIAO, Waveshare Zero and Feather get a variant per model, with their
+  buttons back at `cut: true` where the drawing has them. The Feather
+  ESP32-S3 TFT (display on top) and Reverse TFT (display on the underside,
+  B4) are variants of the Feather ESP32-S3 entry.
 
-Recommended: (b) for XIAO, Zero and Feather, and the Feather ESP32-S3 TFT as
-a variant with its display on top.
+**Tests.** A sanitizer round trip with a variant, the resolution test (an
+override and an added port show up, the others stay), the board check over
+every variant, a golden state with a non-default variant.
 
 The overhang workaround stays. Write it into the add-board skill.
 
@@ -235,7 +268,8 @@ during the actions is reported as an error, not shot silently.
 - **The user's visual review** of every new entry: `shots/<id>.png` against
   its drawing, and `shots/<id>-case.png` (regenerate with
   `node scripts/board.mjs --svg <id> --png` and the snap from the skill).
-- **≈ entries to verify against a drawing.**
+- **≈ entries to verify against a drawing** (done here: search for an
+  official drawing, re-transcribe from it, and leave ≈ where none exists).
   - From before: Arduino Uno, Mega, Orange Pi 5, ESP32-DevKitC V4,
     Wemos D1 mini.
   - New: ESP32 DevKit V1, ESP32-C3 SuperMini, ESP32-2432S028R, QuinLED
@@ -246,9 +280,10 @@ during the actions is reported as an error, not shot silently.
   - QuinLED: terminal heights.
   - Orange Pi 5 Max / Pro: USB-C.
   - CM5 IO Board: power button.
-- **Possible entries:** Feather ESP32-S3 TFT (display on top), unless B6
-  makes it a variant. RAK3401 (1 W) core on the RAK19007: check its height
-  and antennas, then add it to the name.
+- **Feather ESP32-S3 TFT / Reverse TFT:** variants (B6), from Adafruit's
+  drawings.
+- **RAK3401 (1 W) core on the RAK19007:** check its height and antennas,
+  then make it a variant of the RAK19007 (B6).
 
 ---
 
