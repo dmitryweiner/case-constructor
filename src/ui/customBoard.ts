@@ -42,7 +42,7 @@ export function customSignature(def: BoardDef): string {
   return JSON.stringify([def.mount.kind, def.mount.holes.length, def.ports.map((port) => [port.id, port.edge])]);
 }
 
-/** The board in the catalog's JSON format (PLAN.md §2.2), ready to contribute. */
+/** The board in the catalog's JSON format (plans/PLAN.md §2.2), ready to contribute. */
 export function catalogJson(def: BoardDef): string {
   const slug = def.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'custom-board';
   const ports = def.ports.map((port) => {

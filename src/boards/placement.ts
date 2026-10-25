@@ -1,7 +1,7 @@
 // A board placed in the case: which board, where, how high, how it is held,
 // which of its ports get an opening. Positions are in the layout frame: the
 // lower-left corner of the board's rotated outline, relative to the other
-// boards — the layout as a whole is centred in the cavity (PLAN.md §0.4).
+// boards — the layout as a whole is centred in the cavity (plans/PLAN.md §0.4).
 
 import type { FastenerSpec } from '../geo/fasteners';
 import { sanitizeFastener } from '../geo/fasteners';

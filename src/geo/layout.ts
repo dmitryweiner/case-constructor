@@ -187,7 +187,7 @@ export function placeBoards(input: LayoutInput): PlacedBoard[] {
 
 /**
  * Extra room on the lid side of the cavity: a side lid with depth takes that
- * much of the floor, and supports belong on the body's floor (PLAN.md §3.5).
+ * much of the floor, and supports belong on the body's floor (plans/PLAN.md §3.5).
  */
 export function lidBand(lid: LidState, shape: ShapeState): { x0: number; x1: number; y0: number; y1: number } {
   // posts reach their length (and a boss) into the body from the parting plane

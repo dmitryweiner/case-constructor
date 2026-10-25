@@ -1,5 +1,5 @@
 // The whole case: state → { body, lid }. Worker only — every step here is a
-// boolean. The pipeline grows milestone by milestone (PLAN.md §4); the order
+// boolean. The pipeline grows milestone by milestone (plans/PLAN.md §4); the order
 // matters and is commented where it does.
 
 import type { CsgApi } from './csg';

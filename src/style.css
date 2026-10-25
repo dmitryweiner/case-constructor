@@ -710,7 +710,7 @@ input[type='text'] {
 }
 
 /*
- * Text-only RTL (PLAN.md §6): the layout stays left-to-right, and every text
+ * Text-only RTL (plans/PLAN.md §6): the layout stays left-to-right, and every text
  * takes its direction from its own first strong character — the same as
  * dir="auto" on each element. Hebrew strings run right to left, numbers,
  * units and ids stay as they are.

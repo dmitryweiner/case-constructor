@@ -2,11 +2,11 @@
 
 ## Plan
 
-`PLAN.md` — architecture and milestones M0…M8, decisions taken with the user
+`plans/PLAN.md` — architecture and milestones M0…M8, decisions taken with the user
 at the top. Deviations from the plan are recorded at its end as they happen.
-`PLAN-IMPROVEMENTS.md` — the improvements after the review (I1…I8), same
+`plans/PLAN-IMPROVEMENTS.md` — the improvements after the review (I1…I8), same
 rules.
-`PLAN-IMPROVEMENTS-NEW-BOARDS.md` — what the Tier A boards left (B1…B9):
+`plans/PLAN-IMPROVEMENTS-NEW-BOARDS.md` — what the Tier A boards left (B1…B9):
 done; read it only for its decisions and deviations.
 
 ## Node

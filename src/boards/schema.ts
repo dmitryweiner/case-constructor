@@ -3,7 +3,7 @@
 // catalog index. A custom board from the editor travels in the state and
 // goes through the same sanitizer.
 //
-// Board frame (PLAN.md §0.4): origin at the lower-left corner of the vendor's
+// Board frame (plans/PLAN.md §0.4): origin at the lower-left corner of the vendor's
 // top view, x to the right, y up (away from the viewer). Edges: front
 // (y = 0), back (y = d), left (x = 0), right (x = w).
 

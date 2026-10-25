@@ -102,7 +102,7 @@ const STATES: Record<string, AppState> = {
     vents: { on: true, faces: ['right', 'top'], pattern: 'slots', along: 'x' },
     wallMount: { kind: 'keyholes', spacing: 50 },
   }),
-  // I9: ears, count and placement (PLAN-IMPROVEMENTS.md)
+  // I9: ears, count and placement (plans/PLAN-IMPROVEMENTS.md)
   'ears-four-ends': sanitizeState({
     ...defaultState(),
     shape: { ...defaultState().shape, cornerR: 6 },
@@ -113,7 +113,7 @@ const STATES: Record<string, AppState> = {
     shape: { ...defaultState().shape, kind: 'cylinder' },
     wallMount: { kind: 'ears', ears: { count: 3, walls: 'frontBack' } },
   }),
-  // I7: printed screws, threads in the posts (PLAN-IMPROVEMENTS.md)
+  // I7: printed screws, threads in the posts (plans/PLAN-IMPROVEMENTS.md)
   'printed-screws-top': sanitizeState({
     ...defaultState(),
     lid: { ...defaultState().lid, fastening: 'printed', thread: { size: 'P6', fit: 0.2 } },
@@ -122,33 +122,33 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     lid: { ...defaultState().lid, fastening: 'printed', thread: { size: 'P4', fit: 0.2 } },
   }),
-  // I8: magnets, a lid boss under a thin plate (PLAN-IMPROVEMENTS.md)
+  // I8: magnets, a lid boss under a thin plate (plans/PLAN-IMPROVEMENTS.md)
   'magnets-top': sanitizeState({
     ...defaultState(),
     lid: { ...defaultState().lid, fastening: 'magnets', magnet: { size: '8x3', fit: 0.2 } },
   }),
-  // I6: closed keyholes, pads and feet (PLAN-IMPROVEMENTS.md)
+  // I6: closed keyholes, pads and feet (plans/PLAN-IMPROVEMENTS.md)
   'closed-keyholes-feet': sanitizeState({
     ...defaultState(),
     wallMount: { kind: 'keyholes', keyhole: 'closed', spacing: 58, screwD: 4 },
   }),
-  // B1: header pins soldered downwards, a pin bed on the rails (PLAN-IMPROVEMENTS-NEW-BOARDS.md)
+  // B1: header pins soldered downwards, a pin bed on the rails (plans/PLAN-IMPROVEMENTS-NEW-BOARDS.md)
   'nano-pin-bed': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'arduino-nano', pins: true }],
   }),
-  // B2: a board on M1.6 screws (PLAN-IMPROVEMENTS-NEW-BOARDS.md)
+  // B2: a board on M1.6 screws (plans/PLAN-IMPROVEMENTS-NEW-BOARDS.md)
   'heltec-v4-m1.6': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'heltec-wifi-lora-32-v4' }],
   }),
-  // B4: parts on the underside, columns through a bottom lid (PLAN-IMPROVEMENTS-NEW-BOARDS.md)
+  // B4: parts on the underside, columns through a bottom lid (plans/PLAN-IMPROVEMENTS-NEW-BOARDS.md)
   'cyd-bottom-parts': sanitizeState({
     ...defaultState(),
     lid: { ...defaultState().lid, face: 'bottom' },
     boards: [{ board: 'esp32-2432s028r' }],
   }),
-  // B6: a family entry in a variant that is not the default (PLAN-IMPROVEMENTS-NEW-BOARDS.md)
+  // B6: a family entry in a variant that is not the default (plans/PLAN-IMPROVEMENTS-NEW-BOARDS.md)
   'feather-reverse-tft': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'adafruit-feather-esp32-s3', variant: 'reverse-tft' }],
