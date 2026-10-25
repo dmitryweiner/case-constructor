@@ -60,6 +60,15 @@ export interface SegmentedControl<T> extends Common<T> {
   set(state: T, value: string): T;
 }
 
+/** A row of buttons, any number of them pressed (the walls a board stands against). */
+export interface TogglesControl<T> extends Common<T> {
+  kind: 'toggles';
+  options: readonly SelectOption[];
+  optionDisabled?: (state: T, value: string) => boolean;
+  get(state: T): readonly string[];
+  set(state: T, values: string[]): T;
+}
+
 export interface CheckControl<T> extends Common<T> {
   kind: 'check';
   get(state: T): boolean;
@@ -84,7 +93,7 @@ export interface ButtonControl<T> extends Common<T> {
 }
 
 export type Control<T> =
-  | RangeControl<T> | SelectControl<T> | SegmentedControl<T> | CheckControl<T> | TextControl<T> | ButtonControl<T>;
+  | RangeControl<T> | SelectControl<T> | SegmentedControl<T> | TogglesControl<T> | CheckControl<T> | TextControl<T> | ButtonControl<T>;
 
 export interface ControlsHandle<T> {
   /** updates the shown values without rebuilding the DOM */
@@ -113,7 +122,7 @@ export function renderControls<T>(
 
   for (const control of controls) {
     const id = `${idPrefix}_${control.key}`;
-    const row = make(control.kind === 'segmented' ? 'div' : 'label', 'row');
+    const row = make(control.kind === 'segmented' || control.kind === 'toggles' ? 'div' : 'label', 'row');
     const name = make('span', 'row-label', labelText(control.label));
     if (control.hint) name.title = t(control.hint);
     row.append(name);
@@ -178,6 +187,35 @@ export function renderControls<T>(
       setDisabled = (off) => {
         select.disabled = off;
       };
+    } else if (control.kind === 'toggles') {
+      const group = make('div', 'segmented');
+      group.id = id;
+      group.setAttribute('role', 'group');
+      const buttons = control.options.map((option) => {
+        const button = make('button', 'seg-btn', optionText(option));
+        button.type = 'button';
+        button.id = `${id}_${option.value}`;
+        button.dataset.value = option.value;
+        button.addEventListener('click', () => {
+          const now = control.get(read());
+          const next = now.includes(option.value) ? now.filter((value) => value !== option.value) : [...now, option.value];
+          onChange(control.set(read(), next));
+        });
+        group.append(button);
+        return button;
+      });
+      row.append(group);
+      const show = (state: T): void => {
+        const values = control.get(state);
+        for (const button of buttons) {
+          const pressed = values.includes(button.dataset.value ?? '');
+          button.classList.toggle('active', pressed);
+          button.setAttribute('aria-pressed', String(pressed));
+          button.disabled = control.optionDisabled?.(state, button.dataset.value ?? '') ?? false;
+        }
+      };
+      show(read());
+      syncers.push(show);
     } else if (control.kind === 'segmented') {
       const group = make('div', 'segmented');
       group.id = id;

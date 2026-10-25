@@ -178,6 +178,23 @@ else {
 await page.uncheck('#viewBoards');
 if ((await page.evaluate(() => window.__case.captions())).length) errors.push('[captions] captions stay with the boards hidden');
 await page.check('#viewBoards');
+// a board against walls: the Pi 4 flush on the front and the right, the case shrinks
+label('walls');
+const sizeOf = async () => (await page.locator('#status').textContent()).trim();
+const centred = await sizeOf();
+await page.click('#board0_wall_right');
+await page.click('#board0_wall_front');
+await expectWatertight('walls:front-right');
+if ((await sizeOf()) === centred) errors.push(`[walls] the case did not change against two walls: ${centred}`);
+await setRange('board0_wallOffset', -1);
+await expectWatertight('walls:recessed');
+await page.click('#case_kind_cylinder');
+if (await page.locator('#board0_wall').isVisible()) errors.push('[walls] a cylinder offers walls');
+await page.click('#case_kind_box');
+await page.click('#board0_wall_right');
+await page.click('#board0_wall_front');
+if (await page.locator('#board0_wallOffset').isVisible()) errors.push('[walls] the offset stays without walls');
+if ((await sizeOf()) !== centred) errors.push(`[walls] back from the walls, the case is ${await sizeOf()}, not ${centred}`);
 label('openings');
 await page.click('#cutAdd');
 await page.click('#cut0_shape_round');

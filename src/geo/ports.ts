@@ -3,7 +3,8 @@
 // An edge port becomes a channel along the edge's outward normal, starting
 // at the connector's face: whatever wall stands in front of it — flat, round,
 // the console's — gets an opening exactly where the plug goes in, and nothing
-// behind the face is touched. A top element becomes a column from just above
+// behind the face is touched. A board against a wall has its connectors'
+// bodies in the wall: their channels start at the board edge. A top element becomes a column from just above
 // it up through the ceiling; a part on the underside, a column from just
 // below it down through the floor.
 
@@ -92,7 +93,9 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
         out.push({ origin: [cx, cy, 0], ...VERTICAL_AXES, s0, s1, ...section, w, h, source });
       } else {
         const { face, dir } = portAxis(board, port);
-        out.push({ origin: face, ...horizontalAxes(dir[0], dir[1]), s0: -CHANNEL_BACK, s1: reach, ...section, source });
+        // against a wall the connector's body sits in the wall: the channel starts at the board edge
+        const back = board.walls.some((wall) => wall.edge === port.edge) ? Math.max(0, port.protrude) + CHANNEL_BACK : CHANNEL_BACK;
+        out.push({ origin: face, ...horizontalAxes(dir[0], dir[1]), s0: -back, s1: reach, ...section, source });
       }
     }
   }

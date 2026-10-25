@@ -153,6 +153,16 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     boards: [{ board: 'adafruit-feather-esp32-s3', variant: 'reverse-tft' }],
   }),
+  // R7: a board against walls, its connectors flush (plans/PLAN-IMPROVEMENTS-2026-10-25.md)
+  'pi4-flush-front-right': sanitizeState({
+    ...defaultState(),
+    boards: [{ ...defaultState().boards[0], walls: ['front', 'right'] }],
+  }),
+  'pi4-recessed-right-screws': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, fastening: 'screws' },
+    boards: [{ ...defaultState().boards[0], walls: ['right'], wallOffset: -0.5 }],
+  }),
   // R3: the head seat set by the user (plans/PLAN-IMPROVEMENTS-2026-10-25.md)
   'countersunk-head-6.5': sanitizeState({
     ...defaultState(),

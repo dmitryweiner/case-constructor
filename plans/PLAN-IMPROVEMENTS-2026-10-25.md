@@ -239,3 +239,7 @@ adds a part.
   state with posts moved in the golden file. The hole for an asymmetric
   form must be the screw's thread turned over (`threadHole`): the case's
   holes switch to it with the chosen form.
+- **R7.** Several walls per board, not one (`placement.walls`, toggle
+  buttons): the Pi 4 has connectors on two sides, and with one wall only one
+  of them could be flush. The layout handles each side on its own anyway.
+  New control kind `toggles` (any number pressed).

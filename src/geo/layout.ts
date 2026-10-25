@@ -8,7 +8,7 @@
 // depend on the case size, which breaks the circular dependency.
 
 import type { BoardDef, Edge, TopPort } from '../boards/schema';
-import { onFace } from '../boards/schema';
+import { EDGES, onFace } from '../boards/schema';
 import type { BoardPlacement, Rotation } from '../boards/placement';
 import { boardOf, pinsDown, undersideOf } from '../boards/placement';
 import type { Dims } from './face';
@@ -22,7 +22,7 @@ import type { ShapeState } from './shape';
 import { SIZE_MIN, SIZE_MAX, plateOf, shapeSpec } from './shape';
 import { effectiveRadii } from './loft';
 import type { Affine } from './surface';
-import { applyAffine } from './surface';
+import { applyAffine, rotateVec } from './surface';
 
 /** Smallest cavity the case keeps when there is nothing inside to size it by. */
 export const INNER_MIN: Dims = { w: 16, d: 16, h: 10 };
@@ -62,6 +62,25 @@ export interface LayoutInput {
   boards: readonly BoardPlacement[];
 }
 
+/** A board against a case wall: which wall, which of its edges faces it, where the inner wall goes. */
+export interface PlacedWall {
+  /** the case wall, case frame */
+  side: Edge;
+  /** the board's own edge that faces it, board frame */
+  edge: Edge;
+  /** where this board puts the inner wall: x for left / right, y for front / back */
+  line: number;
+  /** how much deeper than asked its connectors sit (they are shorter than the wall), mm */
+  recessed: number;
+  /** the edge has connectors at all */
+  ports: boolean;
+  /** the wall really is there: another board did not push it further out */
+  against: boolean;
+}
+
+/** The least room between a board edge and the wall it stands against, mm. */
+export const WALL_GAP = 0.3;
+
 export interface PlacedBoard {
   index: number;
   def: BoardDef;
@@ -78,6 +97,8 @@ export interface PlacedBoard {
   zTop: number;
   /** bottom of the lowest part under the board */
   zBottom: number;
+  /** the walls it stands against: those asked for that can be (not on a cylinder, a rail edge, the side lid's face) */
+  walls: PlacedWall[];
 }
 
 export interface CaseLayout {
@@ -138,6 +159,25 @@ function edgeReach(def: BoardDef): Record<Edge, number> {
   return reach;
 }
 
+/** A wall a placed board stands against, if it can: see PlacedWall. */
+function wallOf(input: LayoutInput, def: BoardDef, placement: BoardPlacement, toCase: Affine, outline: Rect, side: Edge): PlacedWall | null {
+  if (input.shape.kind === 'cylinder' || input.lid.face === side) return null;
+  const [wx, wy] = edgeNormal(side);
+  const edge = EDGES.find((one) => {
+    const n = rotateVec(toCase, [...edgeNormal(one), 0]);
+    return Math.abs(n[0] - wx) < 1e-9 && Math.abs(n[1] - wy) < 1e-9;
+  });
+  if (!edge || (def.mount.kind === 'rails' && railEdges(def).includes(edge))) return null;
+  const onEdge = def.ports.filter((port) => port.edge === edge);
+  const protrude = Math.max(0, ...onEdge.map((port) => (onFace(port) ? 0 : port.protrude)));
+  // the inner wall goes beyond the board edge by what the connectors stick out, less the wall and the offset
+  const wanted = protrude - (placement.wallOffset ?? 0) - input.shape.wall;
+  const reach = Math.max(wanted, WALL_GAP);
+  const sign = side === 'right' || side === 'back' ? 1 : -1;
+  const at = side === 'right' ? outline.x1 : side === 'left' ? outline.x0 : side === 'back' ? outline.y1 : outline.y0;
+  return { side, edge, line: at + sign * reach, recessed: reach - wanted, ports: onEdge.length > 0, against: true };
+}
+
 function place(input: LayoutInput, offsetX: number, offsetY: number): PlacedBoard[] {
   return input.boards.map((placement, index) => {
     const def = boardOf(placement);
@@ -149,16 +189,18 @@ function place(input: LayoutInput, offsetX: number, offsetY: number): PlacedBoar
       return [p[0], p[1]];
     };
     const reach = edgeReach(def);
+    const outline = rectOf([corner(0, 0), corner(w, d)]);
     return {
       index,
       def,
       placement,
       toCase,
-      outline: rectOf([corner(0, 0), corner(w, d)]),
+      outline,
       footprint: rectOf([corner(-reach.left, -reach.front), corner(w + reach.right, d + reach.back)]),
       z0,
       zTop: z0 + def.size.t + def.topHeight,
       zBottom: z0 - undersideOf(def, pinsDown(def, placement)),
+      walls: (placement.walls ?? []).flatMap((side) => wallOf(input, def, placement, toCase, outline, side) ?? []),
     };
   });
 }
@@ -204,16 +246,49 @@ export function lidBand(lid: LidState, shape: ShapeState): { x0: number; x1: num
   };
 }
 
+/**
+ * The cavity the boards need, layout frame (the lid's band not included):
+ * their footprints and the side margin — except where a board stands
+ * against a wall, which puts the inner wall at its line. `fixed` says which
+ * sides a board holds.
+ */
+function cavityOf(input: LayoutInput, placed: readonly PlacedBoard[]): (Rect & { fixed: Record<Edge, boolean> }) | null {
+  if (placed.length === 0) return null;
+  const margin = sideMargin(input.shape, input.lid);
+  const fixed: Record<Edge, boolean> = { left: false, right: false, front: false, back: false };
+  const sideOf = (board: PlacedBoard, side: Edge, free: number): number => {
+    const wall = board.walls.find((one) => one.side === side);
+    if (!wall) return free;
+    fixed[side] = true;
+    return wall.line;
+  };
+  const { footprint: f0 } = placed[0];
+  const cavity = { x0: f0.x0, x1: f0.x1, y0: f0.y0, y1: f0.y1 };
+  placed.forEach((board, i) => {
+    const f = board.footprint;
+    const x0 = sideOf(board, 'left', f.x0 - margin);
+    const x1 = sideOf(board, 'right', f.x1 + margin);
+    const y0 = sideOf(board, 'front', f.y0 - margin);
+    const y1 = sideOf(board, 'back', f.y1 + margin);
+    cavity.x0 = i === 0 ? x0 : Math.min(cavity.x0, x0);
+    cavity.x1 = i === 0 ? x1 : Math.max(cavity.x1, x1);
+    cavity.y0 = i === 0 ? y0 : Math.min(cavity.y0, y0);
+    cavity.y1 = i === 0 ? y1 : Math.max(cavity.y1, y1);
+  });
+  return { ...cavity, fixed };
+}
+
 /** The minimum outer size: the cavity the boards need plus walls, floor and ceiling. */
 export function minimumDims(input: LayoutInput): Dims {
   const { shape } = input;
   const placed = place(input, 0, 0);
   const box = union(placed.map((board) => board.footprint));
+  const cavity = cavityOf(input, placed);
   const margin = sideMargin(shape, input.lid);
   const top = Math.max(0, ...placed.map((board) => board.zTop - shape.floor));
   const band = lidBand(input.lid, input.shape);
-  let innerW = Math.max(INNER_MIN.w, box ? box.x1 - box.x0 + 2 * margin + band.x0 + band.x1 : 0);
-  let innerD = Math.max(INNER_MIN.d, box ? box.y1 - box.y0 + 2 * margin + band.y0 + band.y1 : 0);
+  let innerW = Math.max(INNER_MIN.w, cavity ? cavity.x1 - cavity.x0 + band.x0 + band.x1 : 0);
+  let innerD = Math.max(INNER_MIN.d, cavity ? cavity.y1 - cavity.y0 + band.y0 + band.y1 : 0);
   const innerH = Math.max(INNER_MIN.h, placed.length > 0 ? top + shape.margin.top : 0);
   if (shape.kind === 'cylinder') {
     const diameter = box ? Math.hypot(box.x1 - box.x0, box.y1 - box.y0) + 2 * margin : 0;
@@ -244,13 +319,26 @@ export function caseLayout(input: LayoutInput): CaseLayout {
   };
   if (shape.kind === 'cylinder') dims = { ...dims, d: dims.w };
 
-  const raw = place(input, 0, 0);
-  const box = union(raw.map((board) => board.footprint));
-  // centred in what is left of the cavity once the lid's band is taken off
+  const cavity = cavityOf(input, place(input, 0, 0));
+  // centred in what is left of the cavity once the lid's band is taken off —
+  // or against the wall a board stands against
   const band = lidBand(input.lid, input.shape);
-  const offsetX = box ? (dims.w + band.x0 - band.x1) / 2 - (box.x0 + box.x1) / 2 : 0;
-  const offsetY = box ? (dims.d + band.y0 - band.y1) / 2 - (box.y0 + box.y1) / 2 : 0;
-  const boards = place(input, offsetX, offsetY);
+  const { wall } = shape;
+  const offsetX = !cavity ? 0
+    : cavity.fixed.left ? wall + band.x0 - cavity.x0
+      : cavity.fixed.right ? dims.w - wall - band.x1 - cavity.x1
+        : (dims.w + band.x0 - band.x1) / 2 - (cavity.x0 + cavity.x1) / 2;
+  const offsetY = !cavity ? 0
+    : cavity.fixed.front ? wall + band.y0 - cavity.y0
+      : cavity.fixed.back ? dims.d - wall - band.y1 - cavity.y1
+        : (dims.d + band.y0 - band.y1) / 2 - (cavity.y0 + cavity.y1) / 2;
+  const inner: Record<Edge, number> = {
+    left: wall + band.x0, right: dims.w - wall - band.x1, front: wall + band.y0, back: dims.d - wall - band.y1,
+  };
+  const boards = place(input, offsetX, offsetY).map((board): PlacedBoard => ({
+    ...board,
+    walls: board.walls.map((wall) => ({ ...wall, against: Math.abs(wall.line - inner[wall.side]) < 1e-6 })),
+  }));
 
   let frontH = shape.console.frontH;
   let backH = shape.console.backH;
@@ -343,6 +431,12 @@ export function collisions(layout: CaseLayout): Message[] {
     }
   }
   for (const board of boards) {
+    for (const wall of board.walls) {
+      if (!wall.against) out.push({ code: 'warn.notAgainstWall', params: { board: board.index + 1 } });
+      else if (wall.ports && wall.recessed > 0.05) {
+        out.push({ code: 'info.portsRecessed', params: { board: board.index + 1, mm: wall.recessed.toFixed(1) } });
+      }
+    }
     for (const port of board.def.ports) {
       if (port.edge === 'bottom' && bottomPartOnSupport(board, port)) {
         out.push({ code: 'warn.bottomPartOnSupport', params: { board: board.index + 1, port: port.id } });

@@ -194,6 +194,12 @@ freely; a temporary script that turns out useful becomes a permanent one.
   and a rail on a pinned edge is the **pin bed** (`pinBedProfile`): one
   extruded profile, no lower lip, a shelf under the header's plastic with a
   slot for the pins.
+- A board against walls (`placement.walls`, case frame; `PlacedBoard.walls`):
+  on each such side the board, not the margin, sets the inner wall
+  (`cavityOf`): its most protruding connector on the facing edge ends at the
+  outer surface + `wallOffset`, never closer than `WALL_GAP` to the inner
+  wall; the layout aligns to that side instead of centring. Its edge ports'
+  channels start at the board edge, since their bodies sit in the wall.
 - Nut slots point towards the board's centre: pointing outwards they cut the
   wall next to a corner standoff.
 - Cutters get a few microns of different growth each (`cut.ts`,
@@ -324,7 +330,7 @@ Boards: `#boardAdd` opens `#boardPicker` (`#boardSearch`, rows
 per board
 `#board<i>_x|_y|_z`, alignment (two boards or more) `#board<i>_align`
 (details), `#board<i>_alignRef`,
-`#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_screw`,
+`#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_wall_front|back|left|right` (toggles; not on a cylinder), `#board<i>_wallOffset`, `#board<i>_screw`,
 `#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), `#board<i>_remove`, port toggles
 `#board<i>_cut_<portId>`.
 Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHeight|_bottomHeight`,

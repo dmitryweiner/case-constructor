@@ -5,8 +5,8 @@
 
 import type { FastenerSpec } from '../geo/fasteners';
 import { sanitizeFastener } from '../geo/fasteners';
-import type { BoardDef } from './schema';
-import { bottomPartsH, resolveVariant, sanitizeBoard } from './schema';
+import type { BoardDef, Edge } from './schema';
+import { EDGES, bottomPartsH, resolveVariant, sanitizeBoard } from './schema';
 import { CATALOG, catalogBoard } from './catalog';
 
 export const ROTATIONS = [0, 90, 180, 270] as const;
@@ -30,11 +30,18 @@ export interface BoardPlacement {
   pins?: boolean;
   /** entries with variants only: which model */
   variant?: string;
+  /** the case walls the board stands against (case frame): its connectors on those sides end at the outer surface */
+  walls?: Edge[];
+  /** with walls: the connector faces beyond the outer surface, mm (negative: recessed) */
+  wallOffset?: number;
 }
 
 export const MAX_BOARDS = 8;
 export const POSITION_MAX = 300;
 export const Z_MAX = 60;
+/** How far a board's connectors may stand out of (or sit back in) the wall it stands against, mm. */
+export const WALL_OFFSET_MIN = -10;
+export const WALL_OFFSET_MAX = 3;
 /** Gap between a new board and the ones already placed, mm. */
 export const NEW_BOARD_GAP = 5;
 
@@ -114,6 +121,8 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
   const rot: unknown = Reflect.get(r, 'rot');
   const pinsRaw: unknown = Reflect.get(r, 'pins');
   const pins = def.pins ? (typeof pinsRaw === 'boolean' ? pinsRaw : def.pins.soldered) : false;
+  const wallsRaw: unknown = Reflect.get(r, 'walls');
+  const walls = Array.isArray(wallsRaw) ? EDGES.filter((edge) => wallsRaw.includes(edge)) : [];
   return {
     board: custom ? 'custom' : def.id,
     ...(custom ? { custom: { ...custom, id: 'custom' } } : {}),
@@ -125,6 +134,7 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
     cuts,
     ...(def.pins ? { pins } : {}),
     ...(variant !== undefined ? { variant } : {}),
+    ...(walls.length > 0 ? { walls, wallOffset: num(Reflect.get(r, 'wallOffset'), WALL_OFFSET_MIN, WALL_OFFSET_MAX, 0) } : {}),
   };
 }
 

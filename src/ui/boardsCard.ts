@@ -9,9 +9,11 @@ import type { Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';
 import type { BoardPlacement } from '../boards/placement';
-import { NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, Z_MAX, boardOf, entryOf, pinsDown, placementMinZ, portCut, withPortCut } from '../boards/placement';
+import { NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, WALL_OFFSET_MAX, WALL_OFFSET_MIN, Z_MAX, boardOf, entryOf, pinsDown, placementMinZ, portCut, withPortCut } from '../boards/placement';
 import type { BoardDef } from '../boards/schema';
+import { EDGES } from '../boards/schema';
 import type { Align, ArrangeMode } from '../geo/arrange';
+import { caseLayout } from '../geo/layout';
 import { ALIGN_X, ALIGN_Y, ARRANGE_MODES, alignBoard, arrangeBoards } from '../geo/arrange';
 import type { Key } from '../i18n';
 import { tDynamic } from '../i18n';
@@ -19,6 +21,14 @@ import type { CustomEditorHandle } from './customBoard';
 import { customSignature, renderCustomEditor } from './customBoard';
 import { HOLE_KINDS, SCREW_SIZES } from '../geo/fasteners';
 import type { AppState } from '../state/schema';
+
+/** Whether the board could stand against this wall of the case (the layout would keep it). */
+function wallPossible(state: AppState, index: number, side: string): boolean {
+  const wall = EDGES.find((edge) => edge === side);
+  if (!wall) return false;
+  const boards = state.boards.map((one, i) => (i === index ? { ...one, walls: [wall] } : one));
+  return (caseLayout({ ...state, boards }).boards[index]?.walls.length ?? 0) > 0;
+}
 
 function patchBoard(state: AppState, index: number, patch: Partial<BoardPlacement>): AppState {
   return { ...state, boards: state.boards.map((board, i) => (i === index ? { ...board, ...patch } : board)) };
@@ -69,6 +79,30 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       options: ROTATIONS.map((rot) => ({ value: String(rot), text: `${rot}°` })),
       get: (state) => String(at(state).rot),
       set: (state, value) => patchBoard(state, index, { rot: ROTATIONS.find((rot) => String(rot) === value) ?? 0 }),
+    },
+    {
+      kind: 'toggles', key: 'wall', label: 'board.wall', hint: 'board.wall.hint',
+      when: (state) => state.shape.kind !== 'cylinder',
+      options: EDGES.map((edge) => ({ value: edge, label: `face.${edge}` as const })),
+      // a wall the board cannot stand against: the side lid's face, a rail edge
+      optionDisabled: (state, value) => !(at(state).walls ?? []).some((wall) => wall === value) && !wallPossible(state, index, value),
+      get: (state) => at(state).walls ?? [],
+      set: (state, values) => {
+        const walls = EDGES.filter((edge) => values.includes(edge));
+        const placement: BoardPlacement = { ...at(state), walls, wallOffset: at(state).wallOffset ?? 0 };
+        if (walls.length === 0) {
+          delete placement.walls;
+          delete placement.wallOffset;
+        }
+        return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
+      },
+    },
+    {
+      kind: 'range', key: 'wallOffset', label: 'board.wallOffset', hint: 'board.wallOffset.hint',
+      min: WALL_OFFSET_MIN, max: WALL_OFFSET_MAX, step: 0.1,
+      when: (state) => state.shape.kind !== 'cylinder' && (at(state).walls ?? []).length > 0,
+      get: (state) => at(state).wallOffset ?? 0,
+      set: (state, value) => patchBoard(state, index, { wallOffset: value }),
     },
     {
       kind: 'select', key: 'screw', label: 'board.screw', when: holes,
