@@ -1,6 +1,6 @@
 # Case Constructor — improvements after the user trial
 
-**Status: agreed with the user (2026-10-25), in progress.**
+**Status: done except the thread form (R4), which waits for the user's test print of `inspect.mjs --thread-test`.**
 
 Written on 2026-10-25 from the notes of a trial of the live site with real
 users (the draft `REVIEW-RESULTS.md`, deleted once this plan is agreed).
