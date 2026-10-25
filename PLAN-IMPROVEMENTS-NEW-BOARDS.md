@@ -174,27 +174,45 @@ The overhang workaround stays. Write it into the add-board skill.
   Dragon Q6A.
 - **Eagle `.brd` and KiCad `.kicad_pcb`** — Adafruit Feather, CM5 IO Board.
 
-The agents wrote temporary readers in the session's scratchpad (gone with
-the session). For two of them they installed packages there without asking
-the user: `ezdxf` (pip, in a venv) and `occt-import-js` (npm).
+The agents wrote temporary readers. The ones that need no packages are kept
+in `scripts/proto/` (its README says which board each was used for). For
+two jobs the agents installed packages in the scratchpad without asking the
+user:
+- **`ezdxf` (pip, in a venv):** to expand INSERT blocks.
+- **`occt-import-js` (npm):** to triangulate STEP models.
 
-**Plan.** Extend the existing scripts and keep everything in Node. **Every
-new dependency needs the user's explicit approval first** (agents included),
-recorded here:
-- `dxf.mjs`: expand INSERT blocks (with their transform). With `--boxes`,
-  print the block name per component (Allegro and Radxa write the package
-  name there: `TYPEC`, `CON_HDMI`, `USB3_TH18`…).
-- `dxf.mjs file.pdf`: read a vector PDF through `pdftocairo -svg` (poppler
-  is already used), correct its scale against a known dimension (`--scale`
-  or `--fit w,d`), and treat its paths as polylines.
-- `scripts/step.mjs` (new): the bounding box of every part of a STEP
-  assembly, mapped into the board frame (`--flip`, `--rotate`). It needs a
-  STEP reader (`occt-import-js`, a dev dependency of about 10 MB of WASM);
-  ask first. The 79 MB Creo export of the ROCK 5B+ gave 0 triangles with
-  it. Note that as a known limit.
-- `board.mjs --brd <file>` / `--kicad <file>`: list the footprints with
-  their positions (both are text formats, no dependency needed).
-- The add-board skill gets a section "which tool for which drawing".
+Neither is needed.
+- **INSERT expansion** is a block definition placed with a translation,
+  rotation and scale, nested.
+- **STEP is a text format.** `scripts/proto/stepbox.py` walks the assembly's
+  placements and reads part boxes and circles (holes) with the standard
+  library. Other agents used the same approach for the Orange Pi 5 Plus,
+  XIAO and Waveshare Zero.
+
+**Plan.** Extend the existing scripts and keep everything in Node, with **no
+new dependencies**: only the standard library and `pdftocairo` (poppler is
+already used). A dependency is added only with the user's explicit approval
+(agents included), and it is recorded here. Rewrite each prototype, then
+delete it from `scripts/proto/`:
+- **`dxf.mjs`: expand INSERT blocks** (nested, with their transform). With
+  `--boxes`, print the block name per component: Allegro and Radxa write
+  the package name there (`TYPEC`, `CON_HDMI`, `USB3_TH18`…).
+- **`dxf.mjs file.pdf`: read a vector PDF.** Go through `pdftocairo -svg`,
+  correct the scale against a known dimension (`--scale` or `--fit w,d`),
+  and treat its subpaths as polylines and circles. The prototypes are
+  `proto/pdfboxes.mjs` (boxes of every subpath, as for the ROCK 5B) and
+  `proto/svg2dxf.py` (SVG → DXF, as for the Orange Pi 5 Max / Pro).
+- **`scripts/step.mjs` (new): the bounding box of every part of a STEP
+  assembly**, mapped into the board frame (`--flip`, `--rotate`). It also
+  lists the circles of a part (hole candidates, as `dxf.mjs` does), from
+  the text parser of `proto/stepbox.py`. Known limit to check: the 79 MB
+  Creo export of the ROCK 5B+. A STEP kernel (`occt-import-js`, about
+  10 MB of WASM) comes in only with the user's approval, and only if a real
+  file defeats the text parser.
+- **`board.mjs --brd <file>` / `--kicad <file>`: list the footprints** with
+  their positions, in the board frame. The prototypes are `proto/brd.py`
+  and `proto/kpcb.py`.
+- **The add-board skill** gets a section "which tool for which drawing".
 
 **Tests.** A tiny fixture per format in `tests/fixtures/` (a block DXF, a
 one-page vector PDF, a two-part STEP), each read back to known boxes.

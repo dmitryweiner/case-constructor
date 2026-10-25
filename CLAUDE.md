@@ -89,6 +89,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   rails. Old-style POLYLINE/VERTEX (Allegro) is read; blocks (INSERT) are
   not expanded.
 - Adding a board: the skill `.claude/skills/add-board/SKILL.md`.
+- `scripts/proto/` — prototype drawing readers (STEP, vector PDF, KiCad,
+  Eagle) waiting to be rewritten as permanent scripts
+  (`PLAN-IMPROVEMENTS-NEW-BOARDS.md`, B7). Not wired into npm or the tests.
+  No new dependencies without the user's explicit approval, subagents
+  included.
 - `scripts/lib/harness.mjs` — flags, a vite server on ports 5273 / 4273
   (not ClayForm's), console error collection, CPU throttle, browser locale.
   `CASE_BROWSER` overrides the chromium executable.
