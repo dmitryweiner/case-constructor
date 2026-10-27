@@ -243,6 +243,10 @@ const STATES: Record<string, AppState> = {
     shape: { ...defaultState().shape, kind: 'console', console: { frontH: 20, backH: 40 } },
     lid: { ...defaultState().lid, face: 'bottom', fastening: 'screws' },
     boards: [{ board: 'custom', custom: { ...KEYPAD, id: 'custom' }, on: 'ceiling', z: 0.3, mount: { size: 'M3', hole: 'insert' } }],
+  }),  // K3: one chamfered window over the keys (the holes are the keypad's default)
+  'keypad-window-top-lid': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'custom', custom: { ...KEYPAD, id: 'custom' }, on: 'ceiling', z: 0.3, keys: 'window', keyFit: 1, mount: { size: 'M3', hole: 'tap' } }],
   }),
 };
 

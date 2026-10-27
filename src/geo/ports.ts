@@ -8,8 +8,8 @@
 // it up through the ceiling; a part on the underside, a column from just
 // below it down through the floor.
 
-import type { PortDef } from '../boards/schema';
-import { keyFields, onFace } from '../boards/schema';
+import type { PortDef, TopPort } from '../boards/schema';
+import { keyFields, keysOf, onFace } from '../boards/schema';
 import { keysOpen, portCut } from '../boards/placement';
 import type { CutterSpec, ExtraCut } from './cutters';
 import { VERTICAL_AXES, flareAt, horizontalAxes } from './cutters';
@@ -73,6 +73,22 @@ export function portAxis(board: PlacedBoard, port: PortDef & { edge: 'front' | '
   return { face, dir: [dir[0], dir[1]] };
 }
 
+/** The thinnest web the lid may keep between two keys' holes, mm. */
+export const KEY_WEB = 0.8;
+
+/**
+ * What a port opens: itself, or — a key field — its window or a hole per
+ * key, each grown by the placement's key fit. A window over keys is
+ * chamfered as a display's is; a key's hole is not (an MX switch clips into
+ * a straight one).
+ */
+function openingsOf(board: PlacedBoard, port: PortDef): { port: PortDef; window: boolean }[] {
+  if (port.type !== 'keys' || !onFace(port) || port.edge !== 'top') return [{ port, window: port.type === 'display' }];
+  const clearance = board.placement.keyFit ?? port.clearance;
+  if (keysOpen(board.def, board.placement) === 'window' || !port.rows) return [{ port: { ...port, clearance }, window: true }];
+  return keysOf(port).map((key) => ({ port: { ...port, ...key, clearance }, window: false }));
+}
+
 export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[] {
   const { dims } = layout;
   const reach = Math.hypot(dims.w, dims.d) + 5;
@@ -83,12 +99,12 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
     const up = rotateVec(board.toCase, [0, 0, 1]);
     // a board on the console's slope: its openings follow its own axes
     const tilted = Math.abs(up[2] - 1) > 1e-9;
-    for (const port of board.def.ports) {
-      if (!portCut(board.placement, port.id, port.cut)) continue;
+    for (const opening of board.def.ports.flatMap((port) => (portCut(board.placement, port.id, port.cut) ? openingsOf(board, port) : []))) {
+      const { port, window } = opening;
       const source = { kind: 'port' as const, board: board.index, port: port.id };
       const section = sectionOf(port);
       if (tilted) {
-        out.push(tiltedCutter(board, port, section, shape, dims, reach, source));
+        out.push(tiltedCutter(board, port, window, section, shape, dims, reach, source));
         continue;
       }
       if (onFace(port)) {
@@ -102,7 +118,7 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
           : [-1, Math.max(board.z0 - port.h - COLUMN_GAP, shape.floor + 0.2)];
         // a hung display's window widens 45° outwards from the inside of the top
         // (or a carried display's, under a flat top)
-        const bevel = (board.hung || board.gap !== undefined) && port.type === 'display' && port.edge === 'top' && board.placement.bevel !== false;
+        const bevel = (board.hung || board.gap !== undefined) && window && port.edge === 'top' && board.placement.bevel !== false;
         const flare = bevel ? { flare: { from: ceiling(cx, cy), rate: WINDOW_FLARE } } : {};
         out.push({ origin: [cx, cy, 0], ...VERTICAL_AXES, s0, s1, ...section, w, h, ...flare, source });
       } else {
@@ -123,7 +139,7 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
  * channel along its edge's normal, tilted with the board.
  */
 function tiltedCutter(
-  board: PlacedBoard, port: PortDef, section: ReturnType<typeof sectionOf>, shape: ShapeState, dims: Dims, reach: number,
+  board: PlacedBoard, port: PortDef, window: boolean, section: ReturnType<typeof sectionOf>, shape: ShapeState, dims: Dims, reach: number,
   source: CutterSpec['source'],
 ): CutterSpec {
   const plate = shape.floor;
@@ -143,7 +159,7 @@ function tiltedCutter(
     if (!frame) return { origin, ex: axis([1, 0, 0]), ey: axis([0, 1, 0]), ez: axis([0, 0, 1]), s0: port.h + COLUMN_GAP, s1: reach, ...section, w, h, source };
     // how far the plate's inside is above the PCB along the normal (the board is parallel to it)
     const inside = -plate - applyAffine(invertRigid(frame), origin)[2];
-    const bevel = port.type === 'display' && board.placement.bevel !== false ? { flare: { from: inside, rate: WINDOW_FLARE } } : {};
+    const bevel = window && board.placement.bevel !== false ? { flare: { from: inside, rate: WINDOW_FLARE } } : {};
     return {
       origin, ex: axis([1, 0, 0]), ey: axis([0, 1, 0]), ez: axis([0, 0, 1]),
       s0: Math.min(port.h + COLUMN_GAP, inside - 0.2), s1: inside + plate + 1, ...section, w, h, ...bevel, source,
@@ -278,6 +294,22 @@ export function cutWarnings(
   return out;
 }
 
+/** The thinnest web between two neighbouring keys' holes, each grown by `fit` (negative: they run into each other), mm. */
+export function thinnestWeb(field: Pick<TopPort, 'rows'>, fit: number): number {
+  const keys = keysOf(field);
+  let thinnest = Infinity;
+  for (let i = 0; i < keys.length; i++) {
+    for (let j = i + 1; j < keys.length; j++) {
+      const [a, b] = [keys[i], keys[j]];
+      const gx = Math.abs(a.x - b.x) - (a.w + b.w) / 2 - 2 * fit;
+      const gy = Math.abs(a.y - b.y) - (a.d + b.d) / 2 - 2 * fit;
+      // side by side the web is the larger gap; diagonally both are open
+      thinnest = Math.min(thinnest, Math.max(gx, gy));
+    }
+  }
+  return thinnest;
+}
+
 /**
  * How far a key field's tops stand out of the plate over it (negative: under
  * its face), along the board's normal, mm: in the plate's frame for a hung
@@ -305,6 +337,8 @@ export function keyNotes(layout: CaseLayout, shape: ShapeState): Message[] {
       const params = { ...boardParams(board), port: field.id, portType: field.type, mm: Math.abs(proud).toFixed(1) };
       const code = proud >= -0.05 ? 'info.keysProud' : keysOpen(board.def, board.placement) === 'holes' ? 'warn.keysUnderFace' : 'info.keysSunk';
       out.push({ code, params: proud >= -0.05 ? { ...params, mm: Math.max(0, proud).toFixed(1) } : params, spot });
+      const web = keysOpen(board.def, board.placement) === 'holes' ? thinnestWeb(field, board.placement.keyFit ?? field.clearance) : Infinity;
+      if (web < KEY_WEB - 1e-9) out.push({ code: 'warn.keyWebThin', params: { ...params, mm: Math.max(0, web).toFixed(1), min: KEY_WEB }, spot });
     }
   }
   return out;

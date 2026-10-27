@@ -867,7 +867,7 @@
   "keypad-hung-top-lid": {
     "body": {
       "triangles": 2048,
-      "volume": 28132.57,
+      "volume": 28132.49,
       "extents": [
         80.6,
         100.6,
@@ -875,8 +875,8 @@
       ]
     },
     "lid": {
-      "triangles": 2494,
-      "volume": 8469.91,
+      "triangles": 4076,
+      "volume": 12018.52,
       "extents": [
         80.6,
         100.6,
@@ -886,8 +886,8 @@
   },
   "keypad-console-slope": {
     "body": {
-      "triangles": 3260,
-      "volume": 27301.48,
+      "triangles": 4908,
+      "volume": 30855.54,
       "extents": [
         81.8,
         100.6,
@@ -901,6 +901,26 @@
         81.8,
         100.6,
         5
+      ]
+    }
+  },
+  "keypad-window-top-lid": {
+    "body": {
+      "triangles": 808,
+      "volume": 23081.13,
+      "extents": [
+        72,
+        92,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 2084,
+      "volume": 4724.05,
+      "extents": [
+        72,
+        92,
+        6.3
       ]
     }
   }

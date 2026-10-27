@@ -30,6 +30,7 @@ export type MessageCode =
   | 'info.keysProud'
   | 'info.keysSunk'
   | 'warn.keysUnderFace'
+  | 'warn.keyWebThin'
   // cutouts (ports)
   | 'warn.portFar'
   | 'info.cutSplit'

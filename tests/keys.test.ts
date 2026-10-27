@@ -10,7 +10,7 @@ import type { CsgApi } from '../src/geo/csg';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, collisions } from '../src/geo/layout';
 import type { Message } from '../src/geo/message';
-import { keyNotes, keysProud } from '../src/geo/ports';
+import { WINDOW_FLARE, keyNotes, keysProud, portCutters, thinnestWeb } from '../src/geo/ports';
 import { validateMesh } from '../src/geo/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
@@ -184,6 +184,68 @@ describe('a keyboard hung from the lid (K2)', () => {
 
   it('builds closed and sliver-free under a top lid', () => {
     const built = buildCase(csg, state(), 8);
+    for (const mesh of [built.body, built.lid]) {
+      const report = validateMesh(mesh);
+      expect(report.watertight).toBe(true);
+      expect(report.degenerateTriangles).toBe(0);
+    }
+  });
+});
+
+describe('openings over the keys (K3)', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+
+  const keypad = { ...sanitizeBoard(KEYPAD), id: 'custom' };
+  function state(board: Record<string, unknown> = {}, patch: Partial<AppState> = {}): AppState {
+    return sanitizeState({
+      ...defaultState(), ...patch,
+      boards: [{ ...defaultPlacement(keypad), board: 'custom', custom: keypad, mount: { size: 'M3', hole: 'tap' }, ...board }],
+    });
+  }
+  const keyCutters = (s: AppState) => {
+    const layout = caseLayout(s);
+    return portCutters(layout, { ...s.shape, console: layout.console }).filter((cutter) => cutter.source.kind === 'port' && cutter.source.port === 'keys');
+  };
+
+  it('a hole per key, the key grown by the fit, straight; or one chamfered window', () => {
+    const holes = keyCutters(state());
+    expect(holes).toHaveLength(12);
+    expect(holes.every((cutter) => cutter.flare === undefined)).toBe(true);
+    expect(holes[0]).toMatchObject({ w: 14 + 2 * 0.5, h: 14 + 2 * 0.5 });
+    expect(keyCutters(state({ keyFit: 2.25 }))[0]).toMatchObject({ w: 18.5, h: 18.5 });
+    const window = keyCutters(state({ keys: 'window' }));
+    expect(window).toHaveLength(1);
+    expect(window[0]).toMatchObject({ w: 57.15 + 1, h: 76.2 + 1, flare: { rate: WINDOW_FLARE } });
+    expect(keyCutters(state({ keys: 'window', bevel: false }))[0].flare).toBeUndefined();
+    expect(keyCutters(state({ cuts: { keys: false } }))).toEqual([]);
+  });
+
+  it('turned on the slope, the holes follow the board', () => {
+    const s = state({}, { shape: { ...defaultState().shape, kind: 'console' }, lid: { ...defaultState().lid, face: 'bottom' } });
+    const holes = keyCutters(s);
+    expect(holes).toHaveLength(12);
+    expect(holes[0].ez[2]).toBeLessThan(1 - 1e-6);
+  });
+
+  it('a web thinner than KEY_WEB between two holes is a warning', () => {
+    expect(thinnestWeb(keyFields(keypad)[0], 0.5)).toBeCloseTo(19.05 - 14 - 1, 6);
+    const notes = (s: AppState): string[] => {
+      const layout = caseLayout(s);
+      return keyNotes(layout, { ...s.shape, console: layout.console }).map((note) => note.code);
+    };
+    expect(notes(state())).not.toContain('warn.keyWebThin');
+    expect(notes(state({ keyFit: 2.25 }))).toContain('warn.keyWebThin');
+    expect(notes(state({ keyFit: 2.25, keys: 'window' }))).not.toContain('warn.keyWebThin');
+  });
+
+  it.each([['holes', {}], ['window', { keys: 'window' }], ['slope', { shape: 'console' }]])('builds closed and sliver-free: %s', (_name, patch) => {
+    const s = 'shape' in patch
+      ? state({}, { shape: { ...defaultState().shape, kind: 'console' }, lid: { ...defaultState().lid, face: 'bottom' } })
+      : state(patch);
+    const built = buildCase(csg, s, 8);
     for (const mesh of [built.body, built.lid]) {
       const report = validateMesh(mesh);
       expect(report.watertight).toBe(true);

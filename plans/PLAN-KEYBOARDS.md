@@ -218,3 +218,8 @@ golden states, smoke steps, docs and translations.
   lip covers `RAIL_GRIP` (1.5 mm) of the PCB's top, and the check already
   reports a key on it. The smoke steps come with the first catalog
   keyboard (K6a): a custom board cannot carry rows.
+- **K3.** The fit slider (`#board<i>_keyFit`) is for the window and the
+  holes alike, 0.05 mm steps. A key's hole keeps the port's rounded corner
+  (`min(1.5, fit)`), like every rectangular opening. Golden: the two K2
+  keypad states moved with it (holes are the keypad's default), one state
+  added for the window.
