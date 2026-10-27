@@ -199,6 +199,13 @@ const STATES: Record<string, AppState> = {
     shape: { ...defaultState().shape, kind: 'cylinder' },
     boards: [{ board: 'lcdwiki-msp1281', on: 'ceiling', z: 0.3, mount: { size: 'M2', hole: 'tap' } }],
   }),
+  // D4: a display on the console's slope
+  'msp3520-console-slope': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'console', console: { frontH: 20, backH: 40 } },
+    lid: { ...defaultState().lid, face: 'bottom', fastening: 'screws' },
+    boards: [{ board: 'lcdwiki-msp3520', on: 'ceiling', z: 0.3, rot: 90, mount: { size: 'M3', hole: 'insert' } }],
+  }),
   'lcd1602-box': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'lcd-1602-i2c', on: 'ceiling', z: 0.3, mount: { size: 'M2.5', hole: 'nut' } }],

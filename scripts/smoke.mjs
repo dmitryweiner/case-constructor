@@ -164,18 +164,21 @@ label('captions');
 await expectWatertight('captions:shown');
 const captions = await page.evaluate(() => window.__case.captions());
 if (captions.length < 4) errors.push(`[captions] only ${captions.length} port captions shown`);
-const usbC = captions.find((caption) => caption.key === '0:usb-c');
-if (!usbC) errors.push(`[captions] no USB-C caption: ${captions.map((caption) => caption.key)}`);
+// USB-C when it shows; the camera keeps its distance from earlier steps, and an overlapped caption hides
+const target = captions.find((caption) => caption.key === '0:usb-c') ?? captions[0];
+if (!target) errors.push('[captions] no caption to click');
 else {
+  const portId = target.key.slice(target.key.indexOf(':') + 1);
+  // read from the state: the card's checkbox may be mid-rebuild; a port at its default has no entry
+  const portCutNow = () => page.evaluate((id) => window.__case.state().boards[0].cuts[id] ?? 'default', portId);
+  const before = await portCutNow();
   const viewBox = await page.locator('#view').boundingBox();
-  await page.mouse.click(viewBox.x + usbC.x, viewBox.y + usbC.y);
-  await expectWatertight('captions:usb-c-off');
-  // read from the state: the card's checkbox may be mid-rebuild
-  const usbCut = () => page.evaluate(() => window.__case.state().boards[0].cuts['usb-c'] ?? true);
-  if (await usbCut()) errors.push('[captions] a click on the USB-C caption left its opening on');
+  await page.mouse.click(viewBox.x + target.x, viewBox.y + target.y);
+  await expectWatertight('captions:port-toggled');
+  if ((await portCutNow()) === before) errors.push(`[captions] a click on the ${portId} caption left its opening as it was`);
   await page.click('#undoBtn');
   await expectWatertight('captions:undo');
-  if (!(await usbCut())) errors.push('[captions] undo did not bring the USB-C opening back');
+  if ((await portCutNow()) !== before) errors.push(`[captions] undo did not bring the ${portId} opening back`);
 }
 await page.uncheck('#viewPortNames');
 await page.waitForTimeout(150);
@@ -266,6 +269,11 @@ await setRange('board1_gap', 0);
 if (!(await page.textContent('#warnings'))?.includes('0.3')) errors.push('[hang] no warning for a gap under 0.3 mm');
 await page.click('#lid_face_bottom');
 await expectWatertight('hang:bottom-lid');
+// on a console it hangs from the slope; a tilted edge cannot stand against the front or back wall
+await page.click('#case_kind_console');
+await expectWatertight('hang:slope');
+if (!(await page.isDisabled('#board1_wall_front')) || !(await page.isDisabled('#board1_wall_back'))) errors.push('[slope] a board on the slope offers the front or back wall');
+await page.click('#case_kind_box');
 await page.click('#lid_face_top');
 await page.click('#board1_on_floor');
 if (!(await page.locator('#board1_z').isVisible())) errors.push('[hang] back on the floor without its standoff height');

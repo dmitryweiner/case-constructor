@@ -364,3 +364,11 @@ below).
   a hung board that thin the slot sits in a top lid's skirt band.
   Waveshare 1.69″ waits for D5: its holes are under the LCM (it is screwed
   from behind, standoffs on its back).
+- **D4.** No fixed-point loop: the console's heights rise together, so the
+  slope's angle never changes while they rise (the depth is fixed before);
+  one deficit for the floor boards and the hung ones does it. Proven on
+  the MSP3520 rather than the BTT Pi TFT50: the TFT50's corner holes are
+  under its 5″ glass (it is screwed from behind) — it goes in with D5/D6.
+  A tilted edge channel stops just past the wall it opens (a long one dived
+  under the floor and was reported as split by the lid).
+

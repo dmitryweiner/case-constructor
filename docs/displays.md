@@ -29,7 +29,14 @@ hole, an insert or a nut pocket near the plate, as on the floor.
   top margin between them.
 - A part on the board's top that lands on a standoff or a rail it hangs
   from is reported, as a part under a floor board is.
-- Not on a console yet: there the board stands on the floor.
+- On a console the board hangs from the slope: parallel to it, the gap
+  below its inside; its standoffs, rim and window go along the slope's
+  normal. The console's heights rise together (the slope keeps its angle)
+  until the board clears the floor and the boards under it by the top
+  margin. Its tilted front and back edges cannot stand against the front
+  or back wall; the left and right walls work as usual. The case is sized
+  by the board's flat outline, so it is a little deeper than the tilted
+  board needs.
 
 ## The window and the glass
 

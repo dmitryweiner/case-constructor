@@ -717,6 +717,26 @@
       ]
     }
   },
+  "msp3520-console-slope": {
+    "body": {
+      "triangles": 3568,
+      "volume": 31451.4,
+      "extents": [
+        115.8,
+        74.9,
+        37.99
+      ]
+    },
+    "lid": {
+      "triangles": 1580,
+      "volume": 18320.41,
+      "extents": [
+        115.8,
+        74.9,
+        5
+      ]
+    }
+  },
   "lcd1602-box": {
     "body": {
       "triangles": 764,

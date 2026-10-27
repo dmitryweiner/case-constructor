@@ -12,7 +12,7 @@ import { EDGES, onFace } from '../boards/schema';
 import type { BoardPlacement, Rotation } from '../boards/placement';
 import { CLAMP_POST_ZONE } from '../boards/battery';
 import { RIM_FIT, rimReach } from './rim';
-import { CEILING_GAP, boardOf, floorZ, pinsDown, undersideOf } from '../boards/placement';
+import { CEILING_GAP, boardOf, pinsDown, undersideOf } from '../boards/placement';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import { bossDiameter } from './fasteners';
@@ -24,7 +24,7 @@ import type { ShapeState } from './shape';
 import { SIZE_MIN, SIZE_MAX, plateOf, shapeSpec } from './shape';
 import { effectiveRadii } from './loft';
 import type { Affine } from './surface';
-import { applyAffine, rotateVec } from './surface';
+import { applyAffine, composeAffine, rotateVec } from './surface';
 
 /** Smallest cavity the case keeps when there is nothing inside to size it by. */
 export const INNER_MIN: Dims = { w: 16, d: 16, h: 10 };
@@ -103,6 +103,25 @@ export interface PlacedBoard {
   walls: PlacedWall[];
   /** hung from the ceiling (its top still up): its supports come down from the ceiling plate */
   hung: boolean;
+  /**
+   * A hung board's plate frame → case frame: w = 0 on the plate's outer
+   * face, w along its outward normal — the top raised to the case height, or
+   * the console's slope. Its supports are built in it.
+   */
+  frame?: Affine;
+}
+
+/** The top plate's frame of a flat-topped case h high: w = 0 on the outer top. */
+export function flatFrame(h: number): Affine {
+  return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, h];
+}
+
+/** The console's slope frame: turned about x by the slope's angle, w = 0 on the outer slope. */
+export function slopeFrame(frontH: number, backH: number, depth: number): Affine {
+  const angle = Math.atan2(backH - frontH, depth);
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  return [1, 0, 0, 0, 0, c, -s, 0, 0, s, c, frontH];
 }
 
 export interface CaseLayout {
@@ -208,30 +227,52 @@ function wallOf(input: LayoutInput, def: BoardDef, placement: BoardPlacement, to
   return { side, edge, line: at + sign * reach, recessed: reach - wanted, ports: onEdge.length > 0, against: true };
 }
 
-/**
- * Whether a placement hangs from the ceiling as built. The console's slope
- * takes no hung board yet (plans/PLAN-DISPLAYS.md D4): there it stands on
- * the floor at its default height.
- */
-export function hangs(input: Pick<LayoutInput, 'shape'>, placement: BoardPlacement): boolean {
-  return placement.on === 'ceiling' && input.shape.kind !== 'console';
+/** Whether a placement hangs from the ceiling (a box's or a cylinder's top, the console's slope). */
+export function hangs(placement: BoardPlacement): boolean {
+  return placement.on === 'ceiling';
 }
 
 /**
- * The boards placed, `offsetX/Y` added to their positions; a hung board's
- * front `z` below `ceiling` (the inner ceiling's height; null while the
- * case height is not known yet — only their plan and their stacks count then).
+ * A hung board's board → case transform under the plate `frame` (see
+ * PlacedBoard.frame): parallel to the plate, its front `gap` below the
+ * plate's inside, its plan centre where the layout puts it (cx, cy).
  */
-function place(input: LayoutInput, offsetX: number, offsetY: number, ceiling: number | null): PlacedBoard[] {
+function hungTransform(def: BoardDef, rot: Rotation, cx: number, cy: number, gap: number, plate: number, frame: Affine): Affine {
+  const turned = rot === 90 || rot === 270;
+  const W = turned ? def.size.d : def.size.w;
+  const D = turned ? def.size.w : def.size.d;
+  const wf = -(plate + gap);
+  // frame: y = v·cos − w·sin, so the plan centre cy sits at v = (cy + w·sin) / cos
+  const [cos, sin] = [frame[5], frame[9]];
+  const v = (cy + wf * sin) / cos;
+  const local = composeAffine([1, 0, 0, cx - W / 2, 0, 1, 0, v - D / 2, 0, 0, 1, wf - def.size.t - def.topHeight], boardTransform(def, rot, 0, 0, 0));
+  return composeAffine(frame, local);
+}
+
+/**
+ * The boards placed, `offsetX/Y` added to their positions; a hung board
+ * under the plate `frame` (null while the case height is not known yet —
+ * only their plan and their stacks count then).
+ */
+function place(input: LayoutInput, offsetX: number, offsetY: number, frame: Affine | null): PlacedBoard[] {
   return input.boards.map((placement, index) => {
     const def = boardOf(placement);
-    const hung = hangs(input, placement);
+    const hung = hangs(placement);
     const pins = pinsDown(def, placement);
     const front = def.size.t + def.topHeight;
-    const z0 = hung ? (ceiling ?? 0) - placement.z - front
-      : input.shape.floor + (placement.on === 'ceiling' ? Math.max(placement.z, floorZ(def, pins)) : placement.z);
-    const toCase = boardTransform(def, placement.rot, placement.x + offsetX, placement.y + offsetY, z0);
     const { w, d } = def.size;
+    const turned = placement.rot === 90 || placement.rot === 270;
+    const cx = placement.x + offsetX + (turned ? d : w) / 2;
+    const cy = placement.y + offsetY + (turned ? w : d) / 2;
+    const plateFrame = frame ?? flatFrame(0);
+    const toCase = hung
+      ? hungTransform(def, placement.rot, cx, cy, placement.z, input.shape.floor, plateFrame)
+      : boardTransform(def, placement.rot, placement.x + offsetX, placement.y + offsetY, input.shape.floor + placement.z);
+    // a hung board may be tilted (the slope): its heights are its corners' extremes
+    const zs = (bz: number): number[] => [[0, 0], [w, 0], [0, d], [w, d]].map(([bx, by]) => applyAffine(toCase, [bx, by, bz])[2]);
+    const z0 = Math.min(...zs(0));
+    const zTop = Math.max(...zs(front));
+    const zBottom = Math.min(...zs(-undersideOf(def, pins)));
     const corner = (bx: number, by: number): [number, number] => {
       const p = applyAffine(toCase, [bx, by, 0]);
       return [p[0], p[1]];
@@ -246,10 +287,11 @@ function place(input: LayoutInput, offsetX: number, offsetY: number, ceiling: nu
       outline,
       footprint: rectOf([corner(-reach.left, -reach.front), corner(w + reach.right, d + reach.back)]),
       z0,
-      zTop: z0 + front,
-      zBottom: z0 - undersideOf(def, pins),
+      zTop,
+      zBottom,
       walls: (placement.walls ?? []).flatMap((side) => wallOf(input, def, placement, toCase, outline, side) ?? []),
       hung,
+      ...(hung ? { frame: plateFrame } : {}),
     };
   });
 }
@@ -416,29 +458,37 @@ export function caseLayout(input: LayoutInput): CaseLayout {
   const inner: Record<Edge, number> = {
     left: wall + band.x0, right: dims.w - wall - band.x1, front: wall + band.y0, back: dims.d - wall - band.y1,
   };
-  const boards = place(input, offsetX, offsetY, dims.h - shape.floor).map((board): PlacedBoard => ({
+  const placeAll = (frame: Affine): PlacedBoard[] => place(input, offsetX, offsetY, frame).map((board): PlacedBoard => ({
     ...board,
     walls: board.walls.map((wall) => ({ ...wall, against: Math.abs(wall.line - inner[wall.side]) < 1e-6 })),
   }));
 
   let frontH = shape.console.frontH;
   let backH = shape.console.backH;
-  if (shape.kind === 'console') {
-    // the slope's inner surface at y must clear every board corner there
-    const k = (backH - frontH) / dims.d;
-    const plate = shape.floor * Math.hypot(1, k);
-    let deficit = Math.max(0, min.h - Math.max(frontH, backH));
-    for (const board of boards) {
-      const need = board.zTop + shape.margin.top;
-      for (const y of [board.footprint.y0, board.footprint.y1]) {
-        deficit = Math.max(deficit, need - (frontH + k * y - plate));
-      }
+  if (shape.kind !== 'console') return { dims, boards: placeAll(flatFrame(dims.h)), console: { frontH, backH } };
+  // The console's heights rise together — the slope's angle stays — until
+  // its inside clears every floor board, and every board hung from it clears
+  // the floor and the floor boards under it, by the top margin.
+  const k = (backH - frontH) / dims.d;
+  const plate = shape.floor * Math.hypot(1, k);
+  const first = placeAll(slopeFrame(frontH, backH, dims.d));
+  let deficit = Math.max(0, min.h - Math.max(frontH, backH));
+  const floorBoards = first.filter((board) => !board.hung);
+  for (const board of floorBoards) {
+    const need = board.zTop + shape.margin.top;
+    for (const y of [board.footprint.y0, board.footprint.y1]) {
+      deficit = Math.max(deficit, need - (frontH + k * y - plate));
     }
-    frontH = Math.min(SIZE_MAX, frontH + deficit);
-    backH = Math.min(SIZE_MAX, backH + deficit);
-    dims = { ...dims, h: Math.max(frontH, backH) };
   }
-  return { dims, boards, console: { frontH, backH } };
+  for (const board of first.filter((one) => one.hung)) {
+    const under = floorBoards.filter((below) => overlap(board.outline, below.outline) > 0.01);
+    const need = Math.max(shape.floor, ...under.map((below) => below.zTop)) + shape.margin.top;
+    deficit = Math.max(deficit, need - board.zBottom);
+  }
+  frontH = Math.min(SIZE_MAX, frontH + deficit);
+  backH = Math.min(SIZE_MAX, backH + deficit);
+  dims = { ...dims, h: Math.max(frontH, backH) };
+  return { dims, boards: placeAll(slopeFrame(frontH, backH, dims.d)), console: { frontH, backH } };
 }
 
 /** The outer size the case is built at. */

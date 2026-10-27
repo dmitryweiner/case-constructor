@@ -94,13 +94,6 @@ describe('the layout', () => {
     const bottom = hung({ lid: { ...defaultState().lid, face: 'bottom' } });
     expect(heldByLid(caseLayout(bottom).boards[0], bottom.lid.face)).toBe(false);
   });
-
-  it('on a console the board stands on the floor until the slope can take it (D4)', () => {
-    const state = hung({ shape: { ...defaultState().shape, kind: 'console' }, lid: { ...defaultState().lid, face: 'bottom' } });
-    const board = caseLayout(state).boards[0];
-    expect(board.hung).toBe(false);
-    expect(board.z0).toBeGreaterThanOrEqual(state.shape.floor + 1);
-  });
 });
 
 describe('standoffs from the ceiling', () => {

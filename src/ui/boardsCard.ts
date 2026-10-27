@@ -43,7 +43,7 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
   const at = (state: AppState): BoardPlacement => state.boards[index];
   const holes = (state: AppState): boolean => boardOf(at(state)).mount.kind === 'holes';
   const battery = (state: AppState): BatterySpec | undefined => at(state).battery;
-  const hung = (state: AppState): boolean => hangs(state, at(state));
+  const hung = (state: AppState): boolean => hangs(at(state));
   const setBattery = (state: AppState, patch: Partial<BatterySpec>): AppState => {
     const spec = sanitizeBattery({ ...(battery(state) ?? defaultBattery()), ...patch });
     return patchBoard(state, index, { battery: spec });
@@ -99,9 +99,9 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       set: (state, value) => patchBoard(state, index, { y: value }),
     },
     {
-      // on the floor or hung from the ceiling; the console's slope takes no hung board yet (D4)
+      // on the floor or hung from the ceiling (on a console: its slope)
       kind: 'segmented', key: 'on', label: 'board.on', hint: 'board.on.hint',
-      when: (state) => battery(state) === undefined && state.shape.kind !== 'console',
+      when: (state) => battery(state) === undefined,
       options: SIDES.map((side) => ({ value: side, label: `board.on.${side}` as const })),
       get: (state) => at(state).on ?? 'floor',
       set: (state, value) => {

@@ -4,11 +4,11 @@
 
 import type { CsgApi } from './csg';
 import type { Manifold } from 'manifold-3d';
-import { CsgScope, fromManifold, unionAll } from './csg';
+import { CsgScope, fromManifold, transformSolid, unionAll } from './csg';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import type { PlacedBoard } from './layout';
-import { caseLayout, effectiveLid } from './layout';
+import { caseLayout, effectiveLid, flatFrame } from './layout';
 import type { Message } from './message';
 import { partingZ, skirtSolid, splitAtParting } from './parting';
 import { plateOf, shapeSpec } from './shape';
@@ -32,7 +32,7 @@ import { screwSolid } from './screwSolids';
 import { screwShape, threadPoints } from './thread';
 import type { LabelRaster } from './label';
 import { labelPlacement } from './label';
-import { applyAffine } from './surface';
+import { applyAffine, composeAffine, invertRigid } from './surface';
 import type { SurfaceMesh } from './surface';
 import type { AppState } from '../state/schema';
 
@@ -91,10 +91,20 @@ export function buildCase(
       ? standoffs(csg, scope, board, shape.floor, segments)
       : rails(csg, scope, board, shape.floor));
     // and step aside for its glass, which a rim around it locates
+    // built in its plate's frame (the top, or the console's slope), then turned into the case
     const hung = (board: PlacedBoard): Support[] => {
+      const frame = board.frame ?? flatFrame(dims.h);
+      const local = composeAffine(invertRigid(frame), board.toCase);
       const keepOut = glassKeepOut(csg, scope, board, segments);
-      const own = fromCeiling(scope, held(upsideDown(board, dims.h)), dims.h)
-        .map((support) => (keepOut ? { ...support, material: scope.keep(support.material.subtract(keepOut)) } : support));
+      const own = fromCeiling(scope, held(upsideDown({ ...board, toCase: local, z0: local[11] }, 0)), 0)
+        .map((support): Support => {
+          const material = transformSolid(scope, support.material, frame);
+          return {
+            base: applyAffine(frame, support.base),
+            material: keepOut ? scope.keep(material.subtract(keepOut)) : material,
+            holes: support.holes ? transformSolid(scope, support.holes, frame) : null,
+          };
+        });
       return [...own, ...rimSolids(csg, scope, board, shape.floor, segments)];
     };
     const supports: Support[] = layout.boards.flatMap((board) => (board.def.battery
