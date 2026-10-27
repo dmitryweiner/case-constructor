@@ -158,13 +158,21 @@ shows the same mark). New boards: the add-board skill
 | Repka Pi 4 | Repka Pi | 85 × 56 | 4 × M2.5 | [source](https://repka-pi.ru/) | ≈ |
 | Walnut Pi 1B | Walnut Pi | 85 × 56 | 4 × M2.5 | [source](https://www.walnutpi.com/) | ≈ |
 | ESP32-C3-DevKitM-1 | Espressif | 25.4 × 44.3 | rails (long) | [source](https://dl.espressif.com/dl/schematics/DIMENSION_ESP32-C3-DEVKITM-1_V1_20200915AA.pdf) | yes |
-| ESP32-2432S028R (Cheap Yellow Display) | Espressif | 86 × 50 | 4 × M3 | [source](https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/OriginalDocumentation/3-Structure_Diagram/Dimensions.png) | ≈ |
+| ESP32-2432S028R (Cheap Yellow Display) / Guition JC2432W328 | Espressif | 86 × 50 | 4 × M3 | [source](https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/OriginalDocumentation/3-Structure_Diagram/Dimensions.png) | ≈ |
 | ESP32-C3 SuperMini | Espressif | 18 × 22.5 | rails (long) | [source](https://mischianti.org/wp-content/uploads/2025/07/ESP32-C3-SuperMini-Size.jpg) | ≈ |
 | ESP32-CAM (AI-Thinker) | Espressif | 27 × 40.5 | rails (long) | [source](https://docs.ai-thinker.com/en/esp32-cam) | ≈ |
 | ESP32-DevKitC V4 | Espressif | 48.2 × 27.9 | rails (long) | [source](https://dl.espressif.com/dl/schematics/esp32_devkitc_v4_pcb_layout.pdf) | yes |
 | ESP32 DevKit V1, 30-pin (DOIT and clones) | Espressif | 51.8 × 28.2 | 4 × M2.5 | [source](https://forum.fritzing.org/t/doit-esp32-devkit-v1/6158) | ≈ |
 | ESP32-S3-DevKitC-1 | Espressif | 25.4 × 62.74 | rails (long) | [source](https://dl.espressif.com/dl/schematics/esp_idf/DXF_ESP32-S3-DevKitC-1_V1.1_20220429.pdf) | yes |
 | Wemos D1 mini (ESP8266 / ESP32) | Espressif | 34.3 × 25.4 | 2 × M1.6 | [source](https://www.wemos.cc/en/latest/_static/files/dim_d1_mini_v4.0.0.pdf) | yes |
+| ESP32-2432S024R / C / N (2.4-inch) | Sunton | 74.4 × 42.9 | 4 × M3 | [source](https://github.com/NoosaHydro/2.4inch_ESP32-2432S024/blob/main/3-Structure_Diagram/Dimensions.png) | ≈ |
+| ESP32-2432S032R / C / N (3.2-inch) | Sunton | 93.7 × 55 | 4 × M3 | [source](https://github.com/kpeeem/3.2inch_ESP32-2432S032/blob/main/3-Structure_Diagram/3.2.jpg) | ≈ |
+| ESP32-3248S035R / C (3.5-inch CYD) | Sunton | 101.5 × 54.9 | 4 × M3 | [source](https://github.com/wegi1/ESP32-3248S035-3-5INCH-LCD/blob/main/3-Structure_Diagram/Dimensions.jpg) | ≈ |
+| ESP32-8048S043 / ESP32-4827S043 (4.3-inch) | Sunton | 123 × 74 | 4 × M3 | [source](https://github.com/wegi1/ESP32-4827S043-4INCH-LCD/blob/main/3-Structure_Diagram/Dimensions.png) | ≈ |
+| ESP32-8048S050C / R / N (5-inch) | Sunton | 137 × 84 | 4 × M3 | [source](https://github.com/wegi1/ESP32-8048S050-5INCH-LCD/blob/main/3-Structure_Diagram/Dimensions.png) | ≈ |
+| ESP32-8048S070C / R / N (7-inch) | Sunton | 181 × 108 | 4 × M3 | [source](https://github.com/wegi1/ESP32-8048S070-7INCH-LCD/blob/main/3-Structure_Diagram/Dimensions.png) | ≈ |
+| JC4827W543 C / R / N (4.3-inch) | Guition | 120 × 70.2 | 4 × M3 | [source](https://github.com/profi-max/JC4827W543_4.3inch_ESP32S3_board/blob/main/Docs/JC4827W543%20Specifications-EN.pdf) | ≈ |
+| T-Display S3 (incl. Touch) | LilyGO | 26.09 × 61.98 | rails (long) | [source](https://github.com/Xinyuan-LilyGO/T-Display-S3/tree/main/dimensions) | ≈ |
 | Arduino Leonardo | Arduino | 68.58 × 53.34 | 4 × M3 | [source](https://docs.arduino.cc/static/fd50e8f3be44a3217bbfd5d123295bdf/A000057-cad-files.zip) | yes |
 | Arduino Mega 2560 | Arduino | 101.6 × 53.34 | 6 × M3 | [source](https://docs.arduino.cc/static/00ab83283ad8f7aae17832d0fe1b1d51/A000067-cad-files.zip) | yes |
 | Arduino Micro | Arduino | 48 × 18 | rails (long) | [source](https://docs.arduino.cc/hardware/micro/) | ≈ |
@@ -187,6 +195,7 @@ shows the same mark). New boards: the add-board skill
 | Seeed XIAO (ESP32-S3/C3/C6, RP2040/RP2350, nRF52840, SAMD21, MG24) | Seeed | 17.78 × 21.14 | rails (long) | [source](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/XIAO_ESP32S3_v1.1_Dimensioning.dxf) | yes |
 | Seeed XIAO ESP32-S3 Sense (with camera board) | Seeed | 17.78 × 21.14 | rails (long) | [source](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/seeed-studio-xiao-esp32s3-sense-3d_model.zip) | yes |
 | Waveshare RP2040-Zero / RP2350-Zero / ESP32-S3-Zero | Waveshare | 18 × 23.5 | rails (long) | [source](https://files.waveshare.com/wiki/RP2350-Zero/RP2350_Zero_step.zip) | yes |
+| ESP32-S3-Touch-LCD-4.3 | Waveshare | 106 × 68 | 4 × M2.5 | [source](https://www.waveshare.com/w/upload/7/7f/Esp32-s3-touch-lcd-4.3-003.jpg) | yes |
 | MPD BH-18650-W (1 × 18650 holder) | MPD | 77.7 × 20.9 | 2 × M3 | [source](https://memoryprotectiondevices.com/datasheets/BH-18650-W/BH-18650-W-datasheet.pdf) | yes |
 | MPD BH2AA-W (2 × AA holder) | MPD | 57.81 × 31.5 | 2 × M2 | [source](https://www.memoryprotectiondevices.com/datasheets/BH2AAW/BH2AAW-datasheet.pdf) | ≈ (holes along the length taken as centred) |
 | MPD BH4AA-W (4 × AA holder) | MPD | 57.15 × 61.72 | 2 × M2 | [source](https://www.memoryprotectiondevices.com/datasheets/BH4AAW/BH4AAW-datasheet.pdf) | ≈ (holes along the length taken as centred) |

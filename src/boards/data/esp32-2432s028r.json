@@ -1,6 +1,6 @@
 {
   "id": "esp32-2432s028r",
-  "name": "ESP32-2432S028R (Cheap Yellow Display)",
+  "name": "ESP32-2432S028R (Cheap Yellow Display) / Guition JC2432W328",
   "vendor": "Espressif",
   "kind": "mcu",
   "size": { "w": 86, "d": 50, "t": 1.6 },
@@ -28,6 +28,10 @@
     { "id": "boot", "type": "button", "edge": "bottom", "x": 74, "y": 11.2, "w": 3, "d": 4, "h": 2, "shape": "rect" },
     { "id": "reset", "type": "button", "edge": "bottom", "x": 78.2, "y": 11.2, "w": 3, "d": 4, "h": 2, "shape": "rect" },
     { "id": "rgb-led", "type": "led", "edge": "bottom", "x": 56.6, "y": 41.5, "w": 3, "d": 3, "h": 1, "shape": "rect" }
+  ],
+  "variants": [
+    { "id": "cyd", "name": "ESP32-2432S028R (Cheap Yellow Display)" },
+    { "id": "jc2432w328", "name": "Guition JC2432W328", "ports": { "ldr": { "x": 81.8, "y": 11.3 }, "serial-p1": { "edge": "back", "along": 53.7 }, "microsd": { "along": 37.2 }, "gpio-cn1": { "along": 64.5 }, "gpio-p3": { "edge": "left", "along": 16.4 }, "speaker-p4": { "along": 28.7 }, "boot": { "x": 71.9, "y": 3 }, "reset": { "x": 76.3, "y": 3 }, "rgb-led": { "edge": "top", "x": 81.8, "y": 38.7, "w": 5, "d": 5, "h": 1.6 } }, "remove": ["usb"], "add": [{ "id": "usb-c", "type": "usb-c", "edge": "left", "along": 32.9, "z": -4.8, "protrude": 1.5 }, { "id": "gpio-p6", "type": "jst", "edge": "back", "along": 76.1, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false }, { "id": "power-switch", "type": "switch", "edge": "front", "along": 19, "w": 4.5, "h": 1.6, "z": -3.2, "protrude": 0.5 }, { "id": "battery-p5", "type": "jst", "edge": "front", "along": 10.8, "w": 6, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0.5, "cut": false }] }
   ],
   "source": "https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/OriginalDocumentation/3-Structure_Diagram/Dimensions.png",
   "verified": false

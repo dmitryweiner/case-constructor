@@ -1,0 +1,33 @@
+{
+  "id": "sunton-esp32-8048s043",
+  "name": "ESP32-8048S043 / ESP32-4827S043 (4.3-inch)",
+  "vendor": "Sunton",
+  "kind": "mcu",
+  "size": { "w": 123, "d": 74, "t": 1.6 },
+  "outline": [[0, 0], [92.4, 0], [92.4, 2.6], [108, 2.6], [108, 0], [123, 0], [123, 74], [0, 74]],
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.5, "y": 3.5, "d": 3.2 },
+      { "x": 3.5, "y": 70.5, "d": 3.2 },
+      { "x": 119.5, "y": 3.5, "d": 3.2 },
+      { "x": 119.5, "y": 70.5, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 4.5,
+  "bottomHeight": 4,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 61.45, "y": 37, "w": 95.04, "d": 53.86, "h": 4.5 },
+    { "id": "usb", "type": "usb-c", "edge": "left", "along": 40.3, "z": -4.8, "protrude": 0 },
+    { "id": "uart-p1", "type": "jst", "edge": "left", "along": 23, "w": 7, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "i2c-p4", "type": "jst", "edge": "front", "along": 14.9, "w": 6, "h": 3, "d": 5, "z": -4.6, "protrude": 0, "cut": false },
+    { "id": "uart-p3", "type": "jst", "edge": "front", "along": 29.9, "w": 7, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "spi-p2", "type": "jst", "edge": "front", "along": 49.3, "w": 7, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "microsd", "type": "microsd", "edge": "front", "along": 72.6, "h": 1.8, "z": -3.4, "protrude": 0.3 },
+    { "id": "boot", "type": "button", "edge": "bottom", "x": 117.6, "y": 20, "w": 3.5, "d": 6, "h": 2, "shape": "rect" },
+    { "id": "reset", "type": "button", "edge": "bottom", "x": 117.6, "y": 30.8, "w": 3.5, "d": 6, "h": 2, "shape": "rect" }
+  ],
+  "source": "https://github.com/wegi1/ESP32-4827S043-4INCH-LCD/blob/main/3-Structure_Diagram/Dimensions.png",
+  "verified": false
+}

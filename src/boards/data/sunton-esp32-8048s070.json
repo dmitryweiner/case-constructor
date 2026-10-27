@@ -1,0 +1,35 @@
+{
+  "id": "sunton-esp32-8048s070",
+  "name": "ESP32-8048S070C / R / N (7-inch)",
+  "vendor": "Sunton",
+  "kind": "mcu",
+  "size": { "w": 181, "d": 108, "t": 1.6 },
+  "outline": [[0, 0], [138.6, 0], [138.6, 1.9], [166.7, 1.9], [166.7, 0], [181, 0], [181, 44.6], [173, 44.6], [173, 63], [181, 63], [181, 108], [0, 108]],
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.5, "y": 3.5, "d": 3.2 },
+      { "x": 3.5, "y": 104.5, "d": 3.2 },
+      { "x": 177.5, "y": 3.5, "d": 3.2 },
+      { "x": 177.5, "y": 104.5, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 5,
+  "bottomHeight": 4,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 90.4, "y": 53.8, "w": 153.84, "d": 85.63, "h": 5 },
+    { "id": "usb", "type": "usb-c", "edge": "left", "along": 53.8, "z": -4.8, "protrude": 0 },
+    { "id": "power", "type": "jst", "edge": "left", "along": 69.8, "w": 7, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "speaker", "type": "jst", "edge": "back", "along": 30.7, "w": 5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "i2c", "type": "jst", "edge": "back", "along": 45.5, "w": 6, "h": 3, "d": 5, "z": -4.6, "protrude": 0, "cut": false },
+    { "id": "io-1", "type": "jst", "edge": "back", "along": 62.7, "w": 7, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "io-2", "type": "jst", "edge": "back", "along": 83.5, "w": 7, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "io-3", "type": "jst", "edge": "back", "along": 104.3, "w": 7, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "microsd", "type": "microsd", "edge": "back", "along": 130.1, "h": 1.8, "z": -3.4, "protrude": 0.3 },
+    { "id": "boot", "type": "button", "edge": "bottom", "x": 163.7, "y": 94, "w": 3.5, "d": 6, "h": 2, "shape": "rect" },
+    { "id": "reset", "type": "button", "edge": "bottom", "x": 171.6, "y": 94, "w": 3.5, "d": 6, "h": 2, "shape": "rect" }
+  ],
+  "source": "https://github.com/wegi1/ESP32-8048S070-7INCH-LCD/blob/main/3-Structure_Diagram/Dimensions.png",
+  "verified": false
+}

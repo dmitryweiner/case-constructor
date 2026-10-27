@@ -1,0 +1,26 @@
+{
+  "id": "lilygo-t-display-s3",
+  "name": "T-Display S3 (incl. Touch)",
+  "vendor": "LilyGO",
+  "kind": "mcu",
+  "size": { "w": 26.09, "d": 61.98, "t": 1.6 },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
+  "topHeight": 3.2,
+  "bottomHeight": 4,
+  "pins": { "below": 8.5, "edges": ["left", "right"], "inset": 1.6, "soldered": false },
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 13.05, "y": 32.8, "w": 22.7, "d": 42.72, "h": 2.6 },
+    { "id": "boot", "type": "button", "edge": "top", "x": 4.5, "y": 3.45, "w": 3, "d": 3, "h": 1.5, "shape": "rect" },
+    { "id": "key", "type": "button", "edge": "top", "x": 22.6, "y": 3.45, "w": 3, "d": 3, "h": 1.5, "shape": "rect" },
+    { "id": "usb", "type": "usb-c", "edge": "front", "along": 13.1, "z": 0, "protrude": 0.9 },
+    { "id": "qwiic", "type": "jst", "edge": "front", "along": 4.1, "w": 6, "h": 3, "d": 5, "z": -4.6, "protrude": 0, "cut": false },
+    { "id": "reset", "type": "switch", "edge": "left", "along": 11.1, "w": 4, "h": 2.5, "d": 3.5, "z": -4.1, "protrude": 0.7 },
+    { "id": "battery", "type": "jst", "edge": "bottom", "x": 13.4, "y": 3.9, "w": 8, "d": 4.5, "h": 3, "cut": false }
+  ],
+  "variants": [
+    { "id": "plain", "name": "T-Display S3" },
+    { "id": "touch", "name": "T-Display S3 Touch", "topHeight": 3.6, "ports": { "display": { "h": 3.6 } } }
+  ],
+  "source": "https://github.com/Xinyuan-LilyGO/T-Display-S3/tree/main/dimensions",
+  "verified": false
+}

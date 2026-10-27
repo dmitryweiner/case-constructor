@@ -1,0 +1,36 @@
+{
+  "id": "sunton-esp32-2432s032",
+  "name": "ESP32-2432S032R / C / N (3.2-inch)",
+  "vendor": "Sunton",
+  "kind": "mcu",
+  "size": { "w": 93.7, "d": 55, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.5, "y": 3.5, "d": 3.2 },
+      { "x": 3.5, "y": 51.5, "d": 3.2 },
+      { "x": 90.2, "y": 3.5, "d": 3.2 },
+      { "x": 90.2, "y": 51.5, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 4,
+  "bottomHeight": 4,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 50.2, "y": 27.55, "w": 64.8, "d": 48.6, "h": 4 },
+    { "id": "rgb-led", "type": "led", "edge": "top", "x": 90.2, "y": 43.6, "w": 5, "d": 5, "h": 1.6, "shape": "rect" },
+    { "id": "ldr", "type": "generic", "edge": "top", "x": 90.2, "y": 12.1, "w": 3.6, "d": 5.4, "h": 1.5, "cut": false },
+    { "id": "usb", "type": "usb-c", "edge": "left", "along": 28, "z": -4.8, "protrude": 0.5 },
+    { "id": "power", "type": "jst", "edge": "left", "along": 14.4, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "extended-io", "type": "jst", "edge": "back", "along": 79.3, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "microsd", "type": "microsd", "edge": "back", "along": 56.6, "h": 1.8, "z": -3.4, "protrude": 0.3 },
+    { "id": "dht", "type": "jst", "edge": "back", "along": 39.2, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "speaker", "type": "jst", "edge": "front", "along": 53.9, "w": 5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "battery-switch", "type": "switch", "edge": "front", "along": 25.8, "w": 4.5, "h": 1.6, "z": -3.2, "protrude": 0.5 },
+    { "id": "battery", "type": "jst", "edge": "front", "along": 11.7, "w": 5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "boot", "type": "button", "edge": "bottom", "x": 75.3, "y": 5.8, "w": 3, "d": 4, "h": 2, "shape": "rect" },
+    { "id": "reset", "type": "button", "edge": "bottom", "x": 79.2, "y": 5.8, "w": 3, "d": 4, "h": 2, "shape": "rect" }
+  ],
+  "source": "https://github.com/kpeeem/3.2inch_ESP32-2432S032/blob/main/3-Structure_Diagram/3.2.jpg",
+  "verified": false
+}

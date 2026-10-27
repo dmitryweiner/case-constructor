@@ -1,0 +1,34 @@
+{
+  "id": "sunton-esp32-3248s035",
+  "name": "ESP32-3248S035R / C (3.5-inch CYD)",
+  "vendor": "Sunton",
+  "kind": "mcu",
+  "size": { "w": 101.5, "d": 54.9, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.5, "y": 3.5, "d": 3.2 },
+      { "x": 3.5, "y": 51.4, "d": 3.2 },
+      { "x": 98, "y": 3.5, "d": 3.2 },
+      { "x": 98, "y": 51.4, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 4,
+  "bottomHeight": 4,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 53.3, "y": 27.45, "w": 73.44, "d": 48.96, "h": 4 },
+    { "id": "rgb-led", "type": "led", "edge": "top", "x": 97.5, "y": 42.7, "w": 5, "d": 5, "h": 1.6, "shape": "rect" },
+    { "id": "ldr", "type": "generic", "edge": "top", "x": 98, "y": 12.3, "w": 3.6, "d": 5.4, "h": 1.5, "cut": false },
+    { "id": "usb", "type": "micro-usb", "edge": "left", "along": 39.3, "z": -4.2, "protrude": 0.5 },
+    { "id": "power", "type": "jst", "edge": "left", "along": 15.7, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "extended-io", "type": "jst", "edge": "back", "along": 85.6, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "dht", "type": "jst", "edge": "back", "along": 67, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "microsd", "type": "microsd", "edge": "back", "along": 50.8, "h": 1.8, "z": -3.4, "protrude": 0.3 },
+    { "id": "speaker", "type": "jst", "edge": "front", "along": 58.7, "w": 5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "boot", "type": "button", "edge": "bottom", "x": 79.9, "y": 6.1, "w": 3, "d": 4, "h": 2, "shape": "rect" },
+    { "id": "reset", "type": "button", "edge": "bottom", "x": 84.2, "y": 6.1, "w": 3, "d": 4, "h": 2, "shape": "rect" }
+  ],
+  "source": "https://github.com/wegi1/ESP32-3248S035-3-5INCH-LCD/blob/main/3-Structure_Diagram/Dimensions.jpg",
+  "verified": false
+}

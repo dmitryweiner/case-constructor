@@ -1,0 +1,36 @@
+{
+  "id": "waveshare-esp32-s3-touch-lcd-4-3",
+  "name": "ESP32-S3-Touch-LCD-4.3",
+  "vendor": "Waveshare",
+  "kind": "mcu",
+  "size": { "w": 106, "d": 68, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 4, "y": 4, "d": 2.7 },
+      { "x": 4, "y": 64, "d": 2.7 },
+      { "x": 102, "y": 4, "d": 2.7 },
+      { "x": 102, "y": 64, "d": 2.7 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 7,
+  "bottomHeight": 5,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 53, "y": 36.4, "w": 95.54, "d": 54.36, "h": 7 },
+    { "id": "battery", "type": "jst", "edge": "left", "along": 18.92, "w": 8, "h": 5, "d": 8.6, "z": -6.6, "protrude": -1.5, "cut": false },
+    { "id": "rs485", "type": "jst", "edge": "left", "along": 27.03, "w": 6, "h": 5, "d": 5, "z": -6.6, "protrude": -0.5, "cut": false },
+    { "id": "i2c", "type": "jst", "edge": "left", "along": 35.74, "w": 10, "h": 5, "d": 5, "z": -6.6, "protrude": -0.5, "cut": false },
+    { "id": "can", "type": "jst", "edge": "left", "along": 44.61, "w": 6, "h": 5, "d": 5, "z": -6.6, "protrude": -0.5, "cut": false },
+    { "id": "sensor-ad", "type": "jst", "edge": "left", "along": 51.61, "w": 8, "h": 5, "d": 5, "z": -6.6, "protrude": -0.5, "cut": false },
+    { "id": "usb", "type": "usb-c", "edge": "right", "along": 35.07, "z": -4.9, "protrude": 0 },
+    { "id": "usb-uart", "type": "usb-c", "edge": "right", "along": 55.04, "z": -4.9, "protrude": 0 },
+    { "id": "rs485-terminal", "type": "terminal", "edge": "front", "along": 59.68, "w": 7.62, "h": 2.6, "d": 10.5, "cutH": 2.6, "z": -4.2, "protrude": -0.3 },
+    { "id": "can-terminal", "type": "terminal", "edge": "front", "along": 86.71, "w": 7.62, "h": 2.6, "d": 10.5, "cutH": 2.6, "z": -4.2, "protrude": -0.3 },
+    { "id": "microsd", "type": "microsd", "edge": "back", "along": 23.29, "h": 2.75, "z": -4.35, "protrude": 0 },
+    { "id": "reset", "type": "switch", "edge": "back", "along": 46.46, "w": 6, "h": 3.6, "d": 4, "z": -5.2, "protrude": 0.15 },
+    { "id": "boot", "type": "switch", "edge": "back", "along": 57.68, "w": 6, "h": 3.6, "d": 4, "z": -5.2, "protrude": 0.15 }
+  ],
+  "source": "https://www.waveshare.com/w/upload/7/7f/Esp32-s3-touch-lcd-4.3-003.jpg",
+  "verified": true
+}

@@ -254,7 +254,29 @@ centre.
 | Waveshare ESP32-S3-Touch-LCD-4.3 | ESP32-S3; 800×480 ST7262 RGB; GT911 | 106 × 68; 4 holes 4 in (98 × 60); glass 106.1 × 67.8 | AA 95.54 × 54.36: 5.33 from the right, 9.09 from the bottom, ≈4.35 from the top; total 8.8 | Code 2,760 (with 4.3B). openHASP. Printables 3 | `waveshare.com/w/upload/7/7f/Esp32-s3-touch-lcd-4.3-003.jpg` (every connector dimensioned: UART and USB USB-C on the left at 12.93 and 32.90, SD, terminals, JST); STEP `files.waveshare.com/wiki/ESP32-S3-Touch-LCD-4.3/ESP32-S3-Touch-LCD-4in3_3D_Drawing.zip` | The best drawing in the segment. Non-touch: 105.4 × 67.1 |
 | Waveshare ESP32-S3-Touch-LCD-7 (and 7B, 1024×600) | ESP32-S3; 800×480 ST7262; GT911 | glass 164 × 97; **mounts on 4 × M3 studs on the LCD's metal back at 126.2 × 65.65**; the PCB has 4 × M2.5 | AA 153.84 × 85.63 | Code **5,136**, the highest Waveshare. openHASP. Printables 3 | `waveshare.com/w/upload/d/d4/ESP32-S3-Touch-LCD-7-details-size-1.png`, `…/e/e8/…-details-size-2.png`, `files.waveshare.com/wiki/ESP32-S3-Touch-LCD-7/ESP32-S3-Touch-LCD-7in0_Drawing.zip`; 7B `waveshare.com/w/upload/9/99/ESP32-S3-Touch-LCD-7B-details-size1.jpg` | Mounts by the display's frame, not the PCB. The 126.2 × 65.65 studs are the original Pi 7″ display's M3 pattern |
 | LilyGO T-Display S3 (touch / non-touch) | ESP32-S3; 1.9″ 170×320 ST7789, 8-bit parallel; optional CST816 | 26.09 × 61.98 (STEP); **no holes**: rails | LCD 25.95 × 49.87 | 1,204★. Code 7,008. CircuitPython 1,183. ESPHome 2 pages, openHASP 2. Printables 30–33 | `github.com/Xinyuan-LilyGO/T-Display-S3/tree/main/dimensions` (`t-display-s3-pcb.stp`, `-full.stp`, `PCB.dwg`, LilyGO's shells) | The top LilyGO board |
-| Adafruit ESP32-S3 TFT Feather / Reverse TFT Feather | ESP32-S3; 1.14″ 240×135 ST7789 | Feather 50.8 × 22.86; 2 × Ø2.2 at x 2.54, 2 × Ø2.5 at x 48.26 (the Reverse mirrored) | on top (TFT) or underneath (Reverse) | CircuitPython **2,338 (Reverse, #19 of 697)** and 1,587. Code 1,178 / 47 | Eagle: `github.com/adafruit/Adafruit-ESP32-S3-TFT-Feather-PCB`, `…/Adafruit-ESP32-S3-Reverse-TFT-Feather-PCB` (`board.mjs --brd`) | Variants of `adafruit-feather-esp32-s3`. `PLAN-IMPROVEMENTS-NEW-BOARDS.md` already names both |
+| Adafruit ESP32-S3 TFT Feather / Reverse TFT Feather (**already in**: variants `tft`, `reverse-tft`) | ESP32-S3; 1.14″ 240×135 ST7789 | Feather 50.8 × 22.86; 2 × Ø2.2 at x 2.54, 2 × Ø2.5 at x 48.26 (the Reverse mirrored) | on top (TFT) or underneath (Reverse) | CircuitPython **2,338 (Reverse, #19 of 697)** and 1,587. Code 1,178 / 47 | Eagle: `github.com/adafruit/Adafruit-ESP32-S3-TFT-Feather-PCB`, `…/Adafruit-ESP32-S3-Reverse-TFT-Feather-PCB` (`board.mjs --brd`) | Variants of `adafruit-feather-esp32-s3`. `PLAN-IMPROVEMENTS-NEW-BOARDS.md` already names both |
+
+**Added on 2026-10-27** (branch `screens-tier-a`): Guition JC2432W328 (variant
+`jc2432w328` of `esp32-2432s028r`), Sunton 2432S024, 2432S032, 3248S035,
+8048S043 / 4827S043 (one entry, one PCB), 8048S050, 8048S070, Guition
+JC4827W543, Waveshare ESP32-S3-Touch-LCD-4.3 (✓: the vendor's dimensioned
+drawing and STEP agree within 0.6 mm), LilyGO T-Display S3 (variant `touch`).
+All but the Waveshare are ≈: outlines and holes from the dimension
+drawings, connectors from the spec PDFs' back views (Sunton's are turned
+180° on the 4.3″ and 5″, mirrored on the rest; the drawings' TF slot
+settles which), the active area centred on the module where no offset is
+given. Two notes on the drawings: the T-Display S3 has two Ø1.9 holes at the
+antenna end only (it stays on rails), and the Guition back view is a hand-held
+photo.
+
+Not added:
+- **CYD2USB** (2432S028Rv3): no drawing and no photo of the bare board; its
+  USB-C position would be a guess.
+- **Waveshare ESP32-S3-Touch-LCD-7**: the driver PCB sits on the LCD's
+  metal back; the case mounts on the frame's M3 bosses (126.2 × 65.65) and
+  its connectors are 23 mm inside the frame edge, past the schema's
+  `protrude` limit (−20). It waits for display placements with the
+  standalone displays (the last section).
 
 ### Tier B — the second wave
 

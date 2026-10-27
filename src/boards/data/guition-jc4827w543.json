@@ -1,0 +1,37 @@
+{
+  "id": "guition-jc4827w543",
+  "name": "JC4827W543 C / R / N (4.3-inch)",
+  "vendor": "Guition",
+  "kind": "mcu",
+  "size": { "w": 120, "d": 70.2, "t": 1.6 },
+  "outline": [[4.25, 0], [89, 0], [89, 2.5], [107.5, 2.5], [107.5, 0], [115.75, 0], [118.75, 1.25], [120, 4.25], [118.75, 7.25], [115.75, 8.5], [113, 8.5], [113, 61.7], [115.75, 61.7], [118.75, 62.95], [120, 65.95], [118.75, 68.95], [115.75, 70.2], [4.25, 70.2], [1.25, 68.95], [0, 65.95], [1.25, 62.95], [4.25, 61.7], [7, 61.7], [7, 8.5], [4.25, 8.5], [1.25, 7.25], [0, 4.25], [1.25, 1.25]],
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.7, "y": 4.05, "d": 3.2 },
+      { "x": 3.7, "y": 66.15, "d": 3.2 },
+      { "x": 116.3, "y": 4.05, "d": 3.2 },
+      { "x": 116.3, "y": 66.15, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 4.5,
+  "bottomHeight": 4,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 59.9, "y": 36.8, "w": 95.04, "d": 53.86, "h": 4.5 },
+    { "id": "usb", "type": "usb-c", "edge": "left", "along": 41.9, "z": -4.8, "protrude": -7.7 },
+    { "id": "power-p1", "type": "jst", "edge": "left", "along": 29.7, "w": 7, "h": 3.4, "d": 5.5, "z": -5, "protrude": -6.7, "cut": false },
+    { "id": "battery", "type": "jst", "edge": "back", "along": 16.9, "w": 5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "speaker", "type": "jst", "edge": "back", "along": 38.3, "w": 5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "battery-switch", "type": "switch", "edge": "back", "along": 81.3, "w": 4.5, "h": 1.6, "z": -3.2, "protrude": 0.5 },
+    { "id": "io-p5", "type": "jst", "edge": "front", "along": 21.2, "w": 6, "h": 3, "d": 5, "z": -4.6, "protrude": 0, "cut": false },
+    { "id": "uart-p4", "type": "jst", "edge": "front", "along": 32.3, "w": 7, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "io-p3", "type": "jst", "edge": "front", "along": 44.4, "w": 7, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "io-p2", "type": "jst", "edge": "front", "along": 59.6, "w": 7, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "microsd", "type": "microsd", "edge": "front", "along": 76.8, "h": 1.8, "z": -3.4, "protrude": 0.3 },
+    { "id": "reset", "type": "button", "edge": "bottom", "x": 109.1, "y": 17.2, "w": 3, "d": 3 },
+    { "id": "boot", "type": "button", "edge": "bottom", "x": 109.1, "y": 28.9, "w": 3, "d": 3 }
+  ],
+  "source": "https://github.com/profi-max/JC4827W543_4.3inch_ESP32S3_board/blob/main/Docs/JC4827W543%20Specifications-EN.pdf",
+  "verified": false
+}

@@ -1,0 +1,36 @@
+{
+  "id": "sunton-esp32-2432s024",
+  "name": "ESP32-2432S024R / C / N (2.4-inch)",
+  "vendor": "Sunton",
+  "kind": "mcu",
+  "size": { "w": 74.4, "d": 42.9, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.2, "y": 3.2, "d": 3.2 },
+      { "x": 3.2, "y": 39.7, "d": 3.2 },
+      { "x": 71.2, "y": 3.2, "d": 3.2 },
+      { "x": 71.2, "y": 39.7, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 4,
+  "bottomHeight": 4,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 40.3, "y": 21.3, "w": 48.96, "d": 36.72, "h": 4 },
+    { "id": "rgb-led", "type": "led", "edge": "top", "x": 71.2, "y": 33.7, "w": 5, "d": 5, "h": 1.6, "shape": "rect" },
+    { "id": "ldr", "type": "generic", "edge": "top", "x": 71.8, "y": 9.2, "w": 3.6, "d": 5.4, "h": 1.5, "cut": false },
+    { "id": "usb", "type": "usb-c", "edge": "left", "along": 23.9, "z": -4.8, "protrude": 0.5 },
+    { "id": "power", "type": "jst", "edge": "left", "along": 11.4, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "extended-io", "type": "jst", "edge": "back", "along": 64.1, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "dht", "type": "jst", "edge": "back", "along": 52.9, "w": 7.5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "microsd", "type": "microsd", "edge": "back", "along": 36.2, "h": 1.8, "z": -3.4, "protrude": 0.3 },
+    { "id": "speaker", "type": "jst", "edge": "front", "along": 27.9, "w": 5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "battery-switch", "type": "switch", "edge": "front", "along": 19.1, "w": 4.5, "h": 1.6, "z": -3.2, "protrude": 0.5 },
+    { "id": "battery", "type": "jst", "edge": "front", "along": 11.2, "w": 5, "h": 3.4, "d": 5.5, "z": -5, "protrude": 0, "cut": false },
+    { "id": "boot", "type": "button", "edge": "bottom", "x": 58.2, "y": 2.6, "w": 3, "d": 4, "h": 2, "shape": "rect" },
+    { "id": "reset", "type": "button", "edge": "bottom", "x": 61.7, "y": 2.6, "w": 3, "d": 4, "h": 2, "shape": "rect" }
+  ],
+  "source": "https://github.com/NoosaHydro/2.4inch_ESP32-2432S024/blob/main/3-Structure_Diagram/Dimensions.png",
+  "verified": false
+}

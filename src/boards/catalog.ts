@@ -44,6 +44,14 @@ import esp32DevkitcV4 from './data/esp32-devkitc-v4.json';
 import esp32DevkitV1 from './data/esp32-devkit-v1.json';
 import esp32S3Devkitc1 from './data/esp32-s3-devkitc-1.json';
 import wemosD1Mini from './data/wemos-d1-mini.json';
+import sunton2432s024 from './data/sunton-esp32-2432s024.json';
+import sunton2432s032 from './data/sunton-esp32-2432s032.json';
+import sunton3248s035 from './data/sunton-esp32-3248s035.json';
+import sunton8048s043 from './data/sunton-esp32-8048s043.json';
+import sunton8048s050 from './data/sunton-esp32-8048s050.json';
+import sunton8048s070 from './data/sunton-esp32-8048s070.json';
+import guitionJc4827w543 from './data/guition-jc4827w543.json';
+import lilygoTDisplayS3 from './data/lilygo-t-display-s3.json';
 import arduinoLeonardo from './data/arduino-leonardo.json';
 import arduinoMega2560 from './data/arduino-mega-2560.json';
 import arduinoMicro from './data/arduino-micro.json';
@@ -66,6 +74,7 @@ import rakwirelessRak19007 from './data/rakwireless-rak19007.json';
 import seeedXiao from './data/seeed-xiao.json';
 import seeedXiaoEsp32s3Sense from './data/seeed-xiao-esp32s3-sense.json';
 import waveshareZero from './data/waveshare-zero.json';
+import waveshareEsp32S3TouchLcd43 from './data/waveshare-esp32-s3-touch-lcd-4-3.json';
 import mpdBh18650W from './data/mpd-bh-18650-w.json';
 import mpdBh2aaW from './data/mpd-bh2aa-w.json';
 import mpdBh4aaW from './data/mpd-bh4aa-w.json';
@@ -112,6 +121,14 @@ export const RAW_BOARDS: readonly unknown[] = [
   esp32DevkitV1,
   esp32S3Devkitc1,
   wemosD1Mini,
+  sunton2432s024,
+  sunton2432s032,
+  sunton3248s035,
+  sunton8048s043,
+  sunton8048s050,
+  sunton8048s070,
+  guitionJc4827w543,
+  lilygoTDisplayS3,
   arduinoLeonardo,
   arduinoMega2560,
   arduinoMicro,
@@ -134,6 +151,7 @@ export const RAW_BOARDS: readonly unknown[] = [
   seeedXiao,
   seeedXiaoEsp32s3Sense,
   waveshareZero,
+  waveshareEsp32S3TouchLcd43,
   // battery holders, screwed down like boards (their own group in the picker)
   mpdBh18650W,
   mpdBh2aaW,
