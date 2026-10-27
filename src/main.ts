@@ -10,7 +10,7 @@ import { el, make } from './ui/dom';
 import { createScene } from './render/scene';
 import type { SceneCaption, ScenePart } from './render/scene';
 import { renderControls } from './ui/controls';
-import type { ControlsHandle } from './ui/controls';
+import type { Control, ControlsHandle } from './ui/controls';
 import { caseControls } from './ui/caseCard';
 import { lidControls } from './ui/lidCard';
 import { renderBoardsCard } from './ui/boardsCard';
@@ -42,8 +42,6 @@ import { ENDONYMS, LANGS, initLang, isLang, lang, onLangChange, setLang, t, tDyn
 import type { Key } from './i18n';
 import type { Message } from './geo/message';
 import { faceFrame } from './geo/face';
-import type { Dims, Face } from './geo/face';
-import type { PrintShape } from './geo/print';
 import { caseLayout, collisions, heldByLid, lidDepthMax, placeBoards } from './geo/layout';
 import { boardGhost, portCaptionAnchor, standoffGhost } from './geo/ghost';
 import {
@@ -52,9 +50,10 @@ import {
 import type { BoardDef } from './boards/schema';
 import { resolveVariant } from './boards/schema';
 import { catalogBoard } from './boards/catalog';
-import { bodyForPrint, lidWithScrews, printLayout, screwsForPrint, screwsInCase, withClamps, PRINT_GAP_MM } from './geo/print';
+import type { LidPlace, PrintArrange } from './geo/print';
+import { LID_PLACES, PRINT_GAP_MAX, PRINT_GAP_MIN, bodyForPrint, bothForPrint, lidWithScrews, screwsInCase, withClamps } from './geo/print';
 import type { SurfaceMesh } from './geo/surface';
-import { meshBounds, mergeMeshes } from './geo/surface';
+import { mergeMeshes } from './geo/surface';
 import { encodeSTL } from './geo/stl';
 import { assessExport, validateMesh } from './geo/validate';
 import type { AppState, ExportMode } from './state/schema';
@@ -98,6 +97,7 @@ const extraOpenings = el('extraOpenings', HTMLDivElement);
 const extraMounting = el('extraMounting', HTMLDivElement);
 const cutAdd = el('cutAdd', HTMLButtonElement);
 const lidParams = el('lidParams', HTMLDivElement);
+const printParams = el('printParams', HTMLDivElement);
 const resolutionSel = el('resolution', HTMLSelectElement);
 const exportBtn = el('exportBtn', HTMLButtonElement);
 const partList = el('partList', HTMLUListElement);
@@ -152,6 +152,25 @@ setupAdjustmentButtons(panel);
 
 let caseRows: ControlsHandle<AppState>;
 let lidRows: ControlsHandle<AppState>;
+let printRows: ControlsHandle<AppState>;
+
+/** Where the lid lies next to the body in the Both STL — the only parts tab with two parts on the bed. */
+function printControls(): Control<AppState>[] {
+  const both = (s: AppState): boolean => s.exportMode === 'both';
+  return [
+    {
+      kind: 'segmented', key: 'lid', label: 'print.lid', hint: 'print.lid.hint', when: both,
+      options: LID_PLACES.map((place) => ({ value: place, label: `print.lid.${place}` as const })),
+      get: (s) => s.print.lid,
+      set: (s, value) => ({ ...s, print: { ...s.print, lid: LID_PLACES.find((place): place is LidPlace => place === value) ?? s.print.lid } }),
+    },
+    {
+      kind: 'range', key: 'gap', label: 'print.gap', hint: 'print.gap.hint', when: both, min: PRINT_GAP_MIN, max: PRINT_GAP_MAX, step: 1,
+      get: (s) => s.print.gap,
+      set: (s, value) => ({ ...s, print: { ...s.print, gap: value } }),
+    },
+  ];
+}
 let boardRows: BoardsCardHandle;
 let cutRows: CutsCardHandle;
 let extraRows: ExtrasHandle;
@@ -163,6 +182,7 @@ function renderPanel(): void {
   cutRows = renderCutsCard(cutCards, () => state, (next) => applyState(next));
   extraRows = renderExtras(extraOpenings, extraMounting, () => state, (next) => applyState(next));
   lidRows = renderControls(lidParams, lidControls(), () => state, (next) => applyState(next), 'lid');
+  printRows = renderControls(printParams, printControls(), () => state, (next) => applyState(next), 'print');
 }
 renderPanel();
 
@@ -177,6 +197,7 @@ function syncPanel(): void {
   caseRows.sync(state);
   boardRows.sync(state);
   lidRows.sync(state);
+  printRows.sync(state);
   boardAdd.disabled = state.boards.length >= MAX_BOARDS;
   boardCustom.disabled = boardAdd.disabled;
   cutRows.sync(state);
@@ -357,14 +378,8 @@ async function showPreview(stamp: number): Promise<void> {
   }
 }
 
-/** Body, lid and printed screws on the bed, left to right — the view and the STL of Both. */
-function bothForPrint(
-  body: SurfaceMesh, lid: SurfaceMesh, screw: SurfaceMesh | null, count: number, face: Face, dims: Dims, shape: PrintShape,
-): SurfaceMesh[] {
-  const parts = printLayout(body, lid, face, dims, shape);
-  const screws = screw ? screwsForPrint(screw, count, meshBounds(parts[1]).max[0] + PRINT_GAP_MM) : null;
-  return screws ? [...parts, screws] : parts;
-}
+/** Where the last print layout of Both put the lid: the caption names it (auto decides by the meshes). */
+let lidPlaced: 'right' | 'behind' = 'right';
 
 /**
  * The parts on the bed as the parts tab picks them — the print layout of the
@@ -374,6 +389,7 @@ function bothForPrint(
  */
 function printParts(
   built: AppState, body: SurfaceMesh, lid: SurfaceMesh, screw: SurfaceMesh | null, clamps: SurfaceMesh | null, lidClamps: SurfaceMesh | null,
+  arrange: PrintArrange = built.print,
 ): ScenePart[] {
   const layout = caseLayout(built);
   const { dims } = layout;
@@ -386,9 +402,9 @@ function printParts(
     const lidParts = lidWithScrews(lid, screw, count, face, dims);
     return roles(withClamps(lidParts, lidClamps), [...(['lid', 'screw'] as const).slice(0, lidParts.length), 'clamp']);
   }
-  const placed = built.exportMode === 'both'
-    ? bothForPrint(body, lid, screw, count, face, dims, shape)
-    : [bodyForPrint(body, face, dims, shape)];
+  const both = built.exportMode === 'both' ? bothForPrint(body, lid, screw, count, face, dims, shape, arrange) : null;
+  if (both) lidPlaced = both.place;
+  const placed = both ? both.parts : [bodyForPrint(body, face, dims, shape)];
   const names: ScenePart['role'][] = built.exportMode === 'both' ? ['body', 'lid', 'screw'] : ['body'];
   const bars = built.exportMode === 'both' && lidClamps ? (clamps ? mergeMeshes([clamps, lidClamps]) : lidClamps) : clamps;
   const withClampBars = withClamps(placed, bars);
@@ -423,8 +439,11 @@ function drawParts(): void {
   const mode = effectiveView(built.exportMode);
   const posts = screw ? lidPosts(built).spots.map((spot) => spot.centre) : [];
   if (mode === 'print') {
-    show(printParts(built, body, lid, screw, clamps, lidClamps));
+    // the lid's place changes no part: the current one, before the worker answers
+    show(printParts(built, body, lid, screw, clamps, lidClamps, state.print));
     scene.setCaptions([]);
+    // auto has just decided where the lid goes
+    viewCaption.textContent = describeView(state);
     return;
   }
   const parts: ScenePart[] = [];
@@ -504,7 +523,9 @@ function describeView(state: AppState): string {
   const parts = state.exportMode;
   const what = t(parts === 'both' ? 'caption.both' : parts === 'body' ? 'caption.body' : 'caption.lid');
   const view = effectiveView(parts);
-  if (view === 'print') return `${what} · ${t('caption.print')}`;
+  if (view === 'print') {
+    return `${what} · ${t('caption.print')}${parts === 'both' ? ` · ${t(lidPlaced === 'behind' ? 'caption.lidBehind' : 'caption.lidRight')}` : ''}`;
+  }
   const boards = viewBoards.checked && state.boards.length > 0 ? ` · ${t('caption.withBoards')}` : '';
   // the body alone has nothing to explode
   if (parts === 'body') return `${what}${boards}`;

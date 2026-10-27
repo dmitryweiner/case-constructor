@@ -1,6 +1,6 @@
 # Case Constructor — improvements after the user voice of 2026-10-27
 
-**Status: in progress — U1, U5, U2 done.**
+**Status: in progress — U1, U5, U2, U4 done.**
 
 Written on 2026-10-27 from `user-voices/27-10-2026/` (`message.md`, the
 user's project `case-constructor-Корпус-1.json`, two screenshots). Items
@@ -207,3 +207,9 @@ on the model, the largest; it builds on U2's messages).
   that stick out (it says the wall that brings them flush, when that wall
   is at least `WALL_MIN`). `#warnings` is a `div` of lines now (`.warn-line`,
   `.info`, a `.warn-head` with the counts); `snap.mjs` reads `innerText`.
+- **U4.** The view draws the print layout with the current `state.print`,
+  not the one of the last worker build: the lid's place changes no part, so
+  it moves at once (the smoke caught the lag). The export lays out with the
+  state it built. `bothForPrint` moved from `main.ts` into `print.ts` and
+  returns where auto put the lid, for the caption. The default is auto for
+  old files too: a long case's Both STL changes from side by side to behind.

@@ -6,8 +6,13 @@ corner of the view always says what is shown; click it to jump to the card.
 
 **Parts** — the same parts are shown and exported:
 
-- **Both** (default) — body and lid side by side in one file, 10 mm apart;
-  with printed screws (docs/lid.md) the screws follow the lid in a row.
+- **Both** (default) — body and lid in one file. **Lid on the bed**: *auto*
+  (default) puts the lid to the right of the body or behind it, whichever
+  makes the longer side of the pair shorter — a long case (175 × 71) goes
+  behind (175 × 152 instead of 360 × 71); *right* or *behind* by hand.
+  **Gap on the bed** — 2…50 mm, 10 by default. With printed screws
+  (docs/lid.md) the screws follow the lid in a row, past it the same way.
+  The caption of the print layout says where the lid went.
 - **Body** — the body alone (the view shows it with its boards).
 - **Lid** — the lid alone, with its printed screws if the lid holds on them.
 

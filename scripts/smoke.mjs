@@ -635,8 +635,35 @@ await page.click('#viewExploded');
 if (!/body.*board.*lid/.test(await drawn())) errors.push(`[view] exploded/both draws ${await drawn()}`);
 await page.click('#viewAssembled');
 if (!/body.*board.*lid/.test(await drawn())) errors.push(`[view] assembled/both draws ${await drawn()}`);
+// the lid's place on the bed: behind the body, then right of it; the caption names it
+label('view:print-lid');
+await page.click('#viewPrint');
+const lidBox = () => page.evaluate(() => {
+  const parts = window.__case.drawnParts();
+  const box = (role) => {
+    const { positions: p } = parts.find((part) => part.role === role).mesh;
+    let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
+    for (let i = 0; i < p.length; i += 3) { x0 = Math.min(x0, p[i]); x1 = Math.max(x1, p[i]); y0 = Math.min(y0, p[i + 1]); y1 = Math.max(y1, p[i + 1]); }
+    return { x0, y0, x1, y1 };
+  };
+  return { body: box('body'), lid: box('lid') };
+});
+await page.click('#print_lid_behind');
+await setRange('print_gap', 20);
+await page.waitForTimeout(150);
+const behind = await lidBox();
+if (Math.abs(behind.lid.y0 - behind.body.y1 - 20) > 0.01 || Math.abs(behind.lid.x0) > 0.01) errors.push(`[view:print-lid] behind: ${JSON.stringify(behind)}`);
+if (!(await page.locator('#viewCaption').textContent()).includes('lid behind')) errors.push('[view:print-lid] the caption does not say behind');
+await page.click('#print_lid_right');
+await page.waitForTimeout(150);
+const right = await lidBox();
+if (Math.abs(right.lid.x0 - right.body.x1 - 20) > 0.01) errors.push(`[view:print-lid] right: ${JSON.stringify(right)}`);
+await exportStl('both:right');
+await page.click('#print_lid_auto');
+await setRange('print_gap', 10);
 await page.click('#viewExploded');
 await page.click('#tabLid');
+if (await page.locator('#print_lid_auto').isVisible()) errors.push('[view:print-lid] the Lid tab offers the lid\'s place');
 await expectWatertight('view:lid');
 if ((await drawn()) !== 'lid') errors.push(`[view] the Lid tab draws ${await drawn()}`);
 if (await page.locator('#viewRow').isVisible()) errors.push('[view] the Lid tab offers a view');

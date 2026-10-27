@@ -1,4 +1,4 @@
-import { bodyForPrint, lidForPrint, lidWithScrews, printLayout, PRINT_GAP_MM, screwsForPrint, screwsInCase } from '../src/geo/print';
+import { bodyForPrint, bothForPrint, lidForPrint, lidWithScrews, printLayout, PRINT_GAP_MM, sanitizePrint, screwsForPrint, screwsInCase } from '../src/geo/print';
 import { SCREW_GAP } from '../src/geo/thread';
 import { faceFrame } from '../src/geo/face';
 import { applyAffine, transformMesh, translation } from '../src/geo/surface';
@@ -30,6 +30,33 @@ describe('print layout', () => {
   it('the lid goes to the right of the body with a gap', () => {
     const [body, lid] = printLayout(boxMesh(), boxMesh(), 'top', dims);
     expect(meshBounds(lid).min[0]).toBeCloseTo(meshBounds(body).max[0] + PRINT_GAP_MM);
+  });
+
+  it('behind the body: the lid starts a gap past the body\'s back, at x = 0', () => {
+    const [body, lid] = printLayout(boxMesh(), boxMesh(), 'top', dims, undefined, { lid: 'behind', gap: 4 });
+    expect(meshBounds(lid).min[0]).toBeCloseTo(0);
+    expect(meshBounds(lid).min[1]).toBeCloseTo(meshBounds(body).max[1] + 4);
+    expect(meshBounds(lid).min[2]).toBeCloseTo(0);
+  });
+
+  it('auto: the layout whose longer side is shorter', () => {
+    // a long case (the user's 175 × 71): side by side it is 360 long, behind 152
+    const long = { w: 175, d: 71, h: 29 };
+    const [, lidLong] = printLayout(boxMesh(175, 71, 26), boxMesh(175, 71, 3), 'top', long, undefined, { lid: 'auto', gap: 10 });
+    expect(meshBounds(lidLong).min[1]).toBeCloseTo(81);
+    // a deep one goes side by side
+    const deep = { w: 60, d: 120, h: 29 };
+    const [, lidDeep] = printLayout(boxMesh(60, 120, 26), boxMesh(60, 120, 3), 'top', deep, undefined, { lid: 'auto', gap: 10 });
+    expect(meshBounds(lidDeep).min[0]).toBeCloseTo(70);
+    // a square one: a tie keeps the right
+    const [, lidSquare] = printLayout(boxMesh(10, 10, 6), boxMesh(10, 10, 3), 'top', { w: 10, d: 10, h: 6 }, undefined, { lid: 'auto', gap: 10 });
+    expect(meshBounds(lidSquare).min[0]).toBeCloseTo(20);
+  });
+
+  it('the settings survive a file; garbage falls back to auto and the default gap', () => {
+    expect(sanitizePrint(undefined)).toEqual({ lid: 'auto', gap: PRINT_GAP_MM });
+    expect(sanitizePrint({ lid: 'behind', gap: 500 })).toEqual({ lid: 'behind', gap: 50 });
+    expect(sanitizePrint({ lid: 'under', gap: 'x' })).toEqual({ lid: 'auto', gap: PRINT_GAP_MM });
   });
 });
 
@@ -64,6 +91,17 @@ describe('printed screws', () => {
       expect(Math.min(...along.map((p) => p[0])), face).toBeCloseTo(0);
       expect(validateMesh(placed).volume, face).toBeGreaterThan(0);
     }
+  });
+
+  it('Both: the screws follow the lid — to its right, or behind it', () => {
+    const right = bothForPrint(boxMesh(), boxMesh(), screw, 3, 'top', dims, undefined, { lid: 'right', gap: 5 }).parts;
+    expect(meshBounds(right[2]).min[0]).toBeCloseTo(meshBounds(right[1]).max[0] + 5);
+    const both = bothForPrint(boxMesh(), boxMesh(), screw, 3, 'top', dims, undefined, { lid: 'behind', gap: 5 });
+    expect(both.place).toBe('behind');
+    const behind = both.parts;
+    expect(meshBounds(behind[2]).min[0]).toBeCloseTo(0);
+    expect(meshBounds(behind[2]).min[1]).toBeCloseTo(meshBounds(behind[1]).max[1] + 5);
+    expect(bothForPrint(boxMesh(), boxMesh(), null, 0, 'top', dims).parts).toHaveLength(2);
   });
 
   it('the lid tab and the STL: the lid, then its screws to the right', () => {

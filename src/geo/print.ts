@@ -12,9 +12,36 @@ import type { Vec2 } from './section';
 import type { Affine, SurfaceMesh } from './surface';
 import { composeAffine, meshBounds, mergeMeshes, transformMesh, translation } from './surface';
 import { SCREW_GAP } from './thread';
+import { clampNum } from './shape';
 
 /** Gap between the body and the lid on the bed, mm. */
 export const PRINT_GAP_MM = 10;
+export const PRINT_GAP_MIN = 2;
+export const PRINT_GAP_MAX = 50;
+
+/** Where the lid goes next to the body in the Both STL; auto takes the more compact of the two. */
+export const LID_PLACES = ['auto', 'right', 'behind'] as const;
+export type LidPlace = (typeof LID_PLACES)[number];
+
+export interface PrintArrange {
+  lid: LidPlace;
+  /** between the body, the lid and the screws, mm */
+  gap: number;
+}
+
+export function defaultPrint(): PrintArrange {
+  return { lid: 'auto', gap: PRINT_GAP_MM };
+}
+
+export function sanitizePrint(raw: unknown): PrintArrange {
+  const d = defaultPrint();
+  const r = typeof raw === 'object' && raw !== null ? raw : {};
+  const lid: unknown = Reflect.get(r, 'lid');
+  return {
+    lid: LID_PLACES.find((place) => place === lid) ?? d.lid,
+    gap: clampNum(Reflect.get(r, 'gap'), PRINT_GAP_MIN, PRINT_GAP_MAX, d.gap),
+  };
+}
 
 /** Rotation of the face frame without its offset: lid normal → +z. */
 function upright(face: Face, dims: Dims): Affine {
@@ -56,11 +83,46 @@ export function lidForPrint(lid: SurfaceMesh, face: Face, dims: Dims, x0 = 0): S
   return onBed(transformMesh(lid, composeAffine(FLIP, upright(face, dims))), x0);
 }
 
-/** Body and lid side by side on the bed, the lid to the right. */
-export function printLayout(body: SurfaceMesh, lid: SurfaceMesh, face: Face, dims: Dims, shape?: PrintShape): SurfaceMesh[] {
+/**
+ * Body and lid on the bed: the lid to the right of the body or behind it,
+ * `gap` apart. Auto puts it behind when that makes the longer side of the
+ * pair's footprint shorter (a long case: side by side it outgrows the bed).
+ */
+export function printLayout(
+  body: SurfaceMesh, lid: SurfaceMesh, face: Face, dims: Dims, shape?: PrintShape, arrange: PrintArrange = { lid: 'right', gap: PRINT_GAP_MM },
+): SurfaceMesh[] {
+  return placeLid(body, lid, face, dims, shape, arrange).parts;
+}
+
+function placeLid(
+  body: SurfaceMesh, lid: SurfaceMesh, face: Face, dims: Dims, shape: PrintShape | undefined, arrange: PrintArrange,
+): { parts: SurfaceMesh[]; place: 'right' | 'behind' } {
   const placedBody = bodyForPrint(body, face, dims, shape);
-  const width = meshBounds(placedBody).max[0];
-  return [placedBody, lidForPrint(lid, face, dims, width + PRINT_GAP_MM)];
+  const flatLid = lidForPrint(lid, face, dims);
+  const b = meshBounds(placedBody).max;
+  const l = meshBounds(flatLid).max;
+  const { gap } = arrange;
+  const right = Math.max(b[0] + gap + l[0], b[1], l[1]);
+  const behind = Math.max(b[0], l[0], b[1] + gap + l[1]);
+  const place = arrange.lid === 'auto' ? (behind < right - 1e-6 ? 'behind' : 'right') : arrange.lid;
+  return { parts: [placedBody, transformMesh(flatLid, place === 'right' ? translation(b[0] + gap, 0, 0) : translation(0, b[1] + gap, 0))], place };
+}
+
+/**
+ * Body, lid and printed screws on the bed — the view and the STL of Both:
+ * the screws in a row past the lid, the same way; `place` says where auto
+ * put the lid (the caption names it).
+ */
+export function bothForPrint(
+  body: SurfaceMesh, lid: SurfaceMesh, screw: SurfaceMesh | null, count: number, face: Face, dims: Dims, shape?: PrintShape,
+  arrange: PrintArrange = { lid: 'right', gap: PRINT_GAP_MM },
+): { parts: SurfaceMesh[]; place: 'right' | 'behind' } {
+  const { parts, place } = placeLid(body, lid, face, dims, shape, arrange);
+  const lidBox = meshBounds(parts[1]);
+  const behind = place === 'behind';
+  const screws = screw
+    ? screwsForPrint(screw, count, behind ? 0 : lidBox.max[0] + arrange.gap, behind ? lidBox.max[1] + arrange.gap : 0) : null;
+  return { parts: screws ? [...parts, screws] : parts, place };
 }
 
 /** Half-turn about x: the screw's own frame (shank up) → shank down. */
@@ -77,12 +139,12 @@ export function screwsInCase(screw: SurfaceMesh, centres: readonly Vec2[], face:
   return mergeMeshes(centres.map((c) => transformMesh(screw, composeAffine(fromFace, composeAffine(translation(c[0], c[1], lift), SHANK_DOWN)))));
 }
 
-/** Printed screws as they print: standing on their heads in a row from x0, `SCREW_GAP` apart. */
-export function screwsForPrint(screw: SurfaceMesh, count: number, x0: number): SurfaceMesh | null {
+/** Printed screws as they print: standing on their heads in a row along x from (x0, y0), `SCREW_GAP` apart. */
+export function screwsForPrint(screw: SurfaceMesh, count: number, x0: number, y0 = 0): SurfaceMesh | null {
   if (count === 0) return null;
   const { min, max } = meshBounds(screw);
   const step = max[0] - min[0] + SCREW_GAP;
-  return mergeMeshes(Array.from({ length: count }, (_, i) => transformMesh(screw, translation(x0 - min[0] + i * step, -min[1], -min[2]))));
+  return mergeMeshes(Array.from({ length: count }, (_, i) => transformMesh(screw, translation(x0 - min[0] + i * step, y0 - min[1], -min[2]))));
 }
 
 /** The lid and its screws on the bed: the lid from x0, the screws to its right. */

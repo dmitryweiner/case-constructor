@@ -448,7 +448,7 @@ Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets
 `#lid_lipT`, `#lid_fit`.
 View and export card (`#exportCard`): parts `#tabBoth` (first, default),
 `#tabBody`, `#tabLid`; view `#viewExploded` (default), `#viewAssembled`,
-`#viewPrint`; `#viewBoards`, `#viewPortNames` (connector names over the ghosts), `#viewXray`; `#resolution`, `#exportBtn`. The
+`#viewPrint`; the lid's place in the Both STL (Both only) `#print_lid_auto|right|behind`, `#print_gap`; `#viewBoards`, `#viewPortNames` (connector names over the ghosts), `#viewXray`; `#resolution`, `#exportBtn`. The
 caption over the canvas `#viewCaption` says what is shown and scrolls to the
 card. Dev builds: `window.__case.drawn()` lists the roles drawn last,
 `drawnParts()` the meshes with their offsets. Port captions (`#portCaptions`, an overlay over
