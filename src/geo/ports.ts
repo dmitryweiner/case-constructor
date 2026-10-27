@@ -136,9 +136,11 @@ function tiltedCutter(
       return { origin, ex: axis([1, 0, 0]), ey: axis([0, -1, 0]), ez: axis([0, 0, -1]), s0: port.h + COLUMN_GAP, s1: reach, ...section, w, h, source };
     }
     const origin = applyAffine(m, [port.x, port.y, t]);
-    // how far the plate's inside is above the PCB along the normal (the board is parallel to it)
+    // a board turned over on a display's back: its column runs on through whatever is there
     const frame = board.frame;
-    const inside = frame ? -plate - applyAffine(invertRigid(frame), origin)[2] : port.h;
+    if (!frame) return { origin, ex: axis([1, 0, 0]), ey: axis([0, 1, 0]), ez: axis([0, 0, 1]), s0: port.h + COLUMN_GAP, s1: reach, ...section, w, h, source };
+    // how far the plate's inside is above the PCB along the normal (the board is parallel to it)
+    const inside = -plate - applyAffine(invertRigid(frame), origin)[2];
     const bevel = port.type === 'display' && board.placement.bevel !== false ? { flare: { from: inside, rate: WINDOW_FLARE } } : {};
     return {
       origin, ex: axis([1, 0, 0]), ey: axis([0, 1, 0]), ez: axis([0, 0, 1]),

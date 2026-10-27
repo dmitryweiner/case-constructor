@@ -217,6 +217,12 @@ const STATES: Record<string, AppState> = {
     lid: { ...defaultState().lid, face: 'bottom' },
     boards: [{ board: 'waveshare-epaper-7.5-v2', on: 'ceiling', z: 0, press: -1, mount: { size: 'M3', hole: 'nut' } }],
   }),
+  // D6: a Pi on the display's back
+  'td2-7-pi5-back': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, fastening: 'screws' },
+    boards: [{ board: 'raspberry-pi-touch-display-2-7', on: 'ceiling', z: 0, mount: { size: 'M3', hole: 'insert' }, back: { board: 'raspberry-pi-5', rot: 90 } }],
+  }),
   'lcd1602-box': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'lcd-1602-i2c', on: 'ceiling', z: 0.3, mount: { size: 'M2.5', hole: 'nut' } }],

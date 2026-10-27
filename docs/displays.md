@@ -85,3 +85,26 @@ hole kind of the board's box (pilot hole, insert or nut).
   panel (the Lid tab and its STL show and export them), with the body when
   the body does; exploded, they float under the panel.
 
+## A board on the display's back
+
+Most DSI displays carry the Pi's 58 × 49 hole pattern on their back, so the
+Pi screws straight onto the display. **On its back** (in the display's box)
+offers the boards whose holes fit the pattern.
+
+- The board takes its place from the pattern; **Turned** offers the turns
+  that fit (a Pi fits a quarter turn either way: its USB and Ethernet on one
+  side or the other). On a DSI display the Pi lies with its parts facing
+  away from the display.
+- **Standoff height** is the display's own standoffs between its back and
+  the board (Touch Display 2: 8.5 mm from its back plate); longer ones make
+  room for a Pi 5's cooler. The case grows to hold the display, the
+  standoffs and the board, with the top margin to the floor.
+- The board has no supports of its own: it rides on the display's metal
+  standoffs (drawn as dark columns). Its edge ports get their openings as
+  any board's; the parts on its faces (the GPIO header, a ribbon
+  connector) are closed by default — turned over, their columns would cut
+  the floor. Its toggles are under the display's own, its captions carry
+  the display's number.
+- Removing the display removes the board on its back.
+- Clamp bars that run into the board on the back are reported.
+

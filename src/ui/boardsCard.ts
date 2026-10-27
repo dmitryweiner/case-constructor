@@ -8,12 +8,15 @@ import { make } from './dom';
 import type { Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';
-import type { BoardPlacement } from '../boards/placement';
+import type { BackPlacement, BoardPlacement } from '../boards/placement';
 import {
-  CEILING_GAP, NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, SIDES, WALL_OFFSET_MAX, WALL_OFFSET_MIN, Z_MAX, boardOf, entryOf, floorZ, pinsDown, placementMinZ,
+  BACK_STANDOFF_MAX, BACK_STANDOFF_MIN, CEILING_GAP, NEW_BOARD_GAP, backPortDefault, backStandoffMin, withBackCut, POSITION_MAX, ROTATIONS, SIDES, WALL_OFFSET_MAX, WALL_OFFSET_MIN, Z_MAX, boardOf, entryOf, floorZ, pinsDown, placementMinZ,
   portCut, withPortCut, withSide,
 } from '../boards/placement';
 import type { BoardDef } from '../boards/schema';
+import { resolveVariant } from '../boards/schema';
+import { CATALOG, catalogBoard } from '../boards/catalog';
+import { attachTurns } from '../geo/attach';
 import type { BatterySpec } from '../boards/battery';
 import { BATTERY_KINDS, CELL_COUNT_MAX, PACK_MAX, PACK_MIN, PRESS_MAX, PRESS_MIN, defaultBattery, sanitizeBattery } from '../boards/battery';
 import { EDGES } from '../boards/schema';
@@ -136,6 +139,7 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       get: (state) => at(state).press ?? 0,
       set: (state, value) => patchBoard(state, index, { press: value }),
     },
+    ...backControls(index, entry),
     {
       kind: 'check', key: 'bevel', label: 'board.bevel', hint: 'board.bevel.hint',
       when: (state) => hung(state) && boardOf(at(state)).ports.some((port) => port.type === 'display' && port.edge === 'top'),
@@ -206,16 +210,91 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
   ];
 }
 
-/** One checkbox per port: cut an opening for it or not. */
+/** A display with a back pattern: the board on its back, its turn and the standoffs' length. */
+function backControls(index: number, entry: BoardDef): Control<AppState>[] {
+  const pattern = entry.back;
+  if (!pattern) return [];
+  const at = (state: AppState): BoardPlacement => state.boards[index];
+  const fits = CATALOG.filter((def) => !def.battery && attachTurns(entry, resolveVariant(def, def.variants?.[0].id)).length > 0);
+  const child = (state: AppState): BoardDef | undefined => {
+    const back = at(state).back;
+    const found = back ? catalogBoard(back.board) : undefined;
+    return found && back ? resolveVariant(found, back.variant) : undefined;
+  };
+  const setBack = (state: AppState, back: BackPlacement | null): AppState => {
+    const placement: BoardPlacement = { ...at(state) };
+    if (back) placement.back = back;
+    else delete placement.back;
+    return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
+  };
+  return [
+    {
+      kind: 'select', key: 'back', label: 'board.back', hint: 'board.back.hint',
+      options: [{ value: '', label: 'board.back.none' }, ...fits.map((def) => ({ value: def.id, text: def.name }))],
+      get: (state) => at(state).back?.board ?? '',
+      set: (state, value) => {
+        const found = catalogBoard(value);
+        if (!found) return setBack(state, null);
+        const def = resolveVariant(found, found.variants?.[0].id);
+        const turns = attachTurns(entry, def);
+        return setBack(state, {
+          board: found.id, rot: turns[0] ?? 0, standoff: Math.max(pattern.standoff, backStandoffMin(entry, def)), cuts: {},
+          ...(found.variants ? { variant: found.variants[0].id } : {}),
+        });
+      },
+    },
+    {
+      kind: 'segmented', key: 'back_rot', label: 'board.back.rot',
+      when: (state) => at(state).back !== undefined,
+      options: ROTATIONS.map((rot) => ({ value: String(rot), text: `${rot}°` })),
+      optionDisabled: (state, value) => {
+        const def = child(state);
+        return !def || !attachTurns(entry, def).some((turn) => String(turn) === value);
+      },
+      get: (state) => String(at(state).back?.rot ?? ''),
+      set: (state, value) => {
+        const back = at(state).back;
+        return back ? setBack(state, { ...back, rot: ROTATIONS.find((rot) => String(rot) === value) ?? back.rot }) : state;
+      },
+    },
+    {
+      kind: 'range', key: 'back_standoff', label: 'board.back.standoff', hint: 'board.back.standoff.hint',
+      min: BACK_STANDOFF_MIN, max: BACK_STANDOFF_MAX, step: 0.5,
+      when: (state) => at(state).back !== undefined,
+      get: (state) => at(state).back?.standoff ?? pattern.standoff,
+      set: (state, value) => {
+        const back = at(state).back;
+        const def = child(state);
+        return back && def ? setBack(state, { ...back, standoff: Math.max(backStandoffMin(entry, def), value) }) : state;
+      },
+    },
+  ];
+}
+
+/** One checkbox per port: cut an opening for it or not; then the ports of the board on a display's back. */
 function portControls(index: number, state: AppState): Control<AppState>[] {
   const def = boardOf(state.boards[index]);
-  return def.ports.map((port): Control<AppState> => ({
+  const own = def.ports.map((port): Control<AppState> => ({
     kind: 'check',
     key: `cut_${port.id}`,
     label: { text: `${tDynamic(`port.${port.type}`)} · ${port.id}` },
     get: (current) => portCut(current.boards[index], port.id, port.cut),
     set: (current, value) => patchBoard(current, index, { cuts: withPortCut(current.boards[index], port, value).cuts }),
   }));
+  const back = state.boards[index].back;
+  const entry = back ? catalogBoard(back.board) : undefined;
+  if (!back || !entry) return own;
+  const child = resolveVariant(entry, back.variant);
+  return [...own, ...child.ports.map((port): Control<AppState> => ({
+    kind: 'check',
+    key: `back_cut_${port.id}`,
+    label: { text: `${child.name} · ${tDynamic(`port.${port.type}`)} · ${port.id}` },
+    get: (current) => current.boards[index].back?.cuts[port.id] ?? backPortDefault(port),
+    set: (current, value) => {
+      const now = current.boards[index].back;
+      return now ? patchBoard(current, index, { back: { ...now, cuts: withBackCut(now, port, value) } }) : current;
+    },
+  }))];
 }
 
 /** A row of plain action buttons under a label, styled like a segmented control. */
@@ -255,7 +334,7 @@ function signatureOf(state: AppState): string {
   // a battery's kind decides its controls, its cell count its name
   return state.boards.map((board) => (board.board === 'custom' ? `custom:${customSignature(boardOf(board))}`
     : board.battery ? `battery:${board.battery.kind}:${board.battery.count}`
-      : `${board.board}:${board.variant ?? ''}`)).join('|');
+      : `${board.board}:${board.variant ?? ''}:${board.back?.board ?? ''}:${board.back?.variant ?? ''}`)).join('|');
 }
 
 export function renderBoardsCard(

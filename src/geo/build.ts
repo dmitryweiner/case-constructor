@@ -112,7 +112,8 @@ export function buildCase(
         });
       return [...own, ...rimSolids(csg, scope, board, shape.floor, segments)];
     };
-    const supports: Support[] = layout.boards.flatMap((board) => (board.def.battery
+    // a board on a display's back rides on the display's own standoffs
+    const supports: Support[] = layout.boards.flatMap((board) => (board.attached !== undefined ? [] : board.def.battery
       ? batterySupports(csg, scope, board, board.def.battery, shape.floor, segments)
       : board.hung ? hung(board) : held(board)));
     // The owner is the part under the support's base; whatever of it reaches

@@ -795,6 +795,35 @@
       ]
     }
   },
+  "td2-7-pi5-back": {
+    "body": {
+      "triangles": 2936,
+      "volume": 114120.85,
+      "extents": [
+        154.74,
+        208.82,
+        37.51
+      ]
+    },
+    "lid": {
+      "triangles": 3044,
+      "volume": 40073.43,
+      "extents": [
+        154.74,
+        208.82,
+        11.42
+      ]
+    },
+    "lidClamp": {
+      "triangles": 568,
+      "volume": 6442.51,
+      "extents": [
+        138.04,
+        148,
+        3
+      ]
+    }
+  },
   "lcd1602-box": {
     "body": {
       "triangles": 764,

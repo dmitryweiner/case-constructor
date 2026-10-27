@@ -44,9 +44,11 @@ import { faceFrame } from './geo/face';
 import type { Dims, Face } from './geo/face';
 import type { PrintShape } from './geo/print';
 import { caseLayout, collisions, heldByLid, lidDepthMax, placeBoards } from './geo/layout';
-import { boardGhost, portCaptionAnchor } from './geo/ghost';
-import { MAX_BOARDS, NEW_BOARD_GAP, boardOf, defaultPlacement, portCut, withPortCut } from './boards/placement';
+import { boardGhost, portCaptionAnchor, standoffGhost } from './geo/ghost';
+import { MAX_BOARDS, NEW_BOARD_GAP, backPortDefault, boardOf, defaultPlacement, portCut, withBackCut, withPortCut } from './boards/placement';
 import type { BoardDef } from './boards/schema';
+import { resolveVariant } from './boards/schema';
+import { catalogBoard } from './boards/catalog';
 import { bodyForPrint, lidWithScrews, printLayout, screwsForPrint, screwsInCase, withClamps, PRINT_GAP_MM } from './geo/print';
 import type { SurfaceMesh } from './geo/surface';
 import { meshBounds, mergeMeshes } from './geo/surface';
@@ -280,7 +282,8 @@ function refresh(): void {
   showWarnings([]);
   const numbered = layout.boards.length > 1;
   portCaptions = layout.boards.flatMap((board) => board.def.ports.map((port): SceneCaption => ({
-    key: `${board.index}:${port.id}`,
+    // a board on a display's back: its own toggles, under the display's number
+    key: `${board.index}${board.attached !== undefined ? 'b' : ''}:${port.id}`,
     text: `${numbered ? `${board.index + 1}: ` : ''}${tDynamic(`port.${port.type}`)} · ${port.id}`,
     at: portCaptionAnchor(board, port),
     dim: !portCut(board.placement, port.id, port.cut),
@@ -288,9 +291,11 @@ function refresh(): void {
   captionsOnLid = layout.boards.flatMap((board) => board.def.ports.map(() => heldByLid(board, state.lid.face)));
   const groups = layout.boards.map((board) => {
     const ghost = boardGhost(board);
+    const standoffs = standoffGhost(board);
     const parts: ScenePart[] = [
       { role: 'board', mesh: ghost.pcb },
       ...(ghost.glass ? [{ role: 'glass' as const, mesh: ghost.glass }] : []),
+      ...(standoffs ? [{ role: 'glass' as const, mesh: standoffs }] : []),
       ...(ghost.ports ? [{ role: 'port' as const, mesh: ghost.ports }] : []),
     ];
     return { parts, onLid: heldByLid(board, state.lid.face) };
@@ -850,8 +855,18 @@ panelBtn.addEventListener('click', () => setPanelOpen(true));
 /** A tap on a port's caption: its opening on or off, as its checkbox in the board card does. */
 function togglePortCut(key: string): void {
   const colon = key.indexOf(':');
-  const index = Number(key.slice(0, colon));
+  const onBack = key.slice(0, colon).endsWith('b');
+  const index = Number(key.slice(0, onBack ? colon - 1 : colon));
   const placement = state.boards[index];
+  const back = placement?.back;
+  if (onBack) {
+    const entry = back ? catalogBoard(back.board) : undefined;
+    const port = entry ? resolveVariant(entry, back?.variant).ports.find((one) => one.id === key.slice(colon + 1)) : undefined;
+    if (!back || !port) return;
+    const value = !(back.cuts[port.id] ?? backPortDefault(port));
+    applyState({ ...state, boards: state.boards.map((one, i) => (i === index ? { ...one, back: { ...back, cuts: withBackCut(back, port, value) } } : one)) });
+    return;
+  }
   const port = placement ? boardOf(placement).ports.find((one) => one.id === key.slice(colon + 1)) : undefined;
   if (!placement || !port) return;
   const boards = state.boards.map((one, i) => (i === index ? withPortCut(one, port, !portCut(one, port.id, port.cut)) : one));

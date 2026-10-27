@@ -387,4 +387,18 @@ below).
   its face on the side margin's line, where the cavity's corner arc ends,
   and left a degenerate triangle on the ceiling. The MSP2807, MSP1281 and
   MSP3520 golden states moved by it (0.1 mm wider).
+- **D6.** The attached board goes after every placed board in
+  `layout.boards`, with the display's index: inserted after its display it
+  shifted every later board's index, and much of the code reads
+  `layout.boards[i]` as `state.boards[i]`. Its messages and captions carry
+  the display's number (a translated "on the back of" would need a message
+  inside a message).
+- **D6.** It cannot stand against a wall: it rides on the display.
+- **D6.** Pressing clamp bars do not step aside for it: a bar that runs
+  into it is reported (`warn.clampBlocked`). Touch Display 2's bars are on
+  its bracket rows, clear of a Pi.
+- **D6.** HyperPixel 4.0 (`facing: top`) is not proven here: its LCD covers
+  its whole PCB, so nothing holds it from the front, and clamp bars under
+  it would run into the Pi below. It is held by the Pi it sits on — the
+  opposite of a board on a display's back. Decided in D7b.
 

@@ -293,6 +293,26 @@ await page.click('#tabLid');
 await page.waitForTimeout(300);
 if (!(await drawn()).includes('clamp')) errors.push(`[clamp] the Lid tab draws ${await drawn()}, no bars`);
 await page.click('#tabBoth');
+// a Pi on its back: by the pattern, its turns, its standoffs drawn, its captions toggle its own openings
+label('back');
+await page.selectOption('#board1_back', 'raspberry-pi-5');
+await expectWatertight('back:pi5');
+if (!(await page.isDisabled('#board1_back_rot_0')) || (await page.isDisabled('#board1_back_rot_270'))) errors.push('[back] the Pi\'s turns are not the pattern\'s');
+await page.click('#board1_back_rot_270');
+await expectWatertight('back:270');
+if (!(await page.locator('#board1_back_cut_usb-c').count())) errors.push('[back] no toggles for the Pi\'s ports');
+const backCaption = (await page.evaluate(() => window.__case.captions())).find((caption) => caption.key.startsWith('1b:'));
+if (backCaption) {
+  const portId = backCaption.key.slice(3);
+  const before = await page.evaluate((id) => window.__case.state().boards[1].back?.cuts[id] ?? 'default', portId);
+  const viewBox = await page.locator('#view').boundingBox();
+  await page.mouse.click(viewBox.x + backCaption.x, viewBox.y + backCaption.y);
+  await expectWatertight('back:caption');
+  const after = await page.evaluate((id) => window.__case.state().boards[1].back?.cuts[id] ?? 'default', portId);
+  if (after === before) errors.push(`[back] a click on the ${portId} caption changed nothing`);
+}
+await page.selectOption('#board1_back', '');
+await expectWatertight('back:none');
 await page.click('#board1_remove');
 label('openings');
 await page.click('#cutAdd');

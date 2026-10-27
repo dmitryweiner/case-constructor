@@ -170,6 +170,19 @@ export interface BoardPins {
   soldered: boolean;
 }
 
+/**
+ * A hole pattern on a display's back that another board screws to — most
+ * DSI displays carry the Pi's 58 × 49: the holes in the display's frame, the
+ * display's own standoffs' length below its back, and which face of the
+ * attached board turns to the display (`bottom`: the Pi's parts face away,
+ * as on a DSI display; `top`: a HAT, its GPIO up into the display).
+ */
+export interface BoardBack {
+  holes: Hole[];
+  standoff: number;
+  facing: 'top' | 'bottom';
+}
+
 /** Fields a variant may change on a port of its entry. */
 export const OVERRIDE_NUMBERS = ['x', 'y', 'along', 'z', 'w', 'h', 'd', 'protrude', 'clearance', 'cutH'] as const;
 export type PortOverride = Partial<Record<(typeof OVERRIDE_NUMBERS)[number], number>> & {
@@ -220,6 +233,8 @@ export interface BoardDef {
   bottomHeight: number;
   /** header rows that may carry pins below the board */
   pins?: BoardPins;
+  /** a display's back: the pattern another board screws to */
+  back?: BoardBack;
   ports: PortDef[];
   /** models of the family, the first is the default */
   variants?: BoardVariant[];
@@ -338,6 +353,23 @@ export function windowInGlass(port: Pick<TopPort, 'x' | 'y' | 'w' | 'd' | 'shape
 
 function withPins(pins: BoardPins | undefined): { pins?: BoardPins } {
   return pins ? { pins } : {};
+}
+
+function withBack(back: BoardBack | undefined): { back?: BoardBack } {
+  return back ? { back } : {};
+}
+
+/** A back pattern clamped into the board; none without holes. */
+export function sanitizeBack(raw: unknown, size: { w: number; d: number }): BoardBack | undefined {
+  if (typeof raw !== 'object' || raw === null) return undefined;
+  const r = rec(raw);
+  const holes: Hole[] = [];
+  for (const item of Array.isArray(r.holes) ? r.holes.slice(0, MAX_HOLES) : []) {
+    const hole = rec(item);
+    holes.push({ x: num(hole.x, 0, size.w, size.w / 2), y: num(hole.y, 0, size.d, size.d / 2), d: num(hole.d, 1, 8, 2.7) });
+  }
+  if (holes.length === 0) return undefined;
+  return { holes, standoff: num(r.standoff, 1, 30, 8), facing: r.facing === 'top' ? 'top' : 'bottom' };
 }
 
 /** Header rows of an entry; none without a valid edge. */
@@ -526,6 +558,7 @@ export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
     topHeight: num(r.topHeight, 0, 100, 10),
     bottomHeight: num(r.bottomHeight, 0, 30, 2),
     ...withPins(sanitizePins(r.pins)),
+    ...withBack(sanitizeBack(r.back, { w, d })),
     ports,
     ...(variants ? { variants } : {}),
     source: typeof r.source === 'string' ? r.source.slice(0, 300) : '',

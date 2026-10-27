@@ -81,7 +81,7 @@ function circle(x: number, y: number, r: number, clockwise: boolean): [number, n
  * built the same way faces out of the material. Vertices are shared, so the
  * mesh is closed.
  */
-function prismMesh(board: PlacedBoard, outer: [number, number][], holes: [number, number][][], z0: number, z1: number): SurfaceMesh {
+function prismMesh(board: Pick<PlacedBoard, 'toCase'>, outer: [number, number][], holes: [number, number][][], z0: number, z1: number): SurfaceMesh {
   const loops = [outer, ...holes];
   const flat = loops.flat();
   const n = flat.length;
@@ -237,4 +237,11 @@ function batteryGhost(board: PlacedBoard, spec: BatterySpec): SurfaceMesh {
   const alongX = { ...board, toCase: composeAffine(board.toCase, ALONG_X) };
   const r = size.h / 2;
   return mergeMeshes(cellCentres(spec).map((y) => prismMesh(alongX, circle(y, r, r, false), [], 0, size.w)));
+}
+
+/** The display's own standoffs a board on its back rides on, as drawn: Ø5 columns below the display's back. */
+export function standoffGhost(board: PlacedBoard): SurfaceMesh | null {
+  const standoffs = board.standoffs;
+  if (!standoffs) return null;
+  return mergeMeshes(standoffs.holes.map((hole) => prismMesh(standoffs, circle(hole.x, hole.y, 2.5, false), [], -standoffs.length, 0)));
 }

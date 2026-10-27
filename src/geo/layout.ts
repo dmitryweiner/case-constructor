@@ -8,12 +8,14 @@
 // depend on the case size, which breaks the circular dependency.
 
 import type { BoardDef, Edge, TopPort } from '../boards/schema';
-import { EDGES, onFace } from '../boards/schema';
+import { EDGES, onFace, resolveVariant } from '../boards/schema';
 import type { BoardPlacement, Rotation } from '../boards/placement';
 import { CLAMP_POST_ZONE } from '../boards/battery';
 import { RIM_FIT, rimReach } from './rim';
-import { CLAMP_BAR_T, clampHold, postReach } from './clamp';
-import { CEILING_GAP, boardOf, pinsDown, undersideOf } from '../boards/placement';
+import { CLAMP_BAR_T, CLAMP_BAR_W, clampHold, postReach } from './clamp';
+import { attachTransform } from './attach';
+import { CEILING_GAP, backPortDefault, boardOf, pinsDown, undersideOf } from '../boards/placement';
+import { catalogBoard } from '../boards/catalog';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import { bossDiameter } from './fasteners';
@@ -110,6 +112,13 @@ export interface PlacedBoard {
    * the console's slope. Its supports are built in it.
    */
   frame?: Affine;
+  /**
+   * A board on a display's back: the display's index (`index` is the same).
+   * It has no supports of its own; it comes after every placed board.
+   */
+  attached?: number;
+  /** an attached board's standoffs, as drawn: the display's frame, its back holes, their length below its back */
+  standoffs?: { toCase: Affine; holes: { x: number; y: number }[]; length: number };
 }
 
 /** The top plate's frame of a flat-topped case h high: w = 0 on the outer top. */
@@ -268,6 +277,58 @@ function hungTransform(def: BoardDef, rot: Rotation, cx: number, cy: number, gap
  * only their plan and their stacks count then).
  */
 function place(input: LayoutInput, offsetX: number, offsetY: number, frame: Affine | null): PlacedBoard[] {
+  const placed = placeOwn(input, offsetX, offsetY, frame);
+  const attached = placed.flatMap((board) => attachedTo(board) ?? []);
+  // a display's stack reaches down to the board on its back
+  const own = placed.map((board) => {
+    const child = attached.find((one) => one.attached === board.index);
+    return child ? { ...board, zBottom: Math.min(board.zBottom, child.zBottom) } : board;
+  });
+  return [...own, ...attached];
+}
+
+/** Corners of a box in a board's frame → their extremes in the case frame. */
+function boxExtent(toCase: Affine, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): { rect: Rect; z0: number; z1: number } {
+  const points = [x0, x1].flatMap((x) => [y0, y1].flatMap((y) => [z0, z1].map((z) => applyAffine(toCase, [x, y, z]))));
+  const zs = points.map((p) => p[2]);
+  return { rect: rectOf(points.map((p): [number, number] => [p[0], p[1]])), z0: Math.min(...zs), z1: Math.max(...zs) };
+}
+
+/** The board on a display's back, placed by its pattern; none without one. */
+function attachedTo(parent: PlacedBoard): PlacedBoard | null {
+  const back = parent.placement.back;
+  const pattern = parent.def.back;
+  const entry = back ? catalogBoard(back.board) : undefined;
+  if (!back || !pattern || !entry) return null;
+  const resolved = resolveVariant(entry, back.variant);
+  const def: BoardDef = { ...resolved, ports: resolved.ports.map((port) => ({ ...port, cut: backPortDefault(port) })) };
+  const toCase = composeAffine(parent.toCase, attachTransform(parent.def, def, back.rot, back.standoff));
+  const placement: BoardPlacement = {
+    board: def.id, x: 0, y: 0, z: 0, rot: back.rot, mount: { size: def.mount.screw, hole: 'tap', head: 'none' }, cuts: back.cuts,
+    ...(back.variant !== undefined ? { variant: back.variant } : {}),
+  };
+  const { w, d, t } = def.size;
+  const reach = edgeReach(def, placement, false);
+  const body = boxExtent(toCase, 0, 0, -undersideOf(def, false), w, d, t + def.topHeight);
+  return {
+    index: parent.index,
+    def,
+    placement,
+    toCase,
+    outline: boxExtent(toCase, 0, 0, 0, w, d, 0).rect,
+    footprint: boxExtent(toCase, -reach.left, -reach.front, 0, w + reach.right, d + reach.back, 0).rect,
+    z0: boxExtent(toCase, 0, 0, 0, w, d, 0).z0,
+    zTop: body.z1,
+    zBottom: body.z0,
+    walls: [],
+    hung: parent.hung,
+    attached: parent.index,
+    standoffs: { toCase: parent.toCase, holes: pattern.holes, length: back.standoff },
+  };
+}
+
+/** The placed boards themselves, without the boards on their backs. */
+function placeOwn(input: LayoutInput, offsetX: number, offsetY: number, frame: Affine | null): PlacedBoard[] {
   return input.boards.map((placement, index) => {
     const def = boardOf(placement);
     const hung = hangs(placement);
@@ -342,7 +403,7 @@ export function hungMargin(shape: ShapeState, lid: LidState): number {
 
 /** Boards in the layout frame (before centring) — for placing a new one beside them. */
 export function placeBoards(input: LayoutInput): PlacedBoard[] {
-  return place(input, 0, 0, null);
+  return placeOwn(input, 0, 0, null);
 }
 
 /**
@@ -579,6 +640,8 @@ export function collisions(layout: CaseLayout): Message[] {
     for (let j = i + 1; j < boards.length; j++) {
       const a = boards[i];
       const b = boards[j];
+      // a display and the board on its back are one stack
+      if (a.index === b.index) continue;
       const zOverlap = Math.min(a.zTop, b.zTop) - Math.max(a.zBottom, b.zBottom);
       if (zOverlap > 0 && overlap(a.outline, b.outline) > 0.01) {
         out.push({ code: 'warn.boardsOverlap', params: { a: i + 1, b: j + 1 } });
@@ -586,6 +649,7 @@ export function collisions(layout: CaseLayout): Message[] {
     }
   }
   for (const board of boards) {
+    if (board.attached !== undefined) continue;
     for (const wall of board.walls) {
       if (!wall.against) out.push({ code: 'warn.notAgainstWall', params: { board: board.index + 1 } });
       else if (wall.ports && wall.recessed > 0.05) {
@@ -598,7 +662,7 @@ export function collisions(layout: CaseLayout): Message[] {
         out.push({ code: board.hung ? 'warn.topPartOnSupport' : 'warn.bottomPartOnSupport', params: { board: board.index + 1, port: port.id } });
       }
     }
-    if (board.def.mount.kind === 'clamp' && clampHold(board.def, board.placement).blocked) {
+    if (board.def.mount.kind === 'clamp' && (clampHold(board.def, board.placement).blocked || barsOnBack(board, boards))) {
       out.push({ code: 'warn.clampBlocked', params: { board: board.index + 1 } });
     }
     // a clamped panel is pressed against the plate on purpose
@@ -612,12 +676,25 @@ export function collisions(layout: CaseLayout): Message[] {
       for (const b of boards) {
         // a floor board's standoffs reach up to its PCB, a hung board's down to its top
         const clear = a.hung ? b.zTop <= a.z0 + a.def.size.t : b.zBottom >= a.z0;
-        if (b === a || clear || overlap(rect, b.outline) <= 0) continue;
+        if (b === a || b.index === a.index || clear || overlap(rect, b.outline) <= 0) continue;
         out.push({ code: 'warn.standoffHitsBoard', params: { a: a.index + 1, b: b.index + 1 } });
       }
     }
   }
   return dedupe(out);
+}
+
+/** Whether a clamped panel's bars run into the board on its back. */
+function barsOnBack(board: PlacedBoard, boards: readonly PlacedBoard[]): boolean {
+  const child = boards.find((one) => one.attached === board.index);
+  if (!child) return false;
+  const hold = clampHold(board.def, board.placement);
+  return hold.bars.some((bar) => {
+    const [a0, a1] = [hold.posts[0], hold.posts[1]];
+    const [b0, b1] = [bar.at - CLAMP_BAR_W / 2, bar.at + CLAMP_BAR_W / 2];
+    const rect = hold.across === 'x' ? boxExtent(board.toCase, a0, b0, 0, a1, b1, 0).rect : boxExtent(board.toCase, b0, a0, 0, b1, a1, 0).rect;
+    return overlap(rect, child.outline) > 0.01;
+  });
 }
 
 /** Whether a part on the side the supports come from lands on its board's standoffs or rails (board frame). */

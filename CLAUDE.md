@@ -224,6 +224,14 @@ freely; a temporary script that turns out useful becomes a permanent one.
   exported with the lid. Whatever stands at a footprint's edge keeps
   `EDGE_KEEP` inside it: the edge is the margin's line, where the cavity's
   corner arcs end (a face on it left collinear ceiling vertices).
+- A board on a display's back (`BoardDef.back`: the pattern, the display's
+  standoffs, which face turns to it; `placement.back`, nested): placed by
+  matching its holes to the pattern (`attach.ts`), it comes after every
+  placed board in `layout.boards` with `attached` = the display's index (the
+  same `index`), so state indices still match the layout's first entries;
+  `placeBoards` leaves it out. No supports; the display's stack depth
+  includes it; the pair is one stack for the overlap checks. Its face parts
+  are closed by default (`backPortDefault`); captions `<i>b:<port>`.
   Its display part's window flares 45° outwards (`CutterSpec.flare`, built
   as one hull — every section is convex); a rim around its glass
   (`rim.ts` pure, `rimSolids.ts` worker) is a support, so it goes where the
@@ -396,7 +404,7 @@ Boards: `#boardAdd` opens `#boardPicker` (`#boardSearch`, rows
 `#boardList [data-board="<id>"]`, batteries `[data-board="battery-<kind>"]`, `#boardPickerClose`); with two boards or more
 `#boardsArrange_row|column|compact` and `#boards_gap` (geo/arrange.ts);
 per board
-`#board<i>_x|_y|_z`, `#board<i>_on_floor|ceiling` (not a battery; on a console the ceiling is the slope), `#board<i>_gap` (hung; instead of `_z`), `#board<i>_bevel` (a hung display), `#board<i>_clampPress` (a clamped panel), alignment (two boards or more) `#board<i>_align`
+`#board<i>_x|_y|_z`, `#board<i>_on_floor|ceiling` (not a battery; on a console the ceiling is the slope), `#board<i>_gap` (hung; instead of `_z`), `#board<i>_bevel` (a hung display), `#board<i>_clampPress` (a clamped panel), `#board<i>_back` (select; a display with a back pattern), `#board<i>_back_rot_0|90|180|270`, `#board<i>_back_standoff`, `#board<i>_back_cut_<port>`, alignment (two boards or more) `#board<i>_align`
 (details), `#board<i>_alignRef`,
 `#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_wall_front|back|left|right` (toggles; not on a cylinder), `#board<i>_wallOffset`, `#board<i>_screw`,
 `#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles

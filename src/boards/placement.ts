@@ -5,12 +5,13 @@
 
 import type { FastenerSpec } from '../geo/fasteners';
 import { sanitizeFastener } from '../geo/fasteners';
-import type { BoardDef, Edge } from './schema';
-import { EDGES, bottomPartsH, resolveVariant, sanitizeBoard } from './schema';
+import type { BoardDef, Edge, PortDef } from './schema';
+import { EDGES, bottomPartsH, onFace, resolveVariant, sanitizeBoard } from './schema';
 import { CATALOG, catalogBoard } from './catalog';
 import type { BatterySpec } from './battery';
 import { PRESS_MAX, PRESS_MIN, batteryDef, defaultBattery, sanitizeBattery } from './battery';
 import { defaultPress } from '../geo/clamp';
+import { attachTurns } from '../geo/attach';
 
 export const ROTATIONS = [0, 90, 180, 270] as const;
 export type Rotation = (typeof ROTATIONS)[number];
@@ -48,7 +49,26 @@ export interface BoardPlacement {
   bevel?: false;
   /** a clamped panel only: how far its bars press into its back, mm (negative leaves room for foam tape) */
   press?: number;
+  /** a display with a back pattern only: the board screwed to its back */
+  back?: BackPlacement;
 }
+
+/**
+ * A board on a display's back: a catalog board whose holes fit the pattern,
+ * the turn that puts them there, the display's standoffs' length, its model
+ * and its port toggles (a part on its faces is closed by default: turned
+ * over, or under the display, its column would cut the case's other side).
+ */
+export interface BackPlacement {
+  board: string;
+  rot: Rotation;
+  standoff: number;
+  variant?: string;
+  cuts: Record<string, boolean>;
+}
+
+export const BACK_STANDOFF_MIN = 3;
+export const BACK_STANDOFF_MAX = 30;
 
 export const SIDES = ['floor', 'ceiling'] as const;
 export type Side = (typeof SIDES)[number];
@@ -186,6 +206,7 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
     ...(ceiling ? { on: 'ceiling' as const } : {}),
     ...(Reflect.get(r, 'bevel') === false ? { bevel: false as const } : {}),
     ...(def.mount.kind === 'clamp' ? { press: num(Reflect.get(r, 'press'), PRESS_MIN, PRESS_MAX, defaultPress(def)) } : {}),
+    ...withBackBoard(def, Reflect.get(r, 'back')),
   };
 }
 
@@ -213,4 +234,55 @@ export function withSide(placement: BoardPlacement, side: Side): BoardPlacement 
   if (side === 'ceiling') out.on = 'ceiling';
   else delete out.on;
   return out;
+}
+
+/** A port of the board on a display's back: its faces' parts closed by default. */
+export function backPortDefault(port: PortDef): boolean {
+  return port.cut && !onFace(port);
+}
+
+/** The lowest standoff a back board allows: a HAT sits on its GPIO header. */
+export function backStandoffMin(parent: BoardDef, child: BoardDef): number {
+  if (parent.back?.facing !== 'top') return BACK_STANDOFF_MIN;
+  const header = child.ports.find((port) => port.type === 'header-2x20' && port.edge === 'top');
+  return Math.max(BACK_STANDOFF_MIN, header?.h ?? 0);
+}
+
+/** The board on a display's back as built: a catalog board that fits, or none. */
+function withBackBoard(parent: BoardDef, raw: unknown): { back?: BackPlacement } {
+  if (!parent.back || typeof raw !== 'object' || raw === null) return {};
+  const id: unknown = Reflect.get(raw, 'board');
+  const entry = typeof id === 'string' ? catalogBoard(id) : undefined;
+  if (!entry || entry.battery) return {};
+  const variantRaw: unknown = Reflect.get(raw, 'variant');
+  const variant = entry.variants?.find((item) => item.id === variantRaw)?.id ?? entry.variants?.[0].id;
+  const child = resolveVariant(entry, variant);
+  const turns = attachTurns(parent, child);
+  if (turns.length === 0) return {};
+  const rot: unknown = Reflect.get(raw, 'rot');
+  const cutsRaw: unknown = Reflect.get(raw, 'cuts');
+  const cuts: Record<string, boolean> = {};
+  if (typeof cutsRaw === 'object' && cutsRaw !== null) {
+    for (const port of child.ports) {
+      const value: unknown = Reflect.get(cutsRaw, port.id);
+      if (typeof value === 'boolean' && value !== backPortDefault(port)) cuts[port.id] = value;
+    }
+  }
+  return {
+    back: {
+      board: entry.id,
+      rot: turns.find((turn) => turn === rot) ?? turns[0],
+      standoff: num(Reflect.get(raw, 'standoff'), backStandoffMin(parent, child), BACK_STANDOFF_MAX, Math.max(parent.back.standoff, backStandoffMin(parent, child))),
+      ...(variant !== undefined ? { variant } : {}),
+      cuts,
+    },
+  };
+}
+
+/** The back board's toggles with a port's opening on or off; its default is not stored. */
+export function withBackCut(back: BackPlacement, port: PortDef, value: boolean): Record<string, boolean> {
+  const cuts = { ...back.cuts };
+  if (value === backPortDefault(port)) delete cuts[port.id];
+  else cuts[port.id] = value;
+  return cuts;
 }
