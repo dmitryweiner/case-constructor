@@ -16,10 +16,10 @@ import { VERTICAL_AXES, flareAt, horizontalAxes } from './cutters';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import type { CaseLayout, PlacedBoard } from './layout';
-import { edgeNormal } from './layout';
+import { edgeNormal, portBlock } from './layout';
 import type { LidState } from './lidSpec';
-import type { Message } from './message';
-import { boardParams } from './message';
+import type { Message, MessageSpot, SpotBox } from './message';
+import { boardParams, boxAround, boxSpot } from './message';
 import type { ShapeState } from './shape';
 import { plateOf } from './shape';
 import type { Vec3 } from './surface';
@@ -193,6 +193,19 @@ export function cutterCorners(cutter: CutterSpec): Vec3[] {
   return out;
 }
 
+/**
+ * An opening in a message: the box around its prism, clipped to the case
+ * (a cutter reaches past the walls), moving with the board or the body.
+ */
+function cutterSpot(cutter: CutterSpec, dims: Dims): MessageSpot {
+  const { min, max } = boxAround(cutterCorners(cutter));
+  const clipped: SpotBox = {
+    min: [Math.max(0, min[0]), Math.max(0, min[1]), Math.max(0, min[2])],
+    max: [Math.min(dims.w, max[0]), Math.min(dims.d, max[1]), Math.min(dims.h, max[2])],
+  };
+  return boxSpot(clipped, cutter.source.kind === 'port' ? { board: cutter.source.board } : 'body');
+}
+
 /** A port's opening in a message: the board (the one with this port under that number) and the port. */
 function sourceParams(layout: CaseLayout, source: { board: number; port: string }): Record<string, string | number> {
   const board = layout.boards.find((one) => one.index === source.board && one.def.ports.some((port) => port.id === source.port))
@@ -220,7 +233,14 @@ export function cutWarnings(
       if (onFace(port) || !portCut(board.placement, port.id, port.cut)) continue;
       const { face, dir } = portAxis(board, port);
       const gap = portToWall(shape, dims, face, dir);
-      if (gap > PORT_FAR_MM) out.push({ code: 'warn.portFar', params: { ...boardParams(board), port: port.id, portType: port.type, mm: gap.toFixed(0) } });
+      if (gap <= PORT_FAR_MM) continue;
+      // the connector and the way out to the wall
+      const block = portBlock(board, port);
+      const corners: Vec3[] = [];
+      for (const x of [block[0], block[3]]) for (const y of [block[1], block[4]]) for (const z of [block[2], block[5]]) corners.push(applyAffine(board.toCase, [x, y, z]));
+      const atWall = corners.map((p): Vec3 => [p[0] + dir[0] * gap, p[1] + dir[1] * gap, p[2]]);
+      const spot = boxSpot(boxAround([...corners, ...atWall]), { board: board.index });
+      out.push({ code: 'warn.portFar', params: { ...boardParams(board), port: port.id, portType: port.type, mm: gap.toFixed(0) }, spot });
     }
   }
   const frame = faceFrame(lid.face, dims);
@@ -234,23 +254,25 @@ export function cutWarnings(
     const split = lo < zp && hi > zp && !throughLid;
     const skirt = !split && !throughLid && hi > zp - lid.lip.h && lo < zp;
     if (!split && !skirt) continue;
+    const spot = cutterSpot(cutter, dims);
     if (cutter.source.kind === 'port') {
       const params = sourceParams(layout, cutter.source);
-      out.push({ code: split ? 'info.cutSplit' : 'warn.cutUnderSkirt', params });
+      out.push({ code: split ? 'info.cutSplit' : 'warn.cutUnderSkirt', params, spot });
     } else {
-      out.push({ code: split ? 'info.extraSplit' : 'warn.extraUnderSkirt', params: { n: cutter.source.index + 1 } });
+      out.push({ code: split ? 'info.extraSplit' : 'warn.extraUnderSkirt', params: { n: cutter.source.index + 1 }, spot });
     }
   }
   for (const [index, cut] of extras.entries()) {
     if (shape.kind === 'cylinder' || !inCorner(shape, dims, cut)) continue;
-    out.push({ code: 'warn.cutInCorner', params: { n: index + 1 } });
+    const cutter = cutters.find((one) => one.source.kind === 'extra' && one.source.index === index);
+    out.push({ code: 'warn.cutInCorner', params: { n: index + 1 }, ...(cutter ? { spot: cutterSpot(cutter, dims) } : {}) });
   }
   // a hung display's window on the top, at its outer width
   for (const cutter of cutters) {
     if (!cutter.flare || cutter.source.kind !== 'port' || shape.kind !== 'box') continue;
     const g = flareAt(cutter, cutter.s1);
     const window: ExtraCut = { face: 'top', shape: 'rect', x: cutter.origin[0], y: cutter.origin[1], w: cutter.w + 2 * g, h: cutter.h + 2 * g, r: 0 };
-    if (inCorner(shape, dims, window)) out.push({ code: 'warn.windowInCorner', params: sourceParams(layout, cutter.source) });
+    if (inCorner(shape, dims, window)) out.push({ code: 'warn.windowInCorner', params: sourceParams(layout, cutter.source), spot: cutterSpot(cutter, dims) });
   }
   return out;
 }

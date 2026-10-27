@@ -23,12 +23,23 @@ export interface SceneCaption {
   text: string;
   at: [number, number, number];
   dim: boolean;
+  /** a warning's badge: red (a note's grey), placed before every port caption; open, it shows the whole message */
+  warn?: { open: boolean; info: boolean };
+}
+
+/** A warning's place: red boxes drawn through the case, brighter when its badge or line is picked. */
+export interface SceneSpot {
+  mesh: SurfaceMesh;
+  offset: [number, number, number];
+  hot: boolean;
 }
 
 export interface SceneHandle {
   setParts(parts: ScenePart[]): void;
   /** Captions drawn over the canvas, following the camera; those that would overlap give way to the nearer ones. */
   setCaptions(captions: SceneCaption[]): void;
+  /** The warnings' places, drawn apart from the parts (a hover redraws only them). */
+  setSpots(spots: SceneSpot[]): void;
   /** The key of the caption shown at a canvas point (CSS px from its top-left), or null. */
   captionAt(x: number, y: number): string | null;
   /** The captions shown now and where — for the smoke. */
@@ -56,6 +67,7 @@ const COLORS: Record<PartRole, number> = {
   port: 0xd9b45a,
   glass: 0x1e2a36,
 };
+const WARN_COLOR = 0xe5484d;
 /** Vertical field of view of the whole canvas, degrees. */
 const FOV = 40;
 /** How long the picture takes to follow the settings sheet, ms (the sheet's own transition). */
@@ -115,6 +127,13 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
       color: COLORS.glass, metalness: 0.3, roughness: 0.2, transparent: true, opacity: 0.8, depthWrite: false,
     }),
   };
+
+  // seen through the walls: no depth test, drawn last
+  const spotMaterial = (opacity: number): THREE.MeshBasicMaterial => new THREE.MeshBasicMaterial({
+    color: WARN_COLOR, transparent: true, opacity, depthWrite: false, depthTest: false, side: THREE.DoubleSide,
+  });
+  const spotMaterials = { cold: spotMaterial(0.13), hot: spotMaterial(0.45) };
+  const spotObjects: THREE.Mesh[] = [];
 
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
@@ -185,7 +204,8 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
       const world = new THREE.Vector3(...shown.caption.at).applyMatrix4(group.matrixWorld);
       const v = world.clone().project(camera);
       return { shown, x: ((v.x + 1) / 2) * w, y: ((1 - v.y) / 2) * h, depth: world.distanceTo(eye), behind: v.z > 1 };
-    }).sort((a, b) => a.depth - b.depth);
+      // a warning's badge first, then the nearest captions
+    }).sort((a, b) => Number(Boolean(b.shown.caption.warn)) - Number(Boolean(a.shown.caption.warn)) || a.depth - b.depth);
     const taken: [number, number, number, number][] = [];
     for (const { shown, x, y, behind } of placed) {
       const rect: [number, number, number, number] = [x - shown.w / 2, y - shown.h - CAPTION_LIFT, shown.w, shown.h];
@@ -285,7 +305,8 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
       captionLayer.replaceChildren();
       captions = list.map((caption) => {
         const el = document.createElement('span');
-        el.className = caption.dim ? 'port-caption dim' : 'port-caption';
+        el.className = caption.warn ? `warn-badge${caption.warn.info ? ' info' : ''}${caption.warn.open ? ' open' : ''}`
+          : caption.dim ? 'port-caption dim' : 'port-caption';
         el.textContent = caption.text;
         captionLayer.append(el);
         return { caption, el, w: 0, h: 0, rect: null };
@@ -296,6 +317,24 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
         shown.h = shown.el.offsetHeight;
       }
       placeCaptions();
+    },
+
+    setSpots(spots: SceneSpot[]): void {
+      for (const obj of spotObjects) {
+        group.remove(obj);
+        obj.geometry.dispose();
+      }
+      spotObjects.length = 0;
+      for (const spot of spots) {
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(spot.mesh.positions, 3));
+        geometry.setIndex(new THREE.BufferAttribute(spot.mesh.indices, 1));
+        const obj = new THREE.Mesh(geometry, spot.hot ? spotMaterials.hot : spotMaterials.cold);
+        obj.position.set(...spot.offset);
+        obj.renderOrder = 10;
+        group.add(obj);
+        spotObjects.push(obj);
+      }
     },
 
     captionAt(x: number, y: number): string | null {
@@ -337,7 +376,8 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
       disposed = true;
       controls.dispose();
       clearObjects();
-      for (const material of Object.values(materials)) material.dispose();
+      for (const obj of spotObjects) obj.geometry.dispose();
+      for (const material of [...Object.values(materials), ...Object.values(spotMaterials)]) material.dispose();
       renderer.dispose();
     },
   };

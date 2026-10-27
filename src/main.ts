@@ -8,7 +8,7 @@
 import './style.css';
 import { el, make } from './ui/dom';
 import { createScene } from './render/scene';
-import type { SceneCaption, ScenePart } from './render/scene';
+import type { SceneCaption, ScenePart, SceneSpot } from './render/scene';
 import { renderControls } from './ui/controls';
 import type { Control, ControlsHandle } from './ui/controls';
 import { caseControls } from './ui/caseCard';
@@ -25,7 +25,7 @@ import type { LabelRaster } from './geo/label';
 import { labelBox, labelPlacement } from './geo/label';
 import { SCREWS } from './geo/fasteners';
 import { screwShape } from './geo/thread';
-import { extrasWarnings, flatRegion } from './geo/extras';
+import { extrasWarnings, faceSpot, flatRegion } from './geo/extras';
 import type { CutsCardHandle } from './ui/cutsCard';
 import { cutWarnings, outerTopAt, portCutters } from './geo/ports';
 import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
@@ -40,10 +40,10 @@ import type { PresetRow } from './ui/presetList';
 import { applyStaticText } from './ui/staticText';
 import { ENDONYMS, LANGS, initLang, isLang, lang, onLangChange, setLang, t, tDynamic, tm, autoPresetPrefixes } from './i18n';
 import type { Key } from './i18n';
-import type { Message } from './geo/message';
+import type { Message, MessageSpot } from './geo/message';
 import { faceFrame } from './geo/face';
 import { caseLayout, collisions, heldByLid, lidDepthMax, placeBoards } from './geo/layout';
-import { boardGhost, portCaptionAnchor, standoffGhost } from './geo/ghost';
+import { boardGhost, portCaptionAnchor, spotMesh, standoffGhost } from './geo/ghost';
 import {
   MAX_BOARDS, NEW_BOARD_GAP, backPortDefault, boardOf, defaultPlacement, ownPortDefault, portCut, withBackCut, withPortCut, withTopCut,
 } from './boards/placement';
@@ -128,6 +128,8 @@ const exportCard = el('exportCard', HTMLElement);
 let viewMode: ViewMode = 'exploded';
 const viewXray = el('viewXray', HTMLInputElement);
 const viewPortNames = el('viewPortNames', HTMLInputElement);
+const viewWarnings = el('viewWarnings', HTMLInputElement);
+const viewWarningsLabel = el('viewWarningsLabel', HTMLLabelElement);
 const viewPortNamesLabel = el('viewPortNamesLabel', HTMLLabelElement);
 const langSel = el('langSel', HTMLSelectElement);
 const tabs: Record<ExportMode, HTMLButtonElement> = {
@@ -249,8 +251,14 @@ let captionsOnLid: boolean[] = [];
 interface Notice {
   text: string;
   info: boolean;
+  /** where it points on the model */
+  spot?: MessageSpot;
+  /** its badge's number, given in list order to the lines with a spot */
+  n?: number;
 }
-const notice = (message: Message): Notice => ({ text: tm(message), info: message.code.startsWith('info.') });
+const notice = (message: Message): Notice => ({
+  text: tm(message), info: message.code.startsWith('info.'), ...(message.spot ? { spot: message.spot } : {}),
+});
 const said = (key: Key, params?: Readonly<Record<string, string | number>>): Notice => ({ text: t(key, params), info: key.startsWith('info.') });
 /** Warnings the panel computes itself, before the worker answers. */
 let baseWarnings: Notice[] = [];
@@ -296,8 +304,9 @@ function refresh(): void {
     const place = labelPlacement(state.label, currentLabel, lidBuilt.face, dims, shapeBuilt);
     const region = flatRegion(shapeBuilt, dims, lidBuilt.face, 0);
     const { hw, hh } = labelBox(place.w, place.h, state.label.angle);
+    const labelSpot = faceSpot(lidBuilt.face, dims, shapeBuilt, lidBuilt, place.u - hw, place.v - hh, place.u + hw, place.v + hh);
     if (place.u - hw < region.u0 || place.u + hw > region.u1 || place.v - hh < region.v0 || place.v + hh > region.v1) {
-      baseWarnings.push(notice({ code: 'warn.labelTooBig' }));
+      baseWarnings.push(notice({ code: 'warn.labelTooBig', spot: labelSpot }));
     }
     // a screw head on the lid: the label must keep clear of it
     const head = lidBuilt.fastening === 'screws' ? (lidBuilt.screw.head === 'none' ? SCREWS[lidBuilt.screw.size].headD : headSeat(lidBuilt).d) / 2 + 0.5
@@ -307,7 +316,7 @@ function refresh(): void {
       const dv = Math.max(0, Math.abs(spot.centre[1] - place.v) - hh);
       return Math.hypot(du, dv) < head;
     })) {
-      baseWarnings.push(notice({ code: 'warn.labelOverScrew' }));
+      baseWarnings.push(notice({ code: 'warn.labelOverScrew', spot: labelSpot }));
     }
   }
   showWarnings([]);
@@ -341,15 +350,75 @@ function refresh(): void {
   previewTimer = setTimeout(() => void showPreview(stamp), PREVIEW_DELAY_MS);
 }
 
+/** The lines shown now, numbered; the one hovered and the one picked (a tap on its badge or line). */
+let shownNotices: Notice[] = [];
+let hoveredWarning: number | null = null;
+let pickedWarning: number | null = null;
+const activeWarning = (): number | null => hoveredWarning ?? pickedWarning;
+
 function showWarnings(extra: Notice[]): void {
-  const all = [...baseWarnings, ...extra];
+  let count = 0;
+  shownNotices = [...baseWarnings, ...extra].map((line) => (line.spot ? { ...line, n: ++count } : line));
+  if (pickedWarning !== null && pickedWarning > count) pickedWarning = null;
+  const all = shownNotices;
   const warned = all.filter((line) => !line.info).length;
   const noted = all.length - warned;
   const counts = [...(warned ? [t('status.warnings', { n: warned })] : []), ...(noted ? [t('status.notes', { n: noted })] : [])];
   warningsEl.replaceChildren(
     ...(all.length > 1 ? [make('div', 'warn-head', counts.join(' · '))] : []),
-    ...all.map((line) => make('div', line.info ? 'warn-line info' : 'warn-line', line.info ? `ℹ ${line.text}` : line.text)),
+    ...all.map((line) => {
+      const row = make('div', line.info ? 'warn-line info' : 'warn-line');
+      if (line.n !== undefined) {
+        const n = line.n;
+        row.dataset.warn = String(n);
+        row.append(make('span', line.info ? 'warn-num info' : 'warn-num', `${line.info ? 'ℹ' : '⚠'} ${n}`));
+        row.addEventListener('mouseenter', () => hoverWarning(n));
+        row.addEventListener('mouseleave', () => hoverWarning(null));
+        row.addEventListener('click', () => pickWarning(n));
+      }
+      row.append(line.info && line.n === undefined ? `ℹ ${line.text}` : line.text);
+      return row;
+    }),
   );
+  drawWarnings();
+}
+
+function hoverWarning(n: number | null): void {
+  hoveredWarning = n;
+  drawWarnings();
+}
+
+/** A tap on a badge or a line opens its message; again, closes it. */
+function pickWarning(n: number): void {
+  pickedWarning = pickedWarning === n ? null : n;
+  drawWarnings();
+}
+
+/** Where the last drawParts put things: a point of a holder, in the view (null in the print layout). */
+let placeInView: ((at: readonly [number, number, number], holder: MessageSpot['holder']) => [number, number, number]) | null = null;
+/** The port captions the last drawParts showed: the badges join them. */
+let shownPortCaptions: SceneCaption[] = [];
+
+/** The warnings' red boxes and badges over the model, the active one bright and open. */
+function drawWarnings(): void {
+  const place = viewWarnings.checked ? placeInView : null;
+  const active = activeWarning();
+  for (const row of warningsEl.querySelectorAll<HTMLElement>('[data-warn]')) row.classList.toggle('hot', Number(row.dataset.warn) === active);
+  const spotted = place ? shownNotices.flatMap((line) => (line.spot && line.n !== undefined ? [{ ...line, spot: line.spot, n: line.n }] : [])) : [];
+  // a note's place shows only when it is picked: the red is for what needs a look
+  scene.setSpots(place ? spotted.flatMap((line): SceneSpot[] => (line.info && line.n !== active ? [] : [{
+    mesh: spotMesh(line.spot), offset: place([0, 0, 0], line.spot.holder), hot: line.n === active,
+  }])) : []);
+  scene.setCaptions([...shownPortCaptions, ...(place ? spotted.map((line): SceneCaption => {
+    const badge = `${line.info ? 'ℹ' : '⚠'} ${line.n}`;
+    return {
+      key: `warn:${line.n}`,
+      text: line.n === active ? `${badge} ${line.text}` : badge,
+      at: place(line.spot.at, line.spot.holder),
+      dim: false,
+      warn: { open: line.n === active, info: line.info },
+    };
+  }) : [])]);
 }
 
 async function showPreview(stamp: number): Promise<void> {
@@ -441,7 +510,10 @@ function drawParts(): void {
   if (mode === 'print') {
     // the lid's place changes no part: the current one, before the worker answers
     show(printParts(built, body, lid, screw, clamps, lidClamps, state.print));
-    scene.setCaptions([]);
+    // the parts are turned on the bed: no place in the case is a place there
+    placeInView = null;
+    shownPortCaptions = [];
+    drawWarnings();
     // auto has just decided where the lid goes
     viewCaption.textContent = describeView(state);
     return;
@@ -474,10 +546,18 @@ function drawParts(): void {
     const [ox, oy, oz] = part.offset ?? [0, 0, 0];
     return { ...part, offset: [ox, oy, oz + lift] };
   }) : parts);
-  scene.setCaptions(withBoards && viewPortNames.checked ? portCaptions.map((caption, i) => {
+  shownPortCaptions = withBoards && viewPortNames.checked ? portCaptions.map((caption, i) => {
     const at = withLid(caption.at, captionsOnLid[i]);
     return { ...caption, at: [at[0], at[1], at[2] + lift] };
-  }) : []);
+  }) : [];
+  // a spot moves with what holds it: the lid, a board the lid holds, or the body
+  placeInView = (at, holder) => {
+    const board = typeof holder === 'object' ? layout.boards.find((one) => one.index === holder.board) : undefined;
+    const onLid = holder === 'lid' || (board !== undefined && heldByLid(board, built.lid.face));
+    const moved = withLid(at, onLid);
+    return [moved[0], moved[1], moved[2] + lift];
+  };
+  drawWarnings();
 }
 
 /**
@@ -545,6 +625,9 @@ function syncView(): void {
   // the names hang over the board ghosts: nothing to name without them
   viewPortNamesLabel.hidden = parts === 'lid';
   viewPortNames.disabled = view === 'print' || !viewBoards.checked;
+  // the parts are turned in the print layout: a place in the case is not a place there
+  viewWarningsLabel.hidden = parts === 'lid';
+  viewWarnings.disabled = view === 'print';
   viewCaption.textContent = describeView(state);
 }
 
@@ -637,6 +720,7 @@ window.addEventListener('keydown', (event) => {
 });
 viewXray.addEventListener('change', () => scene.setXray(viewXray.checked));
 viewPortNames.addEventListener('change', drawParts);
+viewWarnings.addEventListener('change', drawWarnings);
 
 // --- export ---
 
@@ -934,6 +1018,13 @@ view.addEventListener('pointerdown', (event) => {
   if (pressed.size > 1) gesture = true;
 });
 view.addEventListener('pointermove', (event) => {
+  // a mouse over a badge opens it (a touch has no hover: a tap does)
+  if (event.pointerType === 'mouse' && pressed.size === 0) {
+    const box = view.getBoundingClientRect();
+    const key = scene.captionAt(event.clientX - box.left, event.clientY - box.top);
+    const n = key?.startsWith('warn:') ? Number(key.slice(5)) : null;
+    if (n !== hoveredWarning) hoverWarning(n);
+  }
   const start = pressed.get(event.pointerId);
   if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > TAP_MOVE_PX) gesture = true;
 });
@@ -946,7 +1037,8 @@ const release = (event: PointerEvent): void => {
   if (!tap) return;
   const box = view.getBoundingClientRect();
   const caption = scene.captionAt(event.clientX - box.left, event.clientY - box.top);
-  if (caption) togglePortCut(caption);
+  if (caption?.startsWith('warn:')) pickWarning(Number(caption.slice(5)));
+  else if (caption) togglePortCut(caption);
   else if (narrow.matches && panel.classList.contains('open')) setPanelOpen(false);
 };
 view.addEventListener('pointerup', release);
@@ -989,7 +1081,13 @@ if (import.meta.env.DEV) {
     parts: () => lastParts,
     ghosts: () => ghosts,
     /** the port captions shown now and where on the canvas */
-    captions: () => scene.shownCaptions(),
+    captions: () => scene.shownCaptions().filter((caption) => !caption.key.startsWith('warn:')),
+    /** the warnings' badges shown now: number, message, where on the canvas, open or not, and how many boxes */
+    warnings: () => scene.shownCaptions().flatMap((caption) => {
+      const n = caption.key.startsWith('warn:') ? Number(caption.key.slice(5)) : NaN;
+      const line = shownNotices.find((one) => one.n === n);
+      return line ? [{ n, text: line.text, x: caption.x, y: caption.y, open: n === activeWarning(), boxes: line.spot?.boxes.length ?? 0 }] : [];
+    }),
     drawn: () => drawnRoles,
     drawnParts: () => drawnParts,
     project: (points: [number, number, number][]) => scene.project(points),

@@ -21,6 +21,8 @@ export const en = {
   'view.exploded': "exploded",
   'view.assembled': "assembled",
   'view.print': "print layout",
+  'view.warnings': 'Warnings on the model',
+  'view.warnings.title': 'Red boxes and numbered badges where the warnings point; a hover or a tap on a badge or a line shows the whole message',
   'view.xray': 'X-ray',
   'view.xray.title': 'See through the walls',
   'unit.mm': 'mm',

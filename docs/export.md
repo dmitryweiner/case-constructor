@@ -47,8 +47,15 @@ holes and their pads, connectors and parts amber (off in the print layout:
 they are not printed; hidden for the lid alone); *Connector names* — a
 caption over every connector and part of the boards, the names from the
 board card (on by default, only with *Boards*; a click on a name turns its
-opening on or off, see [Openings](openings.md)); *X-ray* — see through the
-walls.
+opening on or off, see [Openings](openings.md)); *Warnings on the model* —
+each warning that has a place (boards in each other, a board off its wall,
+connectors that sit deep, an opening through the skirt, a post in a board,
+the fan or the label off the flat, …) gets a numbered red badge there and a
+faint red box over the place; the list numbers its lines the same way. A
+hover or a tap on a badge or a line lights its box and opens the whole
+message at the badge. Notes (ℹ) get a grey badge and show their box only
+when picked. On by default; not in the print layout (the parts are turned
+there) or for the lid alone; *X-ray* — see through the walls.
 
 On a phone the settings are a sheet over the lower part of the view; the
 case is centred in what the sheet leaves open, and hiding the sheet only

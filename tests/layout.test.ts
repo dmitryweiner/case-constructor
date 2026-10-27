@@ -221,7 +221,7 @@ describe('a user\'s project: the layout messages say where and what to do', () =
   const messages = collisions(caseLayout(state));
 
   it('one note per board for its recessed connectors, naming the walls', () => {
-    const recessed = messages.filter((m) => m.code.startsWith('info.portsRecessed'));
+    const recessed = messages.filter((m) => m.code.startsWith('info.portsRecessed')).map(({ code, params }) => ({ code, params }));
     expect(recessed).toEqual([
       { code: 'info.portsRecessed', params: { board: 1, boardName: 'TPA3118', walls: 'front,back', wall: 2, mm: '2.3' } },
       { code: 'info.portsRecessed', params: { board: 2, boardName: 'DC-DC', walls: 'back', wall: 2, mm: '2.3' } },

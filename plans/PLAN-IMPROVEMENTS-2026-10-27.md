@@ -1,6 +1,6 @@
 # Case Constructor — improvements after the user voice of 2026-10-27
 
-**Status: in progress — U1, U5, U2, U4 done.**
+**Status: done (2026-10-27).**
 
 Written on 2026-10-27 from `user-voices/27-10-2026/` (`message.md`, the
 user's project `case-constructor-Корпус-1.json`, two screenshots). Items
@@ -213,3 +213,17 @@ on the model, the largest; it builds on U2's messages).
   state it built. `bothForPrint` moved from `main.ts` into `print.ts` and
   returns where auto put the lid, for the caption. The default is auto for
   old files too: a long case's Both STL changes from side by side to behind.
+- **U3.** A spot has `boxes` (a list), not one box: the recessed note of a
+  board against the front and the back has a box per wall — one around both
+  would have covered the whole board. Repeated messages (a standoff per
+  hole into the same board) are merged by code and parameters, their boxes
+  joined (`dedupe`, before: by the whole message). `portBlock` moved from
+  `ghost.ts` to `layout.ts` (the layout's spots need it; `ghost.ts` imports
+  `layout.ts`), `CaseLayout.inner` says where the inner walls ended up (the
+  strip of a board off its wall reaches there). The red boxes are drawn by
+  `scene.setSpots`, apart from the parts: a hover must not re-crease a 300k
+  mesh. Notes (ℹ) get a grey badge and their box only while picked — in the
+  user's project five red volumes covered the case. List-only, no place:
+  the closed keyholes on a round wall, their pads on the bed or off the flat
+  part, the panel's own clamps (lid depth, head sizes), the printed thread,
+  the mesh audit.

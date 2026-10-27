@@ -21,6 +21,8 @@ export const he: Record<Key, string> = {
   'view.exploded': "מפורק",
   'view.assembled': "מורכב",
   'view.print': "פריסת הדפסה",
+  'view.warnings': 'אזהרות על הדגם',
+  'view.warnings.title': 'תיבות אדומות ותגיות ממוספרות היכן שהאזהרות מצביעות; ריחוף או הקשה על תגית או שורה מציגים את ההודעה המלאה',
   'view.xray': 'שקיפות',
   'view.xray.title': 'לראות דרך הדפנות',
   'unit.mm': 'מ״מ',

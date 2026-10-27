@@ -7,12 +7,14 @@
 
 import type { CutShape, CutterSpec, ExtraCut } from './cutters';
 import { cutterContains, extraCutters } from './cutters';
+import { cutterCorners } from './ports';
 import type { Dims, Face } from './face';
 import { FACES, faceFrame, isFace } from './face';
 import type { CaseLayout } from './layout';
 import { standoffColumns } from './layout';
 import type { LidState } from './lidSpec';
-import type { Message } from './message';
+import type { Message, MessageSpot } from './message';
+import { boxAround, boxSpot } from './message';
 import type { ShapeKind, ShapeState } from './shape';
 import { clampNum, plateOf } from './shape';
 import type { Vec3 } from './surface';
@@ -550,6 +552,15 @@ function underPad(cutter: CutterSpec, closed: ClosedKeyholes, dims: Dims): boole
   return closed.pads.some((pad) => u > pad.u0 - reach && u < pad.u1 + reach && v > pad.v0 - reach && v < pad.v1 + reach);
 }
 
+/** A rectangle on a face (u, v as seen from outside) through its wall, as a message's spot. */
+export function faceSpot(face: Face, dims: Dims, shape: ShapeState, lid: LidState, u0: number, v0: number, u1: number, v1: number): MessageSpot {
+  const { fromFace } = faceFrame(face, dims);
+  const wall = plateOf(shape, face);
+  const corners: Vec3[] = [];
+  for (const u of [u0, u1]) for (const v of [v0, v1]) for (const z of [-wall, 0]) corners.push(applyAffine(fromFace, [u, v, z]));
+  return boxSpot(boxAround(corners), face === lid.face ? 'lid' : 'body');
+}
+
 /**
  * Warnings: a fan that does not fit its face, keyholes next to a standoff
  * (its hole reaches into the floor: through a keyhole, or into a closed
@@ -568,7 +579,8 @@ export function extrasWarnings(
     const cy = extent.h / 2 + state.fan.y;
     const half = state.fan.size / 2;
     if (cx - half < region.u0 || cx + half > region.u1 || cy - half < region.v0 || cy + half > region.v1) {
-      out.push({ code: 'warn.fanTooBig', params: { size: state.fan.size } });
+      const spot = faceSpot(state.fan.face, dims, shape, lid, cx - half, cy - half, cx + half, cy + half);
+      out.push({ code: 'warn.fanTooBig', params: { size: state.fan.size }, spot });
     }
   }
   if (state.wallMount.kind === 'keyholes') {
@@ -583,8 +595,8 @@ export function extrasWarnings(
       const b = d[0] * cutter.ey[0] + d[1] * cutter.ey[1];
       return Math.hypot(Math.max(0, Math.abs(a) - cutter.w / 2), Math.max(0, Math.abs(b) - cutter.h / 2));
     };
-    const near = cutters.some((cutter) => supports.some((c) => gap(cutter, c.x, c.y) < c.r + 1));
-    if (near) out.push({ code: 'warn.keyholeNearStandoff' });
+    const near = cutters.find((cutter) => supports.some((c) => gap(cutter, c.x, c.y) < c.r + 1));
+    if (near) out.push({ code: 'warn.keyholeNearStandoff', spot: boxSpot(boxAround(cutterCorners(near)), 'body') });
     if (closed) {
       // the body prints standing on the face opposite the lid: with the lid
       // on top the pads are under the floor, and the floor between them hangs

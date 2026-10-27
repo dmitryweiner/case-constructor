@@ -57,9 +57,46 @@ export type MessageCode =
   | 'progress.lid'
   | 'progress.check';
 
+/** An axis-aligned box in the case frame, mm. */
+export interface SpotBox {
+  min: readonly [number, number, number];
+  max: readonly [number, number, number];
+}
+
+/**
+ * Where a message points on the model: red boxes over the place and a badge
+ * at `at`, case frame. `holder` is what the place moves with in the
+ * exploded view: the body, the lid, or a board (index) — with the lid when
+ * the lid holds it.
+ */
+export interface MessageSpot {
+  at: readonly [number, number, number];
+  boxes: readonly SpotBox[];
+  holder: 'body' | 'lid' | { board: number };
+}
+
 export interface Message {
   code: MessageCode;
   params?: Readonly<Record<string, string | number>>;
+  spot?: MessageSpot;
+}
+
+/** A spot over one box: the badge on the middle of its top. */
+export function boxSpot(box: SpotBox, holder: MessageSpot['holder']): MessageSpot {
+  return { at: [(box.min[0] + box.max[0]) / 2, (box.min[1] + box.max[1]) / 2, box.max[2]], boxes: [box], holder };
+}
+
+/** A spot over boxes: the badge on the first one (none without boxes). */
+export function spotOf(boxes: readonly SpotBox[], holder: MessageSpot['holder']): MessageSpot | undefined {
+  const [first] = boxes;
+  return first ? { ...boxSpot(first, holder), boxes } : undefined;
+}
+
+/** The box around points. */
+export function boxAround(points: readonly (readonly number[])[]): SpotBox {
+  const min = [0, 1, 2].map((k) => Math.min(...points.map((p) => p[k])));
+  const max = [0, 1, 2].map((k) => Math.max(...points.map((p) => p[k])));
+  return { min: [min[0], min[1], min[2]], max: [max[0], max[1], max[2]] };
 }
 
 /** A board in a message: its number and its name (the UI puts them together); `key` for a second board. */

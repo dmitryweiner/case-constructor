@@ -622,6 +622,19 @@ const userLines = await page.locator('#warnings .warn-line').allTextContents();
 if (!userLines.some((line) => line.includes('not against the right wall: board 3 “KaRadio ESP32”'))) errors.push(`[file:user] ${userLines.join(' | ').slice(0, 200)}`);
 if ((await page.locator('#warnings .warn-line.info').count()) !== 2) errors.push('[file:user] not two notes');
 if ((await page.locator('#warnings .warn-head').textContent()) !== '3 warnings · 2 notes') errors.push(`[file:user] head ${await page.locator('#warnings .warn-head').textContent()}`);
+// on the model: a badge per message with a place, a hover on a line opens its badge, the toggle hides them
+label('file:user:spots');
+await page.waitForTimeout(150);
+const badges = await page.evaluate(() => window.__case.warnings());
+if (badges.length !== 5) errors.push(`[file:user:spots] ${badges.length} badges: ${JSON.stringify(badges).slice(0, 200)}`);
+await page.hover('#warnings [data-warn="1"]');
+const opened = await page.evaluate(() => window.__case.warnings().find((badge) => badge.n === 1));
+if (!opened?.open || !opened.text.includes('right wall')) errors.push(`[file:user:spots] hover: ${JSON.stringify(opened)}`);
+if (!(await page.locator('#warnings [data-warn="1"]').evaluate((row) => row.classList.contains('hot')))) errors.push('[file:user:spots] the hovered line is not lit');
+await page.mouse.move(0, 0);
+await page.uncheck('#viewWarnings');
+if ((await page.evaluate(() => window.__case.warnings())).length !== 0) errors.push('[file:user:spots] the toggle does not hide the badges');
+await page.check('#viewWarnings');
 
 // view modes and export tabs: what is drawn follows both
 label('view');

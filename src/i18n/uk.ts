@@ -20,6 +20,8 @@ export const uk: Record<Key, string> = {
   'view.exploded': "рознесений",
   'view.assembled': "зібраний",
   'view.print': "розкладка друку",
+  'view.warnings': 'Попередження на моделі',
+  'view.warnings.title': 'Червоні зони й номерки там, куди вказують попередження; наведення або дотик до номерка чи рядка показує повідомлення повністю',
   'view.xray': 'Рентген',
   'view.xray.title': 'Дивитися крізь стінки',
   'unit.mm': 'мм',
