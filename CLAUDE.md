@@ -137,6 +137,13 @@ freely; a temporary script that turns out useful becomes a permanent one.
   file to a board (a layout next to its product page); `--file <path>` registers a file
   downloaded by hand (Google Drive asks a person), `--list`. Fetch here, not
   with curl into the scratchpad: the next session finds the same files.
+- `scripts/demand.mjs github|printables|circuitpython|meshmap|pypi <query…>`
+  — demand counts for a perspective list (GitHub code search through `gh`,
+  Printables top-N by name with downloads, CircuitPython downloads and rank,
+  Meshtastic node share, PyPI last month); `--file` queries, `--out` a TSV
+  that a stopped run resumes from. The research itself (signals and their
+  traps, where vendors keep drawings, splitting it among agents without
+  burning the usage limit): the skill `.claude/skills/demand-research/SKILL.md`.
 - Adding a board: the skill `.claude/skills/add-board/SKILL.md` (its
   "which tool for which drawing"), also for the catalog review: drawings a
   person downloads, the review page's captions, the user's OK/BAD report. No new dependencies without the user's
