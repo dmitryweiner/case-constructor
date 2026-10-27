@@ -78,10 +78,15 @@ editor:
   X, Y from the board's lower-left corner in its top view, Ø) or rails
   (along the long or the short edges);
 - **Ports and parts** — a type (USB-C, HDMI, display, button, …; sizes come
-  from the type) and where it is: on an edge (front, back, left, right — Along
-  is the centre along that edge from its start, Z its bottom above the PCB,
-  W × H its size, Out how far it sticks out) or on top (X, Y of its centre,
-  W × D × H);
+  from the type; a new port is named after its type, `led-1`, `button-2`,
+  and the name follows a type change) and where it is: on an edge (front,
+  back, left, right — Along is the centre along that edge from its start, Z
+  its bottom above the PCB's top, W × H its size, Out how far it sticks out;
+  the opening goes through the wall), on top (the opening through the
+  ceiling) or underneath (through the floor) — X, Y of its centre, W × D × H.
+  A connector on an edge **under the board** (a double-sided board) is an
+  edge port with a negative Z: −thickness − H puts it right under the PCB.
+  A line under each port's fields says the same;
 - **Save as catalog JSON** downloads the board in the catalog's format —
   keep it, or contribute it to the catalog (`.claude/skills/add-board`).
 

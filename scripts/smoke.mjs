@@ -351,6 +351,8 @@ await page.selectOption('#board0_custom_port0_type', 'micro-hdmi');
 const portIds = await page.evaluate(() => window.__case.state().boards[0].custom.ports.map((port) => port.id));
 if (portIds.join() !== 'micro-hdmi-1,usb-c-2') errors.push(`[custom] port ids ${portIds.join()}`);
 if (!(await page.locator('#board0_cut_micro-hdmi-1').count())) errors.push('[custom] no toggle for micro-hdmi-1');
+// a part under the board is a negative Z on an edge: the hint says so
+if (!(await page.locator('#board0_custom_port0_hint').textContent()).includes('under the board')) errors.push('[custom] the edge port hint does not explain Z');
 await page.click('#board0_custom_hole_add');
 await page.click('#board0_custom_hole4_remove');
 await expectWatertight('custom:edited');

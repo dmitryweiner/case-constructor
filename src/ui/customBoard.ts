@@ -255,7 +255,10 @@ export function renderCustomEditor(
     head.append(selectInput(`${prefix}_port${p}_type`, PORT_TYPE_IDS.map((id) => ({ value: id, text: tDynamic(`port.${id}`) })), port.type,
       // a new type brings its own sizes, and an automatic id follows it
       (value) => { if (isPortType(value)) updatePlacement((board) => withPortType(board, p, value)); }));
-    head.append(selectInput(`${prefix}_port${p}_edge`, [...EDGES, 'top', 'bottom'].map((edge) => ({ value: edge, text: tDynamic(`face.${edge}`) })), port.edge,
+    head.append(selectInput(`${prefix}_port${p}_edge`, [
+      ...EDGES.map((edge) => ({ value: edge, text: tDynamic(`face.${edge}`) })),
+      { value: 'top', text: t('custom.side.top') }, { value: 'bottom', text: t('custom.side.bottom') },
+    ], port.edge,
       (value) => setPort((item) => ({ ...item, edge: value }))));
     const del = make('button', 'tb-btn row-del', '✕');
     del.type = 'button';
@@ -268,15 +271,20 @@ export function renderCustomEditor(
     const fields: readonly [string, Key][] = onFace(port)
       ? [['x', 'col.x'], ['y', 'col.y'], ['w', 'col.w'], ['d', 'col.depth'], ['h', 'col.h']]
       : [['along', 'col.along'], ['z', 'col.z'], ['w', 'col.w'], ['h', 'col.h'], ['protrude', 'col.protrude']];
+    // what Z and the sides mean is not obvious: a part under the board is a negative Z, not "underneath"
+    const hint = t(onFace(port) ? 'custom.port.hint.face' : 'custom.port.hint.edge');
     const values = make('div', 'table-row');
     for (const [key, label] of fields) {
       const cell = make('label', 'cell');
+      cell.title = hint;
       const value = Number(Reflect.get(port, key) ?? 0);
       cell.append(make('span', undefined, t(label)), track(numberInput(`${prefix}_port${p}_${key}`, value, 0.1,
         (next) => setPort((item) => ({ ...item, [key]: next }))), (d) => Number(Reflect.get(d.ports[p] ?? {}, key) ?? 0)));
       values.append(cell);
     }
-    wrap.append(values);
+    const note = make('p', 'board-note', hint);
+    note.id = `${prefix}_port${p}_hint`;
+    wrap.append(values, note);
     return wrap;
   }
 

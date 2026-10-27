@@ -1,6 +1,6 @@
 # Case Constructor — improvements after the user voice of 2026-10-27
 
-**Status: in progress — U1 done.**
+**Status: in progress — U1, U5 done.**
 
 Written on 2026-10-27 from `user-voices/27-10-2026/` (`message.md`, the
 user's project `case-constructor-Корпус-1.json`, two screenshots). Items
@@ -189,3 +189,8 @@ U1 (bug) → U5 (text only) → U2 (messages) → U4 (print layout) → U3 (spot
 on the model, the largest; it builds on U2's messages).
 
 ## Deviations (recorded as they happen)
+- **U5.** The edges in the side select keep their plain names ("front"):
+  "edge: front" did not fit the panel's select and was cut off. Only
+  `top` / `bottom` say where the hole goes; the hint line under the fields
+  explains the rest. No separate dictionary test: `Key` already makes tsc
+  demand every key in all four dictionaries.
