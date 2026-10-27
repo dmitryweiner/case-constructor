@@ -17,6 +17,7 @@ import { applyAffine } from '../src/geo/surface';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import { sanitizePlacement } from '../src/boards/placement';
+import { CATALOG } from '../src/boards/catalog';
 
 let csg: CsgApi;
 beforeAll(async () => {
@@ -151,7 +152,7 @@ describe('standoffs and the glass', () => {
 });
 
 describe('under a rounded top', () => {
-  const displays = ['lcdwiki-msp2807', 'lcdwiki-msp1281', 'lcd-1602-i2c'];
+  const displays = CATALOG.filter((def) => def.kind === 'display').map((def) => def.id);
   it.each(displays.flatMap((id) => [[id, 'box', 10], [id, 'box', 20], [id, 'cylinder', 8]] as const))(
     '%s in a %s with a %s mm edge: on the flat ceiling, clear of the skirt, no slivers', (id, kind, edgeR) => {
       const state = hung(id, {}, { kind, edgeR });
@@ -163,4 +164,13 @@ describe('under a rounded top', () => {
       }
     },
   );
+});
+
+describe('every display in the catalog', () => {
+  it.each(CATALOG.filter((def) => def.kind === 'display').map((def) => [def.id]))('%s hangs in a plain box with nothing to warn about', (id) => {
+    const state = sanitizeState({ ...defaultState(), boards: [{ board: id, on: 'ceiling', z: 0.3 }] });
+    const layout = caseLayout(state);
+    expect(collisions(layout)).toEqual([]);
+    expect(cutWarnings(layout, state.shape, state.lid, portCutters(layout, state.shape), [])).toEqual([]);
+  });
 });

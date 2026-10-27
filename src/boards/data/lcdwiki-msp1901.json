@@ -1,0 +1,25 @@
+{
+  "id": "lcdwiki-msp1901",
+  "name": "1.9-inch IPS 170×320, ST7789 (MSP1901)",
+  "vendor": "LCDwiki",
+  "kind": "display",
+  "size": { "w": 29, "d": 62, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2, "y": 2, "d": 2 },
+      { "x": 27, "y": 2, "d": 2 },
+      { "x": 2, "y": 59.99, "d": 2 },
+      { "x": 27, "y": 59.99, "d": 2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 1.73,
+  "bottomHeight": 2.1,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 14.5, "y": 33, "w": 22.695, "d": 42.72, "h": 1.73, "glass": { "x": 14.5, "y": 31, "w": 25.8, "d": 49.72, "t": 1.43 } },
+    { "id": "header", "type": "header-1xN", "edge": "bottom", "x": 14.5, "y": 60.5, "w": 20.32, "d": 2.54, "h": 8.38 }
+  ],
+  "source": "https://www.lcdwiki.com/res/MSP1901/MSP1901_Size.pdf",
+  "verified": false
+}

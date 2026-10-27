@@ -1,0 +1,26 @@
+{
+  "id": "lcdwiki-msp2401",
+  "name": "2.4-inch SPI TFT (MSP2401 / MSP2402)",
+  "vendor": "LCDwiki",
+  "kind": "display",
+  "size": { "w": 42.72, "d": 77.18, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3, "y": 6.92, "d": 3.2 },
+      { "x": 39.72, "y": 6.92, "d": 3.2 },
+      { "x": 3, "y": 74.18, "d": 3.2 },
+      { "x": 39.72, "y": 74.18, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 2.7,
+  "bottomHeight": 3,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 21.36, "y": 43.44, "w": 36.72, "d": 48.96, "h": 2.7, "glass": { "x": 21.36, "y": 40.54, "w": 42.72, "d": 60.26, "t": 2.2 } },
+    { "id": "header", "type": "header-1xN", "edge": "bottom", "x": 21.36, "y": 2, "w": 35.56, "d": 2.54, "h": 8.38 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 47.86, "z": -3.1, "protrude": 0 }
+  ],
+  "source": "https://www.lcdwiki.com/res/MSP2402/MSP2401_Size.pdf",
+  "verified": true
+}

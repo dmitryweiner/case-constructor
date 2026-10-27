@@ -77,6 +77,20 @@ import waveshareZero from './data/waveshare-zero.json';
 import lcdwikiMsp2807 from './data/lcdwiki-msp2807.json';
 import lcdwikiMsp1281 from './data/lcdwiki-msp1281.json';
 import lcd1602I2c from './data/lcd-1602-i2c.json';
+import lcdwikiMsp2401 from './data/lcdwiki-msp2401.json';
+import lcdwikiMsp3520 from './data/lcdwiki-msp3520.json';
+import lcdwikiMsp4021 from './data/lcdwiki-msp4021.json';
+import lcdwikiMsp1901 from './data/lcdwiki-msp1901.json';
+import lcdwikiMsp1691 from './data/lcdwiki-msp1691.json';
+import lcdwikiMsp1141 from './data/lcdwiki-msp1141.json';
+import lcdwikiMsp1308 from './data/lcdwiki-msp1308.json';
+import lcdwikiMsp1541 from './data/lcdwiki-msp1541.json';
+import lcdwikiMsp2008 from './data/lcdwiki-msp2008.json';
+import lcdwikiMc242gx from './data/lcdwiki-mc242gx.json';
+import lcdwikiMc130gx from './data/lcdwiki-mc130gx.json';
+import genericOled096 from './data/generic-oled-096.json';
+import lcd2004I2c from './data/lcd-2004-i2c.json';
+import lcd12864St7920 from './data/lcd-12864-st7920.json';
 import waveshareEsp32S3TouchLcd43 from './data/waveshare-esp32-s3-touch-lcd-4-3.json';
 import mpdBh18650W from './data/mpd-bh-18650-w.json';
 import mpdBh2aaW from './data/mpd-bh2aa-w.json';
@@ -159,6 +173,20 @@ export const RAW_BOARDS: readonly unknown[] = [
   lcdwikiMsp2807,
   lcdwikiMsp1281,
   lcd1602I2c,
+  lcdwikiMsp2401,
+  lcdwikiMsp3520,
+  lcdwikiMsp4021,
+  lcdwikiMsp1901,
+  lcdwikiMsp1691,
+  lcdwikiMsp1141,
+  lcdwikiMsp1308,
+  lcdwikiMsp1541,
+  lcdwikiMsp2008,
+  lcdwikiMc242gx,
+  lcdwikiMc130gx,
+  genericOled096,
+  lcd2004I2c,
+  lcd12864St7920,
   // battery holders, screwed down like boards (their own group in the picker)
   mpdBh18650W,
   mpdBh2aaW,

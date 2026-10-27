@@ -1,0 +1,25 @@
+{
+  "id": "lcdwiki-msp1691",
+  "name": "1.69-inch IPS 240×280, ST7789 (MSP1691)",
+  "vendor": "LCDwiki",
+  "kind": "display",
+  "size": { "w": 31, "d": 48, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2.5, "y": 2.5, "d": 2 },
+      { "x": 28.5, "y": 2.5, "d": 2 },
+      { "x": 2.5, "y": 45.49, "d": 2 },
+      { "x": 28.5, "y": 45.49, "d": 2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 1.86,
+  "bottomHeight": 1.1,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 15.5, "y": 25.29, "w": 27.972, "d": 32.634, "h": 1.86, "glass": { "x": 15.5, "y": 24, "w": 30.07, "d": 37.43, "t": 1.56 } },
+    { "id": "header", "type": "header-1xN", "edge": "bottom", "x": 15.5, "y": 46.5, "w": 20.32, "d": 2.54, "h": 8.38 }
+  ],
+  "source": "https://www.lcdwiki.com/res/MSP1691/MSP1691_Size.pdf",
+  "verified": false
+}

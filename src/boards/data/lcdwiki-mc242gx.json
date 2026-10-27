@@ -1,0 +1,25 @@
+{
+  "id": "lcdwiki-mc242gx",
+  "name": "2.42-inch I2C OLED, SSD1309 (MC242GX)",
+  "vendor": "LCDwiki",
+  "kind": "display",
+  "size": { "w": 72, "d": 43, "t": 1.2 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2, "y": 2, "d": 2.5 },
+      { "x": 70, "y": 2, "d": 2.5 },
+      { "x": 2, "y": 41, "d": 2.5 },
+      { "x": 70, "y": 41, "d": 2.5 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 2.85,
+  "bottomHeight": 2.2,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 36, "y": 24.18, "w": 55.01, "d": 27.49, "h": 2.85, "glass": { "x": 36, "y": 21.5, "w": 62.1, "d": 38.8, "t": 2.85 } },
+    { "id": "header", "type": "header-1xN", "edge": "bottom", "x": 2.55, "y": 23, "w": 2.54, "d": 12.7, "h": 8.34 }
+  ],
+  "source": "https://www.lcdwiki.com/res/MC242GX/2.42inch_IIC_Module_MC242GX_Size.pdf",
+  "verified": true
+}

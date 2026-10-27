@@ -1,0 +1,25 @@
+{
+  "id": "lcdwiki-msp2008",
+  "name": "2.0-inch IPS 240×320, ST7789 (MSP2008)",
+  "vendor": "LCDwiki",
+  "kind": "display",
+  "size": { "w": 36.48, "d": 61.12, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2.5, "y": 2.5, "d": 2 },
+      { "x": 33.98, "y": 2.5, "d": 2 },
+      { "x": 2.5, "y": 58.62, "d": 2 },
+      { "x": 33.98, "y": 58.62, "d": 2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 1.8,
+  "bottomHeight": 1.1,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 18.24, "y": 33.26, "w": 30.6, "d": 40.8, "h": 1.8, "glass": { "x": 18.24, "y": 30.56, "w": 36, "d": 51.8, "t": 1.5 } },
+    { "id": "header", "type": "header-1xN", "edge": "bottom", "x": 18.24, "y": 59.62, "w": 20.32, "d": 2.54, "h": 8.38 }
+  ],
+  "source": "https://www.lcdwiki.com/zh/images/c/c1/MSP2008_Size.png",
+  "verified": false
+}

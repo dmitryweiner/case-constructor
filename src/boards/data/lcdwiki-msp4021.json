@@ -1,0 +1,26 @@
+{
+  "id": "lcdwiki-msp4021",
+  "name": "4.0-inch SPI TFT, touch, ST7796S (MSP4021)",
+  "vendor": "LCDwiki",
+  "kind": "display",
+  "size": { "w": 61.74, "d": 108.04, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.42, "y": 3, "d": 3.2 },
+      { "x": 58.32, "y": 3, "d": 3.2 },
+      { "x": 3.42, "y": 105.04, "d": 3.2 },
+      { "x": 58.32, "y": 105.04, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 4.05,
+  "bottomHeight": 3,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 30.87, "y": 56.88, "w": 55.68, "d": 83.52, "h": 4.05, "glass": { "x": 30.87, "y": 54.005, "w": 60.88, "d": 94.57, "t": 3.55 } },
+    { "id": "header", "type": "header-1xN", "edge": "bottom", "x": 30.87, "y": 2, "w": 35.56, "d": 2.54, "h": 8.35 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 65.85, "z": -3.1, "protrude": -4.23 }
+  ],
+  "source": "https://www.lcdwiki.com/res/MSP4021/MSP4021_Size.pdf",
+  "verified": true
+}

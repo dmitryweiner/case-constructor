@@ -212,6 +212,20 @@ bezel: its outline and thickness), drawn dark under the window in the view.
 | 2.8-inch SPI TFT, touch (MSP2807) | LCDwiki | 50 × 86 | 4 × M3 | [source](https://www.lcdwiki.com/res/MSP2807/MSP2807_Size.pdf) | yes |
 | 1.28-inch round IPS, GC9A01 (MSP1281) | LCDwiki | 38.03 × 45.8 | 2 × M2 | [source](https://www.lcdwiki.com/res/MSP1281/MSP1281_Size.pdf) | yes |
 | 1602 character LCD, PCF8574 I2C backpack | Generic | 80 × 36 | 4 × M2.5 | [source](https://cdn-shop.adafruit.com/datasheets/TC1602A-01T.pdf) | ≈ (Tinsharp's drawing; the backpack estimated) |
+| 2.4-inch SPI TFT (MSP2401 / MSP2402) | LCDwiki | 42.72 × 77.18 | 4 × M3 | [source](https://www.lcdwiki.com/res/MSP2402/MSP2401_Size.pdf) | yes |
+| 3.5-inch SPI TFT, touch, ILI9488 (MSP3520) | LCDwiki | 56.34 × 98 | 4 × M3 | [source](https://www.lcdwiki.com/res/MSP3520/MSP3520_Size.pdf) | yes |
+| 4.0-inch SPI TFT, touch, ST7796S (MSP4021) | LCDwiki | 61.74 × 108.04 | 4 × M3 | [source](https://www.lcdwiki.com/res/MSP4021/MSP4021_Size.pdf) | yes |
+| 1.9-inch IPS 170×320, ST7789 (MSP1901) | LCDwiki | 29 × 62 | 4 × M2 | [source](https://www.lcdwiki.com/res/MSP1901/MSP1901_Size.pdf) | ≈ |
+| 1.69-inch IPS 240×280, ST7789 (MSP1691) | LCDwiki | 31 × 48 | 4 × M2 | [source](https://www.lcdwiki.com/res/MSP1691/MSP1691_Size.pdf) | ≈ |
+| 1.14-inch IPS 135×240, ST7789 (MSP1141) | LCDwiki | 31.4 × 28 | 4 × M2 | [source](https://www.lcdwiki.com/zh/images/6/62/1.14inch_IPS_size.png) | ≈ |
+| 1.3-inch IPS 240×240, ST7789 (MSP1308) | LCDwiki | 27.78 × 39.22 | 4 × M2 | [source](https://www.lcdwiki.com/zh/images/c/cb/1.3inch_IPS_Size.jpg) | ≈ |
+| 1.54-inch IPS 240×240, ST7789 (MSP1541) | LCDwiki | 32 × 43.72 | 4 × M2 | [source](https://www.lcdwiki.com/zh/images/b/b5/MSP1541-size.png) | ≈ |
+| 2.0-inch IPS 240×320, ST7789 (MSP2008) | LCDwiki | 36.48 × 61.12 | 4 × M2 | [source](https://www.lcdwiki.com/zh/images/c/c1/MSP2008_Size.png) | ≈ |
+| 2.42-inch I2C OLED, SSD1309 (MC242GX) | LCDwiki | 72 × 43 | 4 × M2.5 | [source](https://www.lcdwiki.com/res/MC242GX/2.42inch_IIC_Module_MC242GX_Size.pdf) | yes |
+| 1.3-inch I2C OLED, SH1106 (MC130GX) | LCDwiki | 35.4 × 33.5 | 4 × M2.5 | [source](https://www.lcdwiki.com/zh/images/d/d5/1.3OLED_Size.png) | ≈ |
+| 0.96-inch I2C OLED, SSD1306 (128×64) | Generic | 27.3 × 27.8 | 4 × M2 | [source](https://www.lcdwiki.com/images/1/19/MC096-015.jpg) | ≈ |
+| 2004 character LCD, PCF8574 I2C backpack | Generic | 98 × 60 | 4 × M2.5 | [source](https://cdn-shop.adafruit.com/datasheets/WH2004A-CFH-JT%23.pdf) | ≈ |
+| 12864 graphic LCD, ST7920 (128×64) | Generic | 93 × 70 | 4 × M2.5 | [source](https://endrich.com/Datenbl%C3%A4tter/Displays%20%26%20Embedded%20Systems/Monochrome%20LCD/Grafische%20LC-Module/RG12864A2-datasheet.pdf) | ≈ |
 
 ### Battery holders
 

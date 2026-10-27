@@ -352,3 +352,13 @@ below).
   much, and the smoke's slider extremes put the MSP1281's rim tangent to the
   skirt (96 degenerate triangles). So a window reaches the rounded edge only
   on a board against a wall; the warning stays for that.
+- **D7a (in progress).** 14 module entries in: LCDwiki MSP2401, MSP3520,
+  MSP4021, MC242GX (verified); MSP1901, MSP1691 (hole Ø not drawn), the
+  ST7789 1.14/1.3/1.54/2.0″ boards from LCDwiki's size pictures (glass
+  thickness estimated), MC130GX, the generic 0.96″ OLED (LCDwiki's size
+  picture), 2004 (Winstar WH2004A; the perspective's VA/AA offsets were
+  misread — all centred at y 30) and 12864 (Raystar RG12864A2) — ≈. Left:
+  Waveshare 2″ / 1.54″ (DXF read: PCB 35 × 50, holes Ø3 3 mm in, glass
+  31.52 × 33.72 at 17.5, 25.04, AA 27.72² at 17.5, 26.59) / 1.69″, and the
+  Adafruit ST7789 boards from their STEPs (fetched; holes Ø2.5 read).
+
