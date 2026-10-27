@@ -376,8 +376,15 @@ input[type='text'] {
 #warnings {
   color: var(--warn);
   font-size: 12px;
-  white-space: pre-line;
   margin: 4px 2px 0;
+}
+
+.warn-line + .warn-line {
+  margin-top: 3px;
+}
+
+.warn-line.info {
+  color: var(--muted);
 }
 
 #viewWrap {
@@ -897,8 +904,15 @@ input.num {
 
 .view-checks {
   display: flex;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 6px 14px;
   margin: 2px 0 8px;
+}
+
+/* a label never breaks inside: the row wraps instead ("X-ray" broke in two) */
+.view-checks .check-inline {
+  flex: none;
+  white-space: nowrap;
 }
 
 .check-inline {
@@ -951,6 +965,63 @@ input.num {
   border-color: var(--line);
   color: var(--muted);
   text-decoration: line-through;
+}
+
+/* a warning's badge over its place; open, the whole message (a tap or a hover on it or its line) */
+.warn-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 1px 6px;
+  border-radius: 9px;
+  background: #c8383d;
+  border: 1px solid #ff8a8d;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.warn-badge.info {
+  background: #3a4350;
+  border-color: var(--muted);
+}
+
+.warn-badge.open {
+  max-width: 280px;
+  white-space: normal;
+  font-weight: 400;
+  border-radius: 6px;
+  z-index: 1;
+}
+
+.warn-line[data-warn] {
+  cursor: pointer;
+}
+
+.warn-line.hot {
+  color: #ff8a8d;
+}
+
+.warn-line.info.hot {
+  color: var(--text);
+}
+
+.warn-num {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: #c8383d;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.warn-num.info {
+  background: #3a4350;
 }
 
 #viewCaption {

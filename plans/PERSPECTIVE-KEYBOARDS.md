@@ -1,0 +1,5 @@
+- Solder Party BBQ20KBD
+- M5Stack CardKB v1.1
+- Solder Party KeebDeck Keyboard
+- https://github.com/ZitaoTech/BB9900-USB-keyboard
+- https://hackaday.io/project/175405-mini-piqwerty-usb-keyboard-ii

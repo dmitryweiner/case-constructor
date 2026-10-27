@@ -170,6 +170,8 @@ await page.selectOption('#board0_top', '');
 await expectWatertight('carry:none');
 // port captions over the ghosts: a click on one toggles its opening, undo brings it back
 label('captions');
+// the Pi 4's skirt warnings put badges over the case, and a badge hides the captions under it: count the captions alone
+await page.uncheck('#viewWarnings');
 await expectWatertight('captions:shown');
 const captions = await page.evaluate(() => window.__case.captions());
 if (captions.length < 4) errors.push(`[captions] only ${captions.length} port captions shown`);
@@ -197,6 +199,7 @@ await page.uncheck('#viewBoards');
 if ((await page.evaluate(() => window.__case.captions())).length) errors.push('[captions] captions stay with the boards hidden');
 if (!(await page.locator('#viewPortNames').isDisabled())) errors.push('[captions] "Connector names" is live with the boards hidden');
 await page.check('#viewBoards');
+await page.check('#viewWarnings');
 // a board against walls: the Pi 4 flush on the front and the right, the case shrinks
 label('walls');
 const sizeOf = async () => (await page.locator('#status').textContent()).trim();
@@ -347,6 +350,12 @@ await page.click('#board0_custom_port_add');
 await page.click('#board0_custom_port_add');
 await page.selectOption('#board0_custom_port1_edge', 'top');
 await page.selectOption('#board0_custom_port0_type', 'micro-hdmi');
+// an automatic id follows the type: the toggle under the editor says so
+const portIds = await page.evaluate(() => window.__case.state().boards[0].custom.ports.map((port) => port.id));
+if (portIds.join() !== 'micro-hdmi-1,usb-c-2') errors.push(`[custom] port ids ${portIds.join()}`);
+if (!(await page.locator('#board0_cut_micro-hdmi-1').count())) errors.push('[custom] no toggle for micro-hdmi-1');
+// a part under the board is a negative Z on an edge: the hint says so
+if (!(await page.locator('#board0_custom_port0_hint').textContent()).includes('under the board')) errors.push('[custom] the edge port hint does not explain Z');
 await page.click('#board0_custom_hole_add');
 await page.click('#board0_custom_hole4_remove');
 await expectWatertight('custom:edited');
@@ -607,6 +616,28 @@ await page.waitForTimeout(100);
 if (!(await page.locator('#blockers').textContent()).includes('not a Case Constructor')) {
   errors.push('[file] a foreign JSON was not refused');
 }
+// a user's project (tests/fixtures/korpus-1.json): its messages name the wall and the board in the way; notes are grey, not counted
+label('file:user');
+await page.setInputFiles('#fileInput', join(process.cwd(), 'tests/fixtures/korpus-1.json'));
+await page.waitForTimeout(150);
+await expectWatertight('file:user');
+const userLines = await page.locator('#warnings .warn-line').allTextContents();
+if (!userLines.some((line) => line.includes('not against the right wall: board 3 “KaRadio ESP32”'))) errors.push(`[file:user] ${userLines.join(' | ').slice(0, 200)}`);
+if ((await page.locator('#warnings .warn-line.info').count()) !== 2) errors.push('[file:user] not two notes');
+if ((await page.locator('#warnings .warn-head').textContent()) !== '3 warnings · 2 notes') errors.push(`[file:user] head ${await page.locator('#warnings .warn-head').textContent()}`);
+// on the model: a badge per message with a place, a hover on a line opens its badge, the toggle hides them
+label('file:user:spots');
+await page.waitForTimeout(150);
+const badges = await page.evaluate(() => window.__case.warnings());
+if (badges.length !== 5) errors.push(`[file:user:spots] ${badges.length} badges: ${JSON.stringify(badges).slice(0, 200)}`);
+await page.hover('#warnings [data-warn="1"]');
+const opened = await page.evaluate(() => window.__case.warnings().find((badge) => badge.n === 1));
+if (!opened?.open || !opened.text.includes('right wall')) errors.push(`[file:user:spots] hover: ${JSON.stringify(opened)}`);
+if (!(await page.locator('#warnings [data-warn="1"]').evaluate((row) => row.classList.contains('hot')))) errors.push('[file:user:spots] the hovered line is not lit');
+await page.mouse.move(0, 0);
+await page.uncheck('#viewWarnings');
+if ((await page.evaluate(() => window.__case.warnings())).length !== 0) errors.push('[file:user:spots] the toggle does not hide the badges');
+await page.check('#viewWarnings');
 
 // view modes and export tabs: what is drawn follows both
 label('view');
@@ -620,8 +651,35 @@ await page.click('#viewExploded');
 if (!/body.*board.*lid/.test(await drawn())) errors.push(`[view] exploded/both draws ${await drawn()}`);
 await page.click('#viewAssembled');
 if (!/body.*board.*lid/.test(await drawn())) errors.push(`[view] assembled/both draws ${await drawn()}`);
+// the lid's place on the bed: behind the body, then right of it; the caption names it
+label('view:print-lid');
+await page.click('#viewPrint');
+const lidBox = () => page.evaluate(() => {
+  const parts = window.__case.drawnParts();
+  const box = (role) => {
+    const { positions: p } = parts.find((part) => part.role === role).mesh;
+    let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
+    for (let i = 0; i < p.length; i += 3) { x0 = Math.min(x0, p[i]); x1 = Math.max(x1, p[i]); y0 = Math.min(y0, p[i + 1]); y1 = Math.max(y1, p[i + 1]); }
+    return { x0, y0, x1, y1 };
+  };
+  return { body: box('body'), lid: box('lid') };
+});
+await page.click('#print_lid_behind');
+await setRange('print_gap', 20);
+await page.waitForTimeout(150);
+const behind = await lidBox();
+if (Math.abs(behind.lid.y0 - behind.body.y1 - 20) > 0.01 || Math.abs(behind.lid.x0) > 0.01) errors.push(`[view:print-lid] behind: ${JSON.stringify(behind)}`);
+if (!(await page.locator('#viewCaption').textContent()).includes('lid behind')) errors.push('[view:print-lid] the caption does not say behind');
+await page.click('#print_lid_right');
+await page.waitForTimeout(150);
+const right = await lidBox();
+if (Math.abs(right.lid.x0 - right.body.x1 - 20) > 0.01) errors.push(`[view:print-lid] right: ${JSON.stringify(right)}`);
+await exportStl('both:right');
+await page.click('#print_lid_auto');
+await setRange('print_gap', 10);
 await page.click('#viewExploded');
 await page.click('#tabLid');
+if (await page.locator('#print_lid_auto').isVisible()) errors.push('[view:print-lid] the Lid tab offers the lid\'s place');
 await expectWatertight('view:lid');
 if ((await drawn()) !== 'lid') errors.push(`[view] the Lid tab draws ${await drawn()}`);
 if (await page.locator('#viewRow').isVisible()) errors.push('[view] the Lid tab offers a view');

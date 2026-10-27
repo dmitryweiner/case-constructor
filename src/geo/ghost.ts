@@ -9,21 +9,22 @@ import earcut from 'earcut';
 import type { BoardDef, Glass, PortDef } from '../boards/schema';
 import { onFace } from '../boards/schema';
 import type { PlacedBoard } from './layout';
-import { PIN_SPACER, PIN_SPACER_W, edgeNormal, pinEdges } from './layout';
+import { PIN_SPACER, PIN_SPACER_W, pinEdges, portBlock } from './layout';
 import type { Affine, SurfaceMesh, Vec3 } from './surface';
 import { applyAffine, composeAffine, mergeMeshes } from './surface';
 import type { BatterySpec } from '../boards/battery';
+import type { MessageSpot } from './message';
 import { batterySize, cellCentres } from '../boards/battery';
 import { meshNormals } from './normals';
 
-/** An axis-aligned box in the board frame, mapped to the case frame. */
-function boxMesh(board: PlacedBoard, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): SurfaceMesh {
+/** An axis-aligned box in a frame (a board's), mapped to the case frame. */
+function boxMesh(toCase: Affine, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): SurfaceMesh {
   const corners: Vec3[] = [
     [x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0],
     [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1],
   ];
   const positions = new Float32Array(24);
-  corners.forEach((corner, i) => positions.set(applyAffine(board.toCase, corner), i * 3));
+  corners.forEach((corner, i) => positions.set(applyAffine(toCase, corner), i * 3));
   const indices = new Uint32Array([
     0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4,
     2, 3, 7, 2, 7, 6, 1, 2, 6, 1, 6, 5, 3, 0, 4, 3, 4, 7,
@@ -119,36 +120,6 @@ function prismMesh(board: Pick<PlacedBoard, 'toCase'>, outer: [number, number][]
   return { positions, indices: index, normals: meshNormals(positions, index) };
 }
 
-/** How thick a display's window is drawn over its glass, mm. */
-const WINDOW_LAYER = 0.1;
-
-/** The block of one port in the board frame (z = 0 at the PCB underside). */
-export function portBlock(board: PlacedBoard, port: PortDef): [number, number, number, number, number, number] {
-  const { w, d, t } = board.def.size;
-  if (onFace(port)) {
-    // a display with a glass: its window as a thin layer on the glass's front
-    const [z0, z1] = port.edge === 'top'
-      ? [port.glass ? t + port.h - WINDOW_LAYER : t, t + port.h + (port.glass ? WINDOW_LAYER / 2 : 0)]
-      : [-port.h, 0];
-    return [port.x - port.w / 2, port.y - port.d / 2, z0, port.x + port.w / 2, port.y + port.d / 2, z1];
-  }
-  const [nx, ny] = edgeNormal(port.edge);
-  const z0 = t + port.z;
-  const z1 = z0 + port.h;
-  // along the edge from its origin end; the body reaches `d` inward from the protruding face
-  const face = port.protrude;
-  if (nx !== 0) {
-    const edgeX = nx > 0 ? w : 0;
-    const outer = edgeX + nx * face;
-    const inner = outer - nx * port.d;
-    return [Math.min(outer, inner), port.along - port.w / 2, z0, Math.max(outer, inner), port.along + port.w / 2, z1];
-  }
-  const edgeY = ny > 0 ? d : 0;
-  const outer = edgeY + ny * face;
-  const inner = outer - ny * port.d;
-  return [port.along - port.w / 2, Math.min(outer, inner), z0, port.along + port.w / 2, Math.max(outer, inner), z1];
-}
-
 /** Where a port's caption hangs in the view: the middle of its block's top (its bottom for a part underneath), case frame. */
 export function portCaptionAnchor(board: PlacedBoard, port: PortDef): Vec3 {
   const [x0, y0, z0, x1, y1, z1] = portBlock(board, port);
@@ -213,12 +184,12 @@ export function boardGhost(board: PlacedBoard): { pcb: SurfaceMesh; ports: Surfa
   if (board.def.battery) return { pcb: batteryGhost(board, board.def.battery), ports: null, glass: null };
   const { w, d, t } = board.def.size;
   const blocks = [...board.def.ports.map((port) => portBlock(board, port)), ...pinBlocks(board)]
-    .map(([x0, y0, z0, x1, y1, z1]) => boxMesh(board, x0, y0, z0, x1, y1, z1));
+    .map(([x0, y0, z0, x1, y1, z1]) => boxMesh(board.toCase, x0, y0, z0, x1, y1, z1));
   const holes = ghostHoles(board.def);
   // the real outline when the entry has one (chamfers, notches); layout and cavity keep the rectangle
   const outer = board.def.outline ?? [[0, 0], [w, 0], [w, d], [0, d]];
   const pcb = holes.length === 0 && !board.def.outline
-    ? boxMesh(board, 0, 0, 0, w, d, t)
+    ? boxMesh(board.toCase, 0, 0, 0, w, d, t)
     : prismMesh(board, outer, holes.map((hole) => circle(hole.x, hole.y, hole.r + hole.pad, true)), 0, t);
   const pads = holes.map((hole) => prismMesh(
     board, circle(hole.x, hole.y, hole.r + hole.pad, false), [circle(hole.x, hole.y, hole.r, true)], -PAD_PROUD, t + PAD_PROUD,
@@ -233,7 +204,7 @@ const ALONG_X: Affine = [0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0];
 /** A battery's ghost: its cells lying along x, or its pack as a block. */
 function batteryGhost(board: PlacedBoard, spec: BatterySpec): SurfaceMesh {
   const size = batterySize(spec);
-  if (spec.kind === 'pack') return boxMesh(board, 0, 0, 0, size.w, size.d, size.h);
+  if (spec.kind === 'pack') return boxMesh(board.toCase, 0, 0, 0, size.w, size.d, size.h);
   const alongX = { ...board, toCase: composeAffine(board.toCase, ALONG_X) };
   const r = size.h / 2;
   return mergeMeshes(cellCentres(spec).map((y) => prismMesh(alongX, circle(y, r, r, false), [], 0, size.w)));
@@ -244,4 +215,11 @@ export function standoffGhost(board: PlacedBoard): SurfaceMesh | null {
   const standoffs = board.standoffs;
   if (!standoffs) return null;
   return mergeMeshes(standoffs.holes.map((hole) => prismMesh(standoffs, circle(hole.x, hole.y, 2.5, false), [], -standoffs.length, 0)));
+}
+
+const IDENTITY: Affine = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0];
+
+/** A message's place as drawn: its boxes, case frame. */
+export function spotMesh(spot: MessageSpot): SurfaceMesh {
+  return mergeMeshes(spot.boxes.map((box) => boxMesh(IDENTITY, box.min[0], box.min[1], box.min[2], box.max[0], box.max[1], box.max[2])));
 }

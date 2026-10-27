@@ -274,6 +274,18 @@ function isEdge(value: unknown): value is Edge {
   return typeof value === 'string' && EDGES.some((edge) => edge === value);
 }
 
+/** Whether a port id is the automatic one for a type: `<type>-<n>`. */
+export function isAutoPortId(id: string, type: string): boolean {
+  return id.startsWith(`${type}-`) && /^\d+$/.test(id.slice(type.length + 1));
+}
+
+/** The first free automatic id of a port type. */
+export function autoPortId(type: string, taken: ReadonlySet<string>): string {
+  let n = 1;
+  while (taken.has(`${type}-${n}`)) n++;
+  return `${type}-${n}`;
+}
+
 /** A port: defaults from its type, clamped to the board. Null when it cannot be a port at all. */
 export function sanitizePort(raw: unknown, size: { w: number; d: number }, index: number): PortDef | null {
   const r = rec(raw);

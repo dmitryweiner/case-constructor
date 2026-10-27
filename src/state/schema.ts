@@ -17,6 +17,8 @@ import {
 } from '../geo/extras';
 import type { LidState } from '../geo/lidSpec';
 import { defaultLid, lidForKind, sanitizeLid } from '../geo/lidSpec';
+import type { PrintArrange } from '../geo/print';
+import { defaultPrint, sanitizePrint } from '../geo/print';
 
 export const STATE_VERSION = 1;
 
@@ -36,6 +38,8 @@ export interface AppState {
   wallMount: WallMountState;
   label: LabelState;
   exportMode: ExportMode;
+  /** where the lid goes next to the body in the Both STL */
+  print: PrintArrange;
   /** segments per quarter arc for the export build */
   resolution: number;
 }
@@ -54,6 +58,7 @@ export function defaultState(): AppState {
     wallMount: defaultWallMount(),
     label: defaultLabel(),
     exportMode: 'both',
+    print: defaultPrint(),
     resolution: 24,
   };
 }
@@ -84,6 +89,7 @@ export function sanitizeState(raw: unknown): AppState {
     wallMount: sanitizeWallMount(Reflect.get(r, 'wallMount')),
     label: sanitizeLabel(Reflect.get(r, 'label')),
     exportMode: isExportMode(exportMode) ? exportMode : d.exportMode,
+    print: sanitizePrint(Reflect.get(r, 'print')),
     resolution: typeof resolution === 'number' && RESOLUTIONS.includes(resolution) ? resolution : d.resolution,
   };
 }

@@ -74,9 +74,11 @@
               <button class="tab" id="viewPrint" role="radio" aria-checked="false" data-i18n="view.print" data-i18n-title="view.print.title">print layout</button>
             </div>
             </div>
+            <div id="printParams"></div>
             <div class="view-checks">
               <label class="check-inline" id="viewBoardsLabel" data-i18n-title="view.boards.title"><input type="checkbox" id="viewBoards" checked /> <span data-i18n="view.boards">Boards</span></label>
               <label class="check-inline" id="viewPortNamesLabel" data-i18n-title="view.portNames.title"><input type="checkbox" id="viewPortNames" checked /> <span data-i18n="view.portNames">Connector names</span></label>
+              <label class="check-inline" id="viewWarningsLabel" data-i18n-title="view.warnings.title"><input type="checkbox" id="viewWarnings" checked /> <span data-i18n="view.warnings">Warnings on the model</span></label>
               <label class="check-inline" data-i18n-title="view.xray.title"><input type="checkbox" id="viewXray" /> <span data-i18n="view.xray">X-ray</span></label>
             </div>
             <label class="row">
@@ -87,7 +89,7 @@
             <button id="exportBtn" class="tb-btn primary wide" data-i18n="export.button">Export STL</button>
             <p id="status"></p>
             <p id="audit"></p>
-            <p id="warnings"></p>
+            <div id="warnings"></div>
             <p id="blockers" class="blockers"></p>
           </section>
         </aside>

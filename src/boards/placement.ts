@@ -6,7 +6,7 @@
 import type { FastenerSpec } from '../geo/fasteners';
 import { sanitizeFastener } from '../geo/fasteners';
 import type { BoardDef, Edge, PortDef } from './schema';
-import { EDGES, bottomPartsH, onFace, resolveVariant, sanitizeBoard } from './schema';
+import { EDGES, autoPortId, bottomPartsH, isAutoPortId, onFace, resolveVariant, sanitizeBoard } from './schema';
 import { CATALOG, catalogBoard } from './catalog';
 import type { BatterySpec } from './battery';
 import { PRESS_MAX, PRESS_MIN, batteryDef, defaultBattery, sanitizeBattery } from './battery';
@@ -162,10 +162,31 @@ function num(x: unknown, min: number, max: number, fallback: number): number {
   return Math.min(max, Math.max(min, value)) + 0;
 }
 
+/**
+ * A custom board's ports renamed from the ids the editor once gave every
+ * port (`usb-c-<n>`, whatever its type) to their type's own: the old id →
+ * the new one.
+ */
+function legacyPortIds(def: BoardDef): Map<string, string> {
+  const taken = new Set(def.ports.map((port) => port.id));
+  const renamed = new Map<string, string>();
+  for (const port of def.ports) {
+    if (port.type === 'usb-c' || !isAutoPortId(port.id, 'usb-c')) continue;
+    const next = autoPortId(port.type, taken);
+    taken.add(next);
+    renamed.set(port.id, next);
+  }
+  return renamed;
+}
+
 export function sanitizePlacement(raw: unknown): BoardPlacement {
   const r = typeof raw === 'object' && raw !== null ? raw : {};
   const id: unknown = Reflect.get(r, 'board');
-  const custom = id === 'custom' ? sanitizeBoard(Reflect.get(r, 'custom'), 'custom') : undefined;
+  const loaded = id === 'custom' ? sanitizeBoard(Reflect.get(r, 'custom'), 'custom') : undefined;
+  const renamed = loaded ? legacyPortIds(loaded) : new Map<string, string>();
+  const custom = loaded && renamed.size > 0
+    ? { ...loaded, ports: loaded.ports.map((port) => ({ ...port, id: renamed.get(port.id) ?? port.id })) } : loaded;
+  const oldId = new Map([...renamed].map(([from, to]) => [to, from]));
   const battery = id === 'battery' ? sanitizeBattery(Reflect.get(r, 'battery')) : undefined;
   const entry = custom ?? (battery ? batteryDef(battery) : undefined) ?? (typeof id === 'string' ? catalogBoard(id) : undefined) ?? CATALOG[0];
   const variantRaw: unknown = Reflect.get(r, 'variant');
@@ -179,7 +200,7 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
   const cuts: Record<string, boolean> = {};
   if (typeof cutsRaw === 'object' && cutsRaw !== null) {
     for (const port of def.ports) {
-      const value: unknown = Reflect.get(cutsRaw, port.id);
+      const value: unknown = Reflect.get(cutsRaw, oldId.get(port.id) ?? port.id);
       if (typeof value === 'boolean' && value !== ownPortDefault(carried, port)) cuts[port.id] = value;
     }
   }
@@ -230,6 +251,30 @@ export function withPortCut(placement: BoardPlacement, port: { id: string; cut: 
   if (value === port.cut) delete cuts[port.id];
   else cuts[port.id] = value;
   return { ...placement, cuts };
+}
+
+/**
+ * A custom board's port turned into another type: its sizes go (the type
+ * brings its own), an automatic id follows the type, and the opening toggle
+ * follows the id.
+ */
+export function withPortType(placement: BoardPlacement, index: number, type: PortDef['type']): BoardPlacement {
+  const custom = placement.custom;
+  const port = custom?.ports[index];
+  if (!custom || !port) return placement;
+  const id = isAutoPortId(port.id, port.type) && port.type !== type
+    ? autoPortId(type, new Set(custom.ports.map((item) => item.id))) : port.id;
+  const along = onFace(port) ? undefined : port.along;
+  const z = onFace(port) ? undefined : port.z;
+  const x = onFace(port) ? port.x : undefined;
+  const y = onFace(port) ? port.y : undefined;
+  const ports = custom.ports.map((item, i) => (i === index ? { id, type, edge: port.edge, along, z, x, y } : item));
+  const cuts = { ...placement.cuts };
+  if (id !== port.id && port.id in cuts) {
+    cuts[id] = cuts[port.id];
+    delete cuts[port.id];
+  }
+  return sanitizePlacement({ ...placement, custom: { ...custom, ports }, cuts });
 }
 
 /** The placement on the floor or hung from the ceiling; the floor is stored as no field at all. */

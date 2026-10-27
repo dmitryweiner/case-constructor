@@ -7,7 +7,7 @@
 // or larger (manual), and the layout is centred in it: board positions never
 // depend on the case size, which breaks the circular dependency.
 
-import type { BoardDef, Edge, TopPort } from '../boards/schema';
+import type { BoardDef, Edge, PortDef, TopPort } from '../boards/schema';
 import { EDGES, onFace, resolveVariant } from '../boards/schema';
 import type { BoardPlacement, Rotation } from '../boards/placement';
 import { CLAMP_POST_ZONE } from '../boards/battery';
@@ -22,11 +22,12 @@ import { bossDiameter } from './fasteners';
 import { postLength } from './fastening';
 import type { LidState } from './lidSpec';
 import { postDiameter } from './lidSpec';
-import type { Message } from './message';
+import type { Message, SpotBox } from './message';
+import { boardParams, boxAround, spotOf } from './message';
 import type { ShapeState } from './shape';
-import { SIZE_MIN, SIZE_MAX, plateOf, shapeSpec } from './shape';
+import { SIZE_MIN, SIZE_MAX, WALL_MIN, plateOf, shapeSpec } from './shape';
 import { effectiveRadii } from './loft';
-import type { Affine } from './surface';
+import type { Affine, Vec3 } from './surface';
 import { applyAffine, composeAffine, invertRigid, rotateVec } from './surface';
 
 /** Smallest cavity the case keeps when there is nothing inside to size it by. */
@@ -77,6 +78,8 @@ export interface PlacedWall {
   line: number;
   /** how much deeper than asked its connectors sit (they are shorter than the wall), mm */
   recessed: number;
+  /** how far the edge's connectors stick out past the board edge (0 at least), mm */
+  protrude: number;
   /** the edge has connectors at all */
   ports: boolean;
   /** the wall really is there: another board did not push it further out */
@@ -143,6 +146,8 @@ export interface CaseLayout {
   boards: PlacedBoard[];
   /** console only: the heights actually built (raised to clear the boards) */
   console: { frontH: number; backH: number };
+  /** where the inner walls are: x for left / right, y for front / back */
+  inner: Record<Edge, number>;
 }
 
 /** Board frame → layout frame for a rotation, with the rotated outline's corner at (x, y). */
@@ -250,7 +255,7 @@ function wallOf(input: LayoutInput, def: BoardDef, placement: BoardPlacement, to
   const reach = Math.max(wanted, WALL_GAP);
   const sign = side === 'right' || side === 'back' ? 1 : -1;
   const at = side === 'right' ? outline.x1 : side === 'left' ? outline.x0 : side === 'back' ? outline.y1 : outline.y0;
-  return { side, edge, line: at + sign * reach, recessed: reach - wanted, ports: onEdge.length > 0, against: true };
+  return { side, edge, line: at + sign * reach, recessed: reach - wanted, protrude, ports: onEdge.length > 0, against: true };
 }
 
 /** Whether a placement hangs from the ceiling (a box's or a cylinder's top, the console's slope). */
@@ -588,7 +593,7 @@ export function caseLayout(input: LayoutInput): CaseLayout {
     // a carried display under the flat top: how far below the ceiling its front ended up
     const boards = placeAll(flatFrame(dims.h)).map((board): PlacedBoard => (board.carried
       ? { ...board, gap: dims.h - shape.floor - board.zTop } : board));
-    return { dims, boards, console: { frontH, backH } };
+    return { dims, boards, console: { frontH, backH }, inner };
   }
   // The console's heights rise together — the slope's angle stays — until
   // its inside clears every floor board, and every board hung from it clears
@@ -612,7 +617,7 @@ export function caseLayout(input: LayoutInput): CaseLayout {
   frontH = Math.min(SIZE_MAX, frontH + deficit);
   backH = Math.min(SIZE_MAX, backH + deficit);
   dims = { ...dims, h: Math.max(frontH, backH) };
-  return { dims, boards: placeAll(slopeFrame(frontH, backH, dims.d)), console: { frontH, backH } };
+  return { dims, boards: placeAll(slopeFrame(frontH, backH, dims.d)), console: { frontH, backH }, inner };
 }
 
 /** The outer size the case is built at. */
@@ -666,6 +671,36 @@ export function heldByLid(board: Pick<PlacedBoard, 'hung'>, lidFace: string): bo
   return board.hung ? lidFace === 'top' : lidFace === 'bottom';
 }
 
+/** How thick a display's window is drawn over its glass, mm. */
+const WINDOW_LAYER = 0.1;
+
+/** The block of one port in the board frame (z = 0 at the PCB underside). */
+export function portBlock(board: PlacedBoard, port: PortDef): [number, number, number, number, number, number] {
+  const { w, d, t } = board.def.size;
+  if (onFace(port)) {
+    // a display with a glass: its window as a thin layer on the glass's front
+    const [z0, z1] = port.edge === 'top'
+      ? [port.glass ? t + port.h - WINDOW_LAYER : t, t + port.h + (port.glass ? WINDOW_LAYER / 2 : 0)]
+      : [-port.h, 0];
+    return [port.x - port.w / 2, port.y - port.d / 2, z0, port.x + port.w / 2, port.y + port.d / 2, z1];
+  }
+  const [nx, ny] = edgeNormal(port.edge);
+  const z0 = t + port.z;
+  const z1 = z0 + port.h;
+  // along the edge from its origin end; the body reaches `d` inward from the protruding face
+  const face = port.protrude;
+  if (nx !== 0) {
+    const edgeX = nx > 0 ? w : 0;
+    const outer = edgeX + nx * face;
+    const inner = outer - nx * port.d;
+    return [Math.min(outer, inner), port.along - port.w / 2, z0, Math.max(outer, inner), port.along + port.w / 2, z1];
+  }
+  const edgeY = ny > 0 ? d : 0;
+  const outer = edgeY + ny * face;
+  const inner = outer - ny * port.d;
+  return [port.along - port.w / 2, Math.min(outer, inner), z0, port.along + port.w / 2, Math.max(outer, inner), z1];
+}
+
 /** Standoff centres and radii of a placed board, in the case frame. */
 export function standoffColumns(board: PlacedBoard): { x: number; y: number; r: number }[] {
   if (board.def.mount.kind !== 'holes') return [];
@@ -673,6 +708,100 @@ export function standoffColumns(board: PlacedBoard): { x: number; y: number; r: 
   return board.def.mount.holes.map((hole) => {
     const p = applyAffine(board.toCase, [hole.x, hole.y, 0]);
     return { x: p[0], y: p[1], r };
+  });
+}
+
+/** A block in a board's frame (x0, y0, z0, x1, y1, z1) as a box in the case frame. */
+function caseBox(board: PlacedBoard, b: readonly number[]): SpotBox {
+  const corners: Vec3[] = [];
+  for (const x of [b[0], b[3]]) for (const y of [b[1], b[4]]) for (const z of [b[2], b[5]]) corners.push(applyAffine(board.toCase, [x, y, z]));
+  return boxAround(corners);
+}
+
+/** A board's own volume, case frame. */
+function boardBox(board: PlacedBoard): SpotBox {
+  const o = board.outline;
+  return { min: [o.x0, o.y0, board.zBottom], max: [o.x1, o.y1, board.zTop] };
+}
+
+/** Where two boxes share volume (null when they do not). */
+function shared(a: SpotBox, b: SpotBox): SpotBox | null {
+  const min = [0, 1, 2].map((k) => Math.max(a.min[k], b.min[k]));
+  const max = [0, 1, 2].map((k) => Math.min(a.max[k], b.max[k]));
+  return [0, 1, 2].every((k) => max[k] > min[k]) ? { min: [min[0], min[1], min[2]], max: [max[0], max[1], max[2]] } : null;
+}
+
+/** A board in a message's spot: the boxes, moving with that board. */
+function onBoard(board: PlacedBoard, boxes: readonly SpotBox[]): Pick<Message, 'spot'> {
+  const spot = spotOf(boxes, { board: board.index });
+  return spot ? { spot } : {};
+}
+
+/** How far a board reaches towards a side of the case, by its outline. */
+function towards(board: PlacedBoard, side: Edge): number {
+  const o = board.outline;
+  return side === 'right' ? o.x1 : side === 'left' ? -o.x0 : side === 'back' ? o.y1 : -o.y0;
+}
+
+/**
+ * Why a board is not at a wall it asked for: the board that reaches
+ * further, or the case's own size. The spot is the strip between its edge
+ * and the wall.
+ */
+function notAgainst(board: PlacedBoard, side: Edge, layout: CaseLayout): Message {
+  const others = layout.boards.filter((other) => other.index !== board.index && other.attached === undefined);
+  const further = others.reduce<PlacedBoard | undefined>((best, other) => (!best || towards(other, side) > towards(best, side) ? other : best), undefined);
+  const o = board.outline;
+  const wall = layout.inner[side];
+  const [x0, x1] = side === 'left' ? [wall, o.x0] : side === 'right' ? [o.x1, wall] : [o.x0, o.x1];
+  const [y0, y1] = side === 'front' ? [wall, o.y0] : side === 'back' ? [o.y1, wall] : [o.y0, o.y1];
+  const strip = onBoard(board, [{ min: [x0, y0, board.zBottom], max: [x1, y1, board.zTop] }]);
+  return further && towards(further, side) > towards(board, side) - 1e-6
+    ? { code: 'warn.notAgainstWall', params: { ...boardParams(board), side, ...boardParams(further, 'other') }, ...strip }
+    : { code: 'warn.notAgainstWallSize', params: { ...boardParams(board), side }, ...strip };
+}
+
+/**
+ * The note about connectors that cannot reach the outer surface, one per
+ * board and depth: the walls, the wall's thickness, how much deeper than
+ * asked, and — when they do stick out — the wall that would bring them flush.
+ */
+function recessedNotes(board: PlacedBoard, dims: Dims): Message[] {
+  const offset = board.placement.wallOffset ?? 0;
+  const byDepth = new Map<string, PlacedWall[]>();
+  for (const one of board.walls) {
+    if (!one.against || !one.ports || one.recessed <= 0.05) continue;
+    const mm = one.recessed.toFixed(1);
+    byDepth.set(mm, [...(byDepth.get(mm) ?? []), one]);
+  }
+  return [...byDepth].map(([mm, walls]): Message => {
+    const sides = EDGES.filter((side) => walls.some((one) => one.side === side)).join(',');
+    // the board stands WALL_GAP off the inner wall: the rest of how deep they sit is the wall
+    const { protrude, recessed } = walls[0];
+    const wall = +(protrude - offset - WALL_GAP + recessed).toFixed(2);
+    const params = { ...boardParams(board), walls: sides, wall, mm };
+    // the edge's connectors and the way out to the outer surface
+    const boxes = walls.flatMap((one): SpotBox[] => {
+      const ports = board.def.ports.filter((port) => port.edge === one.edge);
+      if (ports.length === 0) return [];
+      const box = boxAround(ports.flatMap((port) => {
+        const b = caseBox(board, portBlock(board, port));
+        return [b.min, b.max];
+      }));
+      const min: Vec3 = [box.min[0], box.min[1], box.min[2]];
+      const max: Vec3 = [box.max[0], box.max[1], box.max[2]];
+      if (one.side === 'left') min[0] = 0;
+      if (one.side === 'right') max[0] = dims.w;
+      if (one.side === 'front') min[1] = 0;
+      if (one.side === 'back') max[1] = dims.d;
+      return [{ min, max }];
+    });
+    const spot = onBoard(board, boxes);
+    // the wall that brings them flush
+    const flush = protrude - offset - WALL_GAP;
+    return flush >= WALL_MIN
+      ? { code: 'info.portsRecessedOut', params: { ...params, out: protrude.toFixed(1), flush: flush.toFixed(1) }, ...spot }
+      : { code: 'info.portsRecessed', params, ...spot };
   });
 }
 
@@ -692,7 +821,8 @@ export function collisions(layout: CaseLayout): Message[] {
       if (a.index === b.index) continue;
       const zOverlap = Math.min(a.zTop, b.zTop) - Math.max(a.zBottom, b.zBottom);
       if (zOverlap > 0 && overlap(a.outline, b.outline) > 0.01) {
-        out.push({ code: 'warn.boardsOverlap', params: { a: i + 1, b: j + 1 } });
+        const both = shared(boardBox(a), boardBox(b));
+        out.push({ code: 'warn.boardsOverlap', params: { ...boardParams(a, 'a'), ...boardParams(b, 'b') }, ...onBoard(a, both ? [both] : []) });
       }
     }
   }
@@ -700,27 +830,29 @@ export function collisions(layout: CaseLayout): Message[] {
     // a carried display must clear the parts of the board under it (a Pi's USB and Ethernet: an extension header)
     const carrier = board.carried ? boards[board.attached ?? -1] : undefined;
     if (carrier && board.z0 < carrier.zTop - 1e-6 && overlap(board.outline, carrier.outline) > 0.01) {
-      out.push({ code: 'warn.carriedOnParts', params: { board: board.index + 1, mm: (carrier.zTop - board.z0).toFixed(1) } });
+      const o = board.outline;
+      const under = shared({ min: [o.x0, o.y0, board.z0], max: [o.x1, o.y1, carrier.zTop] }, boardBox(carrier));
+      out.push({ code: 'warn.carriedOnParts', params: { ...boardParams(board), mm: (carrier.zTop - board.z0).toFixed(1) }, ...onBoard(board, under ? [under] : []) });
     }
     if (board.attached !== undefined) continue;
-    for (const wall of board.walls) {
-      if (!wall.against) out.push({ code: 'warn.notAgainstWall', params: { board: board.index + 1 } });
-      else if (wall.ports && wall.recessed > 0.05) {
-        out.push({ code: 'info.portsRecessed', params: { board: board.index + 1, mm: wall.recessed.toFixed(1) } });
-      }
-    }
+    for (const wall of board.walls) if (!wall.against) out.push(notAgainst(board, wall.side, layout));
+    out.push(...recessedNotes(board, layout.dims));
     // the supports are under a floor board and over a hung one
     for (const port of board.def.ports) {
       if (port.edge === (board.hung ? 'top' : 'bottom') && partOnSupport(board, port)) {
-        out.push({ code: board.hung ? 'warn.topPartOnSupport' : 'warn.bottomPartOnSupport', params: { board: board.index + 1, port: port.id } });
+        out.push({
+          code: board.hung ? 'warn.topPartOnSupport' : 'warn.bottomPartOnSupport',
+          params: { ...boardParams(board), port: port.id, portType: port.type },
+          ...onBoard(board, [caseBox(board, portBlock(board, port))]),
+        });
       }
     }
     if (board.def.mount.kind === 'clamp' && (clampHold(board.def, board.placement).blocked || barsOnBack(board, boards))) {
-      out.push({ code: 'warn.clampBlocked', params: { board: board.index + 1 } });
+      out.push({ code: 'warn.clampBlocked', params: boardParams(board), ...onBoard(board, [boardBox(board)]) });
     }
     // a clamped panel is pressed against the plate on purpose
     if (board.hung && board.def.mount.kind !== 'clamp' && board.placement.z < CEILING_GAP - 1e-9) {
-      out.push({ code: 'warn.glassGap', params: { board: board.index + 1, mm: CEILING_GAP } });
+      out.push({ code: 'warn.glassGap', params: { ...boardParams(board), mm: CEILING_GAP }, ...onBoard(board, [boardBox(board)]) });
     }
   }
   for (const a of boards) {
@@ -730,7 +862,8 @@ export function collisions(layout: CaseLayout): Message[] {
         // a floor board's standoffs reach up to its PCB, a hung board's down to its top
         const clear = a.hung ? b.zTop <= a.z0 + a.def.size.t : b.zBottom >= a.z0;
         if (b === a || b.index === a.index || clear || overlap(rect, b.outline) <= 0) continue;
-        out.push({ code: 'warn.standoffHitsBoard', params: { a: a.index + 1, b: b.index + 1 } });
+        const post = shared({ min: [rect.x0, rect.y0, a.hung ? a.z0 : 0], max: [rect.x1, rect.y1, a.hung ? Infinity : a.z0] }, boardBox(b));
+        out.push({ code: 'warn.standoffHitsBoard', params: { ...boardParams(a, 'a'), ...boardParams(b, 'b') }, ...onBoard(a, post ? [post] : []) });
       }
     }
   }
@@ -782,12 +915,14 @@ function partOnSupport(board: PlacedBoard, port: TopPort): boolean {
   });
 }
 
-function dedupe(messages: Message[]): Message[] {
-  const seen = new Set<string>();
-  return messages.filter((message) => {
-    const key = JSON.stringify(message);
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+/** One message per code and parameters; the places of repeated ones (a standoff per hole) join its spot. */
+export function dedupe(messages: Message[]): Message[] {
+  const seen = new Map<string, Message>();
+  for (const message of messages) {
+    const key = JSON.stringify([message.code, message.params]);
+    const first = seen.get(key);
+    if (!first) seen.set(key, message);
+    else if (first.spot && message.spot) seen.set(key, { ...first, spot: { ...first.spot, boxes: [...first.spot.boxes, ...message.spot.boxes] } });
+  }
+  return [...seen.values()];
 }

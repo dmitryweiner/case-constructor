@@ -19,7 +19,8 @@
 import type { CutterSpec } from './cutters';
 import { cutterContains } from './cutters';
 import type { PlacedBoard } from './layout';
-import type { Message } from './message';
+import type { Message, MessageSpot } from './message';
+import { boardParams, boxAround, boxSpot } from './message';
 import type { FaceFrame } from './face';
 import type { LidState } from './lidSpec';
 import { postDiameter } from './lidSpec';
@@ -212,6 +213,11 @@ export function postSpots(opening: readonly Vec2[], lid: LidState, wall: number)
  * Posts running into a board: the post's box (boss, filled corner, taper)
  * against the board's box (outline × its height range).
  */
+/** A lid post in a message: the box around it, with the body (where the post stands). */
+function postSpot(points: readonly Vec3[]): MessageSpot {
+  return boxSpot(boxAround(points), 'body');
+}
+
 export function postCollisions(spots: readonly PostSpot[], frame: FaceFrame, zp: number, plate: number, lid: LidState, boards: readonly PlacedBoard[]): Message[] {
   const out: Message[] = [];
   const hit = new Set<number>();
@@ -229,7 +235,7 @@ export function postCollisions(spots: readonly PostSpot[], frame: FaceFrame, zp:
       const overlaps = lo[0] < o.x1 && hi[0] > o.x0 && lo[1] < o.y1 && hi[1] > o.y0 && lo[2] < board.zTop && hi[2] > board.zBottom;
       if (overlaps && !hit.has(board.index)) {
         hit.add(board.index);
-        out.push({ code: 'warn.postHitsBoard', params: { board: board.index + 1 } });
+        out.push({ code: 'warn.postHitsBoard', params: boardParams(board), spot: postSpot(pts) });
       }
     }
   }
@@ -246,7 +252,14 @@ export function postsInOpenings(spots: readonly PostSpot[], frame: FaceFrame, zp
       const p = applyAffine(frame.fromFace, [spot.centre[0], spot.centre[1], z]);
       return cutters.some((cutter) => cutterContains(cutter, p, spot.r));
     });
-    if (hit) out.push({ code: 'warn.postInOpening', params: { n: index + 1 } });
+    if (!hit) return;
+    const pts: Vec3[] = [];
+    for (const u of [spot.centre[0] - spot.r, spot.centre[0] + spot.r]) {
+      for (const v of [spot.centre[1] - spot.r, spot.centre[1] + spot.r]) {
+        for (const z of [zp - len, -plate - lid.fit]) pts.push(applyAffine(frame.fromFace, [u, v, z]));
+      }
+    }
+    out.push({ code: 'warn.postInOpening', params: { n: index + 1 }, spot: postSpot(pts) });
   });
   return out;
 }

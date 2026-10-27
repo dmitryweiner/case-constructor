@@ -6,8 +6,13 @@ corner of the view always says what is shown; click it to jump to the card.
 
 **Parts** — the same parts are shown and exported:
 
-- **Both** (default) — body and lid side by side in one file, 10 mm apart;
-  with printed screws (docs/lid.md) the screws follow the lid in a row.
+- **Both** (default) — body and lid in one file. **Lid on the bed**: *auto*
+  (default) puts the lid to the right of the body or behind it, whichever
+  makes the longer side of the pair shorter — a long case (175 × 71) goes
+  behind (175 × 152 instead of 360 × 71); *right* or *behind* by hand.
+  **Gap on the bed** — 2…50 mm, 10 by default. With printed screws
+  (docs/lid.md) the screws follow the lid in a row, past it the same way.
+  The caption of the print layout says where the lid went.
 - **Body** — the body alone (the view shows it with its boards).
 - **Lid** — the lid alone, with its printed screws if the lid holds on them.
 
@@ -22,7 +27,8 @@ needs supports (docs/extras.md; the panel says so).
 (12, 24, 48, 64; default 24). The preview always uses 12.
 
 Below the button the panel shows the outer size, the mesh check (a
-watertight mesh is required) and any warnings. Export is blocked only by a
+watertight mesh is required) and any warnings; notes (ℹ, grey) only inform
+and are not counted among them. Export is blocked only by a
 broken mesh, an empty part or a part larger than 400 mm.
 
 **View** — only the choices that mean something for the parts shown:
@@ -41,8 +47,15 @@ holes and their pads, connectors and parts amber (off in the print layout:
 they are not printed; hidden for the lid alone); *Connector names* — a
 caption over every connector and part of the boards, the names from the
 board card (on by default, only with *Boards*; a click on a name turns its
-opening on or off, see [Openings](openings.md)); *X-ray* — see through the
-walls.
+opening on or off, see [Openings](openings.md)); *Warnings on the model* —
+each warning that has a place (boards in each other, a board off its wall,
+connectors that sit deep, an opening through the skirt, a post in a board,
+the fan or the label off the flat, …) gets a numbered red badge there and a
+faint red box over the place; the list numbers its lines the same way. A
+hover or a tap on a badge or a line lights its box and opens the whole
+message at the badge. Notes (ℹ) get a grey badge and show their box only
+when picked. On by default; not in the print layout (the parts are turned
+there) or for the lid alone; *X-ray* — see through the walls.
 
 On a phone the settings are a sheet over the lower part of the view; the
 case is centred in what the sheet leaves open, and hiding the sheet only

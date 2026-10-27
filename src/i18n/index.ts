@@ -116,7 +116,27 @@ export function tDynamic(key: string, params?: Params): string {
 
 /** A message from the core: a code plus parameters. */
 export function tm(message: Message): string {
-  return t(message.code, message.params);
+  return t(message.code, message.params && messageParams(message.params));
+}
+
+/**
+ * The core's parameters in words: a board number with its `<key>Name` as
+ * "1 “TPA3118”", a port with its `portType` as "LED · led-1", `walls` (a
+ * comma list of faces) as "front and back", `side` as a face name.
+ */
+function messageParams(params: Params): Params {
+  const out: Record<string, string | number> = { ...params };
+  for (const [key, value] of Object.entries(params)) {
+    const name = params[`${key}Name`];
+    if (typeof name === 'string' && typeof value === 'number') out[key] = t('msg.board', { n: value, name });
+  }
+  const { port, portType, walls, side } = params;
+  if (typeof port === 'string' && typeof portType === 'string') out.port = `${tDynamic(`port.${portType}`)} · ${port}`;
+  if (typeof walls === 'string') {
+    out.walls = new Intl.ListFormat(current, { type: 'conjunction' }).format(walls.split(',').map((face) => tDynamic(`face.${face}`)));
+  }
+  if (typeof side === 'string') out.side = tDynamic(`face.${side}`);
+  return out;
 }
 
 /** Auto-name prefixes of presets in every language: the numbering is shared. */
