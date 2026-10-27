@@ -38,11 +38,16 @@ walls at once are fine — a Raspberry Pi 4 against the front and the right has
 both its HDMI and its USB/Ethernet sides flush.
 
 - A side with no connectors, or with connectors shorter than the wall, puts
-  the board 0.3 mm from the inner wall; with connectors the panel says how
-  much deeper they sit than asked.
+  the board 0.3 mm from the inner wall; with connectors a note (grey, ℹ)
+  names the board and the walls and says how much deeper their faces sit
+  than asked — and, when they do stick out past the board's edge, which
+  wall would bring them flush. Connectors that end at the board's edge
+  (a custom board's default Out of 0) are usually fine: a plug reaches them
+  through the opening.
 - With a manual size the board is pushed to its wall rather than centred.
 - When another board reaches further towards the same wall, the wall goes
-  there and the panel says which board is not against it (align them).
+  there and the panel says which board is not against which wall and which
+  board takes it (align them, or untick that wall).
 - Not offered: on a cylinder, on an edge held by rails, and on the side
   where a side lid is.
 - The lid's skirt and corner posts still run along the walls: a post next to

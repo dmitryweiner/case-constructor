@@ -22,7 +22,8 @@ needs supports (docs/extras.md; the panel says so).
 (12, 24, 48, 64; default 24). The preview always uses 12.
 
 Below the button the panel shows the outer size, the mesh check (a
-watertight mesh is required) and any warnings. Export is blocked only by a
+watertight mesh is required) and any warnings; notes (ℹ, grey) only inform
+and are not counted among them. Export is blocked only by a
 broken mesh, an empty part or a part larger than 400 mm.
 
 **View** — only the choices that mean something for the parts shown:
