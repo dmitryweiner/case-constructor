@@ -8,7 +8,7 @@ Decided on purpose, so nobody wonders:
   bumps in grooves.
 - HATs sharing standoffs with the board below: each board has its own
   standoffs; place a HAT as a second board at its height.
-- Light pipes, button caps, display bezels, battery compartments, DIN-rail
+- Light pipes, button caps, battery compartments, DIN-rail
   clips, recesses for rubber feet.
 - Sacrificial bridges over wall openings: the openings are small and
   slicers bridge them.
@@ -16,7 +16,15 @@ Decided on purpose, so nobody wonders:
   STEP): one STL per export.
 - Translated README and user guide (the interface is in four languages).
 
+- A display on a wall of the case (a 1602 on the front of a box): displays
+  hang from the top or the console's slope only.
+- A display carried by the board under it (HyperPixel on a Pi's GPIO).
+
 Known limits of the current version:
+
+- Most display entries are ≈: their active area is taken as centred where
+  the drawing does not place it, and a hung panel's thickness is often an
+  estimate. The window's clearance and the rim's fit wait for a test print.
 
 - Boards marked **≈** in the catalog are transcribed from specifications or
   typical layouts and wait for a measurement.

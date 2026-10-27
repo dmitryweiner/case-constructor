@@ -301,15 +301,21 @@ if (!(await page.isDisabled('#board1_back_rot_0')) || (await page.isDisabled('#b
 await page.click('#board1_back_rot_270');
 await expectWatertight('back:270');
 if (!(await page.locator('#board1_back_cut_usb-c').count())) errors.push('[back] no toggles for the Pi\'s ports');
+// the camera eases after the turn: read the captions once it has stopped, just before the click
+await page.waitForTimeout(600);
 const backCaption = (await page.evaluate(() => window.__case.captions())).find((caption) => caption.key.startsWith('1b:'));
 if (backCaption) {
   const portId = backCaption.key.slice(3);
-  const before = await page.evaluate((id) => window.__case.state().boards[1].back?.cuts[id] ?? 'default', portId);
+  const backCut = (id) => page.evaluate((port) => {
+    const board = window.__case.state().boards[1];
+    return board ? (board.back?.cuts[port] ?? 'default') : `no board 1 (${window.__case.state().boards.length} boards)`;
+  }, id);
+  const before = await backCut(portId);
   const viewBox = await page.locator('#view').boundingBox();
   await page.mouse.click(viewBox.x + backCaption.x, viewBox.y + backCaption.y);
   await expectWatertight('back:caption');
-  const after = await page.evaluate((id) => window.__case.state().boards[1].back?.cuts[id] ?? 'default', portId);
-  if (after === before) errors.push(`[back] a click on the ${portId} caption changed nothing`);
+  const after = await backCut(portId);
+  if (after === before || String(after).startsWith('no board')) errors.push(`[back] a click on the ${portId} caption: ${before} → ${after}`);
 }
 await page.selectOption('#board1_back', '');
 await expectWatertight('back:none');

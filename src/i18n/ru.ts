@@ -370,6 +370,8 @@ export const ru: Record<Key, string> = {
   'preset.esp32-18650-box.note': "Два элемента 18650 в ложементах под печатными прижимами, крышка на потайных винтах",
   'preset.arduino-uno-box.note': "Разъёмы открыты под провода, крышка на винтах M3",
   'preset.cylinder-puck.note': "Круглый узел LoRa: дисплей виден через крышку, вентиляция снизу, ушки",
+  'preset.klipperscreen-console.note': "BTT Pi TFT50 на скате на прижимных лапках, Pi 4 на его спине, крышка снизу, вентиляция сзади",
+  'preset.ha-wall-panel.note': "Touch Display 2 7″ в крышке, Pi 5 на его спине, вентиляция по бокам, замочные петли для стены",
   'preset.plain-box.note': "Пустая скруглённая коробка с плоской крышкой на защёлках",
   'show.what': "Детали — показ и выгрузка",
   'show.how': "Вид",

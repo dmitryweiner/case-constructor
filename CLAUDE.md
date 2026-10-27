@@ -372,6 +372,9 @@ browser is within ~10 % of it):
 | default Pi 4 on printed P6 screws — preview | 12 | 275 ms | 27k + a 6.3k screw |
 | printed P6 screws — export | 24 | 1.3 s | 175k + a 50k screw |
 | printed P6 screws — finest export | 64 | 2.8 s | 317k + an 87k screw |
+| `klipperscreen-console` (TFT50 on the slope, a Pi on its back) — preview | 12 | 270 ms | 14k |
+| `ha-wall-panel` (Touch Display 2, a Pi 5 on its back) — preview | 12 | 255 ms | 19k |
+| `ha-wall-panel` — finest export | 64 | 1.5 s | 89k |
 
 Decided at M1 and confirmed at M8: the preview is the exact case (the same
 pipeline as the export, 12 segments per quarter arc), rebuilt 120 ms after
@@ -388,7 +391,8 @@ Add a state when a feature lands, never edit an old one.
 ## Presets
 
 Built-in presets (`src/state/presets.ts`): `pi4-desktop`, `pi-zero-gpio`,
-`esp32-sensor-box`, `esp32-18650-box`, `arduino-uno-box`, `cylinder-puck`, `plain-box`. Each is
+`esp32-sensor-box`, `esp32-18650-box`, `arduino-uno-box`, `cylinder-puck`,
+`klipperscreen-console`, `ha-wall-panel`, `plain-box`. Each is
 built by `tests/presetsBuild.test.ts` (closed, no slivers, no overlap, no
 layout warnings). A preset's name is one English string in `presets.ts`
 (not translated: the review asked for one name); its note is the

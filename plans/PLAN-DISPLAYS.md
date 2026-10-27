@@ -1,6 +1,6 @@
 # Case Constructor — standalone displays
 
-**Status: approved (2026-10-27), in progress.**
+**Status: done (2026-10-27), but for one open question: HyperPixel 4.0 (see the deviations, D7b).**
 
 Written on 2026-10-27 from `PERSPECTIVE-SCREENS.md`, its last section ("What
 the catalog needs for them"). Boards with a screen on them are in the
@@ -434,4 +434,15 @@ below).
 - **D7c.** Not in: WeAct 2.9″ / 4.2″ (no mounting holes in their models and
   no panel outline to clamp by), LilyGO T5 4.7″ (its DXF is the outline
   only; LilyGO publishes shells, not the board's model).
+- **D8.** The presets close every edge port of the Pi on the display's back
+  and cut one round hole for the cables instead (the console's back, the
+  wall panel's back towards the wall): on a display's back the Pi sits in
+  the middle of the case, and its ports 16–69 mm from the walls filled the
+  panel with warnings. The D6 default (edge ports open) stays for a user's
+  own case. Their vents are sparse slots: a dense grid on faces this big
+  took the preview past its 300 ms (550 ms; now 270 and 255 ms).
+- **D8.** Exploded, a panel's bars that go with the body stay where they
+  are; only battery clamps lift off (upwards they went through the slope).
+- **D8.** No smoke step loads the presets: `tests/presetsBuild.test.ts`
+  builds them (closed, no slivers, no overlap, no warnings).
 

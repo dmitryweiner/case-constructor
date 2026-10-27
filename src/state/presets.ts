@@ -8,11 +8,18 @@
 
 import type { AppState } from './schema';
 import { defaultState, sanitizeState } from './schema';
+import { catalogBoard } from '../boards/catalog';
+import { onFace } from '../boards/schema';
 
 export interface Preset {
   id: string;
   name: string;
   build(): AppState;
+}
+
+/** A board's edge ports all closed: on a display's back they are far from every wall; a cable goes in through a hole instead. */
+function edgePortsClosed(id: string): Record<string, boolean> {
+  return Object.fromEntries((catalogBoard(id)?.ports ?? []).filter((port) => !onFace(port)).map((port) => [port.id, false]));
 }
 
 function make(id: string, name: string, extra: (base: AppState) => Record<string, unknown>): Preset {
@@ -78,6 +85,36 @@ export const PRESETS: Preset[] = [
     boards: [{ board: 'heltec-wifi-lora-32-v3', z: 4 }],
     vents: { on: true, faces: ['bottom'], pattern: 'round', size: 3, pitch: 6, margin: 3, along: 'y' },
     wallMount: { kind: 'ears', spacing: 40, screwD: 3.5 },
+  })),
+
+  // A KlipperScreen console: the BTT Pi TFT50 on the slope on clamp tabs,
+  // a Pi 4 on its back, the lid underneath on screws, vents at the back.
+  make('klipperscreen-console', 'KlipperScreen console', (base) => ({
+    shape: { ...base.shape, kind: 'console', cornerR: 4, console: { frontH: 25, backH: 55 } },
+    lid: { ...base.lid, face: 'bottom', chosen: 'bottom', fastening: 'screws', screw: { size: 'M3', hole: 'insert', head: 'counterbore' } },
+    boards: [{
+      board: 'btt-pi-tft50-v2', on: 'ceiling', z: 0, mount: { size: 'M3', hole: 'insert' },
+      back: { board: 'raspberry-pi-4b', cuts: edgePortsClosed('raspberry-pi-4b') },
+    }],
+    // the cables (power, the printer's USB) leave through one hole in the back
+    extraCuts: [{ face: 'back', shape: 'round', x: 30, y: 22, w: 12, h: 12, r: 0 }],
+    // sparse slots: a big case's dense vents would take the preview past its budget
+    vents: { on: true, faces: ['back'], pattern: 'slots', size: 3, pitch: 10, margin: 10, along: 'x' },
+  })),
+
+  // A Home Assistant wall panel: Touch Display 2 7-inch held by the lid, a Pi
+  // 5 on its back, vents on the sides, keyholes on the back for the wall.
+  make('ha-wall-panel', 'Home Assistant wall panel', (base) => ({
+    shape: { ...base.shape, cornerR: 8 },
+    lid: { ...base.lid, fastening: 'screws', screw: { size: 'M3', hole: 'insert', head: 'countersunk' } },
+    boards: [{
+      board: 'raspberry-pi-touch-display-2-7', on: 'ceiling', z: 0, mount: { size: 'M3', hole: 'insert' },
+      back: { board: 'raspberry-pi-5', cuts: edgePortsClosed('raspberry-pi-5') },
+    }],
+    // the power cable comes out of the wall straight into the back of the case
+    extraCuts: [{ face: 'bottom', shape: 'round', x: 60, y: 140, w: 14, h: 14, r: 0 }],
+    vents: { on: true, faces: ['left', 'right'], pattern: 'slots', size: 2, pitch: 8, margin: 10, along: 'y' },
+    wallMount: { kind: 'keyholes', spacing: 80, screwD: 4 },
   })),
 
   make('plain-box', 'Plain box', (base) => ({ boards: [], shape: { ...base.shape, auto: false, size: { w: 100, d: 70, h: 35 } } })),

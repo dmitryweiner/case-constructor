@@ -421,8 +421,9 @@ function drawParts(): void {
   if (showBody) {
     parts.push({ role: 'body', mesh: body });
     if (withBoards) parts.push(...ghosts.map((ghost, i): ScenePart => ({ ...ghost, offset: withLid(ghost.offset ?? [0, 0, 0], ghostsOnLid[i]) })));
-    // battery clamps on their posts; exploded, lifted off the battery
-    if (clamps) parts.push({ role: 'clamp', mesh: clamps, offset: [0, 0, mode === 'exploded' ? LIFT_MM / 2 : 0] });
+    // battery clamps on their posts; exploded, lifted off the battery (a panel's bars under a slope stay put)
+    const lifted = mode === 'exploded' && built.boards.some((board) => board.board === 'battery');
+    if (clamps) parts.push({ role: 'clamp', mesh: clamps, offset: [0, 0, lifted ? LIFT_MM / 2 : 0] });
   }
   if (showLid && showBody) {
     const lift = lidLift;

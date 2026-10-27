@@ -19,6 +19,8 @@ description in the tooltip is translated):
 | ESP32 on 18650 cells | an ESP32-DevKitC in rails and two 18650 cells behind it, in cradles under printed clamps; the lid on countersunk M3 screws |
 | Arduino Uno box | the headers open for jumper wires, the lid on M3 screws |
 | Cylinder sensor puck | a round LoRa node (Heltec WiFi LoRa 32 V3): the display shows through the lid, vents below, ears |
+| KlipperScreen console | a BTT Pi TFT50 on the console's slope on clamp tabs, a Pi 4 on its back, the lid underneath on screws, one hole at the back for the cables |
+| Home Assistant wall panel | Touch Display 2 7-inch held by the lid, a Pi 5 on its back, vents on the sides, keyholes and a cable hole in the back for the wall |
 | Plain box | an empty rounded box with a flat lid on snaps |
 
 The interface language (🌐) is remembered by the browser and is not part of

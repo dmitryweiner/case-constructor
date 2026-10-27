@@ -371,6 +371,8 @@ export const he: Record<Key, string> = {
   'preset.esp32-18650-box.note': "שני תאי 18650 בעריסות מתחת לתפסים מודפסים, המכסה על ברגים שקועים",
   'preset.arduino-uno-box.note': "המחברים פתוחים לחוטים, מכסה על ברגי M3",
   'preset.cylinder-puck.note': "צומת LoRa עגול: התצוגה נראית דרך המכסה, אוורור מלמטה, אוזניים",
+  'preset.klipperscreen-console.note': "BTT Pi TFT50 על השיפוע על לשוניות לחיצה, Pi 4 על גבו, המכסה מלמטה, אוורור מאחור",
+  'preset.ha-wall-panel.note': "Touch Display 2 בגודל 7 אינץ׳ במכסה, Pi 5 על גבו, אוורור בצדדים, חורי תלייה לקיר",
   'preset.plain-box.note': "קופסה מעוגלת ריקה עם מכסה שטוח על תפסים",
   'show.what': "חלקים — תצוגה וייצוא",
   'show.how': "תצוגה",
