@@ -72,8 +72,10 @@ hole kind of the board's box (pilot hole, insert or nut).
 
 - Such a panel always hangs, and lies against the plate (gap 0): the rim
   locates it, the bars hold it.
-- A panel with threaded holes on its back (Touch Display 2's brackets) gets
-  a bar along each row of them, with a hole for a screw into the panel.
+- A panel with holes on its back (Touch Display 2's brackets, the corner
+  holes of a BTT or Waveshare display under its glass) gets a short tab
+  from the nearer post to each hole, with a hole for a screw into the
+  panel: the back between them stays free for its connectors.
 - One without gets two bars at a fifth of its length from each end; a bar
   moves along the panel to keep off the parts on its back, and the panel
   says so when it finds no room.

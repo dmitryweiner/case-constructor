@@ -218,8 +218,8 @@ freely; a temporary script that turns out useful becomes a permanent one.
   'clamp'` (its `mount.holes` are on its back): it always hangs, against
   the plate; posts from the plate beyond its long edges (built like
   standoffs in the plate frame, `clampSolids.ts`), bars across its back
-  along the short side (`clamp.ts`): a bar per row of back holes, or two
-  pressing ones that step aside for parts on the back (`placement.press`).
+  along the short side (`clamp.ts`): a tab from the nearer post to each
+  back hole, or two pressing bars that step aside for parts on the back (`placement.press`).
   The bars of a panel the lid holds are the part `lidClamp`, printed and
   exported with the lid. Whatever stands at a footprint's edge keeps
   `EDGE_KEEP` inside it: the edge is the margin's line, where the cavity's

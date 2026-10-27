@@ -233,9 +233,18 @@ bezel: its outline and thickness), drawn dark under the window in the view.
 | 1.3-inch 240×240 IPS TFT, ST7789 (4313) | Adafruit | 35.56 × 38.1 | 4 × M2.5 | [source](https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/4313%201.3in%20TFT%20IPS%20Display) | ≈ |
 | 1.14-inch 240×135 TFT, ST7789 (4383) | Adafruit | 31.75 × 27.81 | 4 × M2.5 | [source](https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/4383%201.14in%20TFT%20Display) | ≈ |
 | 1.9-inch 320×170 IPS TFT, ST7789 (5394) | Adafruit | 57.15 × 36.83 | 4 × M2.5 | [source](https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/5394%201.9in%20TFT%20Display) | ≈ |
-| Touch Display 2, 7-inch / Waveshare 7inch DSI LCD (H) | Raspberry Pi | 120.24 × 189.32 | clamp bars, 4 × M2.5 on the back | [source](https://pip-assets.raspberrypi.com/categories/1083-raspberry-pi-touch-display-2/documents/RP-010429-MM-3-touch-display-2-7-inch-product-brief.pdf) | yes |
+| Touch Display 2, 7-inch / Waveshare 7inch DSI LCD (H) | Raspberry Pi | 120.24 × 189.32 | clamp tabs, 4 × M2.5 on the back, Pi on its back | [source](https://pip-assets.raspberrypi.com/categories/1083-raspberry-pi-touch-display-2/documents/RP-010429-MM-3-touch-display-2-7-inch-product-brief.pdf) | yes |
 | 7.5inch e-Paper V2 (800×480) panel | Waveshare | 170.2 × 111.2 | clamp bars, pressing | [source](https://files.waveshare.com/upload/6/60/7.5inch_e-Paper_V2_Specification.pdf) | yes |
-| 1.69inch LCD Module, ST7789 (240×280) | Waveshare | 31.5 × 39 | clamp bars, 4 × M2 on the back | [source](https://files.waveshare.com/upload/4/41/1.69inch_LCD_Module_2Ddrawing.pdf) | ≈ (the LCM's place on the PCB taken as centred) |
+| 1.69inch LCD Module, ST7789 (240×280) | Waveshare | 31.5 × 39 | clamp tabs, 4 × M2 on the back | [source](https://files.waveshare.com/upload/4/41/1.69inch_LCD_Module_2Ddrawing.pdf) | ≈ (the LCM's place on the PCB taken as centred) |
+| 7-inch Touch Display (original) | Raspberry Pi | 192.96 × 110.76 | clamp tabs, 4 × M3 on the back, Pi on its back | [source](https://datasheets.raspberrypi.com/display/7-inch-display-mechanical-drawing.pdf) | ≈ |
+| HDMI5 V1.2 (5-inch HDMI, 800×480) | BIGTREETECH | 121 × 76 | clamp tabs, 4 × M3 on the back | [source](https://github.com/bigtreetech/BIGTREETECH-TouchScreenHardware/tree/master/BTT%20HDMI5%20V1.2) | ≈ |
+| HDMI7 V1.2 (7-inch HDMI, 1024×600) | BIGTREETECH | 165 × 100 | clamp tabs, 5 × M3 on the back | [source](https://github.com/bigtreetech/BIGTREETECH-TouchScreenHardware/tree/master/BTT%20HDMI7%20V1.2) | ≈ |
+| Pi TFT50 V2 (5-inch DSI, 800×480) | BIGTREETECH | 121 × 75.78 | clamp tabs, 4 × M3 on the back, Pi on its back | [source](https://github.com/bigtreetech/BIGTREETECH-TouchScreenHardware/tree/master/BTT%20Pi%20TFT50%20V2.0%20Github) | ≈ |
+| Pi TFT70 V2 (7-inch DSI, 1024×600) | BIGTREETECH | 165 × 100 | clamp tabs, 4 × M3 on the back, Pi on its back | [source](https://github.com/bigtreetech/BIGTREETECH-TouchScreenHardware/tree/master/BTT%20Pi%20TFT70%20V2.0%20Github) | ≈ |
+| Pi TFT43 V2 (4.3-inch DSI, 800×480) | BIGTREETECH | 105.5 × 67 | clamp tabs, 4 × M3 on the back, Pi on its back | [source](https://github.com/bigtreetech/BIGTREETECH-TouchScreenHardware/tree/master/BTT%20Pi%20TFT43%20V2.0%20Github) | ≈ |
+| 4.3inch DSI LCD (800×480) | Waveshare | 106 × 68 | clamp tabs, 4 × M2.5 on the back, Pi on its back | [source](https://www.waveshare.com/img/devkit/LCD/4.3DP/Exterior-Size.jpg) | ≈ |
+| 7inch HDMI LCD (C), 1024×600 | Waveshare | 164.9 × 124.27 | 4 × M3 | [source](https://www.waveshare.com/img/devkit/LCD/7CP/Exterior-Size.jpg) | ≈ |
+| TFT35-SPI V2.1 (3.5-inch SPI, 480×320) | BIGTREETECH | 98 × 56 | 4 × M3 | [source](https://github.com/bigtreetech/TFT35-SPI/blob/master/v2/Hardware/BTT%20TFT35-SPI%20V2.1_SIZE.pdf) | ≈ |
 
 ### Battery holders
 

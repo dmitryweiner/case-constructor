@@ -29,7 +29,7 @@ export function clampPosts(csg: CsgApi, scope: CsgScope, board: PlacedBoard, flo
   // turned upside down, a height above the panel's back is measured down from its front
   const top = board.z0 + board.def.size.t - hold.face;
   const centre = applyAffine(board.toCase, [board.def.size.w / 2, board.def.size.d / 2, 0]);
-  return hold.bars.flatMap((bar) => hold.posts.map((side): Support => {
+  return hold.bars.flatMap((bar) => bar.posts.map((side): Support => {
     const [x, y] = applyAffine(board.toCase, [...spot(hold.across, side, bar.at), 0]);
     return {
       base: [x, y, floor / 2],
@@ -41,8 +41,8 @@ export function clampPosts(csg: CsgApi, scope: CsgScope, board: PlacedBoard, flo
 
 /**
  * The bars of a clamped panel, case frame, as screwed down: across its back
- * from post to post, a through hole over each post and over each of the
- * panel's own back holes.
+ * from post to post (or a tab from a post to a back hole), a through hole
+ * over each post and over each of the panel's own back holes.
  */
 export function clampBars(csg: CsgApi, scope: CsgScope, board: PlacedBoard, segments: number): Manifold {
   const hold = clampHold(board.def, board.placement);
@@ -53,11 +53,13 @@ export function clampBars(csg: CsgApi, scope: CsgScope, board: PlacedBoard, segm
   const panel = (SCREWS[board.def.mount.screw].d + THROUGH_CLEARANCE) / 2;
   const z0 = hold.face - CLAMP_BAR_T;
   const bars = hold.bars.map((bar) => {
-    const [a0, b0] = spot(hold.across, hold.posts[0] - r, bar.at - CLAMP_BAR_W / 2);
-    const [a1, b1] = spot(hold.across, hold.posts[1] + r, bar.at + CLAMP_BAR_W / 2);
+    // from its posts to its holes, a boss's radius beyond each end
+    const ends = [...bar.posts, ...bar.holes];
+    const [a0, b0] = spot(hold.across, Math.min(...ends) - r, bar.at - CLAMP_BAR_W / 2);
+    const [a1, b1] = spot(hold.across, Math.max(...ends) + r, bar.at + CLAMP_BAR_W / 2);
     const solid = box(csg, scope, a0, b0, z0, a1, b1, hold.face);
     const holes = [
-      ...hold.posts.map((side) => cylinder(csg, scope, ...spot(hold.across, side, bar.at), z0 - 1, hold.face + 1, post, n)),
+      ...bar.posts.map((side) => cylinder(csg, scope, ...spot(hold.across, side, bar.at), z0 - 1, hold.face + 1, post, n)),
       ...bar.holes.map((side) => cylinder(csg, scope, ...spot(hold.across, side, bar.at), z0 - 1, hold.face + 1, panel, n)),
     ];
     return scope.keep(solid.subtract(unionAll(csg, scope, holes)));

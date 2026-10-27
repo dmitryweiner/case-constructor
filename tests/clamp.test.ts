@@ -57,11 +57,16 @@ describe('clamp entries', () => {
 });
 
 describe('the hold', () => {
-  it('Touch Display 2: a bar along each row of its bracket holes, across the short side, screwed to them', () => {
+  it('Touch Display 2: a tab from the nearer post to each of its bracket holes, across the short side', () => {
     const hold = clampHold(td2, defaultPlacement(td2));
     expect(hold.across).toBe('x');
-    expect(hold.bars.map((bar) => bar.at).sort((a, b) => a - b)).toEqual([31.11, 171.11]);
-    for (const bar of hold.bars) expect(bar.holes.sort((a, b) => a - b)).toEqual([24.765, 95.475]);
+    expect(hold.bars).toHaveLength(4);
+    for (const bar of hold.bars) {
+      expect([31.11, 171.11]).toContain(bar.at);
+      expect(bar.holes).toHaveLength(1);
+      // the nearer post: the back between the two holes stays free
+      expect(bar.posts).toEqual([bar.holes[0] < td2.size.w / 2 ? hold.posts[0] : hold.posts[1]]);
+    }
     expect(hold.face).toBe(0);
     // the posts stand beyond the long edges
     expect(hold.posts[0]).toBeLessThan(0);
@@ -123,13 +128,16 @@ describe('built', () => {
     const lid = toManifold(csg, built.lid);
     // a post's wall halfway down to the bar, beside the panel
     // the wall of the post, between its insert's hole and its outside
-    const post = applyAffine(board.toCase, [hold.posts[0] + 3.2, hold.bars[0].at, board.def.size.t / 2]);
+    const post = applyAffine(board.toCase, [hold.bars[0].posts[0] + 3.2, hold.bars[0].at, board.def.size.t / 2]);
     expect(solidAt(lid, post)).toBe(true);
     lid.delete();
     const bars = toManifold(csg, built.lidClamps);
-    // the bar under the panel's middle, its hole at a bracket
-    expect(solidAt(bars, applyAffine(board.toCase, [board.def.size.w / 2, hold.bars[0].at, hold.face - CLAMP_BAR_T / 2]))).toBe(true);
-    expect(solidAt(bars, applyAffine(board.toCase, [hold.bars[0].holes[0], hold.bars[0].at, hold.face - CLAMP_BAR_T / 2]))).toBe(false);
+    // a tab between its post and its bracket, its hole at the bracket, nothing under the panel's middle
+    const tab = hold.bars[0];
+    const between = (tab.posts[0] + tab.holes[0]) / 2;
+    expect(solidAt(bars, applyAffine(board.toCase, [between, tab.at, hold.face - CLAMP_BAR_T / 2]))).toBe(true);
+    expect(solidAt(bars, applyAffine(board.toCase, [tab.holes[0], tab.at, hold.face - CLAMP_BAR_T / 2]))).toBe(false);
+    expect(solidAt(bars, applyAffine(board.toCase, [board.def.size.w / 2, tab.at, hold.face - CLAMP_BAR_T / 2]))).toBe(false);
     bars.delete();
   });
 

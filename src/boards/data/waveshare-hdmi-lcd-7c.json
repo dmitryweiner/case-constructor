@@ -1,0 +1,27 @@
+{
+  "id": "waveshare-hdmi-lcd-7c",
+  "name": "7inch HDMI LCD (C), 1024×600",
+  "vendor": "Waveshare",
+  "kind": "display",
+  "size": { "w": 164.9, "d": 124.27, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 4, "y": 4.655, "d": 3.2 },
+      { "x": 160.9, "y": 4.655, "d": 3.2 },
+      { "x": 4, "y": 119.615, "d": 3.2 },
+      { "x": 160.9, "y": 119.615, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 5.5,
+  "bottomHeight": 3,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 82.45, "y": 62.135, "w": 154.08, "d": 85.92, "h": 5.5, "glass": { "x": 82.45, "y": 62.135, "w": 163.92, "d": 97.12, "t": 5 } },
+    { "id": "hdmi", "type": "hdmi", "edge": "right", "along": 99.6, "z": -7.2, "protrude": 0 },
+    { "id": "usb-touch", "type": "micro-usb", "edge": "right", "along": 80, "z": -4.2, "protrude": 0 },
+    { "id": "backlight", "type": "switch", "edge": "right", "along": 65.2, "z": -4.6, "protrude": 0, "cut": false }
+  ],
+  "source": "https://www.waveshare.com/img/devkit/LCD/7CP/Exterior-Size.jpg",
+  "verified": false
+}

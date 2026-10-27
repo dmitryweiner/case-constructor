@@ -42,9 +42,14 @@ const SEARCH_SHARE = 0.3;
 export interface ClampHold {
   /** the axis the bars run along (board frame): x when the panel is narrower than deep */
   across: 'x' | 'y';
-  /** every bar: its centre along the other axis, and its screw holes into the panel along `across` */
-  bars: { at: number; holes: number[] }[];
-  /** the two posts of every bar, along `across` */
+  /**
+   * Every bar: its centre along the other axis; its screw holes into the
+   * panel and the posts it rests on, along `across`. A pressing bar spans
+   * the panel from post to post; a screwed one is a tab from the nearer post
+   * to its hole, so the back between stays free (a connector there).
+   */
+  bars: { at: number; holes: number[]; posts: number[] }[];
+  /** the posts' places beyond the long edges, along `across` */
   posts: [number, number];
   /** the bars' face against the panel's back, board frame z (0 = the back; negative leaves a gap) */
   face: number;
@@ -68,13 +73,11 @@ export function clampHold(def: BoardDef, placement: Pick<BoardPlacement, 'press'
   const along = (p: { x: number; y: number }): number => (across === 'x' ? p.y : p.x);
   const side = (p: { x: number; y: number }): number => (across === 'x' ? p.x : p.y);
   if (def.mount.holes.length > 0) {
-    // a bar along every row of holes on the back
-    const rows = new Map<number, number[]>();
-    for (const hole of def.mount.holes) {
-      const key = [...rows.keys()].find((at) => Math.abs(at - along(hole)) < 1) ?? along(hole);
-      rows.set(key, [...(rows.get(key) ?? []), side(hole)]);
-    }
-    return { across, bars: [...rows].map(([at, holes]) => ({ at, holes })), posts, face, blocked: false };
+    // a tab from the nearer post to every hole on the back
+    const bars = def.mount.holes.map((hole) => ({
+      at: along(hole), holes: [side(hole)], posts: [side(hole) < width / 2 ? posts[0] : posts[1]],
+    }));
+    return { across, bars, posts, face, blocked: false };
   }
   // parts on the back, as spans along the long side
   const spans = def.ports.flatMap((port): [number, number][] => {
@@ -88,11 +91,11 @@ export function clampHold(def: BoardDef, placement: Pick<BoardPlacement, 'press'
     const home = share * length;
     for (let step = 0; step <= SEARCH_SHARE * length; step += 0.5) {
       for (const at of [home - step, home + step]) {
-        if (at >= CLAMP_BAR_W / 2 && at <= length - CLAMP_BAR_W / 2 && free(at)) return { at, holes: [] };
+        if (at >= CLAMP_BAR_W / 2 && at <= length - CLAMP_BAR_W / 2 && free(at)) return { at, holes: [], posts: [...posts] };
       }
     }
     blocked = true;
-    return { at: home, holes: [] };
+    return { at: home, holes: [], posts: [...posts] };
   });
   return { across, bars, posts, face, blocked };
 }

@@ -103,3 +103,20 @@ describe('built', () => {
     }
   });
 });
+
+describe('every display with a back pattern', () => {
+  it.each(CATALOG.filter((def) => def.back).map((def) => [def.id]))('%s takes a Pi 4 and builds closed with it', (id) => {
+    const parent = catalogBoard(id) ?? CATALOG[0];
+    const pi4 = catalogBoard('raspberry-pi-4b') ?? CATALOG[0];
+    expect(attachTurns(parent, pi4).length).toBeGreaterThan(0);
+    const state = sanitizeState({ ...defaultState(), boards: [{ board: id, on: 'ceiling', back: { board: pi4.id } }] });
+    const layout = caseLayout(state);
+    expect(layout.boards).toHaveLength(2);
+    expect(collisions(layout)).toEqual([]);
+    const built = buildCase(csg, state, 8);
+    for (const part of [built.body, built.lid]) {
+      expect(validateMesh(part).watertight).toBe(true);
+      expect(validateMesh(part).degenerateTriangles).toBe(0);
+    }
+  });
+});

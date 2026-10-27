@@ -1,0 +1,28 @@
+{
+  "id": "btt-hdmi7-v1.2",
+  "name": "HDMI7 V1.2 (7-inch HDMI, 1024×600)",
+  "vendor": "BIGTREETECH",
+  "kind": "display",
+  "size": { "w": 165, "d": 100, "t": 1.6 },
+  "mount": {
+    "kind": "clamp",
+    "holes": [
+      { "x": 5, "y": 5, "d": 3.2 },
+      { "x": 58.45, "y": 5, "d": 3.2 },
+      { "x": 160, "y": 5, "d": 3.2 },
+      { "x": 5, "y": 95, "d": 3.2 },
+      { "x": 160, "y": 95, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 4.5,
+  "bottomHeight": 3,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 82.5, "y": 50, "w": 154.21, "d": 85.92, "h": 4.5, "glass": { "x": 82.5, "y": 50, "w": 164.9, "d": 100, "t": 4.5 } },
+    { "id": "hdmi", "type": "hdmi", "edge": "left", "along": 23, "z": -7.2, "protrude": 0 },
+    { "id": "usb-c", "type": "usb-c", "edge": "left", "along": 31.7, "z": -4.8, "protrude": 0 },
+    { "id": "audio", "type": "audio-3.5", "edge": "left", "along": 83, "z": -7.6, "protrude": 0, "cut": false }
+  ],
+  "source": "https://github.com/bigtreetech/BIGTREETECH-TouchScreenHardware/tree/master/BTT%20HDMI7%20V1.2",
+  "verified": false
+}

@@ -101,6 +101,15 @@ import adafruitTft195394 from './data/adafruit-tft-1.9-5394.json';
 import waveshareLcd169 from './data/waveshare-lcd-1.69.json';
 import raspberryPiTouchDisplay27 from './data/raspberry-pi-touch-display-2-7.json';
 import waveshareEpaper75V2 from './data/waveshare-epaper-7.5-v2.json';
+import raspberryPiTouchDisplay7 from './data/raspberry-pi-touch-display-7.json';
+import bttHdmi5V12 from './data/btt-hdmi5-v1.2.json';
+import bttHdmi7V12 from './data/btt-hdmi7-v1.2.json';
+import bttPiTft50V2 from './data/btt-pi-tft50-v2.json';
+import bttPiTft70V2 from './data/btt-pi-tft70-v2.json';
+import bttPiTft43V2 from './data/btt-pi-tft43-v2.json';
+import waveshareDsiLcd43 from './data/waveshare-dsi-lcd-4.3.json';
+import waveshareHdmiLcd7c from './data/waveshare-hdmi-lcd-7c.json';
+import bttTft35SpiV21 from './data/btt-tft35-spi-v2.1.json';
 import waveshareEsp32S3TouchLcd43 from './data/waveshare-esp32-s3-touch-lcd-4-3.json';
 import mpdBh18650W from './data/mpd-bh-18650-w.json';
 import mpdBh2aaW from './data/mpd-bh2aa-w.json';
@@ -207,6 +216,15 @@ export const RAW_BOARDS: readonly unknown[] = [
   waveshareLcd169,
   raspberryPiTouchDisplay27,
   waveshareEpaper75V2,
+  raspberryPiTouchDisplay7,
+  bttHdmi5V12,
+  bttHdmi7V12,
+  bttPiTft50V2,
+  bttPiTft70V2,
+  bttPiTft43V2,
+  waveshareDsiLcd43,
+  waveshareHdmiLcd7c,
+  bttTft35SpiV21,
   // battery holders, screwed down like boards (their own group in the picker)
   mpdBh18650W,
   mpdBh2aaW,

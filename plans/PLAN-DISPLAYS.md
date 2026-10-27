@@ -401,4 +401,20 @@ below).
   its whole PCB, so nothing holds it from the front, and clamp bars under
   it would run into the Pi below. It is held by the Pi it sits on — the
   opposite of a board on a display's back. Decided in D7b.
+- **D7b.** A screwed clamp is a tab from the nearer post to each back hole,
+  not a bar along each row: the BTT HDMI5's HDMI connector sits on its back
+  across the line a full bar would take to its corner holes. The two
+  Touch Display 2 golden states moved with it.
+- **D7b.** In: Touch Display 2 7″ (D5/D6), the original Pi 7″ (its studs'
+  height read as 2.5 mm, ≈), BTT HDMI5 and HDMI7 V1.2, Pi TFT50 / TFT70 /
+  TFT43 V2 (Pi on the back; pattern places read from the back views'
+  pixels, the LCD's active area assumed centred, ≈), Waveshare 4.3″ DSI (Pi
+  on the back), Waveshare 7″ HDMI (C) (holes in its ears, clear of the
+  glass: standoffs from the front), BTT TFT35-SPI V2.1 (its drawing has the
+  PCB and holes only; the LCD taken as centred, the holes outside it, ≈).
+  Most of them are clamped: their corner holes are under the glass.
+- **D7b, open.** HyperPixel 4.0 is not in: its LCD covers its whole PCB and
+  it sits on the Pi as a HAT, so the Pi standing on the floor holds it — a
+  display carried by the board under it, the reverse of D6. To decide with
+  the user.
 

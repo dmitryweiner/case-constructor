@@ -690,7 +690,8 @@ function barsOnBack(board: PlacedBoard, boards: readonly PlacedBoard[]): boolean
   if (!child) return false;
   const hold = clampHold(board.def, board.placement);
   return hold.bars.some((bar) => {
-    const [a0, a1] = [hold.posts[0], hold.posts[1]];
+    const ends = [...bar.posts, ...bar.holes];
+    const [a0, a1] = [Math.min(...ends), Math.max(...ends)];
     const [b0, b1] = [bar.at - CLAMP_BAR_W / 2, bar.at + CLAMP_BAR_W / 2];
     const rect = hold.across === 'x' ? boxExtent(board.toCase, a0, b0, 0, a1, b1, 0).rect : boxExtent(board.toCase, b0, a0, 0, b1, a1, 0).rect;
     return overlap(rect, child.outline) > 0.01;

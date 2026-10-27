@@ -81,6 +81,9 @@ Raw counts, SBC segment:
 
 ### Tier A — high demand, drawing checked
 
+**In the catalog** (plans/PLAN-DISPLAYS.md D7b, 2026-10-27): every row but
+HyperPixel 4.0 (open: a HAT the Pi under it carries).
+
 | Display | Panel | Outline, mm | Active area, mm | Back | Why | Drawing | Note |
 |---|---|---|---|---|---|---|---|
 | Raspberry Pi Touch Display 2, 7″ (SC1635) | 720×1280 DSI, portrait | 120.24 × 189.32, R8, 0.7 lens; depth 14.92 (standoffs 8.5) | 86.94 × 154.56, 16.65 from the left, 17.38 from the bottom | Pi bosses 49 × 58 (Ø5, M2.5); 4 bracket holes 70.71 × 140; plate 99.71 × 168.55; DSI FPC at the centre | Printables 47 models / 15.7k. Pi Hut 48 reviews, 4.65★. r/raspberry_pi 32 titles | Product brief p. 5: `pip-assets.raspberrypi.com/categories/1083-raspberry-pi-touch-display-2/documents/RP-010429-MM-3-touch-display-2-7-inch-product-brief.pdf`; STEP `…/RP-009154-DD-3-raspberry-pi-touch-display-2-step-7inch.zip` | Waveshare 7″ DSI LCD (H) has the identical outline and holes (`waveshare.com/img/devkit/LCD/7inch-DSI-LCD-H/7inch-DSI-LCD-H-details-size.jpg`): an alias |
