@@ -15,6 +15,7 @@ import { validateMesh } from '../src/geo/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import type { SurfaceMesh } from '../src/geo/surface';
+import { KEYPAD } from './helpers';
 
 const GOLDEN_PATH = join(dirname(fileURLToPath(import.meta.url)), 'golden', 'cases.json');
 const SEGMENTS = 8;
@@ -231,6 +232,17 @@ const STATES: Record<string, AppState> = {
   'lcd1602-box': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'lcd-1602-i2c', on: 'ceiling', z: 0.3, mount: { size: 'M2.5', hole: 'nut' } }],
+  }),  // K2: a keyboard hung from the lid (plans/PLAN-KEYBOARDS.md), the test keypad
+  'keypad-hung-top-lid': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, fastening: 'screws' },
+    boards: [{ board: 'custom', custom: { ...KEYPAD, id: 'custom' }, on: 'ceiling', z: 0.3, mount: { size: 'M3', hole: 'tap' } }],
+  }),
+  'keypad-console-slope': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'console', console: { frontH: 20, backH: 40 } },
+    lid: { ...defaultState().lid, face: 'bottom', fastening: 'screws' },
+    boards: [{ board: 'custom', custom: { ...KEYPAD, id: 'custom' }, on: 'ceiling', z: 0.3, mount: { size: 'M3', hole: 'insert' } }],
   }),
 };
 

@@ -9,8 +9,8 @@
 // below it down through the floor.
 
 import type { PortDef } from '../boards/schema';
-import { onFace } from '../boards/schema';
-import { portCut } from '../boards/placement';
+import { keyFields, onFace } from '../boards/schema';
+import { keysOpen, portCut } from '../boards/placement';
 import type { CutterSpec, ExtraCut } from './cutters';
 import { VERTICAL_AXES, flareAt, horizontalAxes } from './cutters';
 import type { Dims } from './face';
@@ -267,12 +267,45 @@ export function cutWarnings(
     const cutter = cutters.find((one) => one.source.kind === 'extra' && one.source.index === index);
     out.push({ code: 'warn.cutInCorner', params: { n: index + 1 }, ...(cutter ? { spot: cutterSpot(cutter, dims) } : {}) });
   }
+  out.push(...keyNotes(layout, shape));
   // a hung display's window on the top, at its outer width
   for (const cutter of cutters) {
     if (!cutter.flare || cutter.source.kind !== 'port' || shape.kind !== 'box') continue;
     const g = flareAt(cutter, cutter.s1);
     const window: ExtraCut = { face: 'top', shape: 'rect', x: cutter.origin[0], y: cutter.origin[1], w: cutter.w + 2 * g, h: cutter.h + 2 * g, r: 0 };
     if (inCorner(shape, dims, window)) out.push({ code: 'warn.windowInCorner', params: sourceParams(layout, cutter.source), spot: cutterSpot(cutter, dims) });
+  }
+  return out;
+}
+
+/**
+ * How far a key field's tops stand out of the plate over it (negative: under
+ * its face), along the board's normal, mm: in the plate's frame for a hung
+ * board, above the outer top for one on the floor.
+ */
+export function keysProud(board: PlacedBoard, port: { x: number; y: number; h: number }, shape: ShapeState, dims: Dims, frontH: number, backH: number): number {
+  const p = applyAffine(board.toCase, [port.x, port.y, board.def.size.t + port.h]);
+  if (board.frame) return applyAffine(invertRigid(board.frame), p)[2];
+  return p[2] - outerTopAt(shape, dims, frontH, backH)(p[0], p[1]);
+}
+
+/** How far each opened key field stands out of the lid: a word on it, a warning when holes leave the keys under the face. */
+export function keyNotes(layout: CaseLayout, shape: ShapeState): Message[] {
+  const out: Message[] = [];
+  for (const board of layout.boards) {
+    for (const field of keyFields(board.def)) {
+      if (!portCut(board.placement, field.id, field.cut)) continue;
+      const proud = keysProud(board, field, shape, layout.dims, layout.console.frontH, layout.console.backH);
+      const { t } = board.def.size;
+      const corners: Vec3[] = [];
+      for (const x of [field.x - field.w / 2, field.x + field.w / 2]) {
+        for (const y of [field.y - field.d / 2, field.y + field.d / 2]) for (const z of [t, t + field.h]) corners.push(applyAffine(board.toCase, [x, y, z]));
+      }
+      const spot = boxSpot(boxAround(corners), { board: board.index });
+      const params = { ...boardParams(board), port: field.id, portType: field.type, mm: Math.abs(proud).toFixed(1) };
+      const code = proud >= -0.05 ? 'info.keysProud' : keysOpen(board.def, board.placement) === 'holes' ? 'warn.keysUnderFace' : 'info.keysSunk';
+      out.push({ code, params: proud >= -0.05 ? { ...params, mm: Math.max(0, proud).toFixed(1) } : params, spot });
+    }
   }
   return out;
 }

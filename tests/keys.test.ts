@@ -3,7 +3,17 @@
 
 import { KEYS_OPEN, PORT_TYPES, keyFields, keysOf, sanitizeBoard, sanitizePort } from '../src/boards/schema';
 import { defaultPlacement, frontHeight, hangsByDefault, keysOpen, sanitizePlacement } from '../src/boards/placement';
+import { CEILING_GAP } from '../src/boards/placement';
 import { RAW_BOARDS } from '../src/boards/catalog';
+import { initCSG } from '../src/geo/csg';
+import type { CsgApi } from '../src/geo/csg';
+import { buildCase } from '../src/geo/build';
+import { caseLayout, collisions } from '../src/geo/layout';
+import type { Message } from '../src/geo/message';
+import { keyNotes, keysProud } from '../src/geo/ports';
+import { validateMesh } from '../src/geo/validate';
+import { defaultState, sanitizeState } from '../src/state/schema';
+import type { AppState } from '../src/state/schema';
 import { garbageLike, KEYPAD, rng } from './helpers';
 
 function rec(x: unknown): Record<string, unknown> {
@@ -114,3 +124,70 @@ function checkKeyboard(raw: unknown): void {
     if (port.edge === 'top' && port.type !== 'keys') expect(port.base ?? port.h, `${where} under the plate`).toBeLessThanOrEqual(board.topHeight);
   }
 }
+
+describe('a keyboard hung from the lid (K2)', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+
+  const keypad = { ...sanitizeBoard(KEYPAD), id: 'custom' };
+  function state(board: Record<string, unknown> = {}, patch: Partial<AppState> = {}): AppState {
+    return sanitizeState({
+      ...defaultState(), ...patch,
+      boards: [{ ...defaultPlacement(keypad), board: 'custom', custom: keypad, mount: { size: 'M3', hole: 'tap' }, ...board }],
+    });
+  }
+  const notes = (s: AppState): Message[] => {
+    const layout = caseLayout(s);
+    const shape = { ...s.shape, console: layout.console };
+    return keyNotes(layout, shape);
+  };
+
+  it('under holes the plate lies on the keys’ base, the gap above it; over a window on topHeight', () => {
+    const s = state();
+    const layout = caseLayout(s);
+    const [board] = layout.boards;
+    expect(board.hung).toBe(true);
+    const ceiling = layout.dims.h - s.shape.floor;
+    expect(board.z0).toBeCloseTo(ceiling - CEILING_GAP - 5 - 1.6, 6);
+    const window = caseLayout(state({ keys: 'window' })).boards[0];
+    expect(window.z0 - board.z0).toBeCloseTo(1, 6);
+  });
+
+  it('the key tops stand out of the plate by h − front − gap − plate', () => {
+    const s = state();
+    expect(keysProud(caseLayout(s).boards[0], keyFields(keypad)[0], s.shape, caseLayout(s).dims, 0, 0))
+      .toBeCloseTo(11.6 - 5 - CEILING_GAP - s.shape.floor, 6);
+    const [note] = notes(s);
+    expect(note).toMatchObject({ code: 'info.keysProud', params: { port: 'keys', mm: (11.6 - 5 - CEILING_GAP - s.shape.floor).toFixed(1) } });
+    expect(note.spot?.holder).toEqual({ board: 0 });
+  });
+
+  it('key tops under the face: a warning under holes, a word over a window', () => {
+    const low = { ...keypad, ports: [{ ...keypad.ports[0], h: 6 }, ...keypad.ports.slice(1)] };
+    expect(notes(state({ custom: low }))[0].code).toBe('warn.keysUnderFace');
+    expect(notes(state({ custom: low, keys: 'window' }))[0].code).toBe('info.keysSunk');
+    // closed, nothing to say
+    expect(notes(state({ custom: low, cuts: { keys: false } }))).toEqual([]);
+  });
+
+  it('on the console’s slope it stands out as much, along the slope’s normal', () => {
+    const s = state({}, { shape: { ...defaultState().shape, kind: 'console' } });
+    const [note] = notes(s);
+    expect(note.params?.mm).toBe((11.6 - 5 - CEILING_GAP - s.shape.floor).toFixed(1));
+  });
+
+  it('its supports go between the keys: no layout warnings', () => {
+    expect(collisions(caseLayout(state()))).toEqual([]);
+  });
+
+  it('builds closed and sliver-free under a top lid', () => {
+    const built = buildCase(csg, state(), 8);
+    for (const mesh of [built.body, built.lid]) {
+      const report = validateMesh(mesh);
+      expect(report.watertight).toBe(true);
+      expect(report.degenerateTriangles).toBe(0);
+    }
+  });
+});

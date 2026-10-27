@@ -211,3 +211,10 @@ golden states, smoke steps, docs and translations.
   field's `base` (`frontHeight`), so the two openings hang the board at
   different heights. A support between the keys is not reported as under a
   part: only the keys themselves count (`partOnSupport`).
+- **K2.** The key notes are in `cutWarnings` (`keyNotes`, `ports.ts`), not
+  in the layout's collisions: they need the outer top, and they are about
+  the opening. A key field closed by its toggle says nothing. The rails
+  stepping aside for the keys waits for the CardKB's data (K6): a rail's
+  lip covers `RAIL_GRIP` (1.5 mm) of the PCB's top, and the check already
+  reports a key on it. The smoke steps come with the first catalog
+  keyboard (K6a): a custom board cannot carry rows.

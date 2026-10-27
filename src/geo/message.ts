@@ -27,6 +27,9 @@ export type MessageCode =
   | 'warn.clampBlocked'
   | 'warn.carriedOnParts'
   | 'warn.windowInCorner'
+  | 'info.keysProud'
+  | 'info.keysSunk'
+  | 'warn.keysUnderFace'
   // cutouts (ports)
   | 'warn.portFar'
   | 'info.cutSplit'

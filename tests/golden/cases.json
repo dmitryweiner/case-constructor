@@ -863,5 +863,45 @@
         11.2
       ]
     }
+  },
+  "keypad-hung-top-lid": {
+    "body": {
+      "triangles": 2048,
+      "volume": 28132.57,
+      "extents": [
+        80.6,
+        100.6,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 2494,
+      "volume": 8469.91,
+      "extents": [
+        80.6,
+        100.6,
+        7.3
+      ]
+    }
+  },
+  "keypad-console-slope": {
+    "body": {
+      "triangles": 3260,
+      "volume": 27301.48,
+      "extents": [
+        81.8,
+        100.6,
+        37.99
+      ]
+    },
+    "lid": {
+      "triangles": 1580,
+      "volume": 17371.64,
+      "extents": [
+        81.8,
+        100.6,
+        5
+      ]
+    }
   }
 }
