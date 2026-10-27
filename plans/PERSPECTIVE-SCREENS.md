@@ -431,6 +431,13 @@ against the window on M3 standoffs from inside.
 
 ### Tier A — high demand, drawing checked
 
+**In the catalog** (plans/PLAN-DISPLAYS.md D7a, 2026-10-27): every row
+below — MSP2807, MSP2401/2402, MSP3520, MSP4021, MSP1281, MSP1901, the
+generic 0.96″ OLED, 1602, 2004, 12864, MC242GX, MC130GX, the LCDwiki ST7789
+1.14/1.3/1.54/1.69/2.0″ and the Waveshare 2″ / 1.54″ and Adafruit
+4311/3787/4313/4383/5394 ST7789 boards. Waveshare 1.69″ waits for the
+clamp bars (D5).
+
 The active area (AA) offset is from the PCB edge, the PCB seen from the
 front; VA is the visible area (the window).
 

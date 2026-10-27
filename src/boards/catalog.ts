@@ -91,6 +91,13 @@ import lcdwikiMc130gx from './data/lcdwiki-mc130gx.json';
 import genericOled096 from './data/generic-oled-096.json';
 import lcd2004I2c from './data/lcd-2004-i2c.json';
 import lcd12864St7920 from './data/lcd-12864-st7920.json';
+import waveshareLcd2 from './data/waveshare-lcd-2.json';
+import waveshareLcd154 from './data/waveshare-lcd-1.54.json';
+import adafruitTft24311 from './data/adafruit-tft-2-4311.json';
+import adafruitTft1543787 from './data/adafruit-tft-1.54-3787.json';
+import adafruitTft134313 from './data/adafruit-tft-1.3-4313.json';
+import adafruitTft1144383 from './data/adafruit-tft-1.14-4383.json';
+import adafruitTft195394 from './data/adafruit-tft-1.9-5394.json';
 import waveshareEsp32S3TouchLcd43 from './data/waveshare-esp32-s3-touch-lcd-4-3.json';
 import mpdBh18650W from './data/mpd-bh-18650-w.json';
 import mpdBh2aaW from './data/mpd-bh2aa-w.json';
@@ -187,6 +194,13 @@ export const RAW_BOARDS: readonly unknown[] = [
   genericOled096,
   lcd2004I2c,
   lcd12864St7920,
+  waveshareLcd2,
+  waveshareLcd154,
+  adafruitTft24311,
+  adafruitTft1543787,
+  adafruitTft134313,
+  adafruitTft1144383,
+  adafruitTft195394,
   // battery holders, screwed down like boards (their own group in the picker)
   mpdBh18650W,
   mpdBh2aaW,

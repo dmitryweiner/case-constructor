@@ -226,6 +226,13 @@ bezel: its outline and thickness), drawn dark under the window in the view.
 | 0.96-inch I2C OLED, SSD1306 (128×64) | Generic | 27.3 × 27.8 | 4 × M2 | [source](https://www.lcdwiki.com/images/1/19/MC096-015.jpg) | ≈ |
 | 2004 character LCD, PCF8574 I2C backpack | Generic | 98 × 60 | 4 × M2.5 | [source](https://cdn-shop.adafruit.com/datasheets/WH2004A-CFH-JT%23.pdf) | ≈ |
 | 12864 graphic LCD, ST7920 (128×64) | Generic | 93 × 70 | 4 × M2.5 | [source](https://endrich.com/Datenbl%C3%A4tter/Displays%20%26%20Embedded%20Systems/Monochrome%20LCD/Grafische%20LC-Module/RG12864A2-datasheet.pdf) | ≈ |
+| 2inch LCD Module, ST7789 (240×320) | Waveshare | 58 × 35 | 4 × M2 | [source](https://files.waveshare.com/upload/6/6d/2inch_LCD_Module_2D_Drawing.pdf) | ≈ |
+| 1.54inch LCD Module, ST7789 (240×240) | Waveshare | 35 × 50 | 4 × M2.5 | [source](https://files.waveshare.com/wiki/1.54inch_LCD_Module/1_54inch_lcd_module_2d.zip) | yes |
+| 2.0-inch 320×240 IPS TFT, ST7789 (4311) | Adafruit | 35.56 × 59.06 | 4 × M2.5 | [source](https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/4311%202in%20TFT%20IPS%20Display) | ≈ |
+| 1.54-inch 240×240 TFT, ST7789 (3787) | Adafruit | 43.82 × 41.91 | 4 × M2.5 | [source](https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/3787%201.5in%20TFT%20Display) | ≈ |
+| 1.3-inch 240×240 IPS TFT, ST7789 (4313) | Adafruit | 35.56 × 38.1 | 4 × M2.5 | [source](https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/4313%201.3in%20TFT%20IPS%20Display) | ≈ |
+| 1.14-inch 240×135 TFT, ST7789 (4383) | Adafruit | 31.75 × 27.81 | 4 × M2.5 | [source](https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/4383%201.14in%20TFT%20Display) | ≈ |
+| 1.9-inch 320×170 IPS TFT, ST7789 (5394) | Adafruit | 57.15 × 36.83 | 4 × M2.5 | [source](https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/5394%201.9in%20TFT%20Display) | ≈ |
 
 ### Battery holders
 
