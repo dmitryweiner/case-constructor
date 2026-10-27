@@ -10,7 +10,9 @@ Each board has:
 |---|---|---|
 | Model | the family's models | entries for a family on one outline (XIAO, Feather, Waveshare Zero): where its buttons and parts are, and which openings it gets |
 | X, Y | 0–300 mm | position relative to the other boards; the layout as a whole is centred in the case, so with one board these do nothing |
-| Standoff height | the board's underside parts + 1 mm … 60 mm | PCB underside above the floor |
+| Held | on the floor / from the ceiling | a display, or a board with a screen on top, hangs from the ceiling when added (see [Displays](displays.md)); on a console, from its slope |
+| Standoff height | the board's underside parts + 1 mm … 60 mm | on the floor: PCB underside above the floor |
+| Gap to the ceiling | 0 … 60 mm (default 0.3) | from the ceiling: from the board's front (its glass) to the inside of the top; under 0.3 mm the panel warns |
 | Pins soldered downwards | on / off | boards with header rows; the default is how the board ships; the board goes up with its pins (8.5 mm with the plastic) |
 | Rotation | 0° / 90° / 180° / 270° | |
 | Against the wall | front / back / left / right, any of them | not on a cylinder; see below |
@@ -196,6 +198,74 @@ shows the same mark). New boards: the add-board skill
 | Seeed XIAO ESP32-S3 Sense (with camera board) | Seeed | 17.78 × 21.14 | rails (long) | [source](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/seeed-studio-xiao-esp32s3-sense-3d_model.zip) | yes |
 | Waveshare RP2040-Zero / RP2350-Zero / ESP32-S3-Zero | Waveshare | 18 × 23.5 | rails (long) | [source](https://files.waveshare.com/wiki/RP2350-Zero/RP2350_Zero_step.zip) | yes |
 | ESP32-S3-Touch-LCD-4.3 | Waveshare | 106 × 68 | 4 × M2.5 | [source](https://www.waveshare.com/w/upload/7/7f/Esp32-s3-touch-lcd-4.3-003.jpg) | yes |
+| e-Paper Driver HAT (Rev 2.3) | Waveshare | 65 × 30.5 | 4 × M2.5 | [source](https://www.waveshare.com/img/devkit/LCD/7.5inch-e-Paper-HAT/7.5inch-e-Paper-HAT-details-size-2.jpg) | yes |
+
+### Displays
+
+Screens sold on their own have a group of their own in the picker
+(*Displays*; search finds them by "display" or "screen" too). An entry gives
+the window — the active area of a TFT or OLED, the visible area of a
+character LCD — and the glass around it (the lens, the LCD module or the
+bezel: its outline and thickness), drawn dark under the window in the view.
+
+| Display | Vendor | Size, mm | Mount | Source | Checked |
+|---|---|---|---|---|---|
+| 2.8-inch SPI TFT, touch (MSP2807) | LCDwiki | 50 × 86 | 4 × M3 | [source](https://www.lcdwiki.com/res/MSP2807/MSP2807_Size.pdf) | yes |
+| 1.28-inch round IPS, GC9A01 (MSP1281) | LCDwiki | 38.03 × 45.8 | 2 × M2 | [source](https://www.lcdwiki.com/res/MSP1281/MSP1281_Size.pdf) | yes |
+| 1602 character LCD, PCF8574 I2C backpack | Generic | 80 × 36 | 4 × M2.5 | [source](https://cdn-shop.adafruit.com/datasheets/TC1602A-01T.pdf) | ≈ (Tinsharp's drawing; the backpack estimated) |
+| 2.4-inch SPI TFT (MSP2401 / MSP2402) | LCDwiki | 42.72 × 77.18 | 4 × M3 | [source](https://www.lcdwiki.com/res/MSP2402/MSP2401_Size.pdf) | yes |
+| 3.5-inch SPI TFT, touch, ILI9488 (MSP3520) | LCDwiki | 56.34 × 98 | 4 × M3 | [source](https://www.lcdwiki.com/res/MSP3520/MSP3520_Size.pdf) | yes |
+| 4.0-inch SPI TFT, touch, ST7796S (MSP4021) | LCDwiki | 61.74 × 108.04 | 4 × M3 | [source](https://www.lcdwiki.com/res/MSP4021/MSP4021_Size.pdf) | yes |
+| 1.9-inch IPS 170×320, ST7789 (MSP1901) | LCDwiki | 29 × 62 | 4 × M2 | [source](https://www.lcdwiki.com/res/MSP1901/MSP1901_Size.pdf) | ≈ |
+| 1.69-inch IPS 240×280, ST7789 (MSP1691) | LCDwiki | 31 × 48 | 4 × M2 | [source](https://www.lcdwiki.com/res/MSP1691/MSP1691_Size.pdf) | ≈ |
+| 1.14-inch IPS 135×240, ST7789 (MSP1141) | LCDwiki | 31.4 × 28 | 4 × M2 | [source](https://www.lcdwiki.com/zh/images/6/62/1.14inch_IPS_size.png) | ≈ |
+| 1.3-inch IPS 240×240, ST7789 (MSP1308) | LCDwiki | 27.78 × 39.22 | 4 × M2 | [source](https://www.lcdwiki.com/zh/images/c/cb/1.3inch_IPS_Size.jpg) | ≈ |
+| 1.54-inch IPS 240×240, ST7789 (MSP1541) | LCDwiki | 32 × 43.72 | 4 × M2 | [source](https://www.lcdwiki.com/zh/images/b/b5/MSP1541-size.png) | ≈ |
+| 2.0-inch IPS 240×320, ST7789 (MSP2008) | LCDwiki | 36.48 × 61.12 | 4 × M2 | [source](https://www.lcdwiki.com/zh/images/c/c1/MSP2008_Size.png) | ≈ |
+| 2.42-inch I2C OLED, SSD1309 (MC242GX) | LCDwiki | 72 × 43 | 4 × M2.5 | [source](https://www.lcdwiki.com/res/MC242GX/2.42inch_IIC_Module_MC242GX_Size.pdf) | yes |
+| 1.3-inch I2C OLED, SH1106 (MC130GX) | LCDwiki | 35.4 × 33.5 | 4 × M2.5 | [source](https://www.lcdwiki.com/zh/images/d/d5/1.3OLED_Size.png) | ≈ |
+| 0.96-inch I2C OLED, SSD1306 (128×64) | Generic | 27.3 × 27.8 | 4 × M2 | [source](https://www.lcdwiki.com/images/1/19/MC096-015.jpg) | ≈ |
+| 2004 character LCD, PCF8574 I2C backpack | Generic | 98 × 60 | 4 × M2.5 | [source](https://cdn-shop.adafruit.com/datasheets/WH2004A-CFH-JT%23.pdf) | ≈ |
+| 12864 graphic LCD, ST7920 (128×64) | Generic | 93 × 70 | 4 × M2.5 | [source](https://endrich.com/Datenbl%C3%A4tter/Displays%20%26%20Embedded%20Systems/Monochrome%20LCD/Grafische%20LC-Module/RG12864A2-datasheet.pdf) | ≈ |
+| 2inch LCD Module, ST7789 (240×320) | Waveshare | 58 × 35 | 4 × M2 | [source](https://files.waveshare.com/upload/6/6d/2inch_LCD_Module_2D_Drawing.pdf) | ≈ |
+| 1.54inch LCD Module, ST7789 (240×240) | Waveshare | 35 × 50 | 4 × M2.5 | [source](https://files.waveshare.com/wiki/1.54inch_LCD_Module/1_54inch_lcd_module_2d.zip) | yes |
+| 2.0-inch 320×240 IPS TFT, ST7789 (4311) | Adafruit | 35.56 × 59.06 | 4 × M2.5 | [source](https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/4311%202in%20TFT%20IPS%20Display) | ≈ |
+| 1.54-inch 240×240 TFT, ST7789 (3787) | Adafruit | 43.82 × 41.91 | 4 × M2.5 | [source](https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/3787%201.5in%20TFT%20Display) | ≈ |
+| 1.3-inch 240×240 IPS TFT, ST7789 (4313) | Adafruit | 35.56 × 38.1 | 4 × M2.5 | [source](https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/4313%201.3in%20TFT%20IPS%20Display) | ≈ |
+| 1.14-inch 240×135 TFT, ST7789 (4383) | Adafruit | 31.75 × 27.81 | 4 × M2.5 | [source](https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/4383%201.14in%20TFT%20Display) | ≈ |
+| 1.9-inch 320×170 IPS TFT, ST7789 (5394) | Adafruit | 57.15 × 36.83 | 4 × M2.5 | [source](https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/5394%201.9in%20TFT%20Display) | ≈ |
+| Touch Display 2, 7-inch / Waveshare 7inch DSI LCD (H) | Raspberry Pi | 120.24 × 189.32 | clamp tabs, 4 × M2.5 on the back, Pi on its back | [source](https://pip-assets.raspberrypi.com/categories/1083-raspberry-pi-touch-display-2/documents/RP-010429-MM-3-touch-display-2-7-inch-product-brief.pdf) | yes |
+| 7.5inch e-Paper V2 (800×480) panel | Waveshare | 170.2 × 111.2 | clamp bars, pressing | [source](https://files.waveshare.com/upload/6/60/7.5inch_e-Paper_V2_Specification.pdf) | yes |
+| 1.69inch LCD Module, ST7789 (240×280) | Waveshare | 31.5 × 39 | clamp tabs, 4 × M2 on the back | [source](https://files.waveshare.com/upload/4/41/1.69inch_LCD_Module_2Ddrawing.pdf) | ≈ (the LCM's place on the PCB taken as centred) |
+| 7-inch Touch Display (original) | Raspberry Pi | 192.96 × 110.76 | clamp tabs, 4 × M3 on the back, Pi on its back | [source](https://datasheets.raspberrypi.com/display/7-inch-display-mechanical-drawing.pdf) | ≈ |
+| HDMI5 V1.2 (5-inch HDMI, 800×480) | BIGTREETECH | 121 × 76 | clamp tabs, 4 × M3 on the back | [source](https://github.com/bigtreetech/BIGTREETECH-TouchScreenHardware/tree/master/BTT%20HDMI5%20V1.2) | ≈ |
+| HDMI7 V1.2 (7-inch HDMI, 1024×600) | BIGTREETECH | 165 × 100 | clamp tabs, 5 × M3 on the back | [source](https://github.com/bigtreetech/BIGTREETECH-TouchScreenHardware/tree/master/BTT%20HDMI7%20V1.2) | ≈ |
+| Pi TFT50 V2 (5-inch DSI, 800×480) | BIGTREETECH | 121 × 75.78 | clamp tabs, 4 × M3 on the back, Pi on its back | [source](https://github.com/bigtreetech/BIGTREETECH-TouchScreenHardware/tree/master/BTT%20Pi%20TFT50%20V2.0%20Github) | ≈ |
+| Pi TFT70 V2 (7-inch DSI, 1024×600) | BIGTREETECH | 165 × 100 | clamp tabs, 4 × M3 on the back, Pi on its back | [source](https://github.com/bigtreetech/BIGTREETECH-TouchScreenHardware/tree/master/BTT%20Pi%20TFT70%20V2.0%20Github) | ≈ |
+| Pi TFT43 V2 (4.3-inch DSI, 800×480) | BIGTREETECH | 105.5 × 67 | clamp tabs, 4 × M3 on the back, Pi on its back | [source](https://github.com/bigtreetech/BIGTREETECH-TouchScreenHardware/tree/master/BTT%20Pi%20TFT43%20V2.0%20Github) | ≈ |
+| 4.3inch DSI LCD (800×480) | Waveshare | 106 × 68 | clamp tabs, 4 × M2.5 on the back, Pi on its back | [source](https://www.waveshare.com/img/devkit/LCD/4.3DP/Exterior-Size.jpg) | ≈ |
+| 7inch HDMI LCD (C), 1024×600 | Waveshare | 164.9 × 124.27 | 4 × M3 | [source](https://www.waveshare.com/img/devkit/LCD/7CP/Exterior-Size.jpg) | ≈ |
+| TFT35-SPI V2.1 (3.5-inch SPI, 480×320) | BIGTREETECH | 98 × 56 | 4 × M3 | [source](https://github.com/bigtreetech/TFT35-SPI/blob/master/v2/Hardware/BTT%20TFT35-SPI%20V2.1_SIZE.pdf) | ≈ |
+| 7.3inch e-Paper (E) Spectra 6 (800×480) panel | Waveshare | 170.2 × 111.2 | clamp bars, pressing | [source](https://www.waveshare.com/img/devkit/LCD/7.3inch-e-Paper-HAT-E/7.3inch-e-Paper-E-details-size.jpg) | yes |
+| Inky Impression 7.3-inch (Spectra 6, 800×480) | Pimoroni | 174.2 × 123.2 | 4 × M2, Pi on its back | [source](https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-7-drawing.png) | ≈ |
+| Inky Impression 4-inch (Spectra 6, 600×400) | Pimoroni | 103 × 78 | 4 × M2, Pi on its back | [source](https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-4-drawing_0f7027b5-497b-45f4-81c4-b5053cb8c9af.png) | ≈ |
+| Inky Impression 13.3-inch (Spectra 6, 1600×1200) | Pimoroni | 296.7 × 210 | 4 × M2, Pi on its back | [source](https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-13-drawing.png) | ≈ |
+| 2.9inch e-Paper Module (296×128) | Waveshare | 89.5 × 38 | 4 × M2 | [source](https://www.waveshare.com/img/devkit/LCD/2.9inch-e-Paper-Module/2.9inch-e-Paper-Module-size.jpg) | ≈ |
+| 4.2inch e-Paper Module (400×300) | Waveshare | 103 × 78.5 | 4 × M2.5 | [source](https://www.waveshare.com/img/devkit/LCD/4.2inch-e-Paper-Module/4.2inch-e-Paper-Module-details-size.jpg) | ≈ |
+| MagTag 2.9-inch e-ink (ESP32-S2) | Adafruit | 80.01 × 53.34 | 4 × M3 | [source](https://github.com/adafruit/Adafruit_MagTag_PCBs) | ≈ |
+| ESP32-S3-Touch-LCD-7 (800×480) | Waveshare | 192.96 × 110.76 | clamp tabs, 4 × M3 on the back | [source](https://www.waveshare.com/w/upload/e/e8/ESP32-S3-Touch-LCD-7-details-size-2.png) | ≈ |
+| Inkplate 6 (6-inch e-paper, 1024×758) | Soldered | 144.4 × 107.8 | clamp tabs, 4 × M3 on the back | [source](https://github.com/SolderedElectronics/Soldered-Inkplate-6-hardware-design) | ≈ |
+| Inkplate 10 (9.7-inch e-paper, 1200×825) | Soldered | 224.8 × 162.43 | clamp tabs, 4 × M3 on the back | [source](https://github.com/SolderedElectronics/Soldered-Inkplate-10-hardware-design) | ≈ |
+| Inkplate 6COLOR (5.85-inch 7-colour e-paper, 600×448) | Soldered | 131.4 × 105.5 | clamp tabs, 4 × M3 on the back | [source](https://github.com/SolderedElectronics/Soldered-Inkplate-6-COLOR-hardware-design) | ≈ |
+| Inkplate 2 (2.13-inch e-paper, 212×104) | Soldered | 65.2 × 35.2 | clamp tabs, 4 × M3 on the back | [source](https://github.com/SolderedElectronics/Soldered-Inkplate-2-hardware-design) | ≈ |
+| Inkplate 5 Gen2 (5.2-inch e-paper, 1280×720) | Soldered | 130.59 × 75.23 | clamp tabs, 4 × M3 on the back | [source](https://github.com/SolderedElectronics/Soldered-Inkplate-5-Gen2-hardware-design) | ≈ |
+| T5 V2.3 (2.13-inch e-paper, ESP32) | LilyGO | 36.75 × 66.29 | 4 × M2 | [source](https://github.com/Xinyuan-LilyGO/LilyGo-T5-Epaper-Series/tree/master/dimensions) | ≈ |
+| HyperPixel 4.0 (touch / non-touch, 800×480) | Pimoroni | 97.85 × 58.14 | on a Pi's header (On top); clamp bars when hung | [source](https://cdn.shopify.com/s/files/1/0174/1800/files/hyperpixel-rectangular-dimensional-drawing.png) | ≈ (the active area taken as centred, the standoff for an extension header) |
+
+### Battery holders
+
+| Holder | Vendor | Size, mm | Mount | Source | Checked |
+|---|---|---|---|---|---|
 | MPD BH-18650-W (1 × 18650 holder) | MPD | 77.7 × 20.9 | 2 × M3 | [source](https://memoryprotectiondevices.com/datasheets/BH-18650-W/BH-18650-W-datasheet.pdf) | yes |
 | MPD BH2AA-W (2 × AA holder) | MPD | 57.81 × 31.5 | 2 × M2 | [source](https://www.memoryprotectiondevices.com/datasheets/BH2AAW/BH2AAW-datasheet.pdf) | ≈ (holes along the length taken as centred) |
 | MPD BH4AA-W (4 × AA holder) | MPD | 57.15 × 61.72 | 2 × M2 | [source](https://www.memoryprotectiondevices.com/datasheets/BH4AAW/BH4AAW-datasheet.pdf) | ≈ (holes along the length taken as centred) |

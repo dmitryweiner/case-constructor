@@ -8,10 +8,14 @@
 // depend on the case size, which breaks the circular dependency.
 
 import type { BoardDef, Edge, TopPort } from '../boards/schema';
-import { EDGES, onFace } from '../boards/schema';
+import { EDGES, onFace, resolveVariant } from '../boards/schema';
 import type { BoardPlacement, Rotation } from '../boards/placement';
 import { CLAMP_POST_ZONE } from '../boards/battery';
-import { boardOf, pinsDown, undersideOf } from '../boards/placement';
+import { RIM_FIT, rimReach } from './rim';
+import { CLAMP_BAR_T, CLAMP_BAR_W, clampHold, postReach } from './clamp';
+import { attachTransform } from './attach';
+import { CEILING_GAP, backPortDefault, boardOf, ownPortDefault, pinsDown, undersideOf } from '../boards/placement';
+import { catalogBoard } from '../boards/catalog';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import { bossDiameter } from './fasteners';
@@ -23,7 +27,7 @@ import type { ShapeState } from './shape';
 import { SIZE_MIN, SIZE_MAX, plateOf, shapeSpec } from './shape';
 import { effectiveRadii } from './loft';
 import type { Affine } from './surface';
-import { applyAffine, rotateVec } from './surface';
+import { applyAffine, composeAffine, invertRigid, rotateVec } from './surface';
 
 /** Smallest cavity the case keeps when there is nothing inside to size it by. */
 export const INNER_MIN: Dims = { w: 16, d: 16, h: 10 };
@@ -100,6 +104,38 @@ export interface PlacedBoard {
   zBottom: number;
   /** the walls it stands against: those asked for that can be (not on a cylinder, a rail edge, the side lid's face) */
   walls: PlacedWall[];
+  /** hung from the ceiling (its top still up): its supports come down from the ceiling plate */
+  hung: boolean;
+  /**
+   * A hung board's plate frame → case frame: w = 0 on the plate's outer
+   * face, w along its outward normal — the top raised to the case height, or
+   * the console's slope. Its supports are built in it.
+   */
+  frame?: Affine;
+  /**
+   * A board on a display's back: the display's index (`index` is the same).
+   * It has no supports of its own; it comes after every placed board.
+   */
+  attached?: number;
+  /** an attached board's standoffs, as drawn: the display's frame, its back holes, their length below its back */
+  standoffs?: { toCase: Affine; holes: { x: number; y: number }[]; length: number };
+  /** a display carried by the board under it (D9): `attached` is that board's index */
+  carried?: true;
+  /** a carried display under a flat top: the gap from its front to the ceiling, once the case height is known */
+  gap?: number;
+}
+
+/** The top plate's frame of a flat-topped case h high: w = 0 on the outer top. */
+export function flatFrame(h: number): Affine {
+  return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, h];
+}
+
+/** The console's slope frame: turned about x by the slope's angle, w = 0 on the outer slope. */
+export function slopeFrame(frontH: number, backH: number, depth: number): Affine {
+  const angle = Math.atan2(backH - frontH, depth);
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  return [1, 0, 0, 0, 0, c, -s, 0, 0, s, c, frontH];
 }
 
 export interface CaseLayout {
@@ -148,9 +184,42 @@ export function pinEdges(board: Pick<PlacedBoard, 'def' | 'placement'>): Edge[] 
   return board.def.pins && pinsDown(board.def, board.placement) ? board.def.pins.edges : [];
 }
 
-/** How far beyond each edge the board's footprint reaches (ports, rails). */
-function edgeReach(def: BoardDef): Record<Edge, number> {
+/**
+ * How far beyond each edge the board's footprint reaches (ports, rails; a
+ * hung board's standoff bosses too: they come down through the band where a
+ * top lid's skirt hangs, and the side margin must keep them off it).
+ */
+function edgeReach(def: BoardDef, placement: BoardPlacement, hung: boolean): Record<Edge, number> {
   const reach: Record<Edge, number> = { front: 0, back: 0, left: 0, right: 0 };
+  // the rim around a hung display's glass, which may reach past its edge
+  if (hung) {
+    for (const port of def.ports) {
+      if (!onFace(port) || port.edge !== 'top' || !port.glass) continue;
+      const rim = rimReach(port.glass, def.size);
+      for (const edge of EDGES) reach[edge] = Math.max(reach[edge], rim[edge]);
+    }
+  }
+  // a clamped panel's posts stand beyond its long edges
+  if (def.mount.kind === 'clamp') {
+    const across = clampHold(def, placement).across;
+    const posts = postReach(placement);
+    if (across === 'x') {
+      reach.left = Math.max(reach.left, posts);
+      reach.right = Math.max(reach.right, posts);
+    } else {
+      reach.front = Math.max(reach.front, posts);
+      reach.back = Math.max(reach.back, posts);
+    }
+  }
+  if (hung && def.mount.kind === 'holes') {
+    const r = bossDiameter(placement.mount) / 2;
+    for (const hole of def.mount.holes) {
+      reach.left = Math.max(reach.left, r - hole.x);
+      reach.right = Math.max(reach.right, hole.x + r - def.size.w);
+      reach.front = Math.max(reach.front, r - hole.y);
+      reach.back = Math.max(reach.back, hole.y + r - def.size.d);
+    }
+  }
   for (const port of def.ports) {
     if (!onFace(port)) reach[port.edge] = Math.max(reach[port.edge], port.protrude);
   }
@@ -184,17 +253,148 @@ function wallOf(input: LayoutInput, def: BoardDef, placement: BoardPlacement, to
   return { side, edge, line: at + sign * reach, recessed: reach - wanted, ports: onEdge.length > 0, against: true };
 }
 
-function place(input: LayoutInput, offsetX: number, offsetY: number): PlacedBoard[] {
+/** Whether a placement hangs from the ceiling (a box's or a cylinder's top, the console's slope). */
+export function hangs(placement: BoardPlacement): boolean {
+  return placement.on === 'ceiling';
+}
+
+/**
+ * A hung board's board → case transform under the plate `frame` (see
+ * PlacedBoard.frame): parallel to the plate, its front `gap` below the
+ * plate's inside, its plan centre where the layout puts it (cx, cy).
+ */
+function hungTransform(def: BoardDef, rot: Rotation, cx: number, cy: number, gap: number, plate: number, frame: Affine): Affine {
+  const turned = rot === 90 || rot === 270;
+  const W = turned ? def.size.d : def.size.w;
+  const D = turned ? def.size.w : def.size.d;
+  const wf = -(plate + gap);
+  // frame: y = v·cos − w·sin, so the plan centre cy sits at v = (cy + w·sin) / cos
+  const [cos, sin] = [frame[5], frame[9]];
+  const v = (cy + wf * sin) / cos;
+  const local = composeAffine([1, 0, 0, cx - W / 2, 0, 1, 0, v - D / 2, 0, 0, 1, wf - def.size.t - def.topHeight], boardTransform(def, rot, 0, 0, 0));
+  return composeAffine(frame, local);
+}
+
+/**
+ * The boards placed, `offsetX/Y` added to their positions; a hung board
+ * under the plate `frame` (null while the case height is not known yet —
+ * only their plan and their stacks count then).
+ */
+function place(input: LayoutInput, offsetX: number, offsetY: number, frame: Affine | null): PlacedBoard[] {
+  const placed = placeOwn(input, offsetX, offsetY, frame);
+  const attached = placed.flatMap((board) => attachedTo(board) ?? carriedBy(board) ?? []);
+  // a display's stack reaches down to the board on its back
+  const own = placed.map((board) => {
+    const child = attached.find((one) => one.attached === board.index && !one.carried);
+    return child ? { ...board, zBottom: Math.min(board.zBottom, child.zBottom) } : board;
+  });
+  return [...own, ...attached];
+}
+
+/** Corners of a box in a board's frame → their extremes in the case frame. */
+function boxExtent(toCase: Affine, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): { rect: Rect; z0: number; z1: number } {
+  const points = [x0, x1].flatMap((x) => [y0, y1].flatMap((y) => [z0, z1].map((z) => applyAffine(toCase, [x, y, z]))));
+  const zs = points.map((p) => p[2]);
+  return { rect: rectOf(points.map((p): [number, number] => [p[0], p[1]])), z0: Math.min(...zs), z1: Math.max(...zs) };
+}
+
+/** The board on a display's back, placed by its pattern; none without one. */
+function attachedTo(parent: PlacedBoard): PlacedBoard | null {
+  const back = parent.placement.back;
+  const pattern = parent.def.back;
+  const entry = back ? catalogBoard(back.board) : undefined;
+  if (!back || !pattern || !entry) return null;
+  const resolved = resolveVariant(entry, back.variant);
+  const def: BoardDef = { ...resolved, ports: resolved.ports.map((port) => ({ ...port, cut: backPortDefault(port) })) };
+  const toCase = composeAffine(parent.toCase, attachTransform(parent.def, def, back.rot, back.standoff));
+  const placement: BoardPlacement = {
+    board: def.id, x: 0, y: 0, z: 0, rot: back.rot, mount: { size: def.mount.screw, hole: 'tap', head: 'none' }, cuts: back.cuts,
+    ...(back.variant !== undefined ? { variant: back.variant } : {}),
+  };
+  const { w, d, t } = def.size;
+  const reach = edgeReach(def, placement, false);
+  const body = boxExtent(toCase, 0, 0, -undersideOf(def, false), w, d, t + def.topHeight);
+  return {
+    index: parent.index,
+    def,
+    placement,
+    toCase,
+    outline: boxExtent(toCase, 0, 0, 0, w, d, 0).rect,
+    footprint: boxExtent(toCase, -reach.left, -reach.front, 0, w + reach.right, d + reach.back, 0).rect,
+    z0: boxExtent(toCase, 0, 0, 0, w, d, 0).z0,
+    zTop: body.z1,
+    zBottom: body.z0,
+    walls: [],
+    hung: parent.hung,
+    attached: parent.index,
+    standoffs: { toCase: parent.toCase, holes: pattern.holes, length: back.standoff },
+  };
+}
+
+/**
+ * The HAT display a floor board carries (D9): D6's pattern read the other
+ * way round — the board's frame → the display's frame, inverted.
+ */
+function carriedBy(board: PlacedBoard): PlacedBoard | null {
+  const top = board.placement.top;
+  const entry = top ? catalogBoard(top.board) : undefined;
+  if (!top || !entry || board.hung) return null;
+  const def = resolveVariant(entry, top.variant);
+  const toCase = composeAffine(board.toCase, invertRigid(attachTransform(def, board.def, top.rot, top.standoff)));
+  const placement: BoardPlacement = {
+    board: def.id, x: 0, y: 0, z: 0, rot: top.rot, mount: { size: def.mount.screw, hole: 'tap', head: 'none' }, cuts: top.cuts,
+    ...(top.variant !== undefined ? { variant: top.variant } : {}),
+  };
+  const { w, d, t } = def.size;
+  // the rim around its glass reaches past it; nothing else does (it has no supports)
+  const reach = edgeReach({ ...def, mount: { ...def.mount, kind: 'holes', holes: [] } }, placement, true);
+  const body = boxExtent(toCase, 0, 0, -undersideOf(def, false), w, d, t + def.topHeight);
+  return {
+    index: board.index,
+    def,
+    placement,
+    toCase,
+    outline: boxExtent(toCase, 0, 0, 0, w, d, 0).rect,
+    footprint: boxExtent(toCase, -reach.left, -reach.front, 0, w + reach.right, d + reach.back, 0).rect,
+    z0: boxExtent(toCase, 0, 0, 0, w, d, 0).z0,
+    zTop: body.z1,
+    zBottom: body.z0,
+    walls: [],
+    hung: false,
+    attached: board.index,
+    carried: true,
+  };
+}
+
+/** The placed boards themselves, without the boards on their backs. */
+function placeOwn(input: LayoutInput, offsetX: number, offsetY: number, frame: Affine | null): PlacedBoard[] {
   return input.boards.map((placement, index) => {
-    const def = boardOf(placement);
-    const z0 = input.shape.floor + placement.z;
-    const toCase = boardTransform(def, placement.rot, placement.x + offsetX, placement.y + offsetY, z0);
+    const own = boardOf(placement);
+    // a board carrying a display keeps its top parts closed by default
+    const def = placement.top ? { ...own, ports: own.ports.map((port) => ({ ...port, cut: ownPortDefault(placement, port) })) } : own;
+    const hung = hangs(placement);
+    const pins = pinsDown(def, placement);
+    const front = def.size.t + def.topHeight;
     const { w, d } = def.size;
+    const turned = placement.rot === 90 || placement.rot === 270;
+    const cx = placement.x + offsetX + (turned ? d : w) / 2;
+    const cy = placement.y + offsetY + (turned ? w : d) / 2;
+    const plateFrame = frame ?? flatFrame(0);
+    const toCase = hung
+      ? hungTransform(def, placement.rot, cx, cy, placement.z, input.shape.floor, plateFrame)
+      : boardTransform(def, placement.rot, placement.x + offsetX, placement.y + offsetY, input.shape.floor + placement.z);
+    // a hung board may be tilted (the slope): its heights are its corners' extremes
+    const zs = (bz: number): number[] => [[0, 0], [w, 0], [0, d], [w, d]].map(([bx, by]) => applyAffine(toCase, [bx, by, bz])[2]);
+    const z0 = Math.min(...zs(0));
+    const zTop = Math.max(...zs(front));
+    // a clamped panel's bars go below its back
+    const below = def.mount.kind === 'clamp' ? Math.max(undersideOf(def, pins), CLAMP_BAR_T - clampHold(def, placement).face) : undersideOf(def, pins);
+    const zBottom = Math.min(...zs(-below));
     const corner = (bx: number, by: number): [number, number] => {
       const p = applyAffine(toCase, [bx, by, 0]);
       return [p[0], p[1]];
     };
-    const reach = edgeReach(def);
+    const reach = edgeReach(def, placement, hung);
     const outline = rectOf([corner(0, 0), corner(w, d)]);
     return {
       index,
@@ -204,9 +404,11 @@ function place(input: LayoutInput, offsetX: number, offsetY: number): PlacedBoar
       outline,
       footprint: rectOf([corner(-reach.left, -reach.front), corner(w + reach.right, d + reach.back)]),
       z0,
-      zTop: z0 + def.size.t + def.topHeight,
-      zBottom: z0 - undersideOf(def, pinsDown(def, placement)),
+      zTop,
+      zBottom,
       walls: (placement.walls ?? []).flatMap((side) => wallOf(input, def, placement, toCase, outline, side) ?? []),
+      hung,
+      ...(hung ? { frame: plateFrame } : {}),
     };
   });
 }
@@ -228,9 +430,21 @@ export function sideMargin(shape: ShapeState, lid: LidState): number {
   return Math.max(shape.margin.side, lid.fit + lid.lip.t + 0.3, posts);
 }
 
+/**
+ * The side margin a hung board keeps: under a rounded top edge the ceiling
+ * is flat only that far in, and a top lid's opening — its skirt — is pushed
+ * in as much. A hung board's rim and standoffs reach the ceiling, so it
+ * keeps the whole rounded zone plus the skirt's band (a round panel's rim
+ * touched the skirt there: slivers).
+ */
+export function hungMargin(shape: ShapeState, lid: LidState): number {
+  const rounded = shape.kind === 'console' ? 0 : Math.max(0, shape.edgeR - Math.min(shape.wall, shape.floor));
+  return Math.max(sideMargin(shape, lid), rounded + lid.fit + lid.lip.t + 0.3);
+}
+
 /** Boards in the layout frame (before centring) — for placing a new one beside them. */
 export function placeBoards(input: LayoutInput): PlacedBoard[] {
-  return place(input, 0, 0);
+  return placeOwn(input, 0, 0, null);
 }
 
 /**
@@ -260,7 +474,8 @@ export function lidBand(lid: LidState, shape: ShapeState): { x0: number; x1: num
  */
 function cavityOf(input: LayoutInput, placed: readonly PlacedBoard[]): (Rect & { fixed: Record<Edge, boolean> }) | null {
   if (placed.length === 0) return null;
-  const margin = sideMargin(input.shape, input.lid);
+  const floorMargin = sideMargin(input.shape, input.lid);
+  const ceilingMargin = hungMargin(input.shape, input.lid);
   const fixed: Record<Edge, boolean> = { left: false, right: false, front: false, back: false };
   const sideOf = (board: PlacedBoard, side: Edge, free: number): number => {
     const wall = board.walls.find((one) => one.side === side);
@@ -272,6 +487,7 @@ function cavityOf(input: LayoutInput, placed: readonly PlacedBoard[]): (Rect & {
   const cavity = { x0: f0.x0, x1: f0.x1, y0: f0.y0, y1: f0.y1 };
   placed.forEach((board, i) => {
     const f = board.footprint;
+    const margin = board.hung ? ceilingMargin : floorMargin;
     const x0 = sideOf(board, 'left', f.x0 - margin);
     const x1 = sideOf(board, 'right', f.x1 + margin);
     const y0 = sideOf(board, 'front', f.y0 - margin);
@@ -287,15 +503,14 @@ function cavityOf(input: LayoutInput, placed: readonly PlacedBoard[]): (Rect & {
 /** The minimum outer size: the cavity the boards need plus walls, floor and ceiling. */
 export function minimumDims(input: LayoutInput): Dims {
   const { shape } = input;
-  const placed = place(input, 0, 0);
+  const placed = place(input, 0, 0, null);
   const box = union(placed.map((board) => board.footprint));
   const cavity = cavityOf(input, placed);
-  const margin = sideMargin(shape, input.lid);
-  const top = Math.max(0, ...placed.map((board) => board.zTop - shape.floor));
+  const margin = placed.some((board) => board.hung) ? hungMargin(shape, input.lid) : sideMargin(shape, input.lid);
   const band = lidBand(input.lid, input.shape);
   let innerW = Math.max(INNER_MIN.w, cavity ? cavity.x1 - cavity.x0 + band.x0 + band.x1 : 0);
   let innerD = Math.max(INNER_MIN.d, cavity ? cavity.y1 - cavity.y0 + band.y0 + band.y1 : 0);
-  const innerH = Math.max(INNER_MIN.h, placed.length > 0 ? top + shape.margin.top : 0);
+  const innerH = Math.max(INNER_MIN.h, placed.length > 0 ? stacksHeight(placed, shape) : 0);
   if (shape.kind === 'cylinder') {
     const diameter = box ? Math.hypot(box.x1 - box.x0, box.y1 - box.y0) + 2 * margin : 0;
     innerW = Math.max(innerW, innerD, diameter);
@@ -307,6 +522,27 @@ export function minimumDims(input: LayoutInput): Dims {
     d: clamp(innerD + 2 * shape.wall),
     h: clamp(innerH + 2 * shape.floor),
   };
+}
+
+/**
+ * The inner height the boards need: each floor board's top and each hung
+ * board's stack (gap, board, parts and pins under it) with `margin.top` to
+ * spare — the two added up where a hung board is over a floor board.
+ */
+function stacksHeight(placed: readonly PlacedBoard[], shape: ShapeState): number {
+  const floorTop = (board: PlacedBoard): number => board.zTop - shape.floor;
+  const hungDepth = (board: PlacedBoard): number => board.placement.z + board.zTop - board.zBottom;
+  const floor = placed.filter((board) => !board.hung && !board.carried);
+  const hung = placed.filter((board) => board.hung);
+  // a carried display wants the ceiling the gap above its front: its window flush
+  const carried = placed.filter((board) => board.carried).map((board) => floorTop(board) + CEILING_GAP);
+  let need = Math.max(Math.max(0, ...floor.map(floorTop), ...hung.map(hungDepth)) + shape.margin.top, ...carried);
+  for (const above of hung) {
+    for (const below of floor) {
+      if (overlap(above.outline, below.outline) > 0.01) need = Math.max(need, floorTop(below) + shape.margin.top + hungDepth(above));
+    }
+  }
+  return need;
 }
 
 /**
@@ -325,7 +561,7 @@ export function caseLayout(input: LayoutInput): CaseLayout {
   };
   if (shape.kind === 'cylinder') dims = { ...dims, d: dims.w };
 
-  const cavity = cavityOf(input, place(input, 0, 0));
+  const cavity = cavityOf(input, place(input, 0, 0, null));
   // centred in what is left of the cavity once the lid's band is taken off —
   // or against the wall a board stands against
   const band = lidBand(input.lid, input.shape);
@@ -341,29 +577,42 @@ export function caseLayout(input: LayoutInput): CaseLayout {
   const inner: Record<Edge, number> = {
     left: wall + band.x0, right: dims.w - wall - band.x1, front: wall + band.y0, back: dims.d - wall - band.y1,
   };
-  const boards = place(input, offsetX, offsetY).map((board): PlacedBoard => ({
+  const placeAll = (frame: Affine): PlacedBoard[] => place(input, offsetX, offsetY, frame).map((board): PlacedBoard => ({
     ...board,
     walls: board.walls.map((wall) => ({ ...wall, against: Math.abs(wall.line - inner[wall.side]) < 1e-6 })),
   }));
 
   let frontH = shape.console.frontH;
   let backH = shape.console.backH;
-  if (shape.kind === 'console') {
-    // the slope's inner surface at y must clear every board corner there
-    const k = (backH - frontH) / dims.d;
-    const plate = shape.floor * Math.hypot(1, k);
-    let deficit = Math.max(0, min.h - Math.max(frontH, backH));
-    for (const board of boards) {
-      const need = board.zTop + shape.margin.top;
-      for (const y of [board.footprint.y0, board.footprint.y1]) {
-        deficit = Math.max(deficit, need - (frontH + k * y - plate));
-      }
-    }
-    frontH = Math.min(SIZE_MAX, frontH + deficit);
-    backH = Math.min(SIZE_MAX, backH + deficit);
-    dims = { ...dims, h: Math.max(frontH, backH) };
+  if (shape.kind !== 'console') {
+    // a carried display under the flat top: how far below the ceiling its front ended up
+    const boards = placeAll(flatFrame(dims.h)).map((board): PlacedBoard => (board.carried
+      ? { ...board, gap: dims.h - shape.floor - board.zTop } : board));
+    return { dims, boards, console: { frontH, backH } };
   }
-  return { dims, boards, console: { frontH, backH } };
+  // The console's heights rise together — the slope's angle stays — until
+  // its inside clears every floor board, and every board hung from it clears
+  // the floor and the floor boards under it, by the top margin.
+  const k = (backH - frontH) / dims.d;
+  const plate = shape.floor * Math.hypot(1, k);
+  const first = placeAll(slopeFrame(frontH, backH, dims.d));
+  let deficit = Math.max(0, min.h - Math.max(frontH, backH));
+  const floorBoards = first.filter((board) => !board.hung);
+  for (const board of floorBoards) {
+    const need = board.zTop + shape.margin.top;
+    for (const y of [board.footprint.y0, board.footprint.y1]) {
+      deficit = Math.max(deficit, need - (frontH + k * y - plate));
+    }
+  }
+  for (const board of first.filter((one) => one.hung)) {
+    const under = floorBoards.filter((below) => overlap(board.outline, below.outline) > 0.01);
+    const need = Math.max(shape.floor, ...under.map((below) => below.zTop)) + shape.margin.top;
+    deficit = Math.max(deficit, need - board.zBottom);
+  }
+  frontH = Math.min(SIZE_MAX, frontH + deficit);
+  backH = Math.min(SIZE_MAX, backH + deficit);
+  dims = { ...dims, h: Math.max(frontH, backH) };
+  return { dims, boards: placeAll(slopeFrame(frontH, backH, dims.d)), console: { frontH, backH } };
 }
 
 /** The outer size the case is built at. */
@@ -408,6 +657,15 @@ function overlap(a: Rect, b: Rect): number {
   return w > 0 && h > 0 ? w * h : 0;
 }
 
+/**
+ * Whether the lid holds the board: its supports grow from the lid's plate —
+ * a hung board under a top lid, a floor board on a bottom lid. In the
+ * exploded view it goes with the lid.
+ */
+export function heldByLid(board: Pick<PlacedBoard, 'hung'>, lidFace: string): boolean {
+  return board.hung ? lidFace === 'top' : lidFace === 'bottom';
+}
+
 /** Standoff centres and radii of a placed board, in the case frame. */
 export function standoffColumns(board: PlacedBoard): { x: number; y: number; r: number }[] {
   if (board.def.mount.kind !== 'holes') return [];
@@ -430,6 +688,8 @@ export function collisions(layout: CaseLayout): Message[] {
     for (let j = i + 1; j < boards.length; j++) {
       const a = boards[i];
       const b = boards[j];
+      // a display and the board on its back are one stack
+      if (a.index === b.index) continue;
       const zOverlap = Math.min(a.zTop, b.zTop) - Math.max(a.zBottom, b.zBottom);
       if (zOverlap > 0 && overlap(a.outline, b.outline) > 0.01) {
         out.push({ code: 'warn.boardsOverlap', params: { a: i + 1, b: j + 1 } });
@@ -437,23 +697,39 @@ export function collisions(layout: CaseLayout): Message[] {
     }
   }
   for (const board of boards) {
+    // a carried display must clear the parts of the board under it (a Pi's USB and Ethernet: an extension header)
+    const carrier = board.carried ? boards[board.attached ?? -1] : undefined;
+    if (carrier && board.z0 < carrier.zTop - 1e-6 && overlap(board.outline, carrier.outline) > 0.01) {
+      out.push({ code: 'warn.carriedOnParts', params: { board: board.index + 1, mm: (carrier.zTop - board.z0).toFixed(1) } });
+    }
+    if (board.attached !== undefined) continue;
     for (const wall of board.walls) {
       if (!wall.against) out.push({ code: 'warn.notAgainstWall', params: { board: board.index + 1 } });
       else if (wall.ports && wall.recessed > 0.05) {
         out.push({ code: 'info.portsRecessed', params: { board: board.index + 1, mm: wall.recessed.toFixed(1) } });
       }
     }
+    // the supports are under a floor board and over a hung one
     for (const port of board.def.ports) {
-      if (port.edge === 'bottom' && bottomPartOnSupport(board, port)) {
-        out.push({ code: 'warn.bottomPartOnSupport', params: { board: board.index + 1, port: port.id } });
+      if (port.edge === (board.hung ? 'top' : 'bottom') && partOnSupport(board, port)) {
+        out.push({ code: board.hung ? 'warn.topPartOnSupport' : 'warn.bottomPartOnSupport', params: { board: board.index + 1, port: port.id } });
       }
+    }
+    if (board.def.mount.kind === 'clamp' && (clampHold(board.def, board.placement).blocked || barsOnBack(board, boards))) {
+      out.push({ code: 'warn.clampBlocked', params: { board: board.index + 1 } });
+    }
+    // a clamped panel is pressed against the plate on purpose
+    if (board.hung && board.def.mount.kind !== 'clamp' && board.placement.z < CEILING_GAP - 1e-9) {
+      out.push({ code: 'warn.glassGap', params: { board: board.index + 1, mm: CEILING_GAP } });
     }
   }
   for (const a of boards) {
     for (const column of standoffColumns(a)) {
       const rect: Rect = { x0: column.x - column.r, y0: column.y - column.r, x1: column.x + column.r, y1: column.y + column.r };
       for (const b of boards) {
-        if (b === a || b.zBottom >= a.z0 || overlap(rect, b.outline) <= 0) continue;
+        // a floor board's standoffs reach up to its PCB, a hung board's down to its top
+        const clear = a.hung ? b.zTop <= a.z0 + a.def.size.t : b.zBottom >= a.z0;
+        if (b === a || b.index === a.index || clear || overlap(rect, b.outline) <= 0) continue;
         out.push({ code: 'warn.standoffHitsBoard', params: { a: a.index + 1, b: b.index + 1 } });
       }
     }
@@ -461,21 +737,41 @@ export function collisions(layout: CaseLayout): Message[] {
   return dedupe(out);
 }
 
-/** Whether a part on the underside lands on its board's standoffs or rails (board frame). */
-function bottomPartOnSupport(board: PlacedBoard, port: TopPort): boolean {
+/** Whether a clamped panel's bars run into the board on its back. */
+function barsOnBack(board: PlacedBoard, boards: readonly PlacedBoard[]): boolean {
+  const child = boards.find((one) => one.attached === board.index);
+  if (!child) return false;
+  const hold = clampHold(board.def, board.placement);
+  return hold.bars.some((bar) => {
+    const ends = [...bar.posts, ...bar.holes];
+    const [a0, a1] = [Math.min(...ends), Math.max(...ends)];
+    const [b0, b1] = [bar.at - CLAMP_BAR_W / 2, bar.at + CLAMP_BAR_W / 2];
+    const rect = hold.across === 'x' ? boxExtent(board.toCase, a0, b0, 0, a1, b1, 0).rect : boxExtent(board.toCase, b0, a0, 0, b1, a1, 0).rect;
+    return overlap(rect, child.outline) > 0.01;
+  });
+}
+
+/** Whether a part on the side the supports come from lands on its board's standoffs or rails (board frame). */
+function partOnSupport(board: PlacedBoard, port: TopPort): boolean {
   const { w, d } = board.def.size;
-  const hw = port.w / 2;
-  const hd = (port.shape === 'round' ? port.w : port.d) / 2;
-  const part: Rect = { x0: port.x - hw, y0: port.y - hd, x1: port.x + hw, y1: port.y + hd };
+  // a hung display's standoffs step aside for its glass: only a screw hole under the glass counts
+  const glass = board.hung ? port.glass : undefined;
+  const hw = glass ? glass.w / 2 + RIM_FIT : port.w / 2;
+  const hd = glass ? glass.d / 2 + RIM_FIT : (port.shape === 'round' ? port.w : port.d) / 2;
+  const [cx, cy] = glass ? [glass.x, glass.y] : [port.x, port.y];
+  const part: Rect = { x0: cx - hw, y0: cy - hd, x1: cx + hw, y1: cy + hd };
   if (board.def.mount.kind === 'holes') {
-    const r = bossDiameter(board.placement.mount) / 2;
+    const boss = bossDiameter(board.placement.mount) / 2;
     return board.def.mount.holes.some((hole) => {
       const dx = Math.max(part.x0 - hole.x, 0, hole.x - part.x1);
       const dy = Math.max(part.y0 - hole.y, 0, hole.y - part.y1);
-      return Math.hypot(dx, dy) < r;
+      return Math.hypot(dx, dy) < (glass ? hole.d / 2 : boss);
     });
   }
-  const pinned = pinEdges(board);
+  // rails step aside for a glass as standoffs do; a clamp's bars step aside by themselves
+  if (glass || board.def.mount.kind === 'clamp') return false;
+  // a hung board's rails carry no pin bed: their lip over its top is a plain one
+  const pinned = board.hung ? [] : pinEdges(board);
   return railEdges(board.def).some((edge) => {
     const reach = railReach(pinned.includes(edge) && board.def.pins ? board.def.pins : null);
     const strip: Rect = edge === 'front' ? { x0: RAIL_SHORTEN, y0: 0, x1: w - RAIL_SHORTEN, y1: reach }

@@ -98,6 +98,33 @@ shows; do not mirror a bottom view.
 - Where the drawing gives no heights, the type defaults stand and
   `"verified"` stays `false` until someone measures.
 
+### Displays
+
+A screen sold on its own (an SPI module, a Pi display, an e-paper panel) is
+`"kind": "display"`: the picker groups it under *Displays*, whatever its
+vendor; register it in the displays' block of `RAW_BOARDS`. Its screen is a
+`display` part on top, and two rectangles from the drawing matter:
+
+- **The window** is the part itself (`x, y, w, d`, centre and size): the
+  active area (AA) of a TFT or an OLED — the whole picture shows, the
+  panel's black border hides behind the case; the visible area (VA) of a
+  character LCD (1602, 2004, 12864). `h` is the front of the glass above the
+  PCB top (the stack: tape, LCD, touch panel).
+- **The glass** is `"glass": { "x", "y", "w", "d", "t" }` on that part (plus
+  `"r"` for rounded corners, `"shape": "round"` with `w` as the diameter):
+  the outermost of the lens, the touch panel, the LCD module or the metal
+  bezel, and its thickness — the case's rim holds it, the plate around the
+  window hides it. It must contain the window and stay inside `size`.
+- The drawing's offsets are usually from the PCB's top edge: y in the board
+  frame is `d − offset − size / 2` for a centre.
+- A **panel with no PCB beyond the glass** (Touch Display 2, a bare e-paper
+  panel): `size` is the glass outline (`outline` for its rounded corners),
+  `t` the module's thickness without the lens (up to 20 mm); the window's
+  `h` and the glass's `t` are the lens (at least 0.2 mm); the driver board, the FPC and the back plate are
+  parts on the underside, `bottomHeight` the deepest of them.
+- `board.mjs --svg` draws the glass dark and dashed under the window, the
+  review page outlines it in blue: lay both over the drawing's front view.
+
 Get the drawing with `node scripts/fetch.mjs <url>` (or `--board <id>` for
 an entry's `source`): it lands in `drawings/`, unpacked (zip, and rar
 through the system `bsdtar`), and stays there for the next check.

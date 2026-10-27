@@ -1,0 +1,25 @@
+{
+  "id": "lcdwiki-msp1308",
+  "name": "1.3-inch IPS 240×240, ST7789 (MSP1308)",
+  "vendor": "LCDwiki",
+  "kind": "display",
+  "size": { "w": 27.78, "d": 39.22, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2.5, "y": 2.5, "d": 2 },
+      { "x": 25.28, "y": 2.5, "d": 2 },
+      { "x": 2.5, "y": 36.72, "d": 2 },
+      { "x": 25.28, "y": 36.72, "d": 2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 1.8,
+  "bottomHeight": 1.1,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 13.89, "y": 21.19, "w": 23.4, "d": 23.4, "h": 1.8, "glass": { "x": 13.89, "y": 19.61, "w": 26.16, "d": 29.22, "t": 1.5 } },
+    { "id": "header", "type": "header-1xN", "edge": "bottom", "x": 13.89, "y": 37.88, "w": 17.78, "d": 2.54, "h": 8.38 }
+  ],
+  "source": "https://www.lcdwiki.com/zh/images/c/cb/1.3inch_IPS_Size.jpg",
+  "verified": false
+}

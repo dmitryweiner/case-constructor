@@ -1,0 +1,25 @@
+{
+  "id": "btt-pi-tft70-v2",
+  "name": "Pi TFT70 V2 (7-inch DSI, 1024×600)",
+  "vendor": "BIGTREETECH",
+  "kind": "display",
+  "size": { "w": 165, "d": 100, "t": 1.6 },
+  "mount": {
+    "kind": "clamp",
+    "holes": [
+      { "x": 5, "y": 5, "d": 3.2 },
+      { "x": 160, "y": 5, "d": 3.2 },
+      { "x": 5, "y": 95, "d": 3.2 },
+      { "x": 160, "y": 95, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 4.5,
+  "bottomHeight": 3,
+  "back": { "holes": [{ "x": 53.83, "y": 25.1, "d": 2.7 }, { "x": 112, "y": 25.1, "d": 2.7 }, { "x": 53.83, "y": 74.17, "d": 2.7 }, { "x": 112, "y": 74.17, "d": 2.7 }], "standoff": 8, "facing": "bottom" },
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 82.5, "y": 50, "w": 154.21, "d": 85.92, "h": 4.5, "glass": { "x": 82.5, "y": 50, "w": 165, "d": 100, "t": 4.5 } }
+  ],
+  "source": "https://github.com/bigtreetech/BIGTREETECH-TouchScreenHardware/tree/master/BTT%20Pi%20TFT70%20V2.0%20Github",
+  "verified": false
+}

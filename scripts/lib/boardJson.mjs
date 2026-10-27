@@ -8,7 +8,7 @@
 
 const ORDER = [
   'id', 'name', 'vendor', 'kind', 'size', 'outline', 'mount', 'topHeight', 'bottomHeight',
-  'pins', 'ports', 'variants', 'source', 'verified',
+  'pins', 'back', 'ports', 'variants', 'source', 'verified',
 ];
 
 /** A value on one line, `{ "a": 1 }` and `[1, 2]` style. */

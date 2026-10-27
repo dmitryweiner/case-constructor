@@ -159,23 +159,35 @@ await page.click('#boardList [data-board="raspberry-pi-4b"]');
 await page.uncheck('#board0_cut_ethernet');
 await expectWatertight('ports:ethernet-off');
 await page.check('#board0_cut_ethernet');
+// a HAT display carried by the board under it: its window flush, its toggles in the board's box
+label('carry');
+await page.selectOption('#board0_top', 'pimoroni-hyperpixel-4');
+await expectWatertight('carry:hyperpixel');
+if (!(await page.locator('#board0_top_cut_display').count())) errors.push('[carry] no toggles for the carried display');
+if (await page.isChecked('#board0_cut_gpio')) errors.push('[carry] the GPIO header under the display is open');
+if (!(await page.evaluate(() => window.__case.drawn())).includes('glass')) errors.push('[carry] no glass drawn');
+await page.selectOption('#board0_top', '');
+await expectWatertight('carry:none');
 // port captions over the ghosts: a click on one toggles its opening, undo brings it back
 label('captions');
 await expectWatertight('captions:shown');
 const captions = await page.evaluate(() => window.__case.captions());
 if (captions.length < 4) errors.push(`[captions] only ${captions.length} port captions shown`);
-const usbC = captions.find((caption) => caption.key === '0:usb-c');
-if (!usbC) errors.push(`[captions] no USB-C caption: ${captions.map((caption) => caption.key)}`);
+// USB-C when it shows; the camera keeps its distance from earlier steps, and an overlapped caption hides
+const target = captions.find((caption) => caption.key === '0:usb-c') ?? captions[0];
+if (!target) errors.push('[captions] no caption to click');
 else {
+  const portId = target.key.slice(target.key.indexOf(':') + 1);
+  // read from the state: the card's checkbox may be mid-rebuild; a port at its default has no entry
+  const portCutNow = () => page.evaluate((id) => window.__case.state().boards[0].cuts[id] ?? 'default', portId);
+  const before = await portCutNow();
   const viewBox = await page.locator('#view').boundingBox();
-  await page.mouse.click(viewBox.x + usbC.x, viewBox.y + usbC.y);
-  await expectWatertight('captions:usb-c-off');
-  // read from the state: the card's checkbox may be mid-rebuild
-  const usbCut = () => page.evaluate(() => window.__case.state().boards[0].cuts['usb-c'] ?? true);
-  if (await usbCut()) errors.push('[captions] a click on the USB-C caption left its opening on');
+  await page.mouse.click(viewBox.x + target.x, viewBox.y + target.y);
+  await expectWatertight('captions:port-toggled');
+  if ((await portCutNow()) === before) errors.push(`[captions] a click on the ${portId} caption left its opening as it was`);
   await page.click('#undoBtn');
   await expectWatertight('captions:undo');
-  if (!(await usbCut())) errors.push('[captions] undo did not bring the USB-C opening back');
+  if ((await portCutNow()) !== before) errors.push(`[captions] undo did not bring the ${portId} opening back`);
 }
 await page.uncheck('#viewPortNames');
 await page.waitForTimeout(150);
@@ -233,6 +245,90 @@ if (!(await page.locator('#boardList [data-board="mpd-bh2aa-w"]').count())) erro
 await page.click('#boardList [data-board="mpd-bh2aa-w"]');
 await expectWatertight('holders:bh2aa');
 await page.click('#board1_remove');
+// a display: found by "screen", in its own group, its glass drawn
+label('displays');
+await page.click('#boardAdd');
+await page.fill('#boardSearch', 'screen');
+const displayGroup = await page.evaluate(() => {
+  const row = document.querySelector('#boardList [data-board="lcdwiki-msp2807"]');
+  let group = row?.previousElementSibling;
+  while (group && !group.classList.contains('preset-group')) group = group.previousElementSibling;
+  return group?.textContent ?? null;
+});
+if (displayGroup !== 'Displays') errors.push(`[displays] MSP2807 under ${displayGroup}, not Displays`);
+await page.click('#boardList [data-board="lcdwiki-msp2807"]');
+await expectWatertight('displays:msp2807');
+if (!(await page.evaluate(() => window.__case.drawn())).includes('glass')) errors.push('[displays] no glass drawn');
+// hung from the ceiling when added: the gap slider, not the standoff height; exploded, it goes up with the lid
+if (!(await page.locator('#board1_on_ceiling').getAttribute('class'))?.includes('active')) errors.push('[hang] a display is not hung when added');
+if (!(await page.locator('#board1_gap').isVisible()) || await page.locator('#board1_z').isVisible()) errors.push('[hang] a hung board shows the standoff height');
+const lifted = await page.evaluate(() => {
+  const parts = window.__case.drawnParts();
+  return { lid: parts.find((part) => part.role === 'lid')?.offset?.[2] ?? 0, glass: parts.find((part) => part.role === 'glass')?.offset?.[2] ?? 0 };
+});
+if (Math.abs(lifted.lid - lifted.glass) > 1e-6 || lifted.lid <= 0) errors.push(`[hang] exploded, the lid rises ${lifted.lid} and the display ${lifted.glass}`);
+await page.click('#board1_hole_nut');
+await expectWatertight('hang:nut');
+// the window's chamfer, on by default; off, the case still closes
+if (!(await page.isChecked('#board1_bevel'))) errors.push('[window] a hung display\'s window is not chamfered');
+await page.uncheck('#board1_bevel');
+await expectWatertight('window:plain');
+await page.check('#board1_bevel');
+await setRange('board1_gap', 0);
+if (!(await page.textContent('#warnings'))?.includes('0.3')) errors.push('[hang] no warning for a gap under 0.3 mm');
+await page.click('#lid_face_bottom');
+await expectWatertight('hang:bottom-lid');
+// on a console it hangs from the slope; a tilted edge cannot stand against the front or back wall
+await page.click('#case_kind_console');
+await expectWatertight('hang:slope');
+if (!(await page.isDisabled('#board1_wall_front')) || !(await page.isDisabled('#board1_wall_back'))) errors.push('[slope] a board on the slope offers the front or back wall');
+await page.click('#case_kind_box');
+await page.click('#lid_face_top');
+await page.click('#board1_on_floor');
+if (!(await page.locator('#board1_z').isVisible())) errors.push('[hang] back on the floor without its standoff height');
+await expectWatertight('hang:floor');
+await page.click('#board1_remove');
+// a clamped panel: always hung, a clamp gap, its bars printed with the lid that holds it
+label('clamp');
+await page.click('#boardAdd');
+await page.fill('#boardSearch', 'touch display 2');
+await page.click('#boardList [data-board="raspberry-pi-touch-display-2-7"]');
+await expectWatertight('clamp:td2');
+if (await page.locator('#board1_on_floor').isVisible()) errors.push('[clamp] a clamped panel offers the floor');
+if (!(await page.locator('#board1_clampPress').isVisible())) errors.push('[clamp] no clamp gap');
+await setRange('board1_clampPress', -1);
+await expectWatertight('clamp:gap');
+await page.click('#tabLid');
+await page.waitForTimeout(300);
+if (!(await drawn()).includes('clamp')) errors.push(`[clamp] the Lid tab draws ${await drawn()}, no bars`);
+await page.click('#tabBoth');
+// a Pi on its back: by the pattern, its turns, its standoffs drawn, its captions toggle its own openings
+label('back');
+await page.selectOption('#board1_back', 'raspberry-pi-5');
+await expectWatertight('back:pi5');
+if (!(await page.isDisabled('#board1_back_rot_0')) || (await page.isDisabled('#board1_back_rot_270'))) errors.push('[back] the Pi\'s turns are not the pattern\'s');
+await page.click('#board1_back_rot_270');
+await expectWatertight('back:270');
+if (!(await page.locator('#board1_back_cut_usb-c').count())) errors.push('[back] no toggles for the Pi\'s ports');
+// the camera eases after the turn: read the captions once it has stopped, just before the click
+await page.waitForTimeout(600);
+const backCaption = (await page.evaluate(() => window.__case.captions())).find((caption) => caption.key.startsWith('1b:'));
+if (backCaption) {
+  const portId = backCaption.key.slice(3);
+  const backCut = (id) => page.evaluate((port) => {
+    const board = window.__case.state().boards[1];
+    return board ? (board.back?.cuts[port] ?? 'default') : `no board 1 (${window.__case.state().boards.length} boards)`;
+  }, id);
+  const before = await backCut(portId);
+  const viewBox = await page.locator('#view').boundingBox();
+  await page.mouse.click(viewBox.x + backCaption.x, viewBox.y + backCaption.y);
+  await expectWatertight('back:caption');
+  const after = await backCut(portId);
+  if (after === before || String(after).startsWith('no board')) errors.push(`[back] a click on the ${portId} caption: ${before} → ${after}`);
+}
+await page.selectOption('#board1_back', '');
+await expectWatertight('back:none');
+await page.click('#board1_remove');
 label('openings');
 await page.click('#cutAdd');
 await page.click('#cut0_shape_round');
@@ -273,6 +369,8 @@ if (found !== 1) errors.push(`[boards:search] "lora 32 v3" finds ${found}`);
 await page.click('#boardList [data-board]');
 await expectWatertight('boards:two');
 label('boards:overlap');
+// the Heltec has a screen, so it hangs when added: over the Pi that is no overlap; on the floor it is
+await page.click('#board1_on_floor');
 await setRange('board1_x', 0);
 await page.waitForTimeout(100);
 if (!(await page.locator('#warnings').textContent()).includes('overlap')) errors.push('[boards:overlap] no warning');

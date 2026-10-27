@@ -1,0 +1,25 @@
+{
+  "id": "lcdwiki-msp1141",
+  "name": "1.14-inch IPS 135×240, ST7789 (MSP1141)",
+  "vendor": "LCDwiki",
+  "kind": "display",
+  "size": { "w": 31.4, "d": 28, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2.5, "y": 2.5, "d": 2 },
+      { "x": 28.9, "y": 2.5, "d": 2 },
+      { "x": 2.5, "y": 25.5, "d": 2 },
+      { "x": 28.9, "y": 25.5, "d": 2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 1.8,
+  "bottomHeight": 1.1,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 14.455, "y": 14, "w": 24.91, "d": 14.86, "h": 1.8, "glass": { "x": 15.7, "y": 14, "w": 31.4, "d": 17.6, "t": 1.5 } },
+    { "id": "header", "type": "header-1xN", "edge": "bottom", "x": 15.7, "y": 26.56, "w": 20.32, "d": 2.54, "h": 8.38 }
+  ],
+  "source": "https://www.lcdwiki.com/zh/images/6/62/1.14inch_IPS_size.png",
+  "verified": false
+}

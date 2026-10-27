@@ -1,0 +1,25 @@
+{
+  "id": "lcdwiki-msp1541",
+  "name": "1.54-inch IPS 240×240, ST7789 (MSP1541)",
+  "vendor": "LCDwiki",
+  "kind": "display",
+  "size": { "w": 32, "d": 43.72, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2.5, "y": 2.5, "d": 2 },
+      { "x": 29.5, "y": 2.5, "d": 2 },
+      { "x": 2.5, "y": 41.22, "d": 2 },
+      { "x": 29.5, "y": 41.22, "d": 2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 1.8,
+  "bottomHeight": 1.1,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 16, "y": 23.41, "w": 27.72, "d": 27.72, "h": 1.8, "glass": { "x": 16, "y": 21.86, "w": 31.52, "d": 35.1, "t": 1.5 } },
+    { "id": "header", "type": "header-1xN", "edge": "bottom", "x": 16, "y": 42.22, "w": 20.32, "d": 2.54, "h": 8.38 }
+  ],
+  "source": "https://www.lcdwiki.com/zh/images/b/b5/MSP1541-size.png",
+  "verified": false
+}

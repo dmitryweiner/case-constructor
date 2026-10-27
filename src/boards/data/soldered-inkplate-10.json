@@ -1,0 +1,25 @@
+{
+  "id": "soldered-inkplate-10",
+  "name": "Inkplate 10 (9.7-inch e-paper, 1200×825)",
+  "vendor": "Soldered",
+  "kind": "mcu",
+  "size": { "w": 224.8, "d": 162.43, "t": 8.65 },
+  "mount": {
+    "kind": "clamp",
+    "holes": [
+      { "x": 221.02, "y": 3.53, "d": 3.2 },
+      { "x": 3.02, "y": 3.53, "d": 3.2 },
+      { "x": 221.02, "y": 159.16, "d": 3.2 },
+      { "x": 3.02, "y": 159.16, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 1.4,
+  "bottomHeight": 0,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 112.4, "y": 81.69, "w": 203, "d": 139.6, "h": 1.4, "glass": { "x": 112.4, "y": 81.69, "w": 218.8, "d": 157.39, "t": 1 } },
+    { "id": "usb-c", "type": "usb-c", "edge": "right", "along": 14.98, "w": 8.95, "h": 4.2, "z": -4.81, "protrude": 0.3 }
+  ],
+  "source": "https://github.com/SolderedElectronics/Soldered-Inkplate-10-hardware-design",
+  "verified": false
+}

@@ -4,17 +4,20 @@
 
 import type { CsgApi } from './csg';
 import type { Manifold } from 'manifold-3d';
-import { CsgScope, fromManifold, unionAll } from './csg';
+import { CsgScope, fromManifold, transformSolid, unionAll } from './csg';
 import type { Dims } from './face';
 import { faceFrame } from './face';
-import { caseLayout, effectiveLid } from './layout';
+import type { PlacedBoard } from './layout';
+import { caseLayout, effectiveLid, flatFrame, heldByLid } from './layout';
 import type { Message } from './message';
 import { partingZ, skirtSolid, splitAtParting } from './parting';
 import { plateOf, shapeSpec } from './shape';
 import { outerSolid, shellSolid } from './shell';
 import type { Support } from './standoffs';
-import { rails, standoffs } from './standoffs';
+import { fromCeiling, rails, standoffs, upsideDown } from './standoffs';
 import { batteryClamps, batterySupports } from './batterySolids';
+import { glassKeepOut, rimSolids } from './rimSolids';
+import { clampBars, clampPosts } from './clampSolids';
 import { cuttersSolid } from './cut';
 import { postSpots } from './fastening';
 import { postSolids, snapSolids } from './lip';
@@ -30,7 +33,7 @@ import { screwSolid } from './screwSolids';
 import { screwShape, threadPoints } from './thread';
 import type { LabelRaster } from './label';
 import { labelPlacement } from './label';
-import { applyAffine } from './surface';
+import { applyAffine, composeAffine, invertRigid } from './surface';
 import type { SurfaceMesh } from './surface';
 import type { AppState } from '../state/schema';
 
@@ -39,8 +42,10 @@ export interface CaseBuild {
   lid: SurfaceMesh;
   /** printed screws: one screw in its own frame (head below z = 0, shank up); the main thread places the copies */
   screw: SurfaceMesh | null;
-  /** the batteries' clamp bars, case frame, as screwed down; null without batteries */
+  /** the clamp bars that go with the body (batteries', a panel's the body holds), case frame, as screwed down; null without */
   clamps: SurfaceMesh | null;
+  /** the clamp bars of panels the lid holds, case frame, as screwed down; null without */
+  lidClamps: SurfaceMesh | null;
   dims: Dims;
 }
 
@@ -78,16 +83,41 @@ export function buildCase(
     let body = parted.body;
     let lidSolid = parted.lid;
 
-    // Supports go on whichever part owns the floor under them — the body,
-    // or the lid when the floor is the lid. After the split, so the parting
+    // Supports go on whichever part owns the plate they grow from — the
+    // body, or the lid when the floor (or, for a hung board, the ceiling) is
+    // the lid. After the split, so the parting
     // plane never cuts a standoff; before any cutout, so a vent under a
     // standoff does not open it.
     onStage(BUILD_STAGES[2]);
-    const supports: Support[] = layout.boards.flatMap((board) => (board.def.battery
+    // a hung board's supports are a floor board's in the case turned upside down
+    const held = (board: PlacedBoard): Support[] => (board.def.mount.kind === 'holes'
+      ? standoffs(csg, scope, board, shape.floor, segments)
+      : board.def.mount.kind === 'clamp'
+        ? clampPosts(csg, scope, board, shape.floor, segments)
+        : rails(csg, scope, board, shape.floor));
+    // and step aside for its glass, which a rim around it locates
+    // built in its plate's frame (the top, or the console's slope), then turned into the case
+    const hung = (board: PlacedBoard): Support[] => {
+      const frame = board.frame ?? flatFrame(dims.h);
+      const local = composeAffine(invertRigid(frame), board.toCase);
+      const keepOut = glassKeepOut(csg, scope, board, segments);
+      const own = fromCeiling(scope, held(upsideDown({ ...board, toCase: local, z0: local[11] }, 0)), 0)
+        .map((support): Support => {
+          const material = transformSolid(scope, support.material, frame);
+          return {
+            base: applyAffine(frame, support.base),
+            material: keepOut ? scope.keep(material.subtract(keepOut)) : material,
+            holes: support.holes ? transformSolid(scope, support.holes, frame) : null,
+          };
+        });
+      return [...own, ...rimSolids(csg, scope, board, shape.floor, segments)];
+    };
+    // a board on a display's back rides on the display's own standoffs
+    // (a carried display only gets the rim around its glass)
+    const supports: Support[] = layout.boards.flatMap((board) => (board.attached !== undefined
+      ? (board.carried ? rimSolids(csg, scope, board, shape.floor, segments) : []) : board.def.battery
       ? batterySupports(csg, scope, board, board.def.battery, shape.floor, segments)
-      : board.def.mount.kind === 'holes'
-        ? standoffs(csg, scope, board, shape.floor, segments)
-        : rails(csg, scope, board, shape.floor)));
+      : board.hung ? hung(board) : held(board)));
     // The owner is the part under the support's base; whatever of it reaches
     // into the other part's material (a deep side lid over a manually placed
     // board) is cut away, so the parts never overlap.
@@ -182,9 +212,16 @@ export function buildCase(
     const screw = lid.fastening === 'printed'
       ? fromManifold(screwSolid(csg, scope, screwShape(lid.thread.size, plate, lid.fit), threadPoints(segments)))
       : null;
-    const clampBars = layout.boards.flatMap((board) => (board.def.battery ? [batteryClamps(csg, scope, board, board.def.battery, segments)] : []));
-    const clamps = clampBars.length > 0 ? fromManifold(unionAll(csg, scope, clampBars)) : null;
-    return { body: fromManifold(body), lid: fromManifold(lidSolid), screw, clamps, dims };
+    // clamp bars go with the part that holds what they clamp: battery bars with the body,
+    // a panel's with the lid when the lid holds the panel
+    const bars = layout.boards.flatMap((board) => (board.def.battery
+      ? [{ onLid: false, solid: batteryClamps(csg, scope, board, board.def.battery, segments) }]
+      : board.hung && board.def.mount.kind === 'clamp' ? [{ onLid: heldByLid(board, lid.face), solid: clampBars(csg, scope, board, segments) }] : []));
+    const merged = (onLid: boolean): SurfaceMesh | null => {
+      const solids = bars.filter((bar) => bar.onLid === onLid).map((bar) => bar.solid);
+      return solids.length > 0 ? fromManifold(unionAll(csg, scope, solids)) : null;
+    };
+    return { body: fromManifold(body), lid: fromManifold(lidSolid), screw, clamps: merged(false), lidClamps: merged(true), dims };
   } finally {
     scope.dispose();
   }

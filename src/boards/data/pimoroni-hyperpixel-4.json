@@ -1,0 +1,17 @@
+{
+  "id": "pimoroni-hyperpixel-4",
+  "name": "HyperPixel 4.0 (touch / non-touch, 800×480)",
+  "vendor": "Pimoroni",
+  "kind": "display",
+  "size": { "w": 97.85, "d": 58.14, "t": 1.6 },
+  "mount": { "kind": "clamp", "holes": [], "screw": "M2.5" },
+  "topHeight": 3.2,
+  "bottomHeight": 8.5,
+  "back": { "holes": [{ "x": 82.5, "y": 4.57, "d": 2.7 }, { "x": 24.5, "y": 4.57, "d": 2.7 }, { "x": 82.5, "y": 53.57, "d": 2.7 }, { "x": 24.5, "y": 53.57, "d": 2.7 }], "standoff": 16.5, "facing": "top" },
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 48.925, "y": 29.07, "w": 86.4, "d": 51.8, "h": 3.2, "glass": { "x": 48.925, "y": 29.07, "w": 97.2, "d": 58.14, "t": 2.5 } },
+    { "id": "gpio", "type": "header-2xN", "edge": "bottom", "x": 53.5, "y": 53.57, "w": 51, "d": 5.08, "h": 8.5, "cut": false }
+  ],
+  "source": "https://cdn.shopify.com/s/files/1/0174/1800/files/hyperpixel-rectangular-dimensional-drawing.png",
+  "verified": false
+}

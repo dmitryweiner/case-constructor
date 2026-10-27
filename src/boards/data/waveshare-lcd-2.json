@@ -1,0 +1,25 @@
+{
+  "id": "waveshare-lcd-2",
+  "name": "2inch LCD Module, ST7789 (240×320)",
+  "vendor": "Waveshare",
+  "kind": "display",
+  "size": { "w": 58, "d": 35, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2.5, "y": 2.5, "d": 2.2 },
+      { "x": 55.5, "y": 2.5, "d": 2.2 },
+      { "x": 2.5, "y": 32.5, "d": 2.2 },
+      { "x": 55.5, "y": 32.5, "d": 2.2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 2.4,
+  "bottomHeight": 6,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 30.73, "y": 17.5, "w": 40.8, "d": 30.6, "h": 2.4, "glass": { "x": 28.97, "y": 17.5, "w": 47.83, "d": 34.6, "t": 2.2 } },
+    { "id": "connector", "type": "generic", "edge": "bottom", "x": 49.55, "y": 17.5, "w": 7.3, "d": 20, "h": 6 }
+  ],
+  "source": "https://files.waveshare.com/upload/6/6d/2inch_LCD_Module_2D_Drawing.pdf",
+  "verified": false
+}

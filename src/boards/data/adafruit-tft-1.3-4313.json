@@ -1,0 +1,26 @@
+{
+  "id": "adafruit-tft-1.3-4313",
+  "name": "1.3-inch 240×240 IPS TFT, ST7789 (4313)",
+  "vendor": "Adafruit",
+  "kind": "display",
+  "size": { "w": 35.56, "d": 38.1, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2.54, "y": 2.54, "d": 2.5 },
+      { "x": 33.02, "y": 2.54, "d": 2.5 },
+      { "x": 2.54, "y": 35.56, "d": 2.5 },
+      { "x": 33.02, "y": 35.56, "d": 2.5 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 1.5,
+  "bottomHeight": 2,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 18.59, "y": 19.01, "w": 23.4, "d": 23.4, "h": 1.5, "glass": { "x": 20.17, "y": 19.01, "w": 29.22, "d": 26.16, "t": 1.46 } },
+    { "id": "header", "type": "header-1xN", "edge": "bottom", "x": 2.54, "y": 19.05, "w": 2.54, "d": 27.94, "h": 8.5 },
+    { "id": "microsd", "type": "microsd", "edge": "front", "along": 14.51, "z": -3.1, "protrude": 0, "cut": false }
+  ],
+  "source": "https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/4313%201.3in%20TFT%20IPS%20Display",
+  "verified": false
+}

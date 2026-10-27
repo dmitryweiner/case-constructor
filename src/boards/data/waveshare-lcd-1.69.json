@@ -1,0 +1,24 @@
+{
+  "id": "waveshare-lcd-1.69",
+  "name": "1.69inch LCD Module, ST7789 (240×280)",
+  "vendor": "Waveshare",
+  "kind": "display",
+  "size": { "w": 31.5, "d": 39, "t": 5.3 },
+  "mount": {
+    "kind": "clamp",
+    "holes": [
+      { "x": 3.6, "y": 3.6, "d": 2.2 },
+      { "x": 27.9, "y": 3.6, "d": 2.2 },
+      { "x": 3.6, "y": 35.4, "d": 2.2 },
+      { "x": 27.9, "y": 35.4, "d": 2.2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 1.8,
+  "bottomHeight": 0,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 15.75, "y": 20.8, "w": 27.97, "d": 32.63, "h": 1.8, "glass": { "x": 15.75, "y": 19.5, "w": 30.07, "d": 37.43, "r": 5, "t": 1.6 } }
+  ],
+  "source": "https://files.waveshare.com/upload/4/41/1.69inch_LCD_Module_2Ddrawing.pdf",
+  "verified": false
+}

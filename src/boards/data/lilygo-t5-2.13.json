@@ -1,0 +1,29 @@
+{
+  "id": "lilygo-t5-2.13",
+  "name": "T5 V2.3 (2.13-inch e-paper, ESP32)",
+  "vendor": "LilyGO",
+  "kind": "mcu",
+  "size": { "w": 36.75, "d": 66.29, "t": 1.2 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2.25, "y": 2.51, "d": 2 },
+      { "x": 34.6, "y": 2.51, "d": 2 },
+      { "x": 2.25, "y": 63.94, "d": 2 },
+      { "x": 34.6, "y": 63.94, "d": 2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 1.2,
+  "bottomHeight": 4,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 18.375, "y": 39.97, "w": 23.71, "d": 48.55, "h": 1.2, "glass": { "x": 18.375, "y": 36.025, "w": 29.25, "d": 59.25, "t": 1 } },
+    { "id": "micro-usb", "type": "micro-usb", "edge": "right", "along": 23.29, "z": -4, "protrude": 0.37 },
+    { "id": "microsd", "type": "microsd", "edge": "right", "along": 11.76, "z": -3.7, "protrude": 0 },
+    { "id": "power", "type": "switch", "edge": "left", "along": 23.35, "w": 9.17, "h": 3.66, "z": -4.9, "protrude": 2.26 },
+    { "id": "button-1", "type": "switch", "edge": "left", "along": 8.59, "w": 4.65, "h": 2.3, "z": -3.5, "protrude": 0.72 },
+    { "id": "button-2", "type": "switch", "edge": "left", "along": 15.31, "w": 4.65, "h": 2.3, "z": -3.5, "protrude": 0.72 }
+  ],
+  "source": "https://github.com/Xinyuan-LilyGO/LilyGo-T5-Epaper-Series/tree/master/dimensions",
+  "verified": false
+}

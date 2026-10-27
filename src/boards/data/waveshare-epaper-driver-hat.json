@@ -1,0 +1,26 @@
+{
+  "id": "waveshare-epaper-driver-hat",
+  "name": "e-Paper Driver HAT (Rev 2.3)",
+  "vendor": "Waveshare",
+  "kind": "mcu",
+  "size": { "w": 65, "d": 30.5, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.5, "y": 4, "d": 3 },
+      { "x": 61.5, "y": 4, "d": 3 },
+      { "x": 3.5, "y": 27, "d": 3 },
+      { "x": 61.5, "y": 27, "d": 3 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 3,
+  "bottomHeight": 2,
+  "ports": [
+    { "id": "fpc", "type": "fpc", "edge": "top", "x": 33.3, "y": 27, "w": 16.6, "d": 5, "h": 2.5 },
+    { "id": "connector", "type": "jst", "edge": "front", "along": 31.5, "w": 14, "h": 5, "z": 0, "protrude": 0 },
+    { "id": "gpio", "type": "header-2xN", "edge": "bottom", "x": 32.5, "y": 27, "w": 51, "d": 5.08, "h": 8.5 }
+  ],
+  "source": "https://www.waveshare.com/img/devkit/LCD/7.5inch-e-Paper-HAT/7.5inch-e-Paper-HAT-details-size-2.jpg",
+  "verified": true
+}

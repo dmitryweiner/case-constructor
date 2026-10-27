@@ -81,6 +81,9 @@ Raw counts, SBC segment:
 
 ### Tier A — high demand, drawing checked
 
+**In the catalog** (plans/PLAN-DISPLAYS.md D7b, D9, 2026-10-27): every row;
+HyperPixel 4.0 is carried by the Pi under it (D9).
+
 | Display | Panel | Outline, mm | Active area, mm | Back | Why | Drawing | Note |
 |---|---|---|---|---|---|---|---|
 | Raspberry Pi Touch Display 2, 7″ (SC1635) | 720×1280 DSI, portrait | 120.24 × 189.32, R8, 0.7 lens; depth 14.92 (standoffs 8.5) | 86.94 × 154.56, 16.65 from the left, 17.38 from the bottom | Pi bosses 49 × 58 (Ø5, M2.5); 4 bracket holes 70.71 × 140; plate 99.71 × 168.55; DSI FPC at the centre | Printables 47 models / 15.7k. Pi Hut 48 reviews, 4.65★. r/raspberry_pi 32 titles | Product brief p. 5: `pip-assets.raspberrypi.com/categories/1083-raspberry-pi-touch-display-2/documents/RP-010429-MM-3-touch-display-2-7-inch-product-brief.pdf`; STEP `…/RP-009154-DD-3-raspberry-pi-touch-display-2-step-7inch.zip` | Waveshare 7″ DSI LCD (H) has the identical outline and holes (`waveshare.com/img/devkit/LCD/7inch-DSI-LCD-H/7inch-DSI-LCD-H-details-size.jpg`): an alias |
@@ -212,7 +215,8 @@ Raw counts, SBC segment:
 ## Boards with a screen on them
 
 The display and the MCU on one bare PCB: these are ordinary catalog boards
-with a `display` part on top. Already in the catalog: ESP32-2432S028R (CYD,
+with a `display` part on top. Waveshare ESP32-S3-Touch-LCD-7 went in with D7c (on clamp tabs to its
+frame's studs). Already in the catalog: ESP32-2432S028R (CYD,
 ≈), Heltec WiFi LoRa 32 V3/V4 and Wireless Tracker (small OLEDs). The boards
 plan has LilyGO T-Display S3 in its Tier B; it moves to Tier A here.
 
@@ -431,6 +435,12 @@ against the window on M3 standoffs from inside.
 
 ### Tier A — high demand, drawing checked
 
+**In the catalog** (plans/PLAN-DISPLAYS.md D7a, 2026-10-27): every row
+below — MSP2807, MSP2401/2402, MSP3520, MSP4021, MSP1281, MSP1901, the
+generic 0.96″ OLED, 1602, 2004, 12864, MC242GX, MC130GX, the LCDwiki ST7789
+1.14/1.3/1.54/1.69/2.0″ and the Waveshare 2″ / 1.54″ and Adafruit
+4311/3787/4313/4383/5394 ST7789 boards; Waveshare 1.69″ on clamp bars (D5).
+
 The active area (AA) offset is from the PCB edge, the PCB seen from the
 front; VA is the visible area (the window).
 
@@ -541,6 +551,13 @@ holes: it needs a pocket, and its driver is a separate board.
 | Printables `searchPrints2.totalCount` | Cases and frames | Fuzzy ("epaper" 4545, "e-paper" 214); the title-filtered run hit a 429, so raw totals only: order of magnitude |
 
 ### Tier A — high demand, drawing exists
+
+**In the catalog** (plans/PLAN-DISPLAYS.md D7c, 2026-10-27): the 7.5″ panel
+(V2, on clamp bars) and the 7.3″ E, the e-Paper Driver HAT, the three Inky
+Impressions (a Pi on their backs), the Waveshare 2.9″ and 4.2″ modules,
+MagTag, Inkplate 6 / 10 / 6COLOR / 2 / 5 Gen2, LilyGO T5 2.13. Not in:
+WeAct 2.9″ / 4.2″ (no holes in their models), LilyGO T5 4.7″ (the DXF has
+the outline only; no board model is published).
 
 | Display | Size, colours | Outline, mm | Holes | Active area, mm | Why | Drawing | Note |
 |---|---|---|---|---|---|---|---|

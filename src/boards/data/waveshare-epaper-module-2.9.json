@@ -1,0 +1,25 @@
+{
+  "id": "waveshare-epaper-module-2.9",
+  "name": "2.9inch e-Paper Module (296×128)",
+  "vendor": "Waveshare",
+  "kind": "display",
+  "size": { "w": 89.5, "d": 38, "t": 1.6 },
+  "outline": [[0, 0], [89.5, 0], [89.5, 38], [0, 38], [0, 27.5], [1.5, 27.5], [1.5, 11], [0, 11]],
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2.5, "y": 2.5, "d": 2.2 },
+      { "x": 87, "y": 2.5, "d": 2.2 },
+      { "x": 2.5, "y": 35.5, "d": 2.2 },
+      { "x": 87, "y": 35.5, "d": 2.2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 1.4,
+  "bottomHeight": 3,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 44.75, "y": 19, "w": 66.89, "d": 29.05, "h": 1.4, "glass": { "x": 44.75, "y": 19, "w": 80.1, "d": 36.7, "t": 1.2 } }
+  ],
+  "source": "https://www.waveshare.com/img/devkit/LCD/2.9inch-e-Paper-Module/2.9inch-e-Paper-Module-size.jpg",
+  "verified": false
+}

@@ -1,0 +1,25 @@
+{
+  "id": "lcd-1602-i2c",
+  "name": "1602 character LCD, PCF8574 I2C backpack",
+  "vendor": "Generic",
+  "kind": "display",
+  "size": { "w": 80, "d": 36, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2.5, "y": 2.5, "d": 2.5 },
+      { "x": 77.5, "y": 2.5, "d": 2.5 },
+      { "x": 2.5, "y": 33.5, "d": 2.5 },
+      { "x": 77.5, "y": 33.5, "d": 2.5 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 8.9,
+  "bottomHeight": 3,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 40, "y": 16.8, "w": 64.5, "d": 13.8, "h": 8.9, "glass": { "x": 40, "y": 16.8, "w": 71.3, "d": 26.8, "t": 8.9 } },
+    { "id": "backpack", "type": "generic", "edge": "bottom", "x": 27.05, "y": 25, "w": 41.5, "d": 19.5, "h": 12 }
+  ],
+  "source": "https://cdn-shop.adafruit.com/datasheets/TC1602A-01T.pdf",
+  "verified": false
+}

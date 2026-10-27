@@ -3,7 +3,7 @@
 
 import { RAW_BOARDS, CATALOG, catalogBoard } from '../src/boards/catalog';
 import type { PortType } from '../src/boards/schema';
-import { PORT_TYPES, insidePolygon, isPortType, onFace, resolveVariant, sanitizeBoard, sanitizeOutline, sanitizePort } from '../src/boards/schema';
+import { PORT_TYPES, insidePolygon, isPortType, onFace, resolveVariant, sanitizeBoard, sanitizeOutline, sanitizePort, windowInGlass } from '../src/boards/schema';
 import { defaultPlacement, sanitizePlacement, portCut, boardOf, entryOf, minBoardZ, placementMinZ, pinsDown } from '../src/boards/placement';
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -60,6 +60,13 @@ describe('board catalog', () => {
       expect(typeof p.id === 'string' && !ids.has(p.id), `${String(p.id)} unique`).toBe(true);
       ids.add(String(p.id));
       const port = board.ports[i];
+      // a glass, when written, is kept as written (defaults filled in) and holds the window
+      if (p.glass !== undefined) {
+        const glass = rec(p.glass);
+        // a round glass, like a round part, gives its diameter once
+        expect(onFace(port) && port.glass, `${port.id} glass`).toEqual({ r: 0, shape: 'rect', ...glass, ...(glass.shape === 'round' ? { d: glass.w } : {}) });
+        if (onFace(port) && port.glass) expect(windowInGlass(port, port.glass), `${port.id} window in its glass`).toBe(true);
+      }
       if (onFace(port)) {
         expect(port.x - port.w / 2, port.id).toBeGreaterThanOrEqual(-0.5);
         expect(port.x + port.w / 2, port.id).toBeLessThanOrEqual(w + 0.5);
@@ -167,6 +174,46 @@ describe('sanitizeBoard', () => {
     expect(terminal).toMatchObject({ h: PORT_TYPES.terminal.h, cutH: PORT_TYPES.terminal.cutH });
     expect(sanitizePort({ id: 't', type: 'terminal', edge: 'front', h: 4 }, { w: 30, d: 20 }, 0)).toMatchObject({ h: 4, cutH: 4 });
     expect(sanitizePort({ id: 'u', type: 'usb-c', edge: 'front' }, { w: 30, d: 20 }, 0)).not.toHaveProperty('cutH');
+  });
+});
+
+describe('display entries', () => {
+  const size = { w: 50, d: 86 };
+  const window = { id: 'display', type: 'display', edge: 'top', x: 25, y: 47.9, w: 43.2, d: 57.6, h: 4 };
+
+  it('a display part may carry its glass: kept, defaults filled in', () => {
+    const port = sanitizePort({ ...window, glass: { x: 25, y: 45, w: 50, d: 69.2, t: 3.5 } }, size, 0);
+    expect(port).toMatchObject({ glass: { x: 25, y: 45, w: 50, d: 69.2, t: 3.5, r: 0, shape: 'rect' } });
+    const round = sanitizePort({ ...window, shape: 'round', w: 32.4, glass: { x: 25, y: 47.9, w: 35.6, t: 1.5, shape: 'round' } }, size, 0);
+    // a round glass, like a round part, takes its diameter for both sizes
+    expect(round).toMatchObject({ glass: { w: 35.6, d: 35.6, shape: 'round', r: 0 } });
+  });
+
+  it('the glass stays inside the board and around the window, else it is dropped', () => {
+    // clamped into the board
+    const wide = sanitizePort({ ...window, glass: { x: 25, y: 45, w: 60, d: 69.2, t: 3.5 } }, size, 0);
+    expect(wide).toMatchObject({ glass: { w: 50 } });
+    // not around the window: no glass at all
+    expect(sanitizePort({ ...window, glass: { x: 25, y: 45, w: 30, d: 69.2, t: 3.5 } }, size, 0)).not.toHaveProperty('glass');
+    // only a display part on top has one
+    expect(sanitizePort({ ...window, type: 'generic', glass: { x: 25, y: 45, w: 50, d: 69.2, t: 3.5 } }, size, 0)).not.toHaveProperty('glass');
+    expect(sanitizePort({ ...window, edge: 'bottom', glass: { x: 25, y: 45, w: 50, d: 69.2, t: 3.5 } }, size, 0)).not.toHaveProperty('glass');
+  });
+
+  it('a display is its own kind, and a panel may be thicker than a PCB', () => {
+    const panel = sanitizeBoard({ kind: 'display', size: { w: 120, d: 190, t: 6.4 } });
+    expect(panel.kind).toBe('display');
+    expect(panel.size.t).toBe(6.4);
+    expect(sanitizeBoard({ kind: 'mcu', size: { w: 120, d: 190, t: 6.4 } }).size.t).toBe(5);
+  });
+
+  it('fuzz with a glass: never throws and is idempotent', () => {
+    const random = rng(13);
+    const template = RAW_BOARDS.find((raw) => JSON.stringify(raw).includes('"glass"')) ?? RAW_BOARDS[0];
+    for (let i = 0; i < 500; i++) {
+      const once = sanitizeBoard(garbageLike(template, random));
+      expect(sanitizeBoard(once)).toEqual(once);
+    }
   });
 });
 

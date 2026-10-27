@@ -1,0 +1,25 @@
+{
+  "id": "waveshare-lcd-1.54",
+  "name": "1.54inch LCD Module, ST7789 (240×240)",
+  "vendor": "Waveshare",
+  "kind": "display",
+  "size": { "w": 35, "d": 50, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3, "y": 3, "d": 3 },
+      { "x": 32, "y": 3, "d": 3 },
+      { "x": 3, "y": 47, "d": 3 },
+      { "x": 32, "y": 47, "d": 3 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 1.8,
+  "bottomHeight": 5,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 17.5, "y": 26.59, "w": 27.72, "d": 27.72, "h": 1.8, "glass": { "x": 17.5, "y": 25.04, "w": 31.52, "d": 33.72, "t": 1.7 } },
+    { "id": "connector", "type": "generic", "edge": "bottom", "x": 17.4, "y": 46.6, "w": 20.4, "d": 6.4, "h": 5 }
+  ],
+  "source": "https://files.waveshare.com/wiki/1.54inch_LCD_Module/1_54inch_lcd_module_2d.zip",
+  "verified": true
+}

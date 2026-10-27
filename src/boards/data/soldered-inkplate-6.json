@@ -1,0 +1,25 @@
+{
+  "id": "soldered-inkplate-6",
+  "name": "Inkplate 6 (6-inch e-paper, 1024×758)",
+  "vendor": "Soldered",
+  "kind": "mcu",
+  "size": { "w": 144.4, "d": 107.8, "t": 8.65 },
+  "mount": {
+    "kind": "clamp",
+    "holes": [
+      { "x": 140.62, "y": 3.53, "d": 3.2 },
+      { "x": 3.02, "y": 3.53, "d": 3.2 },
+      { "x": 140.62, "y": 104.53, "d": 3.2 },
+      { "x": 3.02, "y": 104.53, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 1.4,
+  "bottomHeight": 0,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 72.2, "y": 53.9, "w": 122.4, "d": 90.6, "h": 1.4, "glass": { "x": 72.2, "y": 53.9, "w": 138.4, "d": 101.8, "t": 1 } },
+    { "id": "usb-c", "type": "usb-c", "edge": "right", "along": 14.98, "w": 8.95, "h": 4.2, "z": -4.81, "protrude": 0.3 }
+  ],
+  "source": "https://github.com/SolderedElectronics/Soldered-Inkplate-6-hardware-design",
+  "verified": false
+}

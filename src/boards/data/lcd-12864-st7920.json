@@ -1,0 +1,26 @@
+{
+  "id": "lcd-12864-st7920",
+  "name": "12864 graphic LCD, ST7920 (128×64)",
+  "vendor": "Generic",
+  "kind": "display",
+  "size": { "w": 93, "d": 70, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2.5, "y": 2.5, "d": 2.5 },
+      { "x": 90.5, "y": 2.5, "d": 2.5 },
+      { "x": 2.5, "y": 67.5, "d": 2.5 },
+      { "x": 90.5, "y": 67.5, "d": 2.5 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 9,
+  "bottomHeight": 3,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 46.5, "y": 35, "w": 72, "d": 40, "h": 9, "glass": { "x": 47, "y": 35, "w": 80, "d": 50.2, "t": 9 } },
+    { "id": "backlight", "type": "generic", "edge": "top", "x": 89.75, "y": 35, "w": 6.5, "d": 39.8, "h": 9 },
+    { "id": "header", "type": "header-1xN", "edge": "bottom", "x": 40.67, "y": 2.5, "w": 45.72, "d": 2.54, "h": 8.5 }
+  ],
+  "source": "https://endrich.com/Datenbl%C3%A4tter/Displays%20%26%20Embedded%20Systems/Monochrome%20LCD/Grafische%20LC-Module/RG12864A2-datasheet.pdf",
+  "verified": false
+}

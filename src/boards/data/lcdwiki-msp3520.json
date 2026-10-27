@@ -1,0 +1,26 @@
+{
+  "id": "lcdwiki-msp3520",
+  "name": "3.5-inch SPI TFT, touch, ILI9488 (MSP3520)",
+  "vendor": "LCDwiki",
+  "kind": "display",
+  "size": { "w": 56.34, "d": 98, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.42, "y": 3, "d": 3.2 },
+      { "x": 52.92, "y": 3, "d": 3.2 },
+      { "x": 3.42, "y": 95, "d": 3.2 },
+      { "x": 52.92, "y": 95, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 4.2,
+  "bottomHeight": 3,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 28.17, "y": 51.33, "w": 48.96, "d": 73.44, "h": 4.2, "glass": { "x": 28.17, "y": 48.98, "w": 55.5, "d": 84.96, "t": 3.7 } },
+    { "id": "header", "type": "header-1xN", "edge": "bottom", "x": 28.17, "y": 2, "w": 35.56, "d": 2.54, "h": 8.38 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 65.85, "z": -3.1, "protrude": 0 }
+  ],
+  "source": "https://www.lcdwiki.com/res/MSP3520/MSP3520_Size.pdf",
+  "verified": true
+}

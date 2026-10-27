@@ -1,0 +1,25 @@
+{
+  "id": "btt-pi-tft43-v2",
+  "name": "Pi TFT43 V2 (4.3-inch DSI, 800×480)",
+  "vendor": "BIGTREETECH",
+  "kind": "display",
+  "size": { "w": 105.5, "d": 67, "t": 1.6 },
+  "mount": {
+    "kind": "clamp",
+    "holes": [
+      { "x": 4, "y": 4, "d": 3.2 },
+      { "x": 101.5, "y": 4, "d": 3.2 },
+      { "x": 4, "y": 63, "d": 3.2 },
+      { "x": 101.5, "y": 63, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 4.5,
+  "bottomHeight": 3,
+  "back": { "holes": [{ "x": 14.5, "y": 9.2, "d": 2.7 }, { "x": 72.33, "y": 9.2, "d": 2.7 }, { "x": 14.5, "y": 58.33, "d": 2.7 }, { "x": 72.33, "y": 58.33, "d": 2.7 }], "standoff": 8, "facing": "bottom" },
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 52.75, "y": 33.5, "w": 95.04, "d": 53.86, "h": 4.5, "glass": { "x": 52.75, "y": 33.5, "w": 105.5, "d": 67, "t": 4.5 } }
+  ],
+  "source": "https://github.com/bigtreetech/BIGTREETECH-TouchScreenHardware/tree/master/BTT%20Pi%20TFT43%20V2.0%20Github",
+  "verified": false
+}

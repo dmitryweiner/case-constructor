@@ -1,0 +1,26 @@
+{
+  "id": "generic-oled-096",
+  "name": "0.96-inch I2C OLED, SSD1306 (128×64)",
+  "vendor": "Generic",
+  "kind": "display",
+  "size": { "w": 27.3, "d": 27.8, "t": 1.2 },
+  "outline": [[0, 0], [6.65, 0], [6.65, 2.1], [20.65, 2.1], [20.65, 0], [27.3, 0], [27.3, 27.8], [0, 27.8]],
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2, "y": 2, "d": 2 },
+      { "x": 25.3, "y": 2, "d": 2 },
+      { "x": 2, "y": 26.3, "d": 2 },
+      { "x": 25.3, "y": 26.3, "d": 2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 1.5,
+  "bottomHeight": 1.5,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 13.65, "y": 16, "w": 21.74, "d": 10.86, "h": 1.5, "glass": { "x": 13.65, "y": 13.895, "w": 26.7, "d": 19.27, "t": 1.4 } },
+    { "id": "header", "type": "header-1xN", "edge": "bottom", "x": 13.65, "y": 26.3, "w": 10.16, "d": 2.54, "h": 8.6 }
+  ],
+  "source": "https://www.lcdwiki.com/images/1/19/MC096-015.jpg",
+  "verified": false
+}

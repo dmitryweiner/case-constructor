@@ -12,7 +12,7 @@ import type { PortDef } from '../boards/schema';
 import { onFace } from '../boards/schema';
 import { portCut } from '../boards/placement';
 import type { CutterSpec, ExtraCut } from './cutters';
-import { VERTICAL_AXES, horizontalAxes } from './cutters';
+import { VERTICAL_AXES, flareAt, horizontalAxes } from './cutters';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import type { CaseLayout, PlacedBoard } from './layout';
@@ -22,7 +22,7 @@ import type { Message } from './message';
 import type { ShapeState } from './shape';
 import { plateOf } from './shape';
 import type { Vec3 } from './surface';
-import { applyAffine, rotateVec } from './surface';
+import { applyAffine, invertRigid, rotateVec } from './surface';
 
 /** A port this far from the inner wall would need a long plug: warn. */
 export const PORT_FAR_MM = 12;
@@ -30,6 +30,8 @@ export const PORT_FAR_MM = 12;
 const COLUMN_GAP = 0.3;
 /** Channels start this far behind the connector face. */
 const CHANNEL_BACK = 0.2;
+/** A display window's chamfer: mm wider per mm through the plate, on every side (45°). */
+export const WINDOW_FLARE = 1;
 
 /** Inner top of the cavity at (x, y): the ceiling, or the console's slope. */
 export function ceilingAt(shape: ShapeState, dims: Dims, frontH: number, backH: number): (x: number, y: number) => number {
@@ -77,10 +79,17 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
   const top = outerTopAt(shape, dims, layout.console.frontH, layout.console.backH);
   const out: CutterSpec[] = [];
   for (const board of layout.boards) {
+    const up = rotateVec(board.toCase, [0, 0, 1]);
+    // a board on the console's slope: its openings follow its own axes
+    const tilted = Math.abs(up[2] - 1) > 1e-9;
     for (const port of board.def.ports) {
       if (!portCut(board.placement, port.id, port.cut)) continue;
       const source = { kind: 'port' as const, board: board.index, port: port.id };
       const section = sectionOf(port);
+      if (tilted) {
+        out.push(tiltedCutter(board, port, section, shape, dims, reach, source));
+        continue;
+      }
       if (onFace(port)) {
         const [cx, cy] = applyAffine(board.toCase, [port.x, port.y, 0]);
         const turned = board.placement.rot === 90 || board.placement.rot === 270;
@@ -90,7 +99,11 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
         const [s0, s1] = port.edge === 'top'
           ? [Math.min(board.z0 + board.def.size.t + port.h + COLUMN_GAP, ceiling(cx, cy) - 0.2), top(cx, cy) + 1]
           : [-1, Math.max(board.z0 - port.h - COLUMN_GAP, shape.floor + 0.2)];
-        out.push({ origin: [cx, cy, 0], ...VERTICAL_AXES, s0, s1, ...section, w, h, source });
+        // a hung display's window widens 45° outwards from the inside of the top
+        // (or a carried display's, under a flat top)
+        const bevel = (board.hung || board.gap !== undefined) && port.type === 'display' && port.edge === 'top' && board.placement.bevel !== false;
+        const flare = bevel ? { flare: { from: ceiling(cx, cy), rate: WINDOW_FLARE } } : {};
+        out.push({ origin: [cx, cy, 0], ...VERTICAL_AXES, s0, s1, ...section, w, h, ...flare, source });
       } else {
         const { face, dir } = portAxis(board, port);
         // against a wall the connector's body sits in the wall: the channel starts at the board edge
@@ -100,6 +113,51 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
     }
   }
   return out;
+}
+
+/**
+ * An opening of a board tilted on the console's slope, in the board's own
+ * axes: a top part's column (a display's window, flared) along its normal
+ * through the slope, a part underneath along the other way, an edge port's
+ * channel along its edge's normal, tilted with the board.
+ */
+function tiltedCutter(
+  board: PlacedBoard, port: PortDef, section: ReturnType<typeof sectionOf>, shape: ShapeState, dims: Dims, reach: number,
+  source: CutterSpec['source'],
+): CutterSpec {
+  const plate = shape.floor;
+  const m = board.toCase;
+  const axis = (v: Vec3): Vec3 => rotateVec(m, v);
+  const { t } = board.def.size;
+  if (onFace(port)) {
+    const w = port.shape === 'round' ? section.w : port.w + 2 * port.clearance;
+    const h = port.shape === 'round' ? section.w : port.d + 2 * port.clearance;
+    if (port.edge === 'bottom') {
+      const origin = applyAffine(m, [port.x, port.y, 0]);
+      return { origin, ex: axis([1, 0, 0]), ey: axis([0, -1, 0]), ez: axis([0, 0, -1]), s0: port.h + COLUMN_GAP, s1: reach, ...section, w, h, source };
+    }
+    const origin = applyAffine(m, [port.x, port.y, t]);
+    // a board turned over on a display's back: its column runs on through whatever is there
+    const frame = board.frame;
+    if (!frame) return { origin, ex: axis([1, 0, 0]), ey: axis([0, 1, 0]), ez: axis([0, 0, 1]), s0: port.h + COLUMN_GAP, s1: reach, ...section, w, h, source };
+    // how far the plate's inside is above the PCB along the normal (the board is parallel to it)
+    const inside = -plate - applyAffine(invertRigid(frame), origin)[2];
+    const bevel = port.type === 'display' && board.placement.bevel !== false ? { flare: { from: inside, rate: WINDOW_FLARE } } : {};
+    return {
+      origin, ex: axis([1, 0, 0]), ey: axis([0, 1, 0]), ez: axis([0, 0, 1]),
+      s0: Math.min(port.h + COLUMN_GAP, inside - 0.2), s1: inside + plate + 1, ...section, w, h, ...bevel, source,
+    };
+  }
+  const { face } = portAxis(board, port);
+  const [nx, ny] = edgeNormal(port.edge);
+  const ez = axis([nx, ny, 0]);
+  const ey = axis([0, 0, 1]);
+  const ex: Vec3 = [ey[1] * ez[2] - ey[2] * ez[1], ey[2] * ez[0] - ey[0] * ez[2], ey[0] * ez[1] - ey[1] * ez[0]];
+  const back = board.walls.some((wall) => wall.edge === port.edge) ? Math.max(0, port.protrude) + CHANNEL_BACK : CHANNEL_BACK;
+  // a channel tilted down must stop just past the wall it opens, not dive on under the floor
+  const level = Math.hypot(ez[0], ez[1]);
+  const out = level > 1e-6 ? (portToWall(shape, dims, face, [ez[0] / level, ez[1] / level]) + shape.wall + 1) / level : reach;
+  return { origin: face, ex, ey, ez, s0: -back, s1: Math.min(reach, out), ...section, source };
 }
 
 /** Distance from a port face to the inner wall along its direction. */
@@ -118,12 +176,13 @@ export function portToWall(shape: ShapeState, dims: Dims, face: Vec3, dir: [numb
   return Math.max(0, Math.min(tx, ty));
 }
 
-/** The eight corners of a cutter, case frame. */
+/** The eight corners of a cutter (its flare's wider end included), case frame. */
 export function cutterCorners(cutter: CutterSpec): Vec3[] {
   const out: Vec3[] = [];
   for (const s of [cutter.s0, cutter.s1]) {
-    for (const a of [-cutter.w / 2, cutter.w / 2]) {
-      for (const b of [-cutter.h / 2, cutter.h / 2]) {
+    const g = flareAt(cutter, s);
+    for (const a of [-cutter.w / 2 - g, cutter.w / 2 + g]) {
+      for (const b of [-cutter.h / 2 - g, cutter.h / 2 + g]) {
         const p: Vec3 = [0, 0, 0];
         for (let k = 0; k < 3; k++) p[k] = cutter.origin[k] + cutter.ex[k] * a + cutter.ey[k] * b + cutter.ez[k] * s;
         out.push(p);
@@ -172,6 +231,13 @@ export function cutWarnings(
   for (const [index, cut] of extras.entries()) {
     if (shape.kind === 'cylinder' || !inCorner(shape, dims, cut)) continue;
     out.push({ code: 'warn.cutInCorner', params: { n: index + 1 } });
+  }
+  // a hung display's window on the top, at its outer width
+  for (const cutter of cutters) {
+    if (!cutter.flare || cutter.source.kind !== 'port' || shape.kind !== 'box') continue;
+    const g = flareAt(cutter, cutter.s1);
+    const window: ExtraCut = { face: 'top', shape: 'rect', x: cutter.origin[0], y: cutter.origin[1], w: cutter.w + 2 * g, h: cutter.h + 2 * g, r: 0 };
+    if (inCorner(shape, dims, window)) out.push({ code: 'warn.windowInCorner', params: { board: cutter.source.board + 1, port: cutter.source.port } });
   }
   return out;
 }

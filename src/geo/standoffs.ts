@@ -15,6 +15,7 @@ import type { PlacedBoard } from './layout';
 import {
   PIN_SLOT, PIN_SPACER, PIN_TIP_GAP, RAIL_GAP, RAIL_GRIP, RAIL_LIP, RAIL_SHORTEN, RAIL_THICK, pinEdges, railEdges, railReach,
 } from './layout';
+import type { Affine } from './surface';
 import { applyAffine } from './surface';
 
 export interface Support {
@@ -45,6 +46,29 @@ export function box(csg: CsgApi, scope: CsgScope, x0: number, y0: number, z0: nu
 /** Segments around a small round feature at a given arc resolution. */
 export function roundSegments(segments: number): number {
   return Math.max(12, Math.round(segments * 2));
+}
+
+/**
+ * A hung board as the floor board it is in the case turned upside down
+ * (z → h − z): its PCB at the mirrored height, its pins left out (they point
+ * away from the ceiling, so its rails need no pin bed). Its supports are
+ * built as a floor board's and turned back by `fromCeiling`.
+ */
+export function upsideDown(board: PlacedBoard, h: number): PlacedBoard {
+  const z0 = h - board.z0 - board.def.size.t;
+  const m = board.toCase;
+  const toCase: Affine = [m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], z0];
+  return { ...board, z0, toCase, placement: { ...board.placement, pins: false } };
+}
+
+/** Supports built for `upsideDown(board, h)` turned back: they come down from the ceiling plate. */
+export function fromCeiling(scope: CsgScope, supports: readonly Support[], h: number): Support[] {
+  const mirror: Affine = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, h];
+  return supports.map((support) => ({
+    base: applyAffine(mirror, support.base),
+    material: transformSolid(scope, support.material, mirror),
+    holes: support.holes ? transformSolid(scope, support.holes, mirror) : null,
+  }));
 }
 
 /** Standoffs of one board with holes. */

@@ -1,0 +1,24 @@
+{
+  "id": "adafruit-tft-1.14-4383",
+  "name": "1.14-inch 240×135 TFT, ST7789 (4383)",
+  "vendor": "Adafruit",
+  "kind": "display",
+  "size": { "w": 31.75, "d": 27.81, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 2.54, "y": 2.54, "d": 2.5 },
+      { "x": 29.21, "y": 2.54, "d": 2.5 },
+      { "x": 2.54, "y": 25.27, "d": 2.5 },
+      { "x": 29.21, "y": 25.27, "d": 2.5 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 1.55,
+  "bottomHeight": 2,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 15.75, "y": 13.71, "w": 24.91, "d": 14.86, "h": 1.55, "glass": { "x": 15.75, "y": 13.71, "w": 31.5, "d": 18.31, "t": 1.5 } }
+  ],
+  "source": "https://github.com/adafruit/Adafruit_CAD_Parts/tree/main/4383%201.14in%20TFT%20Display",
+  "verified": false
+}

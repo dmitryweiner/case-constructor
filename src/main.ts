@@ -43,10 +43,14 @@ import type { Key } from './i18n';
 import { faceFrame } from './geo/face';
 import type { Dims, Face } from './geo/face';
 import type { PrintShape } from './geo/print';
-import { caseLayout, collisions, lidDepthMax, placeBoards } from './geo/layout';
-import { boardGhost, portCaptionAnchor } from './geo/ghost';
-import { MAX_BOARDS, NEW_BOARD_GAP, boardOf, defaultPlacement, portCut, withPortCut } from './boards/placement';
+import { caseLayout, collisions, heldByLid, lidDepthMax, placeBoards } from './geo/layout';
+import { boardGhost, portCaptionAnchor, standoffGhost } from './geo/ghost';
+import {
+  MAX_BOARDS, NEW_BOARD_GAP, backPortDefault, boardOf, defaultPlacement, ownPortDefault, portCut, withBackCut, withPortCut, withTopCut,
+} from './boards/placement';
 import type { BoardDef } from './boards/schema';
+import { resolveVariant } from './boards/schema';
+import { catalogBoard } from './boards/catalog';
 import { bodyForPrint, lidWithScrews, printLayout, screwsForPrint, screwsInCase, withClamps, PRINT_GAP_MM } from './geo/print';
 import type { SurfaceMesh } from './geo/surface';
 import { meshBounds, mergeMeshes } from './geo/surface';
@@ -207,13 +211,18 @@ let generation = 0;
 /** The generation whose build has answered (a preview or an error) — for scripts/snap.mjs. */
 let settled = 0;
 /** The last preview from the worker, kept so view toggles redraw without a rebuild. */
-let lastParts: { body: SurfaceMesh; lid: SurfaceMesh; screw: SurfaceMesh | null; clamps: SurfaceMesh | null; state: AppState } | null = null;
+let lastParts: {
+  body: SurfaceMesh; lid: SurfaceMesh; screw: SurfaceMesh | null; clamps: SurfaceMesh | null; lidClamps: SurfaceMesh | null; state: AppState;
+} | null = null;
 /** The label's raster for the current state — the worker gets it with every job. */
 let currentLabel: LabelRaster | null = null;
 /** Board ghosts of the current state — drawn at once, the case follows from the worker. */
 let ghosts: ScenePart[] = [];
 /** A caption per port of every board, drawn with the ghosts. */
 let portCaptions: SceneCaption[] = [];
+/** Which ghosts and captions the lid holds (a board hung under a top lid): exploded, they go with it. */
+let ghostsOnLid: boolean[] = [];
+let captionsOnLid: boolean[] = [];
 /** Warnings the panel computes itself, before the worker answers. */
 let baseWarnings: string[] = [];
 
@@ -275,15 +284,26 @@ function refresh(): void {
   showWarnings([]);
   const numbered = layout.boards.length > 1;
   portCaptions = layout.boards.flatMap((board) => board.def.ports.map((port): SceneCaption => ({
-    key: `${board.index}:${port.id}`,
+    // a board on a display's back: its own toggles, under the display's number
+    key: `${board.index}${board.carried ? 't' : board.attached !== undefined ? 'b' : ''}:${port.id}`,
     text: `${numbered ? `${board.index + 1}: ` : ''}${tDynamic(`port.${port.type}`)} · ${port.id}`,
     at: portCaptionAnchor(board, port),
     dim: !portCut(board.placement, port.id, port.cut),
   })));
-  ghosts = layout.boards.flatMap((board): ScenePart[] => {
+  captionsOnLid = layout.boards.flatMap((board) => board.def.ports.map(() => heldByLid(board, state.lid.face)));
+  const groups = layout.boards.map((board) => {
     const ghost = boardGhost(board);
-    return [{ role: 'board', mesh: ghost.pcb }, ...(ghost.ports ? [{ role: 'port' as const, mesh: ghost.ports }] : [])];
+    const standoffs = standoffGhost(board);
+    const parts: ScenePart[] = [
+      { role: 'board', mesh: ghost.pcb },
+      ...(ghost.glass ? [{ role: 'glass' as const, mesh: ghost.glass }] : []),
+      ...(standoffs ? [{ role: 'glass' as const, mesh: standoffs }] : []),
+      ...(ghost.ports ? [{ role: 'port' as const, mesh: ghost.ports }] : []),
+    ];
+    return { parts, onLid: heldByLid(board, state.lid.face) };
   });
+  ghosts = groups.flatMap((group) => group.parts);
+  ghostsOnLid = groups.flatMap((group) => group.parts.map(() => group.onLid));
   drawParts();
   renderPartList();
 
@@ -310,9 +330,10 @@ async function showPreview(stamp: number): Promise<void> {
     const lid = toMesh(partById(result.parts, 'lid'));
     const screw = optionalPart(result.parts, 'screw');
     const clamps = optionalPart(result.parts, 'clamp');
-    lastParts = { body, lid, screw, clamps, state: requested };
+    const lidClamps = optionalPart(result.parts, 'lidClamp');
+    lastParts = { body, lid, screw, clamps, lidClamps, state: requested };
     drawParts();
-    audit([body, lid, ...(screw ? [screw] : []), ...(clamps ? [clamps] : [])], result.ms);
+    audit([body, lid, ...(screw ? [screw] : []), ...(clamps ? [clamps] : []), ...(lidClamps ? [lidClamps] : [])], result.ms);
   } catch (error) {
     if (stamp !== generation) return;
     settled = stamp;
@@ -333,12 +354,12 @@ function bothForPrint(
 
 /**
  * The parts on the bed as the parts tab picks them — the print layout of the
- * view and of the STL: Both is body, lid, printed screws and battery clamps;
- * Body is the body and the clamps (they go into it); Lid is the lid and its
- * screws.
+ * view and of the STL: Both is body, lid, printed screws and every clamp bar;
+ * Body is the body and the bars that go into it (batteries', a panel's the
+ * body holds); Lid is the lid, its screws and the bars of a panel it holds.
  */
 function printParts(
-  built: AppState, body: SurfaceMesh, lid: SurfaceMesh, screw: SurfaceMesh | null, clamps: SurfaceMesh | null,
+  built: AppState, body: SurfaceMesh, lid: SurfaceMesh, screw: SurfaceMesh | null, clamps: SurfaceMesh | null, lidClamps: SurfaceMesh | null,
 ): ScenePart[] {
   const layout = caseLayout(built);
   const { dims } = layout;
@@ -347,12 +368,16 @@ function printParts(
   const count = screw ? lidPosts(built).spots.length : 0;
   const roles = (meshes: SurfaceMesh[], names: ScenePart['role'][]): ScenePart[] =>
     meshes.map((mesh, i): ScenePart => ({ role: names[i] ?? 'screw', mesh }));
-  if (built.exportMode === 'lid') return roles(lidWithScrews(lid, screw, count, face, dims), ['lid', 'screw']);
+  if (built.exportMode === 'lid') {
+    const lidParts = lidWithScrews(lid, screw, count, face, dims);
+    return roles(withClamps(lidParts, lidClamps), [...(['lid', 'screw'] as const).slice(0, lidParts.length), 'clamp']);
+  }
   const placed = built.exportMode === 'both'
     ? bothForPrint(body, lid, screw, count, face, dims, shape)
     : [bodyForPrint(body, face, dims, shape)];
   const names: ScenePart['role'][] = built.exportMode === 'both' ? ['body', 'lid', 'screw'] : ['body'];
-  const withClampBars = withClamps(placed, clamps);
+  const bars = built.exportMode === 'both' && lidClamps ? (clamps ? mergeMeshes([clamps, lidClamps]) : lidClamps) : clamps;
+  const withClampBars = withClamps(placed, bars);
   return roles(withClampBars, [...names.slice(0, placed.length), 'clamp']);
 }
 
@@ -376,7 +401,7 @@ function partById(parts: JobPart[], id: JobPart['id']): JobPart {
  */
 function drawParts(): void {
   if (!lastParts) return;
-  const { body, lid, screw, clamps, state: built } = lastParts;
+  const { body, lid, screw, clamps, lidClamps, state: built } = lastParts;
   const layout = caseLayout(built);
   const { dims } = layout;
   const showBody = built.exportMode !== 'lid';
@@ -384,22 +409,29 @@ function drawParts(): void {
   const mode = effectiveView(built.exportMode);
   const posts = screw ? lidPosts(built).spots.map((spot) => spot.centre) : [];
   if (mode === 'print') {
-    show(printParts(built, body, lid, screw, clamps));
+    show(printParts(built, body, lid, screw, clamps, lidClamps));
     scene.setCaptions([]);
     return;
   }
   const parts: ScenePart[] = [];
   const withBoards = showBody && viewBoards.checked;
+  // exploded with the lid shown, the boards the lid holds go with it
+  const n = faceFrame(built.lid.face, dims).n;
+  const lidLift = showLid && mode === 'exploded' ? LIFT_MM : 0;
+  const withLid = (at: readonly [number, number, number], onLid: boolean | undefined): [number, number, number] => (onLid
+    ? [at[0] + n[0] * lidLift, at[1] + n[1] * lidLift, at[2] + n[2] * lidLift] : [at[0], at[1], at[2]]);
   if (showBody) {
     parts.push({ role: 'body', mesh: body });
-    if (withBoards) parts.push(...ghosts);
-    // battery clamps on their posts; exploded, lifted off the battery
-    if (clamps) parts.push({ role: 'clamp', mesh: clamps, offset: [0, 0, mode === 'exploded' ? LIFT_MM / 2 : 0] });
+    if (withBoards) parts.push(...ghosts.map((ghost, i): ScenePart => ({ ...ghost, offset: withLid(ghost.offset ?? [0, 0, 0], ghostsOnLid[i]) })));
+    // battery clamps on their posts; exploded, lifted off the battery (a panel's bars under a slope stay put)
+    const lifted = mode === 'exploded' && built.boards.some((board) => board.board === 'battery');
+    if (clamps) parts.push({ role: 'clamp', mesh: clamps, offset: [0, 0, lifted ? LIFT_MM / 2 : 0] });
   }
   if (showLid && showBody) {
-    const n = faceFrame(built.lid.face, dims).n;
-    const lift = mode === 'exploded' ? LIFT_MM : 0;
+    const lift = lidLift;
     parts.push({ role: 'lid', mesh: lid, offset: [n[0] * lift, n[1] * lift, n[2] * lift] });
+    // a panel's clamp bars belong to the lid that holds it; exploded, halfway out, under the panel
+    if (lidClamps) parts.push({ role: 'clamp', mesh: lidClamps, offset: [n[0] * lift / 2, n[1] * lift / 2, n[2] * lift / 2] });
     // printed screws in their holes; exploded, they hover over the lifted lid
     const screws = screw ? screwsInCase(screw, posts, built.lid.face, dims, 2 * lift) : null;
     if (screws) parts.push({ role: 'screw', mesh: screws });
@@ -409,7 +441,10 @@ function drawParts(): void {
     const [ox, oy, oz] = part.offset ?? [0, 0, 0];
     return { ...part, offset: [ox, oy, oz + lift] };
   }) : parts);
-  scene.setCaptions(withBoards && viewPortNames.checked ? portCaptions.map((caption) => ({ ...caption, at: [caption.at[0], caption.at[1], caption.at[2] + lift] })) : []);
+  scene.setCaptions(withBoards && viewPortNames.checked ? portCaptions.map((caption, i) => {
+    const at = withLid(caption.at, captionsOnLid[i]);
+    return { ...caption, at: [at[0], at[1], at[2] + lift] };
+  }) : []);
 }
 
 /**
@@ -610,7 +645,9 @@ async function runExport(): Promise<void> {
     const body = toMesh(partById(result.parts, 'body'));
     const lid = toMesh(partById(result.parts, 'lid'));
     // printed screws travel with the lid, battery clamps with the body: same print job, same material
-    const placed = printParts(requested, body, lid, optionalPart(result.parts, 'screw'), optionalPart(result.parts, 'clamp'));
+    const placed = printParts(
+      requested, body, lid, optionalPart(result.parts, 'screw'), optionalPart(result.parts, 'clamp'), optionalPart(result.parts, 'lidClamp'),
+    );
     const mesh = mergeMeshes(placed.map((part) => part.mesh));
     download(encodeSTL(mesh, { name: requested.exportMode }), `case-constructor-${requested.exportMode}.stl`);
   } catch (error) {
@@ -821,11 +858,33 @@ panelBtn.addEventListener('click', () => setPanelOpen(true));
 /** A tap on a port's caption: its opening on or off, as its checkbox in the board card does. */
 function togglePortCut(key: string): void {
   const colon = key.indexOf(':');
-  const index = Number(key.slice(0, colon));
+  const onBack = key.slice(0, colon).endsWith('b');
+  const onTop = key.slice(0, colon).endsWith('t');
+  const index = Number(key.slice(0, onBack || onTop ? colon - 1 : colon));
   const placement = state.boards[index];
+  const top = placement?.top;
+  if (onTop) {
+    const entry = top ? catalogBoard(top.board) : undefined;
+    const port = entry ? resolveVariant(entry, top?.variant).ports.find((one) => one.id === key.slice(colon + 1)) : undefined;
+    if (!top || !port) return;
+    const value = !(top.cuts[port.id] ?? port.cut);
+    applyState({ ...state, boards: state.boards.map((one, i) => (i === index ? { ...one, top: { ...top, cuts: withTopCut(top, port, value) } } : one)) });
+    return;
+  }
+  const back = placement?.back;
+  if (onBack) {
+    const entry = back ? catalogBoard(back.board) : undefined;
+    const port = entry ? resolveVariant(entry, back?.variant).ports.find((one) => one.id === key.slice(colon + 1)) : undefined;
+    if (!back || !port) return;
+    const value = !(back.cuts[port.id] ?? backPortDefault(port));
+    applyState({ ...state, boards: state.boards.map((one, i) => (i === index ? { ...one, back: { ...back, cuts: withBackCut(back, port, value) } } : one)) });
+    return;
+  }
   const port = placement ? boardOf(placement).ports.find((one) => one.id === key.slice(colon + 1)) : undefined;
   if (!placement || !port) return;
-  const boards = state.boards.map((one, i) => (i === index ? withPortCut(one, port, !portCut(one, port.id, port.cut)) : one));
+  // a board carrying a display keeps its top parts closed by default
+  const own = { id: port.id, cut: ownPortDefault(placement, port) };
+  const boards = state.boards.map((one, i) => (i === index ? withPortCut(one, own, !portCut(one, port.id, own.cut)) : one));
   applyState({ ...state, boards });
 }
 

@@ -7,7 +7,7 @@
 // connector faces.
 
 import type { BoardPlacement } from '../boards/placement';
-import { placementMinZ } from '../boards/placement';
+import { placementMinZ, withSide } from '../boards/placement';
 import type { LayoutInput, PlacedBoard } from './layout';
 import { placeBoards, sideMargin } from './layout';
 
@@ -116,7 +116,8 @@ export function arrangeBoards(input: LayoutInput, mode: ArrangeMode, gap: number
 /**
  * One board moved so that its outline lines up with another board's: an
  * edge, the centre, right next to it (to the right / behind, footprints a
- * gap apart) — or set to the same standoff height. Only that board moves,
+ * gap apart) — or set to the same standoff height (or the same gap under
+ * the ceiling: it takes the reference's side). Only that board moves,
  * unless it would leave the positive quadrant: then the whole layout shifts,
  * which changes nothing in the case (the layout is centred).
  */
@@ -124,7 +125,9 @@ export function alignBoard(input: LayoutInput, index: number, ref: number, how: 
   const boards = [...input.boards];
   if (index === ref || !boards[index] || !boards[ref]) return boards;
   if (how === 'height') {
-    boards[index] = { ...boards[index], z: Math.max(placementMinZ(boards[index]), boards[ref].z) };
+    // the same height means the same side too: a hung reference makes it hang at its gap (never a battery)
+    const next = withSide(boards[index], boards[ref].on === 'ceiling' && !boards[index].battery ? 'ceiling' : 'floor');
+    boards[index] = { ...next, z: Math.max(placementMinZ(next), boards[ref].z) };
     return boards;
   }
   const placed = placeBoards(input);

@@ -1,0 +1,36 @@
+{
+  "id": "adafruit-magtag",
+  "name": "MagTag 2.9-inch e-ink (ESP32-S2)",
+  "vendor": "Adafruit",
+  "kind": "mcu",
+  "size": { "w": 80.01, "d": 53.34, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.81, "y": 3.81, "d": 3.2 },
+      { "x": 76.2, "y": 3.81, "d": 3.2 },
+      { "x": 3.81, "y": 49.53, "d": 3.2 },
+      { "x": 76.2, "y": 49.53, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 1.5,
+  "bottomHeight": 6,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 40, "y": 27.4, "w": 66.89, "d": 29.05, "h": 1.4, "glass": { "x": 40, "y": 27.4, "w": 79, "d": 36.7, "t": 1.2 } },
+    { "id": "button-a", "type": "button", "edge": "top", "x": 15.24, "y": 3.81, "w": 6, "d": 3.5, "h": 1.5, "shape": "rect" },
+    { "id": "button-b", "type": "button", "edge": "top", "x": 31.75, "y": 3.81, "w": 6, "d": 3.5, "h": 1.5, "shape": "rect" },
+    { "id": "button-c", "type": "button", "edge": "top", "x": 48.26, "y": 3.81, "w": 6, "d": 3.5, "h": 1.5, "shape": "rect" },
+    { "id": "button-d", "type": "button", "edge": "top", "x": 64.77, "y": 3.81, "w": 6, "d": 3.5, "h": 1.5, "shape": "rect" },
+    { "id": "neopixel-1", "type": "led", "edge": "top", "x": 15.24, "y": 50.29, "w": 4.6, "d": 1.2, "h": 1, "shape": "rect" },
+    { "id": "neopixel-2", "type": "led", "edge": "top", "x": 31.75, "y": 50.29, "w": 4.6, "d": 1.2, "h": 1, "shape": "rect" },
+    { "id": "neopixel-3", "type": "led", "edge": "top", "x": 48.26, "y": 50.29, "w": 4.6, "d": 1.2, "h": 1, "shape": "rect" },
+    { "id": "neopixel-4", "type": "led", "edge": "top", "x": 64.13, "y": 50.29, "w": 4.6, "d": 1.2, "h": 1, "shape": "rect" },
+    { "id": "usb-c", "type": "usb-c", "edge": "right", "along": 12.7, "z": -4.8, "protrude": 0 },
+    { "id": "power", "type": "switch", "edge": "back", "along": 12.7, "z": -4.6, "protrude": 0 },
+    { "id": "reset", "type": "switch", "edge": "right", "along": 25.4, "w": 3.5, "h": 3, "z": -4.6, "protrude": 0 },
+    { "id": "battery", "type": "jst", "edge": "bottom", "x": 8.19, "y": 11.68, "w": 9.2, "d": 8.4, "h": 6 }
+  ],
+  "source": "https://github.com/adafruit/Adafruit_MagTag_PCBs",
+  "verified": false
+}

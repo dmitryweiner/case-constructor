@@ -1,0 +1,25 @@
+{
+  "id": "soldered-inkplate-5-gen2",
+  "name": "Inkplate 5 Gen2 (5.2-inch e-paper, 1280×720)",
+  "vendor": "Soldered",
+  "kind": "mcu",
+  "size": { "w": 130.59, "d": 75.23, "t": 8.65 },
+  "mount": {
+    "kind": "clamp",
+    "holes": [
+      { "x": 127.06, "y": 3.03, "d": 3.2 },
+      { "x": 3.27, "y": 3.03, "d": 3.2 },
+      { "x": 127.06, "y": 71.46, "d": 3.2 },
+      { "x": 3.27, "y": 71.46, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 1.4,
+  "bottomHeight": 0,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 65.3, "y": 37.6, "w": 114.8, "d": 64.6, "h": 1.4, "glass": { "x": 65.3, "y": 37.6, "w": 124.6, "d": 69.2, "t": 1 } },
+    { "id": "usb-c", "type": "usb-c", "edge": "right", "along": 14.98, "w": 8.95, "h": 4.2, "z": -4.81, "protrude": 0.3 }
+  ],
+  "source": "https://github.com/SolderedElectronics/Soldered-Inkplate-5-Gen2-hardware-design",
+  "verified": false
+}

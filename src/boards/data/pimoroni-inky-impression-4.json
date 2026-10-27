@@ -1,0 +1,29 @@
+{
+  "id": "pimoroni-inky-impression-4",
+  "name": "Inky Impression 4-inch (Spectra 6, 600×400)",
+  "vendor": "Pimoroni",
+  "kind": "display",
+  "size": { "w": 103, "d": 78, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3, "y": 3, "d": 2.2 },
+      { "x": 100, "y": 3, "d": 2.2 },
+      { "x": 3, "y": 75, "d": 2.2 },
+      { "x": 100, "y": 75, "d": 2.2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 1.4,
+  "bottomHeight": 3,
+  "back": { "holes": [{ "x": 28.47, "y": 19.5, "d": 2.7 }, { "x": 86.43, "y": 19.5, "d": 2.7 }, { "x": 28.47, "y": 68.5, "d": 2.7 }, { "x": 86.43, "y": 68.5, "d": 2.7 }], "standoff": 11, "facing": "top" },
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 53.65, "y": 39, "w": 84.6, "d": 56.4, "h": 1.4, "glass": { "x": 53.65, "y": 39, "w": 90.4, "d": 70, "t": 1.2 } },
+    { "id": "button-a", "type": "switch", "edge": "right", "along": 17.85, "w": 6, "h": 3.5, "z": -5.1, "protrude": 0, "cut": false },
+    { "id": "button-b", "type": "switch", "edge": "right", "along": 31.95, "w": 6, "h": 3.5, "z": -5.1, "protrude": 0, "cut": false },
+    { "id": "button-c", "type": "switch", "edge": "right", "along": 46.05, "w": 6, "h": 3.5, "z": -5.1, "protrude": 0, "cut": false },
+    { "id": "button-d", "type": "switch", "edge": "right", "along": 60.15, "w": 6, "h": 3.5, "z": -5.1, "protrude": 0, "cut": false }
+  ],
+  "source": "https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-4-drawing_0f7027b5-497b-45f4-81c4-b5053cb8c9af.png",
+  "verified": false
+}

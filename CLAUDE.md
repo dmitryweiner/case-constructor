@@ -9,7 +9,12 @@ rules.
 `plans/PLAN-IMPROVEMENTS-NEW-BOARDS.md` — what the Tier A boards left (B1…B9):
 done; read it only for its decisions and deviations.
 `plans/PLAN-IMPROVEMENTS-2026-10-25.md` — what the user trial asked for
-(R1…R8), the current plan; on the branch `improvements-2026-10-25`.
+(R1…R8): done.
+`plans/PLAN-DISPLAYS.md` — standalone displays (D1…D8): hung from the
+ceiling or the console's slope, the window and the glass rim, clamp bars, a
+board on the display's back, the Tier A screens. The current plan; on the
+branch `displays-2026-10-27`.
+`plans/PERSPECTIVE-SCREENS.md` — the ranked screen list it serves.
 
 ## Node
 
@@ -46,7 +51,8 @@ freely; a temporary script that turns out useful becomes a permanent one.
   catalog board from the picker (with nut/insert holes, a rotation and its
   pins toggled), soldered pins raising the board, a family's model, port
   toggles, user openings, the custom board editor and its catalog JSON,
-  board search and overlap warnings, arranging and aligning two boards (and
+  board search and overlap warnings, a display found by "screen" in its own
+  group with its glass drawn, arranging and aligning two boards (and
   undo), every lid face, cylinder/console lid restrictions, snaps and screws
   with every hole and head kind, magnets, printed screws (P4 with its
   warning, the Lid tab with the screws, a lid export), vents, fan, through
@@ -194,6 +200,50 @@ freely; a temporary script that turns out useful becomes a permanent one.
   (`geo/ghost.ts`, no CSG) line up with the worker's case. A ghost's PCB has
   its mounting holes through it (faces triangulated with `earcut`) and a pad
   ring around each, in the ports' colour.
+- A board hung from the ceiling (`placement.on: 'ceiling'`, `PlacedBoard.hung`;
+  its top still up, `z` the gap from its front to the inner ceiling,
+  `CEILING_GAP` 0.3 by default, missing = the floor): its supports are a
+  floor board's built in the case turned upside down (`upsideDown`) and
+  mirrored back (`fromCeiling`), so they belong to whoever owns the top
+  plate. The inner height adds a hung stack to a floor stack under it
+  (`stacksHeight`); a hung board's footprint takes its bosses' overhang (a
+  top lid's skirt hangs right there). `heldByLid` boards go with the lid in
+  the exploded view. Every hung board has its plate's `frame` (w = 0 on the
+  plate's outer face): the top raised to the case height (`flatFrame`), or
+  the console's slope (`slopeFrame`); its supports are built in that frame.
+  On the slope its openings follow its own axes (`tiltedCutter`), a tilted
+  edge channel stops just past the wall; the console's heights rise together
+  (the angle stays) until it clears the floor and the boards under it.
+  A panel with nothing to screw into from the front is `mount.kind:
+  'clamp'` (its `mount.holes` are on its back): it always hangs, against
+  the plate; posts from the plate beyond its long edges (built like
+  standoffs in the plate frame, `clampSolids.ts`), bars across its back
+  along the short side (`clamp.ts`): a tab from the nearer post to each
+  back hole, or two pressing bars that step aside for parts on the back (`placement.press`).
+  The bars of a panel the lid holds are the part `lidClamp`, printed and
+  exported with the lid. Whatever stands at a footprint's edge keeps
+  `EDGE_KEEP` inside it: the edge is the margin's line, where the cavity's
+  corner arcs end (a face on it left collinear ceiling vertices).
+- A board on a display's back (`BoardDef.back`: the pattern, the display's
+  standoffs, which face turns to it; `placement.back`, nested): placed by
+  matching its holes to the pattern (`attach.ts`), it comes after every
+  placed board in `layout.boards` with `attached` = the display's index (the
+  same `index`), so state indices still match the layout's first entries;
+  `placeBoards` leaves it out. No supports; the display's stack depth
+  includes it; the pair is one stack for the overlap checks. Its face parts
+  are closed by default (`backPortDefault`); captions `<i>b:<port>`.
+  The other way round, a floor board may carry a HAT display on top
+  (`placement.top`, D9): the same pattern, its transform inverted; the
+  display is `carried`, the ceiling comes down to `CEILING_GAP` above its
+  front (`gap`), its window flares and its glass gets a rim; the board's
+  top parts are closed by default (`ownPortDefault`); captions `<i>t:<port>`.
+  Its display part's window flares 45° outwards (`CutterSpec.flare`, built
+  as one hull — every section is convex); a rim around its glass
+  (`rim.ts` pure, `rimSolids.ts` worker) is a support, so it goes where the
+  standoffs go; it steps aside for the board's other top parts, and the
+  board's own supports step aside for the glass (`glassKeepOut`). A hung
+  board keeps the top edge's rounded zone plus the skirt band from the
+  walls (`hungMargin`): only there is the ceiling flat and the skirt clear.
 - Supports (`geo/standoffs.ts`) go to the part that owns the floor under
   them (the lid when the floor is the lid), minus whatever of them would
   enter the other part; holes are drilled after the union. A deep side lid
@@ -327,6 +377,9 @@ browser is within ~10 % of it):
 | default Pi 4 on printed P6 screws — preview | 12 | 275 ms | 27k + a 6.3k screw |
 | printed P6 screws — export | 24 | 1.3 s | 175k + a 50k screw |
 | printed P6 screws — finest export | 64 | 2.8 s | 317k + an 87k screw |
+| `klipperscreen-console` (TFT50 on the slope, a Pi on its back) — preview | 12 | 270 ms | 14k |
+| `ha-wall-panel` (Touch Display 2, a Pi 5 on its back) — preview | 12 | 255 ms | 19k |
+| `ha-wall-panel` — finest export | 64 | 1.5 s | 89k |
 
 Decided at M1 and confirmed at M8: the preview is the exact case (the same
 pipeline as the export, 12 segments per quarter arc), rebuilt 120 ms after
@@ -343,7 +396,8 @@ Add a state when a feature lands, never edit an old one.
 ## Presets
 
 Built-in presets (`src/state/presets.ts`): `pi4-desktop`, `pi-zero-gpio`,
-`esp32-sensor-box`, `esp32-18650-box`, `arduino-uno-box`, `cylinder-puck`, `plain-box`. Each is
+`esp32-sensor-box`, `esp32-18650-box`, `arduino-uno-box`, `cylinder-puck`,
+`klipperscreen-console`, `ha-wall-panel`, `plain-box`. Each is
 built by `tests/presetsBuild.test.ts` (closed, no slivers, no overlap, no
 layout warnings). A preset's name is one English string in `presets.ts`
 (not translated: the review asked for one name); its note is the
@@ -359,7 +413,7 @@ Boards: `#boardAdd` opens `#boardPicker` (`#boardSearch`, rows
 `#boardList [data-board="<id>"]`, batteries `[data-board="battery-<kind>"]`, `#boardPickerClose`); with two boards or more
 `#boardsArrange_row|column|compact` and `#boards_gap` (geo/arrange.ts);
 per board
-`#board<i>_x|_y|_z`, alignment (two boards or more) `#board<i>_align`
+`#board<i>_x|_y|_z`, `#board<i>_on_floor|ceiling` (not a battery; on a console the ceiling is the slope), `#board<i>_gap` (hung; instead of `_z`), `#board<i>_bevel` (a hung display), `#board<i>_clampPress` (a clamped panel), `#board<i>_back` (select; a display with a back pattern), `#board<i>_back_rot_0|90|180|270`, `#board<i>_back_standoff`, `#board<i>_back_cut_<port>`, `#board<i>_top` (select; a floor board with holes), `#board<i>_top_rot_0|90|180|270`, `#board<i>_top_standoff`, `#board<i>_top_cut_<port>`, alignment (two boards or more) `#board<i>_align`
 (details), `#board<i>_alignRef`,
 `#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_wall_front|back|left|right` (toggles; not on a cylinder), `#board<i>_wallOffset`, `#board<i>_screw`,
 `#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles

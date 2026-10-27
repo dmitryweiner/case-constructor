@@ -6,9 +6,32 @@ import type { CrossSection, Manifold } from 'manifold-3d';
 import type { CsgApi, CsgScope } from './csg';
 import { extrude, transformSolid, unionAll } from './csg';
 import type { CutterSpec } from './cutters';
+import { flareAt } from './cutters';
 import type { Affine } from './surface';
 
 export function cutterSolid(csg: CsgApi, scope: CsgScope, cutter: CutterSpec, segments: number): Manifold {
+  const grownBy = (g: number): CrossSection => sectionOf(csg, scope, { ...cutter, w: cutter.w + 2 * g, h: cutter.h + 2 * g, r: cutter.r + g }, segments);
+  let prism: Manifold;
+  if (cutter.flare && cutter.flare.from < cutter.s1) {
+    // a chamfered window: the straight part and the wider far end, hulled
+    // (every section is convex, so the hull is exactly the flared prism)
+    const from = Math.max(cutter.s0 + FLARE_SLICE, cutter.flare.from);
+    const straight = extrude(csg, scope, grownBy(flareAt(cutter, cutter.s0)), cutter.s0, from);
+    const end = extrude(csg, scope, grownBy(flareAt(cutter, cutter.s1)), cutter.s1 - FLARE_SLICE, cutter.s1);
+    prism = scope.keep(csg.Manifold.hull([straight, end]));
+  } else {
+    prism = extrude(csg, scope, sectionOf(csg, scope, cutter, segments), cutter.s0, cutter.s1);
+  }
+  const { origin: o, ex, ey, ez } = cutter;
+  const place: Affine = [ex[0], ey[0], ez[0], o[0], ex[1], ey[1], ez[1], o[1], ex[2], ey[2], ez[2], o[2]];
+  return transformSolid(scope, prism, place);
+}
+
+/** The thin slices a flared cutter's hull is taken over, mm. */
+const FLARE_SLICE = 0.01;
+
+/** A cutter's section in its (ex, ey) plane. */
+function sectionOf(csg: CsgApi, scope: CsgScope, cutter: Pick<CutterSpec, 'shape' | 'w' | 'h' | 'r'>, segments: number): CrossSection {
   const circular = Math.max(16, segments * 4);
   let section: CrossSection;
   if (cutter.shape === 'round') {
@@ -30,10 +53,7 @@ export function cutterSolid(csg: CsgApi, scope: CsgScope, cutter: CutterSpec, se
     const core = scope.keep(csg.CrossSection.square([cutter.w - 2 * r, cutter.h - 2 * r], true));
     section = r > 0 ? scope.keep(scope.keep(core.offset(r, 'Round', 2, circular)).simplify(1e-3)) : core;
   }
-  const prism = extrude(csg, scope, section, cutter.s0, cutter.s1);
-  const { origin: o, ex, ey, ez } = cutter;
-  const place: Affine = [ex[0], ey[0], ez[0], o[0], ex[1], ey[1], ez[1], o[1], ex[2], ey[2], ez[2], o[2]];
-  return transformSolid(scope, prism, place);
+  return section;
 }
 
 /**

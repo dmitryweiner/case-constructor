@@ -1,0 +1,25 @@
+{
+  "id": "raspberry-pi-touch-display-7",
+  "name": "7-inch Touch Display (original)",
+  "vendor": "Raspberry Pi",
+  "kind": "display",
+  "size": { "w": 192.96, "d": 110.76, "t": 7.76 },
+  "mount": {
+    "kind": "clamp",
+    "holes": [
+      { "x": 34.22, "y": 23.55, "d": 3 },
+      { "x": 160.42, "y": 23.55, "d": 3 },
+      { "x": 34.22, "y": 89.2, "d": 3 },
+      { "x": 160.42, "y": 89.2, "d": 3 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 0.7,
+  "bottomHeight": 0,
+  "back": { "holes": [{ "x": 73.97, "y": 34.35, "d": 2.5 }, { "x": 131.97, "y": 34.35, "d": 2.5 }, { "x": 73.97, "y": 83.35, "d": 2.5 }, { "x": 131.97, "y": 83.35, "d": 2.5 }], "standoff": 6, "facing": "bottom" },
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 96.48, "y": 56.39, "w": 154.08, "d": 85.92, "h": 0.7, "glass": { "x": 96.48, "y": 55.38, "w": 192.96, "d": 110.76, "t": 0.7 } }
+  ],
+  "source": "https://datasheets.raspberrypi.com/display/7-inch-display-mechanical-drawing.pdf",
+  "verified": false
+}

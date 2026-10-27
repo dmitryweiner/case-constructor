@@ -676,5 +676,192 @@
         7
       ]
     }
+  },
+  "msp2807-hung-top-lid-inserts": {
+    "body": {
+      "triangles": 2816,
+      "volume": 27752.19,
+      "extents": [
+        72.3,
+        106,
+        18.09
+      ]
+    },
+    "lid": {
+      "triangles": 2476,
+      "volume": 12057.68,
+      "extents": [
+        72.3,
+        106,
+        6.3
+      ]
+    }
+  },
+  "msp1281-cylinder": {
+    "body": {
+      "triangles": 700,
+      "volume": 13759.84,
+      "extents": [
+        68.012,
+        68.012,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1672,
+      "volume": 6304.12,
+      "extents": [
+        68.012,
+        68.012,
+        5
+      ]
+    }
+  },
+  "msp3520-console-slope": {
+    "body": {
+      "triangles": 3566,
+      "volume": 31484.3,
+      "extents": [
+        115.8,
+        75,
+        37.99
+      ]
+    },
+    "lid": {
+      "triangles": 1580,
+      "volume": 18344.3,
+      "extents": [
+        115.8,
+        75,
+        5
+      ]
+    }
+  },
+  "td2-7-top-lid-clamped": {
+    "body": {
+      "triangles": 1900,
+      "volume": 88371.4,
+      "extents": [
+        154.74,
+        208.82,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 3044,
+      "volume": 40073.42,
+      "extents": [
+        154.74,
+        208.82,
+        11.42
+      ]
+    },
+    "lidClamp": {
+      "triangles": 592,
+      "volume": 3394.03,
+      "extents": [
+        138.04,
+        148,
+        3
+      ]
+    }
+  },
+  "epaper-7.5-bottom-lid-pressed": {
+    "body": {
+      "triangles": 2104,
+      "volume": 38087.32,
+      "extents": [
+        181.1,
+        140.9,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 53298.75,
+      "extents": [
+        181.1,
+        140.9,
+        5
+      ]
+    },
+    "clamp": {
+      "triangles": 296,
+      "volume": 6268.23,
+      "extents": [
+        110.12,
+        132.8,
+        3
+      ]
+    }
+  },
+  "td2-7-pi5-back": {
+    "body": {
+      "triangles": 2936,
+      "volume": 114120.85,
+      "extents": [
+        154.74,
+        208.82,
+        37.51
+      ]
+    },
+    "lid": {
+      "triangles": 3044,
+      "volume": 40073.43,
+      "extents": [
+        154.74,
+        208.82,
+        11.42
+      ]
+    },
+    "lidClamp": {
+      "triangles": 592,
+      "volume": 3394.03,
+      "extents": [
+        138.04,
+        148,
+        3
+      ]
+    }
+  },
+  "hyperpixel-on-pi4-top-lid": {
+    "body": {
+      "triangles": 2828,
+      "volume": 34687.96,
+      "extents": [
+        118.025,
+        69.04,
+        29.99
+      ]
+    },
+    "lid": {
+      "triangles": 1680,
+      "volume": 8887.69,
+      "extents": [
+        118.025,
+        69.04,
+        5
+      ]
+    }
+  },
+  "lcd1602-box": {
+    "body": {
+      "triangles": 764,
+      "volume": 22306.29,
+      "extents": [
+        91.6,
+        47.6,
+        27.79
+      ]
+    },
+    "lid": {
+      "triangles": 2736,
+      "volume": 9593.5,
+      "extents": [
+        91.6,
+        47.6,
+        11.2
+      ]
+    }
   }
 }

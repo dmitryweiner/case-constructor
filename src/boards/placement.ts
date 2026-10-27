@@ -5,11 +5,13 @@
 
 import type { FastenerSpec } from '../geo/fasteners';
 import { sanitizeFastener } from '../geo/fasteners';
-import type { BoardDef, Edge } from './schema';
-import { EDGES, bottomPartsH, resolveVariant, sanitizeBoard } from './schema';
+import type { BoardDef, Edge, PortDef } from './schema';
+import { EDGES, bottomPartsH, onFace, resolveVariant, sanitizeBoard } from './schema';
 import { CATALOG, catalogBoard } from './catalog';
 import type { BatterySpec } from './battery';
-import { batteryDef, defaultBattery, sanitizeBattery } from './battery';
+import { PRESS_MAX, PRESS_MIN, batteryDef, defaultBattery, sanitizeBattery } from './battery';
+import { defaultPress } from '../geo/clamp';
+import { attachTurns } from '../geo/attach';
 
 export const ROTATIONS = [0, 90, 180, 270] as const;
 export type Rotation = (typeof ROTATIONS)[number];
@@ -38,7 +40,40 @@ export interface BoardPlacement {
   walls?: Edge[];
   /** with walls: the connector faces beyond the outer surface, mm (negative: recessed) */
   wallOffset?: number;
+  /**
+   * Where it is held: on standoffs from the floor (missing), or hung from the
+   * ceiling, its top still up and `z` the gap from its front to the ceiling.
+   */
+  on?: Side;
+  /** a hung display's window without its chamfer (missing: chamfered) */
+  bevel?: false;
+  /** a clamped panel only: how far its bars press into its back, mm (negative leaves room for foam tape) */
+  press?: number;
+  /** a display with a back pattern only: the board screwed to its back */
+  back?: BackPlacement;
+  /** a board on the floor only: the HAT display it carries (D6 the other way round) */
+  top?: BackPlacement;
 }
+
+/**
+ * A board on a display's back: a catalog board whose holes fit the pattern,
+ * the turn that puts them there, the display's standoffs' length, its model
+ * and its port toggles (a part on its faces is closed by default: turned
+ * over, or under the display, its column would cut the case's other side).
+ */
+export interface BackPlacement {
+  board: string;
+  rot: Rotation;
+  standoff: number;
+  variant?: string;
+  cuts: Record<string, boolean>;
+}
+
+export const BACK_STANDOFF_MIN = 3;
+export const BACK_STANDOFF_MAX = 30;
+
+export const SIDES = ['floor', 'ceiling'] as const;
+export type Side = (typeof SIDES)[number];
 
 export const MAX_BOARDS = 8;
 export const POSITION_MAX = 300;
@@ -48,6 +83,12 @@ export const WALL_OFFSET_MIN = -10;
 export const WALL_OFFSET_MAX = 3;
 /** Gap between a new board and the ones already placed, mm. */
 export const NEW_BOARD_GAP = 5;
+/**
+ * A hung board's gap to the ceiling by default, mm: the drawings' and the
+ * print's tolerance, so a glass thicker than drawn is not pressed against
+ * the plate. Less is allowed, with a warning.
+ */
+export const CEILING_GAP = 0.3;
 
 /** The entry behind a placement, its variants unresolved: the catalog entry or the custom board. */
 export function entryOf(placement: Pick<BoardPlacement, 'board' | 'custom' | 'battery'>): BoardDef {
@@ -77,10 +118,21 @@ export function minBoardZ(def: BoardDef, pins = false): number {
   return undersideOf(def, pins) + 1;
 }
 
-/** Lowest a placed board may sit, its pins as the placement has them. */
+/** Lowest a placed board may sit, its pins as the placement has them; a hung board's gap may be 0. */
 export function placementMinZ(placement: BoardPlacement): number {
+  if (placement.on === 'ceiling') return 0;
   const def = boardOf(placement);
   return minBoardZ(def, pinsDown(def, placement));
+}
+
+/** A display, or a board with a display on top, hangs from the ceiling when added (its screen at the window). */
+export function hangsByDefault(def: BoardDef): boolean {
+  return !def.battery && (def.kind === 'display' || def.ports.some((port) => port.type === 'display' && port.edge === 'top'));
+}
+
+/** The height a board stands at on the floor by default: a battery low in its cradles, a board on 4 mm standoffs or higher. */
+export function floorZ(def: BoardDef, pins: boolean): number {
+  return def.battery ? minBoardZ(def, pins) : Math.max(4, minBoardZ(def, pins));
 }
 
 export function defaultPlacement(entry: BoardDef, x = 0, y = 0): BoardPlacement {
@@ -92,13 +144,15 @@ export function defaultPlacement(entry: BoardDef, x = 0, y = 0): BoardPlacement 
     ...(def.battery ? { battery: def.battery } : {}),
     x,
     y,
-    // a battery lies low, in its cradles; a board stands on standoffs
-    z: def.battery ? minBoardZ(def, pins) : Math.max(4, minBoardZ(def, pins)),
+    // a clamped panel lies against the plate; anything else hangs the gap below it
+    z: hangsByDefault(def) ? (def.mount.kind === 'clamp' ? 0 : CEILING_GAP) : floorZ(def, pins),
     rot: 0,
     mount: { size: def.mount.screw, hole: 'tap', head: 'none' },
     cuts: {},
     ...(def.pins ? { pins } : {}),
     ...(variant !== undefined ? { variant } : {}),
+    ...(hangsByDefault(def) ? { on: 'ceiling' as const } : {}),
+    ...(def.mount.kind === 'clamp' ? { press: defaultPress(def) } : {}),
   };
 }
 
@@ -118,12 +172,15 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
   const variant = entry.variants?.find((item) => item.id === variantRaw)?.id ?? entry.variants?.[0].id;
   const def = resolveVariant(entry, variant);
   const base = defaultPlacement(entry);
+  // a clamped panel has nothing to stand on: it always hangs; a floor board may carry a display on top
+  const ceiling = (Reflect.get(r, 'on') === 'ceiling' || def.mount.kind === 'clamp') && !def.battery;
+  const carried = ceiling || def.battery ? {} : withTopDisplay(def, Reflect.get(r, 'top'));
   const cutsRaw: unknown = Reflect.get(r, 'cuts');
   const cuts: Record<string, boolean> = {};
   if (typeof cutsRaw === 'object' && cutsRaw !== null) {
     for (const port of def.ports) {
       const value: unknown = Reflect.get(cutsRaw, port.id);
-      if (typeof value === 'boolean' && value !== port.cut) cuts[port.id] = value;
+      if (typeof value === 'boolean' && value !== ownPortDefault(carried, port)) cuts[port.id] = value;
     }
   }
   const rot: unknown = Reflect.get(r, 'rot');
@@ -131,19 +188,29 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
   const pins = def.pins ? (typeof pinsRaw === 'boolean' ? pinsRaw : def.pins.soldered) : false;
   const wallsRaw: unknown = Reflect.get(r, 'walls');
   const walls = Array.isArray(wallsRaw) ? EDGES.filter((edge) => wallsRaw.includes(edge)) : [];
+  // a file without the field stands on the floor, at the height it always had
+  const zRaw: unknown = Reflect.get(r, 'z');
+  const z = ceiling
+    ? num(zRaw, 0, Z_MAX, def.mount.kind === 'clamp' ? 0 : CEILING_GAP)
+    : num(zRaw, minBoardZ(def, pins), Z_MAX, Math.max(floorZ(def, def.pins?.soldered ?? false), minBoardZ(def, pins)));
   return {
     board: custom ? 'custom' : def.id,
     ...(custom ? { custom: { ...custom, id: 'custom' } } : {}),
     ...(battery ? { battery } : {}),
     x: num(Reflect.get(r, 'x'), 0, POSITION_MAX, base.x),
     y: num(Reflect.get(r, 'y'), 0, POSITION_MAX, base.y),
-    z: num(Reflect.get(r, 'z'), minBoardZ(def, pins), Z_MAX, Math.max(base.z, minBoardZ(def, pins))),
+    z,
     rot: ROTATIONS.find((value) => value === rot) ?? base.rot,
     mount: { ...sanitizeFastener(Reflect.get(r, 'mount'), base.mount), head: 'none' },
     cuts,
     ...(def.pins ? { pins } : {}),
     ...(variant !== undefined ? { variant } : {}),
     ...(walls.length > 0 ? { walls, wallOffset: num(Reflect.get(r, 'wallOffset'), WALL_OFFSET_MIN, WALL_OFFSET_MAX, 0) } : {}),
+    ...(ceiling ? { on: 'ceiling' as const } : {}),
+    ...(Reflect.get(r, 'bevel') === false ? { bevel: false as const } : {}),
+    ...(def.mount.kind === 'clamp' ? { press: num(Reflect.get(r, 'press'), PRESS_MIN, PRESS_MAX, defaultPress(def)) } : {}),
+    ...withBackBoard(def, Reflect.get(r, 'back')),
+    ...carried,
   };
 }
 
@@ -163,4 +230,117 @@ export function withPortCut(placement: BoardPlacement, port: { id: string; cut: 
   if (value === port.cut) delete cuts[port.id];
   else cuts[port.id] = value;
   return { ...placement, cuts };
+}
+
+/** The placement on the floor or hung from the ceiling; the floor is stored as no field at all. */
+export function withSide(placement: BoardPlacement, side: Side): BoardPlacement {
+  const out: BoardPlacement = { ...placement };
+  if (side === 'ceiling') out.on = 'ceiling';
+  else delete out.on;
+  return out;
+}
+
+/** A port of the board on a display's back: its faces' parts closed by default. */
+export function backPortDefault(port: PortDef): boolean {
+  return port.cut && !onFace(port);
+}
+
+/** The lowest standoff a back board allows: a HAT sits on its GPIO header. */
+export function backStandoffMin(parent: BoardDef, child: BoardDef): number {
+  if (parent.back?.facing !== 'top') return BACK_STANDOFF_MIN;
+  const header = child.ports.find((port) => port.type === 'header-2x20' && port.edge === 'top');
+  return Math.max(BACK_STANDOFF_MIN, header?.h ?? 0);
+}
+
+/** The board on a display's back as built: a catalog board that fits, or none. */
+function withBackBoard(parent: BoardDef, raw: unknown): { back?: BackPlacement } {
+  if (!parent.back || typeof raw !== 'object' || raw === null) return {};
+  const id: unknown = Reflect.get(raw, 'board');
+  const entry = typeof id === 'string' ? catalogBoard(id) : undefined;
+  if (!entry || entry.battery) return {};
+  const variantRaw: unknown = Reflect.get(raw, 'variant');
+  const variant = entry.variants?.find((item) => item.id === variantRaw)?.id ?? entry.variants?.[0].id;
+  const child = resolveVariant(entry, variant);
+  const turns = attachTurns(parent, child);
+  if (turns.length === 0) return {};
+  const rot: unknown = Reflect.get(raw, 'rot');
+  const cutsRaw: unknown = Reflect.get(raw, 'cuts');
+  const cuts: Record<string, boolean> = {};
+  if (typeof cutsRaw === 'object' && cutsRaw !== null) {
+    for (const port of child.ports) {
+      const value: unknown = Reflect.get(cutsRaw, port.id);
+      if (typeof value === 'boolean' && value !== backPortDefault(port)) cuts[port.id] = value;
+    }
+  }
+  return {
+    back: {
+      board: entry.id,
+      rot: turns.find((turn) => turn === rot) ?? turns[0],
+      standoff: num(Reflect.get(raw, 'standoff'), backStandoffMin(parent, child), BACK_STANDOFF_MAX, Math.max(parent.back.standoff, backStandoffMin(parent, child))),
+      ...(variant !== undefined ? { variant } : {}),
+      cuts,
+    },
+  };
+}
+
+/** The back board's toggles with a port's opening on or off; its default is not stored. */
+export function withBackCut(back: BackPlacement, port: PortDef, value: boolean): Record<string, boolean> {
+  const cuts = { ...back.cuts };
+  if (value === backPortDefault(port)) delete cuts[port.id];
+  else cuts[port.id] = value;
+  return cuts;
+}
+
+/**
+ * The HAT display a floor board carries: a catalog display whose back
+ * pattern faces up and fits the board's holes, or none. Its turn, standoff
+ * and toggles mean what they mean on a display's back (`withBackBoard`) —
+ * the same pattern, read the other way round.
+ */
+function withTopDisplay(board: BoardDef, raw: unknown): { top?: BackPlacement } {
+  if (typeof raw !== 'object' || raw === null) return {};
+  const id: unknown = Reflect.get(raw, 'board');
+  const entry = typeof id === 'string' ? catalogBoard(id) : undefined;
+  if (!entry || entry.back?.facing !== 'top') return {};
+  const variantRaw: unknown = Reflect.get(raw, 'variant');
+  const variant = entry.variants?.find((item) => item.id === variantRaw)?.id ?? entry.variants?.[0].id;
+  const display = resolveVariant(entry, variant);
+  const turns = attachTurns(display, board);
+  if (turns.length === 0 || !display.back) return {};
+  const rot: unknown = Reflect.get(raw, 'rot');
+  const cutsRaw: unknown = Reflect.get(raw, 'cuts');
+  const cuts: Record<string, boolean> = {};
+  if (typeof cutsRaw === 'object' && cutsRaw !== null) {
+    for (const port of display.ports) {
+      const value: unknown = Reflect.get(cutsRaw, port.id);
+      if (typeof value === 'boolean' && value !== port.cut) cuts[port.id] = value;
+    }
+  }
+  const min = backStandoffMin(display, board);
+  return {
+    top: {
+      board: entry.id,
+      rot: turns.find((turn) => turn === rot) ?? turns[0],
+      standoff: num(Reflect.get(raw, 'standoff'), min, BACK_STANDOFF_MAX, Math.max(display.back.standoff, min)),
+      ...(variant !== undefined ? { variant } : {}),
+      cuts,
+    },
+  };
+}
+
+/** The toggles of a carried display with a port's opening on or off; its default is not stored. */
+export function withTopCut(top: BackPlacement, port: PortDef, value: boolean): Record<string, boolean> {
+  const cuts = { ...top.cuts };
+  if (value === port.cut) delete cuts[port.id];
+  else cuts[port.id] = value;
+  return cuts;
+}
+
+/**
+ * A port's default on a placed board: its own, except that a board carrying
+ * a display on top keeps its top parts closed — their columns would open
+ * the case right under the display.
+ */
+export function ownPortDefault(placement: Pick<BoardPlacement, 'top'>, port: PortDef): boolean {
+  return port.cut && !(placement.top && onFace(port) && port.edge === 'top');
 }
