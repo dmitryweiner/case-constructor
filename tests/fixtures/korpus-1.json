@@ -1,0 +1,410 @@
+{
+  "app": "case-constructor",
+  "version": 1,
+  "name": "Корпус 1",
+  "savedAt": "2026-10-26T14:30:50.908Z",
+  "state": {
+    "version": 1,
+    "shape": {
+      "kind": "box",
+      "cornerR": 3,
+      "edgeR": 0,
+      "wall": 2,
+      "floor": 2,
+      "auto": true,
+      "size": {
+        "w": 176,
+        "d": 71,
+        "h": 28
+      },
+      "margin": {
+        "side": 2,
+        "top": 3
+      },
+      "console": {
+        "frontH": 20,
+        "backH": 40
+      }
+    },
+    "boards": [
+      {
+        "board": "custom",
+        "custom": {
+          "id": "custom",
+          "name": "TPA3118",
+          "vendor": "",
+          "kind": "mcu",
+          "size": {
+            "w": 53,
+            "d": 66,
+            "t": 1
+          },
+          "mount": {
+            "kind": "holes",
+            "holes": [
+              {
+                "x": 3.5,
+                "y": 3.5,
+                "d": 2.7
+              },
+              {
+                "x": 49.5,
+                "y": 3.5,
+                "d": 2.7
+              },
+              {
+                "x": 3.5,
+                "y": 62.5,
+                "d": 2.7
+              },
+              {
+                "x": 49.5,
+                "y": 62.5,
+                "d": 2.7
+              }
+            ],
+            "screw": "M3",
+            "rails": "long"
+          },
+          "topHeight": 15,
+          "bottomHeight": 3,
+          "ports": [
+            {
+              "id": "usb-c-1",
+              "type": "button",
+              "w": 9,
+              "h": 9,
+              "d": 9,
+              "clearance": 0.6,
+              "shape": "round",
+              "cut": true,
+              "edge": "front",
+              "along": 13,
+              "z": 3.5,
+              "protrude": 0
+            },
+            {
+              "id": "usb-c-2",
+              "type": "dc-jack-5.5",
+              "w": 9,
+              "h": 11,
+              "d": 14,
+              "clearance": 0.6,
+              "shape": "rect",
+              "cut": true,
+              "edge": "back",
+              "along": 26.5,
+              "z": 0,
+              "protrude": -1
+            }
+          ],
+          "source": "",
+          "verified": false
+        },
+        "x": 0,
+        "y": 0,
+        "z": 4,
+        "rot": 0,
+        "mount": {
+          "size": "M3",
+          "hole": "tap",
+          "head": "none"
+        },
+        "cuts": {},
+        "walls": [
+          "front",
+          "back",
+          "left",
+          "right"
+        ],
+        "wallOffset": 0
+      },
+      {
+        "board": "custom",
+        "custom": {
+          "id": "custom",
+          "name": "DC-DC",
+          "vendor": "",
+          "kind": "mcu",
+          "size": {
+            "w": 23.5,
+            "d": 66,
+            "t": 1
+          },
+          "mount": {
+            "kind": "holes",
+            "holes": [
+              {
+                "x": 3,
+                "y": 6,
+                "d": 2.7
+              },
+              {
+                "x": 20.5,
+                "y": 6,
+                "d": 2.7
+              }
+            ],
+            "screw": "M3",
+            "rails": "long"
+          },
+          "topHeight": 12,
+          "bottomHeight": 2,
+          "ports": [
+            {
+              "id": "usb-c-1",
+              "type": "dc-jack-5.5",
+              "w": 9,
+              "h": 14,
+              "d": 14,
+              "clearance": 0.6,
+              "shape": "rect",
+              "cut": true,
+              "edge": "back",
+              "along": 5,
+              "z": 0,
+              "protrude": -0.5
+            },
+            {
+              "id": "usb-c-2",
+              "type": "dc-jack-5.5",
+              "w": 9,
+              "h": 14,
+              "d": 14,
+              "clearance": 0.6,
+              "shape": "rect",
+              "cut": true,
+              "edge": "back",
+              "along": 21.5,
+              "z": 0,
+              "protrude": -0.5
+            }
+          ],
+          "source": "",
+          "verified": false
+        },
+        "x": 55,
+        "y": 0,
+        "z": 4,
+        "rot": 0,
+        "mount": {
+          "size": "M2.5",
+          "hole": "tap",
+          "head": "none"
+        },
+        "cuts": {},
+        "walls": [
+          "front",
+          "back",
+          "left",
+          "right"
+        ],
+        "wallOffset": 0
+      },
+      {
+        "board": "custom",
+        "custom": {
+          "id": "custom",
+          "name": "KaRadio ESP32",
+          "vendor": "",
+          "kind": "mcu",
+          "size": {
+            "w": 88,
+            "d": 55,
+            "t": 1.6
+          },
+          "mount": {
+            "kind": "holes",
+            "holes": [
+              {
+                "x": 4,
+                "y": 3,
+                "d": 2.7
+              },
+              {
+                "x": 78.5,
+                "y": 3,
+                "d": 2.7
+              },
+              {
+                "x": 4,
+                "y": 47,
+                "d": 2.7
+              },
+              {
+                "x": 78.5,
+                "y": 47,
+                "d": 2.7
+              }
+            ],
+            "screw": "M3",
+            "rails": "long"
+          },
+          "topHeight": 4.5,
+          "bottomHeight": 13,
+          "ports": [
+            {
+              "id": "usb-c-1",
+              "type": "button",
+              "w": 3.5,
+              "h": 3.5,
+              "d": 3.5,
+              "clearance": 0.6,
+              "shape": "round",
+              "cut": true,
+              "edge": "top",
+              "x": 83,
+              "y": 13
+            },
+            {
+              "id": "usb-c-2",
+              "type": "button",
+              "w": 3.5,
+              "h": 3.5,
+              "d": 3.5,
+              "clearance": 0.6,
+              "shape": "round",
+              "cut": true,
+              "edge": "top",
+              "x": 83,
+              "y": 25
+            },
+            {
+              "id": "usb-c-3",
+              "type": "button",
+              "w": 3.5,
+              "h": 3.5,
+              "d": 3.5,
+              "clearance": 0.6,
+              "shape": "round",
+              "cut": true,
+              "edge": "top",
+              "x": 83,
+              "y": 37.2
+            },
+            {
+              "id": "usb-c-4",
+              "type": "display",
+              "w": 45,
+              "h": 3,
+              "d": 35,
+              "clearance": 0.3,
+              "shape": "rect",
+              "cut": true,
+              "edge": "top",
+              "x": 38,
+              "y": 28.5
+            },
+            {
+              "id": "usb-c-5",
+              "type": "led",
+              "w": 2.6,
+              "h": 2.6,
+              "d": 2.6,
+              "clearance": 0.5,
+              "shape": "round",
+              "cut": true,
+              "edge": "back",
+              "along": 6,
+              "z": -7.2,
+              "protrude": 0
+            }
+          ],
+          "source": "",
+          "verified": false
+        },
+        "x": 81,
+        "y": 0,
+        "z": 16,
+        "rot": 0,
+        "mount": {
+          "size": "M3",
+          "hole": "tap",
+          "head": "none"
+        },
+        "cuts": {},
+        "walls": [
+          "front"
+        ],
+        "wallOffset": 0
+      }
+    ],
+    "lid": {
+      "face": "top",
+      "chosen": "top",
+      "depth": 0,
+      "fastening": "snaps",
+      "screw": {
+        "size": "M3",
+        "hole": "tap",
+        "head": "counterbore"
+      },
+      "head": {
+        "d": null,
+        "depth": null
+      },
+      "magnet": {
+        "size": "6x3",
+        "fit": 0.2
+      },
+      "thread": {
+        "size": "P6",
+        "fit": 0.35
+      },
+      "lip": {
+        "h": 3,
+        "t": 1.5
+      },
+      "fit": 0.2
+    },
+    "extraCuts": [],
+    "vents": {
+      "on": false,
+      "faces": [
+        "back",
+        "left",
+        "right"
+      ],
+      "pattern": "slots",
+      "size": 2,
+      "pitch": 8,
+      "margin": 4,
+      "along": "y"
+    },
+    "fan": {
+      "on": false,
+      "face": "back",
+      "size": 40,
+      "x": 0,
+      "y": 0,
+      "screwD": 3.2
+    },
+    "wallMount": {
+      "kind": "none",
+      "keyhole": "through",
+      "ears": {
+        "count": 2,
+        "walls": "leftRight",
+        "wall": "back",
+        "along": "centre"
+      },
+      "spacing": 40,
+      "screwD": 4
+    },
+    "label": {
+      "on": true,
+      "text": "KaRadio",
+      "font": "rubik",
+      "sizeMm": 7,
+      "depth": 0.6,
+      "raised": false,
+      "anchor": "centre",
+      "margin": 3,
+      "x": -38,
+      "y": 0,
+      "angle": 0
+    },
+    "exportMode": "body",
+    "resolution": 64
+  }
+}

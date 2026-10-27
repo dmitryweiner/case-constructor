@@ -347,6 +347,10 @@ await page.click('#board0_custom_port_add');
 await page.click('#board0_custom_port_add');
 await page.selectOption('#board0_custom_port1_edge', 'top');
 await page.selectOption('#board0_custom_port0_type', 'micro-hdmi');
+// an automatic id follows the type: the toggle under the editor says so
+const portIds = await page.evaluate(() => window.__case.state().boards[0].custom.ports.map((port) => port.id));
+if (portIds.join() !== 'micro-hdmi-1,usb-c-2') errors.push(`[custom] port ids ${portIds.join()}`);
+if (!(await page.locator('#board0_cut_micro-hdmi-1').count())) errors.push('[custom] no toggle for micro-hdmi-1');
 await page.click('#board0_custom_hole_add');
 await page.click('#board0_custom_hole4_remove');
 await expectWatertight('custom:edited');

@@ -19,3 +19,11 @@ Tiny drawings for `tests/drawing.test.ts`, each made with known boxes:
 - `tiny.brd`, `tiny.kicad_pcb` — a 30 × 20 outline with two footprints, one
   turned 90°, one on the bottom, nets on the pads; the Eagle board also has a
   Ø3.2 mounting hole at (3, 3).
+
+A user's project, as they sent it:
+
+- `korpus-1.json` — `user-voices/27-10-2026/case-constructor-Корпус-1.json`:
+  three custom boards made before port ids followed their type (every port
+  is `usb-c-<n>`), boards against walls whose connectors do not reach the
+  outer surface, one board pushed off its right wall
+  (`plans/PLAN-IMPROVEMENTS-2026-10-27.md`).

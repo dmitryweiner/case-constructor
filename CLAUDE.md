@@ -12,9 +12,12 @@ done; read it only for its decisions and deviations.
 (R1…R8): done.
 `plans/PLAN-DISPLAYS.md` — standalone displays (D1…D8): hung from the
 ceiling or the console's slope, the window and the glass rim, clamp bars, a
-board on the display's back, the Tier A screens. The current plan; on the
-branch `displays-2026-10-27`.
+board on the display's back, the Tier A screens: done.
 `plans/PERSPECTIVE-SCREENS.md` — the ranked screen list it serves.
+`plans/PLAN-IMPROVEMENTS-2026-10-27.md` — what a user's project asked for
+(U1…U5): port ids by type, messages that say where and what to do, warnings
+on the model, the lid's place in the Both STL, the editor's hints. The
+current plan; on the branch `improvements-2026-10-27`.
 
 ## Node
 

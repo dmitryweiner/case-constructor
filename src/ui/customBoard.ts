@@ -11,7 +11,9 @@ import { make } from './dom';
 import type { Key } from '../i18n';
 import { t, tDynamic } from '../i18n';
 import type { BoardDef, PortDef, PortType } from '../boards/schema';
-import { EDGES, PORT_TYPES, PORT_TYPE_IDS, isPortType, onFace, sanitizePort } from '../boards/schema';
+import { EDGES, PORT_TYPES, PORT_TYPE_IDS, autoPortId, isPortType, onFace, sanitizePort } from '../boards/schema';
+import type { BoardPlacement } from '../boards/placement';
+import { withPortType } from '../boards/placement';
 import { SCREW_SIZES } from '../geo/fasteners';
 import type { AppState } from '../state/schema';
 
@@ -129,13 +131,13 @@ export function renderCustomEditor(
 ): CustomEditorHandle {
   const prefix = `board${index}_custom`;
   const current = (): BoardDef => read().boards[index].custom ?? defaultCustomBoard();
-  const update = (change: (def: BoardDef) => BoardDef): void => {
+  const updatePlacement = (change: (placement: BoardPlacement) => BoardPlacement): void => {
     const state = read();
-    onChange({
-      ...state,
-      boards: state.boards.map((board, i) => (i === index ? { ...board, custom: change(board.custom ?? defaultCustomBoard()) } : board)),
-    });
+    onChange({ ...state, boards: state.boards.map((board, i) => (i === index ? change(board) : board)) });
   };
+  const update = (change: (def: BoardDef) => BoardDef): void => updatePlacement((board) => ({
+    ...board, custom: change(board.custom ?? defaultCustomBoard()),
+  }));
   const def = current();
   const box = make('div', 'custom-editor');
   const inputs = new Map<string, (def: BoardDef) => number | string>();
@@ -225,10 +227,7 @@ export function renderCustomEditor(
   addPort.type = 'button';
   addPort.id = `${prefix}_port_add`;
   addPort.addEventListener('click', () => update((d) => {
-    const ids = new Set(d.ports.map((item) => item.id));
-    let n = 1;
-    while (ids.has(`usb-c-${n}`)) n++;
-    const port: unknown = { id: `usb-c-${n}`, type: 'usb-c', edge: 'front', along: d.size.w / 2 };
+    const port: unknown = { id: autoPortId('usb-c', new Set(d.ports.map((item) => item.id))), type: 'usb-c', edge: 'front', along: d.size.w / 2 };
     return { ...d, ports: [...d.ports, portFrom(port, d.size)] };
   }));
   box.append(addPort);
@@ -254,8 +253,8 @@ export function renderCustomEditor(
       ...d, ports: d.ports.map((item, i) => (i === p ? portFrom(change({ ...item }), d.size) : item)),
     }));
     head.append(selectInput(`${prefix}_port${p}_type`, PORT_TYPE_IDS.map((id) => ({ value: id, text: tDynamic(`port.${id}`) })), port.type,
-      // a new type brings its own sizes: drop the old ones, the sanitizer fills the defaults
-      (value) => setPort((item) => ({ id: item.id, type: isPortType(value) ? value : item.type, edge: item.edge, along: item.along, x: item.x, y: item.y, z: item.z }))));
+      // a new type brings its own sizes, and an automatic id follows it
+      (value) => { if (isPortType(value)) updatePlacement((board) => withPortType(board, p, value)); }));
     head.append(selectInput(`${prefix}_port${p}_edge`, [...EDGES, 'top', 'bottom'].map((edge) => ({ value: edge, text: tDynamic(`face.${edge}`) })), port.edge,
       (value) => setPort((item) => ({ ...item, edge: value }))));
     const del = make('button', 'tb-btn row-del', '✕');
