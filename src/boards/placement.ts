@@ -38,7 +38,15 @@ export interface BoardPlacement {
   walls?: Edge[];
   /** with walls: the connector faces beyond the outer surface, mm (negative: recessed) */
   wallOffset?: number;
+  /**
+   * Where it is held: on standoffs from the floor (missing), or hung from the
+   * ceiling, its top still up and `z` the gap from its front to the ceiling.
+   */
+  on?: Side;
 }
+
+export const SIDES = ['floor', 'ceiling'] as const;
+export type Side = (typeof SIDES)[number];
 
 export const MAX_BOARDS = 8;
 export const POSITION_MAX = 300;
@@ -48,6 +56,12 @@ export const WALL_OFFSET_MIN = -10;
 export const WALL_OFFSET_MAX = 3;
 /** Gap between a new board and the ones already placed, mm. */
 export const NEW_BOARD_GAP = 5;
+/**
+ * A hung board's gap to the ceiling by default, mm: the drawings' and the
+ * print's tolerance, so a glass thicker than drawn is not pressed against
+ * the plate. Less is allowed, with a warning.
+ */
+export const CEILING_GAP = 0.3;
 
 /** The entry behind a placement, its variants unresolved: the catalog entry or the custom board. */
 export function entryOf(placement: Pick<BoardPlacement, 'board' | 'custom' | 'battery'>): BoardDef {
@@ -77,10 +91,21 @@ export function minBoardZ(def: BoardDef, pins = false): number {
   return undersideOf(def, pins) + 1;
 }
 
-/** Lowest a placed board may sit, its pins as the placement has them. */
+/** Lowest a placed board may sit, its pins as the placement has them; a hung board's gap may be 0. */
 export function placementMinZ(placement: BoardPlacement): number {
+  if (placement.on === 'ceiling') return 0;
   const def = boardOf(placement);
   return minBoardZ(def, pinsDown(def, placement));
+}
+
+/** A display, or a board with a display on top, hangs from the ceiling when added (its screen at the window). */
+export function hangsByDefault(def: BoardDef): boolean {
+  return !def.battery && (def.kind === 'display' || def.ports.some((port) => port.type === 'display' && port.edge === 'top'));
+}
+
+/** The height a board stands at on the floor by default: a battery low in its cradles, a board on 4 mm standoffs or higher. */
+export function floorZ(def: BoardDef, pins: boolean): number {
+  return def.battery ? minBoardZ(def, pins) : Math.max(4, minBoardZ(def, pins));
 }
 
 export function defaultPlacement(entry: BoardDef, x = 0, y = 0): BoardPlacement {
@@ -92,13 +117,13 @@ export function defaultPlacement(entry: BoardDef, x = 0, y = 0): BoardPlacement 
     ...(def.battery ? { battery: def.battery } : {}),
     x,
     y,
-    // a battery lies low, in its cradles; a board stands on standoffs
-    z: def.battery ? minBoardZ(def, pins) : Math.max(4, minBoardZ(def, pins)),
+    z: hangsByDefault(def) ? CEILING_GAP : floorZ(def, pins),
     rot: 0,
     mount: { size: def.mount.screw, hole: 'tap', head: 'none' },
     cuts: {},
     ...(def.pins ? { pins } : {}),
     ...(variant !== undefined ? { variant } : {}),
+    ...(hangsByDefault(def) ? { on: 'ceiling' as const } : {}),
   };
 }
 
@@ -131,19 +156,26 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
   const pins = def.pins ? (typeof pinsRaw === 'boolean' ? pinsRaw : def.pins.soldered) : false;
   const wallsRaw: unknown = Reflect.get(r, 'walls');
   const walls = Array.isArray(wallsRaw) ? EDGES.filter((edge) => wallsRaw.includes(edge)) : [];
+  // a file without the field stands on the floor, at the height it always had
+  const ceiling = Reflect.get(r, 'on') === 'ceiling' && !def.battery;
+  const zRaw: unknown = Reflect.get(r, 'z');
+  const z = ceiling
+    ? num(zRaw, 0, Z_MAX, CEILING_GAP)
+    : num(zRaw, minBoardZ(def, pins), Z_MAX, Math.max(floorZ(def, def.pins?.soldered ?? false), minBoardZ(def, pins)));
   return {
     board: custom ? 'custom' : def.id,
     ...(custom ? { custom: { ...custom, id: 'custom' } } : {}),
     ...(battery ? { battery } : {}),
     x: num(Reflect.get(r, 'x'), 0, POSITION_MAX, base.x),
     y: num(Reflect.get(r, 'y'), 0, POSITION_MAX, base.y),
-    z: num(Reflect.get(r, 'z'), minBoardZ(def, pins), Z_MAX, Math.max(base.z, minBoardZ(def, pins))),
+    z,
     rot: ROTATIONS.find((value) => value === rot) ?? base.rot,
     mount: { ...sanitizeFastener(Reflect.get(r, 'mount'), base.mount), head: 'none' },
     cuts,
     ...(def.pins ? { pins } : {}),
     ...(variant !== undefined ? { variant } : {}),
     ...(walls.length > 0 ? { walls, wallOffset: num(Reflect.get(r, 'wallOffset'), WALL_OFFSET_MIN, WALL_OFFSET_MAX, 0) } : {}),
+    ...(ceiling ? { on: 'ceiling' as const } : {}),
   };
 }
 
@@ -163,4 +195,12 @@ export function withPortCut(placement: BoardPlacement, port: { id: string; cut: 
   if (value === port.cut) delete cuts[port.id];
   else cuts[port.id] = value;
   return { ...placement, cuts };
+}
+
+/** The placement on the floor or hung from the ceiling; the floor is stored as no field at all. */
+export function withSide(placement: BoardPlacement, side: Side): BoardPlacement {
+  const out: BoardPlacement = { ...placement };
+  if (side === 'ceiling') out.on = 'ceiling';
+  else delete out.on;
+  return out;
 }

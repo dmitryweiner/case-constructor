@@ -43,7 +43,7 @@ import type { Key } from './i18n';
 import { faceFrame } from './geo/face';
 import type { Dims, Face } from './geo/face';
 import type { PrintShape } from './geo/print';
-import { caseLayout, collisions, lidDepthMax, placeBoards } from './geo/layout';
+import { caseLayout, collisions, heldByLid, lidDepthMax, placeBoards } from './geo/layout';
 import { boardGhost, portCaptionAnchor } from './geo/ghost';
 import { MAX_BOARDS, NEW_BOARD_GAP, boardOf, defaultPlacement, portCut, withPortCut } from './boards/placement';
 import type { BoardDef } from './boards/schema';
@@ -214,6 +214,9 @@ let currentLabel: LabelRaster | null = null;
 let ghosts: ScenePart[] = [];
 /** A caption per port of every board, drawn with the ghosts. */
 let portCaptions: SceneCaption[] = [];
+/** Which ghosts and captions the lid holds (a board hung under a top lid): exploded, they go with it. */
+let ghostsOnLid: boolean[] = [];
+let captionsOnLid: boolean[] = [];
 /** Warnings the panel computes itself, before the worker answers. */
 let baseWarnings: string[] = [];
 
@@ -280,14 +283,18 @@ function refresh(): void {
     at: portCaptionAnchor(board, port),
     dim: !portCut(board.placement, port.id, port.cut),
   })));
-  ghosts = layout.boards.flatMap((board): ScenePart[] => {
+  captionsOnLid = layout.boards.flatMap((board) => board.def.ports.map(() => heldByLid(board, state.lid.face)));
+  const groups = layout.boards.map((board) => {
     const ghost = boardGhost(board);
-    return [
+    const parts: ScenePart[] = [
       { role: 'board', mesh: ghost.pcb },
       ...(ghost.glass ? [{ role: 'glass' as const, mesh: ghost.glass }] : []),
       ...(ghost.ports ? [{ role: 'port' as const, mesh: ghost.ports }] : []),
     ];
+    return { parts, onLid: heldByLid(board, state.lid.face) };
   });
+  ghosts = groups.flatMap((group) => group.parts);
+  ghostsOnLid = groups.flatMap((group) => group.parts.map(() => group.onLid));
   drawParts();
   renderPartList();
 
@@ -394,15 +401,19 @@ function drawParts(): void {
   }
   const parts: ScenePart[] = [];
   const withBoards = showBody && viewBoards.checked;
+  // exploded with the lid shown, the boards the lid holds go with it
+  const n = faceFrame(built.lid.face, dims).n;
+  const lidLift = showLid && mode === 'exploded' ? LIFT_MM : 0;
+  const withLid = (at: readonly [number, number, number], onLid: boolean | undefined): [number, number, number] => (onLid
+    ? [at[0] + n[0] * lidLift, at[1] + n[1] * lidLift, at[2] + n[2] * lidLift] : [at[0], at[1], at[2]]);
   if (showBody) {
     parts.push({ role: 'body', mesh: body });
-    if (withBoards) parts.push(...ghosts);
+    if (withBoards) parts.push(...ghosts.map((ghost, i): ScenePart => ({ ...ghost, offset: withLid(ghost.offset ?? [0, 0, 0], ghostsOnLid[i]) })));
     // battery clamps on their posts; exploded, lifted off the battery
     if (clamps) parts.push({ role: 'clamp', mesh: clamps, offset: [0, 0, mode === 'exploded' ? LIFT_MM / 2 : 0] });
   }
   if (showLid && showBody) {
-    const n = faceFrame(built.lid.face, dims).n;
-    const lift = mode === 'exploded' ? LIFT_MM : 0;
+    const lift = lidLift;
     parts.push({ role: 'lid', mesh: lid, offset: [n[0] * lift, n[1] * lift, n[2] * lift] });
     // printed screws in their holes; exploded, they hover over the lifted lid
     const screws = screw ? screwsInCase(screw, posts, built.lid.face, dims, 2 * lift) : null;
@@ -413,7 +424,10 @@ function drawParts(): void {
     const [ox, oy, oz] = part.offset ?? [0, 0, 0];
     return { ...part, offset: [ox, oy, oz + lift] };
   }) : parts);
-  scene.setCaptions(withBoards && viewPortNames.checked ? portCaptions.map((caption) => ({ ...caption, at: [caption.at[0], caption.at[1], caption.at[2] + lift] })) : []);
+  scene.setCaptions(withBoards && viewPortNames.checked ? portCaptions.map((caption, i) => {
+    const at = withLid(caption.at, captionsOnLid[i]);
+    return { ...caption, at: [at[0], at[1], at[2] + lift] };
+  }) : []);
 }
 
 /**

@@ -676,5 +676,25 @@
         7
       ]
     }
+  },
+  "msp2807-hung-top-lid-inserts": {
+    "body": {
+      "triangles": 2816,
+      "volume": 27282.31,
+      "extents": [
+        70.6,
+        106,
+        18.09
+      ]
+    },
+    "lid": {
+      "triangles": 2048,
+      "volume": 11234.05,
+      "extents": [
+        70.6,
+        106,
+        6.3
+      ]
+    }
   }
 }

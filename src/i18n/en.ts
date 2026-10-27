@@ -143,6 +143,12 @@ export const en = {
   'board.xy.hint': 'position relative to the other boards, mm; the layout as a whole is centred in the case',
   'board.z': 'Standoff height',
   'board.z.hint': 'PCB underside above the floor, mm; never below the parts under the board',
+  'board.on': 'Held',
+  'board.on.floor': 'On the floor',
+  'board.on.ceiling': 'From the ceiling',
+  'board.on.hint': 'From the ceiling: its top against the lid (or the case\'s top), on standoffs coming down from it — a screen flush with its window',
+  'board.gap': 'Gap to the ceiling',
+  'board.gap.hint': 'from the board\'s front (the glass) to the inside of the top, mm; 0.3 leaves room for a glass thicker than drawn',
   'board.pins': 'Pins soldered downwards',
   'board.pins.hint': 'Header pins point down under the board: it sits higher, and rails carry the header on a bed with a slot for the pins',
   'board.variant': 'Model',
@@ -192,6 +198,8 @@ export const en = {
   'warn.notAgainstWall': "Board {board} is not against its wall: another board takes the wall further out. Align the boards on that side.",
   'info.portsRecessed': "The connectors of board {board} are shorter than the wall: they sit {mm} mm deeper than asked.",
   'warn.bottomPartOnSupport': 'Board {board}, {port}: the part under the board lands on a standoff or a rail.',
+  'warn.topPartOnSupport': 'Board {board}, {port}: the part on top lands on a standoff or a rail it hangs from.',
+  'warn.glassGap': 'Board {board}: less than {mm} mm to the ceiling — a glass thicker than drawn will press against it.',
   'progress.supports': 'Standoffs and rails',
 
   // --- openings ---

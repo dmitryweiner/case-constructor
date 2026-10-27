@@ -7,13 +7,14 @@ import type { Manifold } from 'manifold-3d';
 import { CsgScope, fromManifold, unionAll } from './csg';
 import type { Dims } from './face';
 import { faceFrame } from './face';
+import type { PlacedBoard } from './layout';
 import { caseLayout, effectiveLid } from './layout';
 import type { Message } from './message';
 import { partingZ, skirtSolid, splitAtParting } from './parting';
 import { plateOf, shapeSpec } from './shape';
 import { outerSolid, shellSolid } from './shell';
 import type { Support } from './standoffs';
-import { rails, standoffs } from './standoffs';
+import { fromCeiling, rails, standoffs, upsideDown } from './standoffs';
 import { batteryClamps, batterySupports } from './batterySolids';
 import { cuttersSolid } from './cut';
 import { postSpots } from './fastening';
@@ -78,16 +79,19 @@ export function buildCase(
     let body = parted.body;
     let lidSolid = parted.lid;
 
-    // Supports go on whichever part owns the floor under them — the body,
-    // or the lid when the floor is the lid. After the split, so the parting
+    // Supports go on whichever part owns the plate they grow from — the
+    // body, or the lid when the floor (or, for a hung board, the ceiling) is
+    // the lid. After the split, so the parting
     // plane never cuts a standoff; before any cutout, so a vent under a
     // standoff does not open it.
     onStage(BUILD_STAGES[2]);
+    // a hung board's supports are a floor board's in the case turned upside down
+    const held = (board: PlacedBoard): Support[] => (board.def.mount.kind === 'holes'
+      ? standoffs(csg, scope, board, shape.floor, segments)
+      : rails(csg, scope, board, shape.floor));
     const supports: Support[] = layout.boards.flatMap((board) => (board.def.battery
       ? batterySupports(csg, scope, board, board.def.battery, shape.floor, segments)
-      : board.def.mount.kind === 'holes'
-        ? standoffs(csg, scope, board, shape.floor, segments)
-        : rails(csg, scope, board, shape.floor)));
+      : board.hung ? fromCeiling(scope, held(upsideDown(board, dims.h)), dims.h) : held(board)));
     // The owner is the part under the support's base; whatever of it reaches
     // into the other part's material (a deep side lid over a manually placed
     // board) is cut away, so the parts never overlap.

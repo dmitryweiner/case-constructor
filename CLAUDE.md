@@ -200,6 +200,15 @@ freely; a temporary script that turns out useful becomes a permanent one.
   (`geo/ghost.ts`, no CSG) line up with the worker's case. A ghost's PCB has
   its mounting holes through it (faces triangulated with `earcut`) and a pad
   ring around each, in the ports' colour.
+- A board hung from the ceiling (`placement.on: 'ceiling'`, `PlacedBoard.hung`;
+  its top still up, `z` the gap from its front to the inner ceiling,
+  `CEILING_GAP` 0.3 by default, missing = the floor): its supports are a
+  floor board's built in the case turned upside down (`upsideDown`) and
+  mirrored back (`fromCeiling`), so they belong to whoever owns the top
+  plate. The inner height adds a hung stack to a floor stack under it
+  (`stacksHeight`); a hung board's footprint takes its bosses' overhang (a
+  top lid's skirt hangs right there). `heldByLid` boards go with the lid in
+  the exploded view. Not on a console yet (`hangs`).
 - Supports (`geo/standoffs.ts`) go to the part that owns the floor under
   them (the lid when the floor is the lid), minus whatever of them would
   enter the other part; holes are drilled after the union. A deep side lid
@@ -365,7 +374,7 @@ Boards: `#boardAdd` opens `#boardPicker` (`#boardSearch`, rows
 `#boardList [data-board="<id>"]`, batteries `[data-board="battery-<kind>"]`, `#boardPickerClose`); with two boards or more
 `#boardsArrange_row|column|compact` and `#boards_gap` (geo/arrange.ts);
 per board
-`#board<i>_x|_y|_z`, alignment (two boards or more) `#board<i>_align`
+`#board<i>_x|_y|_z`, `#board<i>_on_floor|ceiling` (not on a console, not a battery), `#board<i>_gap` (hung; instead of `_z`), alignment (two boards or more) `#board<i>_align`
 (details), `#board<i>_alignRef`,
 `#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_wall_front|back|left|right` (toggles; not on a cylinder), `#board<i>_wallOffset`, `#board<i>_screw`,
 `#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles

@@ -10,7 +10,9 @@ Each board has:
 |---|---|---|
 | Model | the family's models | entries for a family on one outline (XIAO, Feather, Waveshare Zero): where its buttons and parts are, and which openings it gets |
 | X, Y | 0–300 mm | position relative to the other boards; the layout as a whole is centred in the case, so with one board these do nothing |
-| Standoff height | the board's underside parts + 1 mm … 60 mm | PCB underside above the floor |
+| Held | on the floor / from the ceiling | a display, or a board with a screen on top, hangs from the ceiling when added (see [Displays](displays.md)); not on a console yet |
+| Standoff height | the board's underside parts + 1 mm … 60 mm | on the floor: PCB underside above the floor |
+| Gap to the ceiling | 0 … 60 mm (default 0.3) | from the ceiling: from the board's front (its glass) to the inside of the top; under 0.3 mm the panel warns |
 | Pins soldered downwards | on / off | boards with header rows; the default is how the board ships; the board goes up with its pins (8.5 mm with the plastic) |
 | Rotation | 0° / 90° / 180° / 270° | |
 | Against the wall | front / back / left / right, any of them | not on a cylinder; see below |

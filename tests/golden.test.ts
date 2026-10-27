@@ -187,6 +187,12 @@ const STATES: Record<string, AppState> = {
     shape: { ...defaultState().shape, floor: 4 },
     lid: { ...defaultState().lid, fastening: 'screws', screw: { size: 'M3', hole: 'insert', head: 'counterbore' }, head: { d: 6, depth: 3 } },
   }),
+  // D2: a display hung from the lid (plans/PLAN-DISPLAYS.md)
+  'msp2807-hung-top-lid-inserts': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, fastening: 'screws', screw: { size: 'M3', hole: 'insert', head: 'none' } },
+    boards: [{ board: 'lcdwiki-msp2807', on: 'ceiling', z: 0.3, mount: { size: 'M3', hole: 'insert' } }],
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

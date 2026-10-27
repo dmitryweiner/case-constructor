@@ -9,13 +9,16 @@ import type { Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';
 import type { BoardPlacement } from '../boards/placement';
-import { NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, WALL_OFFSET_MAX, WALL_OFFSET_MIN, Z_MAX, boardOf, entryOf, pinsDown, placementMinZ, portCut, withPortCut } from '../boards/placement';
+import {
+  CEILING_GAP, NEW_BOARD_GAP, POSITION_MAX, ROTATIONS, SIDES, WALL_OFFSET_MAX, WALL_OFFSET_MIN, Z_MAX, boardOf, entryOf, floorZ, pinsDown, placementMinZ,
+  portCut, withPortCut, withSide,
+} from '../boards/placement';
 import type { BoardDef } from '../boards/schema';
 import type { BatterySpec } from '../boards/battery';
 import { BATTERY_KINDS, CELL_COUNT_MAX, PACK_MAX, PACK_MIN, PRESS_MAX, PRESS_MIN, defaultBattery, sanitizeBattery } from '../boards/battery';
 import { EDGES } from '../boards/schema';
 import type { Align, ArrangeMode } from '../geo/arrange';
-import { caseLayout } from '../geo/layout';
+import { caseLayout, hangs } from '../geo/layout';
 import { ALIGN_X, ALIGN_Y, ARRANGE_MODES, alignBoard, arrangeBoards } from '../geo/arrange';
 import type { Key } from '../i18n';
 import { tDynamic } from '../i18n';
@@ -40,6 +43,7 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
   const at = (state: AppState): BoardPlacement => state.boards[index];
   const holes = (state: AppState): boolean => boardOf(at(state)).mount.kind === 'holes';
   const battery = (state: AppState): BatterySpec | undefined => at(state).battery;
+  const hung = (state: AppState): boolean => hangs(state, at(state));
   const setBattery = (state: AppState, patch: Partial<BatterySpec>): AppState => {
     const spec = sanitizeBattery({ ...(battery(state) ?? defaultBattery()), ...patch });
     return patchBoard(state, index, { battery: spec });
@@ -95,11 +99,32 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       set: (state, value) => patchBoard(state, index, { y: value }),
     },
     {
+      // on the floor or hung from the ceiling; the console's slope takes no hung board yet (D4)
+      kind: 'segmented', key: 'on', label: 'board.on', hint: 'board.on.hint',
+      when: (state) => battery(state) === undefined && state.shape.kind !== 'console',
+      options: SIDES.map((side) => ({ value: side, label: `board.on.${side}` as const })),
+      get: (state) => at(state).on ?? 'floor',
+      set: (state, value) => {
+        const def = boardOf(at(state));
+        const placement: BoardPlacement = value === 'ceiling'
+          ? { ...withSide(at(state), 'ceiling'), z: CEILING_GAP }
+          : { ...withSide(at(state), 'floor'), z: floorZ(def, pinsDown(def, at(state))) };
+        return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
+      },
+    },
+    {
       // a battery lies in cradles rather than on standoffs: the same height, its own words
       kind: 'range', key: 'z', label: entry.battery ? 'battery.z' : 'board.z', hint: entry.battery ? 'battery.z.hint' : 'board.z.hint',
       min: 0, max: Z_MAX, step: 0.5,
+      when: (state) => !hung(state),
       get: (state) => at(state).z,
       set: (state, value) => patchBoard(state, index, { z: Math.max(placementMinZ(at(state)), value) }),
+    },
+    {
+      kind: 'range', key: 'gap', label: 'board.gap', hint: 'board.gap.hint', min: 0, max: Z_MAX, step: 0.1,
+      when: hung,
+      get: (state) => at(state).z,
+      set: (state, value) => patchBoard(state, index, { z: value }),
     },
     {
       kind: 'check', key: 'pins', label: 'board.pins', hint: 'board.pins.hint',

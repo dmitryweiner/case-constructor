@@ -247,6 +247,24 @@ if (displayGroup !== 'Displays') errors.push(`[displays] MSP2807 under ${display
 await page.click('#boardList [data-board="lcdwiki-msp2807"]');
 await expectWatertight('displays:msp2807');
 if (!(await page.evaluate(() => window.__case.drawn())).includes('glass')) errors.push('[displays] no glass drawn');
+// hung from the ceiling when added: the gap slider, not the standoff height; exploded, it goes up with the lid
+if (!(await page.locator('#board1_on_ceiling').getAttribute('class'))?.includes('active')) errors.push('[hang] a display is not hung when added');
+if (!(await page.locator('#board1_gap').isVisible()) || await page.locator('#board1_z').isVisible()) errors.push('[hang] a hung board shows the standoff height');
+const lifted = await page.evaluate(() => {
+  const parts = window.__case.drawnParts();
+  return { lid: parts.find((part) => part.role === 'lid')?.offset?.[2] ?? 0, glass: parts.find((part) => part.role === 'glass')?.offset?.[2] ?? 0 };
+});
+if (Math.abs(lifted.lid - lifted.glass) > 1e-6 || lifted.lid <= 0) errors.push(`[hang] exploded, the lid rises ${lifted.lid} and the display ${lifted.glass}`);
+await page.click('#board1_hole_nut');
+await expectWatertight('hang:nut');
+await setRange('board1_gap', 0);
+if (!(await page.textContent('#warnings'))?.includes('0.3')) errors.push('[hang] no warning for a gap under 0.3 mm');
+await page.click('#lid_face_bottom');
+await expectWatertight('hang:bottom-lid');
+await page.click('#lid_face_top');
+await page.click('#board1_on_floor');
+if (!(await page.locator('#board1_z').isVisible())) errors.push('[hang] back on the floor without its standoff height');
+await expectWatertight('hang:floor');
 await page.click('#board1_remove');
 label('openings');
 await page.click('#cutAdd');
@@ -288,6 +306,8 @@ if (found !== 1) errors.push(`[boards:search] "lora 32 v3" finds ${found}`);
 await page.click('#boardList [data-board]');
 await expectWatertight('boards:two');
 label('boards:overlap');
+// the Heltec has a screen, so it hangs when added: over the Pi that is no overlap; on the floor it is
+await page.click('#board1_on_floor');
 await setRange('board1_x', 0);
 await page.waitForTimeout(100);
 if (!(await page.locator('#warnings').textContent()).includes('overlap')) errors.push('[boards:overlap] no warning');

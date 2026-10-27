@@ -2,6 +2,7 @@
 
 - [Case shape and size](case.md)
 - [Boards, standoffs and rails](boards.md)
+- [Displays](displays.md)
 - [Batteries](batteries.md)
 - [Lid](lid.md)
 - [Openings: ports and your own](openings.md)

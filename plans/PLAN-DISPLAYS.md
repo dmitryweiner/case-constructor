@@ -319,3 +319,18 @@ first, and without the sizes it goes in as ≈ or moves to Tier B (recorded
 below).
 
 ## Deviations (recorded as they happen)
+
+- **D2.** The gap is a slider of its own, `#board<i>_gap` (0.1 mm steps),
+  shown instead of `#board<i>_z` on a hung board: a control's label is fixed.
+- **D2.** *The same height* takes the reference's side too (a hung
+  reference hangs the board at its gap), instead of aligning only boards on
+  the same side — a button that silently did nothing is what the review
+  found wrong with the view toggles.
+- **D2.** A hung board's footprint includes its standoff bosses' overhang
+  past its edge: M3 inserts on the MSP2807 reach 0.6 mm past it and met a
+  top lid's skirt (slivers on the skirt's face). Floor boards unchanged.
+- **D2.** The exploded view moves with the lid every board the lid holds
+  (`heldByLid`): a hung board under a top lid, and also a floor board on a
+  bottom lid — before, those stayed with the body.
+- **D2.** Until D4, a board marked hung on a console stands on the floor at
+  its default floor height; the card hides the choice there.

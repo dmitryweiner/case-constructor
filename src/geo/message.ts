@@ -20,6 +20,8 @@ export type MessageCode =
   | 'warn.notAgainstWall'
   | 'info.portsRecessed'
   | 'warn.bottomPartOnSupport'
+  | 'warn.topPartOnSupport'
+  | 'warn.glassGap'
   // cutouts (ports)
   | 'warn.portFar'
   | 'info.cutSplit'

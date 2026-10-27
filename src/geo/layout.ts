@@ -11,7 +11,7 @@ import type { BoardDef, Edge, TopPort } from '../boards/schema';
 import { EDGES, onFace } from '../boards/schema';
 import type { BoardPlacement, Rotation } from '../boards/placement';
 import { CLAMP_POST_ZONE } from '../boards/battery';
-import { boardOf, pinsDown, undersideOf } from '../boards/placement';
+import { CEILING_GAP, boardOf, floorZ, pinsDown, undersideOf } from '../boards/placement';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import { bossDiameter } from './fasteners';
@@ -100,6 +100,8 @@ export interface PlacedBoard {
   zBottom: number;
   /** the walls it stands against: those asked for that can be (not on a cylinder, a rail edge, the side lid's face) */
   walls: PlacedWall[];
+  /** hung from the ceiling (its top still up): its supports come down from the ceiling plate */
+  hung: boolean;
 }
 
 export interface CaseLayout {
@@ -148,9 +150,22 @@ export function pinEdges(board: Pick<PlacedBoard, 'def' | 'placement'>): Edge[] 
   return board.def.pins && pinsDown(board.def, board.placement) ? board.def.pins.edges : [];
 }
 
-/** How far beyond each edge the board's footprint reaches (ports, rails). */
-function edgeReach(def: BoardDef): Record<Edge, number> {
+/**
+ * How far beyond each edge the board's footprint reaches (ports, rails; a
+ * hung board's standoff bosses too: they come down through the band where a
+ * top lid's skirt hangs, and the side margin must keep them off it).
+ */
+function edgeReach(def: BoardDef, placement: BoardPlacement, hung: boolean): Record<Edge, number> {
   const reach: Record<Edge, number> = { front: 0, back: 0, left: 0, right: 0 };
+  if (hung && def.mount.kind === 'holes') {
+    const r = bossDiameter(placement.mount) / 2;
+    for (const hole of def.mount.holes) {
+      reach.left = Math.max(reach.left, r - hole.x);
+      reach.right = Math.max(reach.right, hole.x + r - def.size.w);
+      reach.front = Math.max(reach.front, r - hole.y);
+      reach.back = Math.max(reach.back, hole.y + r - def.size.d);
+    }
+  }
   for (const port of def.ports) {
     if (!onFace(port)) reach[port.edge] = Math.max(reach[port.edge], port.protrude);
   }
@@ -184,17 +199,35 @@ function wallOf(input: LayoutInput, def: BoardDef, placement: BoardPlacement, to
   return { side, edge, line: at + sign * reach, recessed: reach - wanted, ports: onEdge.length > 0, against: true };
 }
 
-function place(input: LayoutInput, offsetX: number, offsetY: number): PlacedBoard[] {
+/**
+ * Whether a placement hangs from the ceiling as built. The console's slope
+ * takes no hung board yet (plans/PLAN-DISPLAYS.md D4): there it stands on
+ * the floor at its default height.
+ */
+export function hangs(input: Pick<LayoutInput, 'shape'>, placement: BoardPlacement): boolean {
+  return placement.on === 'ceiling' && input.shape.kind !== 'console';
+}
+
+/**
+ * The boards placed, `offsetX/Y` added to their positions; a hung board's
+ * front `z` below `ceiling` (the inner ceiling's height; null while the
+ * case height is not known yet — only their plan and their stacks count then).
+ */
+function place(input: LayoutInput, offsetX: number, offsetY: number, ceiling: number | null): PlacedBoard[] {
   return input.boards.map((placement, index) => {
     const def = boardOf(placement);
-    const z0 = input.shape.floor + placement.z;
+    const hung = hangs(input, placement);
+    const pins = pinsDown(def, placement);
+    const front = def.size.t + def.topHeight;
+    const z0 = hung ? (ceiling ?? 0) - placement.z - front
+      : input.shape.floor + (placement.on === 'ceiling' ? Math.max(placement.z, floorZ(def, pins)) : placement.z);
     const toCase = boardTransform(def, placement.rot, placement.x + offsetX, placement.y + offsetY, z0);
     const { w, d } = def.size;
     const corner = (bx: number, by: number): [number, number] => {
       const p = applyAffine(toCase, [bx, by, 0]);
       return [p[0], p[1]];
     };
-    const reach = edgeReach(def);
+    const reach = edgeReach(def, placement, hung);
     const outline = rectOf([corner(0, 0), corner(w, d)]);
     return {
       index,
@@ -204,9 +237,10 @@ function place(input: LayoutInput, offsetX: number, offsetY: number): PlacedBoar
       outline,
       footprint: rectOf([corner(-reach.left, -reach.front), corner(w + reach.right, d + reach.back)]),
       z0,
-      zTop: z0 + def.size.t + def.topHeight,
-      zBottom: z0 - undersideOf(def, pinsDown(def, placement)),
+      zTop: z0 + front,
+      zBottom: z0 - undersideOf(def, pins),
       walls: (placement.walls ?? []).flatMap((side) => wallOf(input, def, placement, toCase, outline, side) ?? []),
+      hung,
     };
   });
 }
@@ -230,7 +264,7 @@ export function sideMargin(shape: ShapeState, lid: LidState): number {
 
 /** Boards in the layout frame (before centring) — for placing a new one beside them. */
 export function placeBoards(input: LayoutInput): PlacedBoard[] {
-  return place(input, 0, 0);
+  return place(input, 0, 0, null);
 }
 
 /**
@@ -287,15 +321,14 @@ function cavityOf(input: LayoutInput, placed: readonly PlacedBoard[]): (Rect & {
 /** The minimum outer size: the cavity the boards need plus walls, floor and ceiling. */
 export function minimumDims(input: LayoutInput): Dims {
   const { shape } = input;
-  const placed = place(input, 0, 0);
+  const placed = place(input, 0, 0, null);
   const box = union(placed.map((board) => board.footprint));
   const cavity = cavityOf(input, placed);
   const margin = sideMargin(shape, input.lid);
-  const top = Math.max(0, ...placed.map((board) => board.zTop - shape.floor));
   const band = lidBand(input.lid, input.shape);
   let innerW = Math.max(INNER_MIN.w, cavity ? cavity.x1 - cavity.x0 + band.x0 + band.x1 : 0);
   let innerD = Math.max(INNER_MIN.d, cavity ? cavity.y1 - cavity.y0 + band.y0 + band.y1 : 0);
-  const innerH = Math.max(INNER_MIN.h, placed.length > 0 ? top + shape.margin.top : 0);
+  const innerH = Math.max(INNER_MIN.h, placed.length > 0 ? stacksHeight(placed, shape) : 0);
   if (shape.kind === 'cylinder') {
     const diameter = box ? Math.hypot(box.x1 - box.x0, box.y1 - box.y0) + 2 * margin : 0;
     innerW = Math.max(innerW, innerD, diameter);
@@ -307,6 +340,25 @@ export function minimumDims(input: LayoutInput): Dims {
     d: clamp(innerD + 2 * shape.wall),
     h: clamp(innerH + 2 * shape.floor),
   };
+}
+
+/**
+ * The inner height the boards need: each floor board's top and each hung
+ * board's stack (gap, board, parts and pins under it) with `margin.top` to
+ * spare — the two added up where a hung board is over a floor board.
+ */
+function stacksHeight(placed: readonly PlacedBoard[], shape: ShapeState): number {
+  const floorTop = (board: PlacedBoard): number => board.zTop - shape.floor;
+  const hungDepth = (board: PlacedBoard): number => board.placement.z + board.zTop - board.zBottom;
+  const floor = placed.filter((board) => !board.hung);
+  const hung = placed.filter((board) => board.hung);
+  let need = Math.max(0, ...floor.map(floorTop), ...hung.map(hungDepth)) + shape.margin.top;
+  for (const above of hung) {
+    for (const below of floor) {
+      if (overlap(above.outline, below.outline) > 0.01) need = Math.max(need, floorTop(below) + shape.margin.top + hungDepth(above));
+    }
+  }
+  return need;
 }
 
 /**
@@ -325,7 +377,7 @@ export function caseLayout(input: LayoutInput): CaseLayout {
   };
   if (shape.kind === 'cylinder') dims = { ...dims, d: dims.w };
 
-  const cavity = cavityOf(input, place(input, 0, 0));
+  const cavity = cavityOf(input, place(input, 0, 0, null));
   // centred in what is left of the cavity once the lid's band is taken off —
   // or against the wall a board stands against
   const band = lidBand(input.lid, input.shape);
@@ -341,7 +393,7 @@ export function caseLayout(input: LayoutInput): CaseLayout {
   const inner: Record<Edge, number> = {
     left: wall + band.x0, right: dims.w - wall - band.x1, front: wall + band.y0, back: dims.d - wall - band.y1,
   };
-  const boards = place(input, offsetX, offsetY).map((board): PlacedBoard => ({
+  const boards = place(input, offsetX, offsetY, dims.h - shape.floor).map((board): PlacedBoard => ({
     ...board,
     walls: board.walls.map((wall) => ({ ...wall, against: Math.abs(wall.line - inner[wall.side]) < 1e-6 })),
   }));
@@ -408,6 +460,15 @@ function overlap(a: Rect, b: Rect): number {
   return w > 0 && h > 0 ? w * h : 0;
 }
 
+/**
+ * Whether the lid holds the board: its supports grow from the lid's plate —
+ * a hung board under a top lid, a floor board on a bottom lid. In the
+ * exploded view it goes with the lid.
+ */
+export function heldByLid(board: Pick<PlacedBoard, 'hung'>, lidFace: string): boolean {
+  return board.hung ? lidFace === 'top' : lidFace === 'bottom';
+}
+
 /** Standoff centres and radii of a placed board, in the case frame. */
 export function standoffColumns(board: PlacedBoard): { x: number; y: number; r: number }[] {
   if (board.def.mount.kind !== 'holes') return [];
@@ -443,17 +504,23 @@ export function collisions(layout: CaseLayout): Message[] {
         out.push({ code: 'info.portsRecessed', params: { board: board.index + 1, mm: wall.recessed.toFixed(1) } });
       }
     }
+    // the supports are under a floor board and over a hung one
     for (const port of board.def.ports) {
-      if (port.edge === 'bottom' && bottomPartOnSupport(board, port)) {
-        out.push({ code: 'warn.bottomPartOnSupport', params: { board: board.index + 1, port: port.id } });
+      if (port.edge === (board.hung ? 'top' : 'bottom') && partOnSupport(board, port)) {
+        out.push({ code: board.hung ? 'warn.topPartOnSupport' : 'warn.bottomPartOnSupport', params: { board: board.index + 1, port: port.id } });
       }
+    }
+    if (board.hung && board.placement.z < CEILING_GAP - 1e-9) {
+      out.push({ code: 'warn.glassGap', params: { board: board.index + 1, mm: CEILING_GAP } });
     }
   }
   for (const a of boards) {
     for (const column of standoffColumns(a)) {
       const rect: Rect = { x0: column.x - column.r, y0: column.y - column.r, x1: column.x + column.r, y1: column.y + column.r };
       for (const b of boards) {
-        if (b === a || b.zBottom >= a.z0 || overlap(rect, b.outline) <= 0) continue;
+        // a floor board's standoffs reach up to its PCB, a hung board's down to its top
+        const clear = a.hung ? b.zTop <= a.z0 + a.def.size.t : b.zBottom >= a.z0;
+        if (b === a || clear || overlap(rect, b.outline) <= 0) continue;
         out.push({ code: 'warn.standoffHitsBoard', params: { a: a.index + 1, b: b.index + 1 } });
       }
     }
@@ -461,8 +528,8 @@ export function collisions(layout: CaseLayout): Message[] {
   return dedupe(out);
 }
 
-/** Whether a part on the underside lands on its board's standoffs or rails (board frame). */
-function bottomPartOnSupport(board: PlacedBoard, port: TopPort): boolean {
+/** Whether a part on the side the supports come from lands on its board's standoffs or rails (board frame). */
+function partOnSupport(board: PlacedBoard, port: TopPort): boolean {
   const { w, d } = board.def.size;
   const hw = port.w / 2;
   const hd = (port.shape === 'round' ? port.w : port.d) / 2;
@@ -475,7 +542,8 @@ function bottomPartOnSupport(board: PlacedBoard, port: TopPort): boolean {
       return Math.hypot(dx, dy) < r;
     });
   }
-  const pinned = pinEdges(board);
+  // a hung board's rails carry no pin bed: their lip over its top is a plain one
+  const pinned = board.hung ? [] : pinEdges(board);
   return railEdges(board.def).some((edge) => {
     const reach = railReach(pinned.includes(edge) && board.def.pins ? board.def.pins : null);
     const strip: Rect = edge === 'front' ? { x0: RAIL_SHORTEN, y0: 0, x1: w - RAIL_SHORTEN, y1: reach }
