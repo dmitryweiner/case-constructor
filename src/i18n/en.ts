@@ -159,6 +159,9 @@ export const en = {
   'board.back.rot': 'Turned',
   'board.back.standoff': 'Standoff height',
   'board.back.standoff.hint': 'the display\'s standoffs between its back and the board, mm — longer ones make room for a Pi 5\'s cooler',
+  'board.top': 'On top',
+  'board.top.hint': 'a HAT display (HyperPixel) on this board\'s header: the board on the floor carries it, the case puts its window flush above it',
+  'board.top.standoff.hint': 'from this board to the display, mm — on a Pi 4 or 5 a display over the USB and Ethernet needs an extension header',
   'board.pins': 'Pins soldered downwards',
   'board.pins.hint': 'Header pins point down under the board: it sits higher, and rails carry the header on a bed with a slot for the pins',
   'board.variant': 'Model',
@@ -211,6 +214,7 @@ export const en = {
   'warn.topPartOnSupport': 'Board {board}, {port}: the part on top lands on a standoff or a rail it hangs from.',
   'warn.glassGap': 'Board {board}: less than {mm} mm to the ceiling — a glass thicker than drawn will press against it.',
   'warn.clampBlocked': 'Board {board}: a clamp bar finds no free place on the back of the panel — it runs into a part there.',
+  'warn.carriedOnParts': 'Board {board}: the display on top sits on its parts — raise its standoffs by {mm} mm (an extension header).',
   'progress.supports': 'Standoffs and rails',
 
   // --- openings ---

@@ -11,7 +11,7 @@ import { t } from '../i18n';
 import type { BackPlacement, BoardPlacement } from '../boards/placement';
 import {
   BACK_STANDOFF_MAX, BACK_STANDOFF_MIN, CEILING_GAP, NEW_BOARD_GAP, backPortDefault, backStandoffMin, withBackCut, POSITION_MAX, ROTATIONS, SIDES, WALL_OFFSET_MAX, WALL_OFFSET_MIN, Z_MAX, boardOf, entryOf, floorZ, pinsDown, placementMinZ,
-  portCut, withPortCut, withSide,
+  ownPortDefault, portCut, withPortCut, withSide, withTopCut,
 } from '../boards/placement';
 import type { BoardDef } from '../boards/schema';
 import { resolveVariant } from '../boards/schema';
@@ -140,6 +140,7 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       set: (state, value) => patchBoard(state, index, { press: value }),
     },
     ...backControls(index, entry),
+    ...topControls(index, entry),
     {
       kind: 'check', key: 'bevel', label: 'board.bevel', hint: 'board.bevel.hint',
       when: (state) => hung(state) && boardOf(at(state)).ports.some((port) => port.type === 'display' && port.edge === 'top'),
@@ -271,6 +272,69 @@ function backControls(index: number, entry: BoardDef): Control<AppState>[] {
   ];
 }
 
+/** A board on the floor: the HAT display it carries, its turn and the standoffs' length (D9). */
+function topControls(index: number, entry: BoardDef): Control<AppState>[] {
+  if (entry.battery || entry.mount.kind !== 'holes') return [];
+  const at = (state: AppState): BoardPlacement => state.boards[index];
+  const board = resolveVariant(entry, entry.variants?.[0].id);
+  const fits = CATALOG.filter((def) => def.back?.facing === 'top' && attachTurns(resolveVariant(def, def.variants?.[0].id), board).length > 0);
+  if (fits.length === 0) return [];
+  const display = (state: AppState): BoardDef | undefined => {
+    const top = at(state).top;
+    const found = top ? catalogBoard(top.board) : undefined;
+    return found && top ? resolveVariant(found, top.variant) : undefined;
+  };
+  const setTop = (state: AppState, top: BackPlacement | null): AppState => {
+    const placement: BoardPlacement = { ...at(state) };
+    if (top) placement.top = top;
+    else delete placement.top;
+    return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
+  };
+  const floor = (state: AppState): boolean => !hangs(at(state));
+  return [
+    {
+      kind: 'select', key: 'top', label: 'board.top', hint: 'board.top.hint', when: floor,
+      options: [{ value: '', label: 'board.back.none' }, ...fits.map((def) => ({ value: def.id, text: def.name }))],
+      get: (state) => at(state).top?.board ?? '',
+      set: (state, value) => {
+        const found = catalogBoard(value);
+        const def = found ? resolveVariant(found, found.variants?.[0].id) : undefined;
+        if (!found || !def?.back) return setTop(state, null);
+        const turns = attachTurns(def, resolveVariant(entry, at(state).variant));
+        return setTop(state, {
+          board: found.id, rot: turns[0] ?? 0, standoff: Math.max(def.back.standoff, backStandoffMin(def, board)), cuts: {},
+          ...(found.variants ? { variant: found.variants[0].id } : {}),
+        });
+      },
+    },
+    {
+      kind: 'segmented', key: 'top_rot', label: 'board.back.rot',
+      when: (state) => floor(state) && at(state).top !== undefined,
+      options: ROTATIONS.map((rot) => ({ value: String(rot), text: `${rot}°` })),
+      optionDisabled: (state, value) => {
+        const def = display(state);
+        return !def || !attachTurns(def, boardOf(at(state))).some((turn) => String(turn) === value);
+      },
+      get: (state) => String(at(state).top?.rot ?? ''),
+      set: (state, value) => {
+        const top = at(state).top;
+        return top ? setTop(state, { ...top, rot: ROTATIONS.find((rot) => String(rot) === value) ?? top.rot }) : state;
+      },
+    },
+    {
+      kind: 'range', key: 'top_standoff', label: 'board.back.standoff', hint: 'board.top.standoff.hint',
+      min: BACK_STANDOFF_MIN, max: BACK_STANDOFF_MAX, step: 0.5,
+      when: (state) => floor(state) && at(state).top !== undefined,
+      get: (state) => at(state).top?.standoff ?? 0,
+      set: (state, value) => {
+        const top = at(state).top;
+        const def = display(state);
+        return top && def ? setTop(state, { ...top, standoff: Math.max(backStandoffMin(def, boardOf(at(state))), value) }) : state;
+      },
+    },
+  ];
+}
+
 /** One checkbox per port: cut an opening for it or not; then the ports of the board on a display's back. */
 function portControls(index: number, state: AppState): Control<AppState>[] {
   const def = boardOf(state.boards[index]);
@@ -278,9 +342,26 @@ function portControls(index: number, state: AppState): Control<AppState>[] {
     kind: 'check',
     key: `cut_${port.id}`,
     label: { text: `${tDynamic(`port.${port.type}`)} · ${port.id}` },
-    get: (current) => portCut(current.boards[index], port.id, port.cut),
-    set: (current, value) => patchBoard(current, index, { cuts: withPortCut(current.boards[index], port, value).cuts }),
+    get: (current) => portCut(current.boards[index], port.id, ownPortDefault(current.boards[index], port)),
+    set: (current, value) => patchBoard(current, index, {
+      cuts: withPortCut(current.boards[index], { id: port.id, cut: ownPortDefault(current.boards[index], port) }, value).cuts,
+    }),
   }));
+  const top = state.boards[index].top;
+  const topEntry = top ? catalogBoard(top.board) : undefined;
+  if (top && topEntry) {
+    const display = resolveVariant(topEntry, top.variant);
+    return [...own, ...display.ports.map((port): Control<AppState> => ({
+      kind: 'check',
+      key: `top_cut_${port.id}`,
+      label: { text: `${display.name} · ${tDynamic(`port.${port.type}`)} · ${port.id}` },
+      get: (current) => current.boards[index].top?.cuts[port.id] ?? port.cut,
+      set: (current, value) => {
+        const now = current.boards[index].top;
+        return now ? patchBoard(current, index, { top: { ...now, cuts: withTopCut(now, port, value) } }) : current;
+      },
+    }))];
+  }
   const back = state.boards[index].back;
   const entry = back ? catalogBoard(back.board) : undefined;
   if (!back || !entry) return own;
@@ -334,7 +415,7 @@ function signatureOf(state: AppState): string {
   // a battery's kind decides its controls, its cell count its name
   return state.boards.map((board) => (board.board === 'custom' ? `custom:${customSignature(boardOf(board))}`
     : board.battery ? `battery:${board.battery.kind}:${board.battery.count}`
-      : `${board.board}:${board.variant ?? ''}:${board.back?.board ?? ''}:${board.back?.variant ?? ''}`)).join('|');
+      : `${board.board}:${board.variant ?? ''}:${board.back?.board ?? ''}:${board.back?.variant ?? ''}:${board.top?.board ?? ''}`)).join('|');
 }
 
 export function renderBoardsCard(

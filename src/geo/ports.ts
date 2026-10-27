@@ -100,7 +100,8 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
           ? [Math.min(board.z0 + board.def.size.t + port.h + COLUMN_GAP, ceiling(cx, cy) - 0.2), top(cx, cy) + 1]
           : [-1, Math.max(board.z0 - port.h - COLUMN_GAP, shape.floor + 0.2)];
         // a hung display's window widens 45° outwards from the inside of the top
-        const bevel = board.hung && port.type === 'display' && port.edge === 'top' && board.placement.bevel !== false;
+        // (or a carried display's, under a flat top)
+        const bevel = (board.hung || board.gap !== undefined) && port.type === 'display' && port.edge === 'top' && board.placement.bevel !== false;
         const flare = bevel ? { flare: { from: ceiling(cx, cy), rate: WINDOW_FLARE } } : {};
         out.push({ origin: [cx, cy, 0], ...VERTICAL_AXES, s0, s1, ...section, w, h, ...flare, source });
       } else {

@@ -110,3 +110,21 @@ offers the boards whose holes fit the pattern.
 - Removing the display removes the board on its back.
 - Clamp bars that run into the board on the back are reported.
 
+## A display on the board under it
+
+A HAT display (HyperPixel 4.0) sits on a Pi's header and covers its whole
+PCB: nothing holds it from the front, the Pi standing on the floor carries
+it. **On top** (in the box of a board on the floor) offers the HAT displays
+whose holes fit the board's.
+
+- **Turned** and **Standoff height** as for a board on a display's back;
+  the height is from the board to the display. HyperPixel covers a Pi 4's
+  or 5's USB and Ethernet, so it needs an extension header: the standoff
+  defaults to 16.5 mm, and a display lower than the parts under it is
+  reported.
+- The case's top comes down to the gap (0.3 mm) above the display's front
+  unless another board needs more: the window is flush, chamfered, and the
+  glass gets its rim, as on a hung display.
+- The board's own parts on top (the GPIO header) are closed by default —
+  their columns would open the case right under the display.
+

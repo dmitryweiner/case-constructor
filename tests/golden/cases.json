@@ -824,6 +824,26 @@
       ]
     }
   },
+  "hyperpixel-on-pi4-top-lid": {
+    "body": {
+      "triangles": 2828,
+      "volume": 34687.96,
+      "extents": [
+        118.025,
+        69.04,
+        29.99
+      ]
+    },
+    "lid": {
+      "triangles": 1680,
+      "volume": 8887.69,
+      "extents": [
+        118.025,
+        69.04,
+        5
+      ]
+    }
+  },
   "lcd1602-box": {
     "body": {
       "triangles": 764,

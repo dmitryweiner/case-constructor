@@ -223,6 +223,11 @@ const STATES: Record<string, AppState> = {
     lid: { ...defaultState().lid, fastening: 'screws' },
     boards: [{ board: 'raspberry-pi-touch-display-2-7', on: 'ceiling', z: 0, mount: { size: 'M3', hole: 'insert' }, back: { board: 'raspberry-pi-5', rot: 90 } }],
   }),
+  // D9: a HAT display carried by the board under it
+  'hyperpixel-on-pi4-top-lid': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'raspberry-pi-4b', z: 5, mount: { size: 'M2.5', hole: 'insert' }, top: { board: 'pimoroni-hyperpixel-4' } }],
+  }),
   'lcd1602-box': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'lcd-1602-i2c', on: 'ceiling', z: 0.3, mount: { size: 'M2.5', hole: 'nut' } }],

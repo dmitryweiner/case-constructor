@@ -232,6 +232,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   `placeBoards` leaves it out. No supports; the display's stack depth
   includes it; the pair is one stack for the overlap checks. Its face parts
   are closed by default (`backPortDefault`); captions `<i>b:<port>`.
+  The other way round, a floor board may carry a HAT display on top
+  (`placement.top`, D9): the same pattern, its transform inverted; the
+  display is `carried`, the ceiling comes down to `CEILING_GAP` above its
+  front (`gap`), its window flares and its glass gets a rim; the board's
+  top parts are closed by default (`ownPortDefault`); captions `<i>t:<port>`.
   Its display part's window flares 45° outwards (`CutterSpec.flare`, built
   as one hull — every section is convex); a rim around its glass
   (`rim.ts` pure, `rimSolids.ts` worker) is a support, so it goes where the
@@ -408,7 +413,7 @@ Boards: `#boardAdd` opens `#boardPicker` (`#boardSearch`, rows
 `#boardList [data-board="<id>"]`, batteries `[data-board="battery-<kind>"]`, `#boardPickerClose`); with two boards or more
 `#boardsArrange_row|column|compact` and `#boards_gap` (geo/arrange.ts);
 per board
-`#board<i>_x|_y|_z`, `#board<i>_on_floor|ceiling` (not a battery; on a console the ceiling is the slope), `#board<i>_gap` (hung; instead of `_z`), `#board<i>_bevel` (a hung display), `#board<i>_clampPress` (a clamped panel), `#board<i>_back` (select; a display with a back pattern), `#board<i>_back_rot_0|90|180|270`, `#board<i>_back_standoff`, `#board<i>_back_cut_<port>`, alignment (two boards or more) `#board<i>_align`
+`#board<i>_x|_y|_z`, `#board<i>_on_floor|ceiling` (not a battery; on a console the ceiling is the slope), `#board<i>_gap` (hung; instead of `_z`), `#board<i>_bevel` (a hung display), `#board<i>_clampPress` (a clamped panel), `#board<i>_back` (select; a display with a back pattern), `#board<i>_back_rot_0|90|180|270`, `#board<i>_back_standoff`, `#board<i>_back_cut_<port>`, `#board<i>_top` (select; a floor board with holes), `#board<i>_top_rot_0|90|180|270`, `#board<i>_top_standoff`, `#board<i>_top_cut_<port>`, alignment (two boards or more) `#board<i>_align`
 (details), `#board<i>_alignRef`,
 `#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_wall_front|back|left|right` (toggles; not on a cylinder), `#board<i>_wallOffset`, `#board<i>_screw`,
 `#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles

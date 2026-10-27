@@ -81,8 +81,8 @@ Raw counts, SBC segment:
 
 ### Tier A — high demand, drawing checked
 
-**In the catalog** (plans/PLAN-DISPLAYS.md D7b, 2026-10-27): every row but
-HyperPixel 4.0 (open: a HAT the Pi under it carries).
+**In the catalog** (plans/PLAN-DISPLAYS.md D7b, D9, 2026-10-27): every row;
+HyperPixel 4.0 is carried by the Pi under it (D9).
 
 | Display | Panel | Outline, mm | Active area, mm | Back | Why | Drawing | Note |
 |---|---|---|---|---|---|---|---|

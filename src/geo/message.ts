@@ -23,6 +23,7 @@ export type MessageCode =
   | 'warn.topPartOnSupport'
   | 'warn.glassGap'
   | 'warn.clampBlocked'
+  | 'warn.carriedOnParts'
   | 'warn.windowInCorner'
   // cutouts (ports)
   | 'warn.portFar'

@@ -260,6 +260,7 @@ bezel: its outline and thickness), drawn dark under the window in the view.
 | Inkplate 2 (2.13-inch e-paper, 212×104) | Soldered | 65.2 × 35.2 | clamp tabs, 4 × M3 on the back | [source](https://github.com/SolderedElectronics/Soldered-Inkplate-2-hardware-design) | ≈ |
 | Inkplate 5 Gen2 (5.2-inch e-paper, 1280×720) | Soldered | 130.59 × 75.23 | clamp tabs, 4 × M3 on the back | [source](https://github.com/SolderedElectronics/Soldered-Inkplate-5-Gen2-hardware-design) | ≈ |
 | T5 V2.3 (2.13-inch e-paper, ESP32) | LilyGO | 36.75 × 66.29 | 4 × M2 | [source](https://github.com/Xinyuan-LilyGO/LilyGo-T5-Epaper-Series/tree/master/dimensions) | ≈ |
+| HyperPixel 4.0 (touch / non-touch, 800×480) | Pimoroni | 97.85 × 58.14 | on a Pi's header (On top); clamp bars when hung | [source](https://cdn.shopify.com/s/files/1/0174/1800/files/hyperpixel-rectangular-dimensional-drawing.png) | ≈ (the active area taken as centred, the standoff for an extension header) |
 
 ### Battery holders
 

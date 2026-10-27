@@ -105,7 +105,9 @@ describe('built', () => {
 });
 
 describe('every display with a back pattern', () => {
-  it.each(CATALOG.filter((def) => def.back).map((def) => [def.id]))('%s takes a Pi 4 and builds closed with it', (id) => {
+  // a pressing-clamp panel (HyperPixel) is carried by its Pi instead (D9): its bars would run into the Pi
+  const hangsWithPi = CATALOG.filter((def) => def.back && !(def.mount.kind === 'clamp' && def.mount.holes.length === 0));
+  it.each(hangsWithPi.map((def) => [def.id]))('%s takes a Pi 4 and builds closed with it', (id) => {
     const parent = catalogBoard(id) ?? CATALOG[0];
     const pi4 = catalogBoard('raspberry-pi-4b') ?? CATALOG[0];
     expect(attachTurns(parent, pi4).length).toBeGreaterThan(0);

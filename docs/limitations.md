@@ -18,7 +18,6 @@ Decided on purpose, so nobody wonders:
 
 - A display on a wall of the case (a 1602 on the front of a box): displays
   hang from the top or the console's slope only.
-- A display carried by the board under it (HyperPixel on a Pi's GPIO).
 
 Known limits of the current version:
 

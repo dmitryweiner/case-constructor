@@ -31,16 +31,17 @@ export interface RimSpec {
   port: string;
 }
 
-/** The rims of a board: one per display part with a glass, only when the board hangs. */
-export function rimsOf(board: Pick<PlacedBoard, 'def' | 'placement' | 'hung'>): RimSpec[] {
-  if (!board.hung) return [];
+/** The rims of a board: one per display part with a glass, when the board hangs or is a display carried under a flat top. */
+export function rimsOf(board: Pick<PlacedBoard, 'def' | 'placement' | 'hung' | 'carried' | 'gap'>): RimSpec[] {
+  const gap = board.hung ? board.placement.z : board.carried ? board.gap : undefined;
+  if (gap === undefined) return [];
   const { t } = board.def.size;
   return board.def.ports.flatMap((port) => {
     if (!onFace(port) || port.edge !== 'top' || !port.glass) return [];
     const front = t + port.h;
     // never down onto the PCB
     const z0 = Math.max(t + 0.2, front - Math.min(port.glass.t, RIM_H_MAX));
-    return [{ glass: port.glass, z0, z1: front + board.placement.z, port: port.id }];
+    return [{ glass: port.glass, z0, z1: front + gap, port: port.id }];
   });
 }
 

@@ -125,6 +125,7 @@ import solderedInkplate6color from './data/soldered-inkplate-6color.json';
 import solderedInkplate2 from './data/soldered-inkplate-2.json';
 import solderedInkplate5Gen2 from './data/soldered-inkplate-5-gen2.json';
 import lilygoT5213 from './data/lilygo-t5-2.13.json';
+import pimoroniHyperpixel4 from './data/pimoroni-hyperpixel-4.json';
 import waveshareEsp32S3TouchLcd43 from './data/waveshare-esp32-s3-touch-lcd-4-3.json';
 import mpdBh18650W from './data/mpd-bh-18650-w.json';
 import mpdBh2aaW from './data/mpd-bh2aa-w.json';
@@ -255,6 +256,7 @@ export const RAW_BOARDS: readonly unknown[] = [
   solderedInkplate2,
   solderedInkplate5Gen2,
   lilygoT5213,
+  pimoroniHyperpixel4,
   // battery holders, screwed down like boards (their own group in the picker)
   mpdBh18650W,
   mpdBh2aaW,

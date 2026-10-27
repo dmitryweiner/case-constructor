@@ -151,6 +151,9 @@ export const he: Record<Key, string> = {
   'board.back.rot': 'סיבוב',
   'board.back.standoff': 'גובה המעמדים',
   'board.back.standoff.hint': 'מעמדי המסך בין גבו ללוח, מ״מ — ארוכים יותר מפנים מקום למאוורר של Pi 5',
+  'board.top': 'מלמעלה',
+  'board.top.hint': 'מסך HAT‏ (HyperPixel) על פיני הלוח הזה: הלוח שעל הרצפה נושא אותו, והחלון במארז בקו אחד איתו',
+  'board.top.standoff.hint': 'מהלוח הזה עד המסך, מ״מ — ב־Pi 4 ו־5 מסך מעל ה־USB וה־Ethernet צריך מאריך פינים',
   'board.pins': 'פינים מולחמים כלפי מטה',
   'board.pins.hint': 'פיני המחברים בולטים מתחת ללוח: הלוח יושב גבוה יותר, והמסילות נושאות את המחבר על משטח עם חריץ לפינים',
   'board.variant': 'דגם',
@@ -203,6 +206,7 @@ export const he: Record<Key, string> = {
   'warn.topPartOnSupport': 'לוח {board}, {port}: הרכיב שמעל הלוח נופל על עמוד או מסילה שהלוח תלוי עליהם.',
   'warn.glassGap': 'לוח {board}: פחות מ־{mm} מ״מ עד התקרה — זכוכית עבה מהשרטוט תילחץ אליה.',
   'warn.clampBlocked': 'לוח {board}: לפס הלחיצה אין מקום פנוי בגב הלוח — הוא נתקל ברכיב.',
+  'warn.carriedOnParts': 'לוח {board}: המסך שמעליו יושב על הרכיבים שלו — הגביהו את המעמדים ב־{mm} מ״מ (מאריך פינים).',
   'progress.supports': 'מעמדים ומסילות',
 
   // --- openings ---

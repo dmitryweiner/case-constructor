@@ -159,6 +159,15 @@ await page.click('#boardList [data-board="raspberry-pi-4b"]');
 await page.uncheck('#board0_cut_ethernet');
 await expectWatertight('ports:ethernet-off');
 await page.check('#board0_cut_ethernet');
+// a HAT display carried by the board under it: its window flush, its toggles in the board's box
+label('carry');
+await page.selectOption('#board0_top', 'pimoroni-hyperpixel-4');
+await expectWatertight('carry:hyperpixel');
+if (!(await page.locator('#board0_top_cut_display').count())) errors.push('[carry] no toggles for the carried display');
+if (await page.isChecked('#board0_cut_gpio')) errors.push('[carry] the GPIO header under the display is open');
+if (!(await page.evaluate(() => window.__case.drawn())).includes('glass')) errors.push('[carry] no glass drawn');
+await page.selectOption('#board0_top', '');
+await expectWatertight('carry:none');
 // port captions over the ghosts: a click on one toggles its opening, undo brings it back
 label('captions');
 await expectWatertight('captions:shown');

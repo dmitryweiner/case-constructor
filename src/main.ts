@@ -45,7 +45,9 @@ import type { Dims, Face } from './geo/face';
 import type { PrintShape } from './geo/print';
 import { caseLayout, collisions, heldByLid, lidDepthMax, placeBoards } from './geo/layout';
 import { boardGhost, portCaptionAnchor, standoffGhost } from './geo/ghost';
-import { MAX_BOARDS, NEW_BOARD_GAP, backPortDefault, boardOf, defaultPlacement, portCut, withBackCut, withPortCut } from './boards/placement';
+import {
+  MAX_BOARDS, NEW_BOARD_GAP, backPortDefault, boardOf, defaultPlacement, ownPortDefault, portCut, withBackCut, withPortCut, withTopCut,
+} from './boards/placement';
 import type { BoardDef } from './boards/schema';
 import { resolveVariant } from './boards/schema';
 import { catalogBoard } from './boards/catalog';
@@ -283,7 +285,7 @@ function refresh(): void {
   const numbered = layout.boards.length > 1;
   portCaptions = layout.boards.flatMap((board) => board.def.ports.map((port): SceneCaption => ({
     // a board on a display's back: its own toggles, under the display's number
-    key: `${board.index}${board.attached !== undefined ? 'b' : ''}:${port.id}`,
+    key: `${board.index}${board.carried ? 't' : board.attached !== undefined ? 'b' : ''}:${port.id}`,
     text: `${numbered ? `${board.index + 1}: ` : ''}${tDynamic(`port.${port.type}`)} · ${port.id}`,
     at: portCaptionAnchor(board, port),
     dim: !portCut(board.placement, port.id, port.cut),
@@ -857,8 +859,18 @@ panelBtn.addEventListener('click', () => setPanelOpen(true));
 function togglePortCut(key: string): void {
   const colon = key.indexOf(':');
   const onBack = key.slice(0, colon).endsWith('b');
-  const index = Number(key.slice(0, onBack ? colon - 1 : colon));
+  const onTop = key.slice(0, colon).endsWith('t');
+  const index = Number(key.slice(0, onBack || onTop ? colon - 1 : colon));
   const placement = state.boards[index];
+  const top = placement?.top;
+  if (onTop) {
+    const entry = top ? catalogBoard(top.board) : undefined;
+    const port = entry ? resolveVariant(entry, top?.variant).ports.find((one) => one.id === key.slice(colon + 1)) : undefined;
+    if (!top || !port) return;
+    const value = !(top.cuts[port.id] ?? port.cut);
+    applyState({ ...state, boards: state.boards.map((one, i) => (i === index ? { ...one, top: { ...top, cuts: withTopCut(top, port, value) } } : one)) });
+    return;
+  }
   const back = placement?.back;
   if (onBack) {
     const entry = back ? catalogBoard(back.board) : undefined;
@@ -870,7 +882,9 @@ function togglePortCut(key: string): void {
   }
   const port = placement ? boardOf(placement).ports.find((one) => one.id === key.slice(colon + 1)) : undefined;
   if (!placement || !port) return;
-  const boards = state.boards.map((one, i) => (i === index ? withPortCut(one, port, !portCut(one, port.id, port.cut)) : one));
+  // a board carrying a display keeps its top parts closed by default
+  const own = { id: port.id, cut: ownPortDefault(placement, port) };
+  const boards = state.boards.map((one, i) => (i === index ? withPortCut(one, own, !portCut(one, port.id, own.cut)) : one));
   applyState({ ...state, boards });
 }
 

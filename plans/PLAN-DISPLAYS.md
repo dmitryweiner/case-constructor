@@ -1,6 +1,6 @@
 # Case Constructor — standalone displays
 
-**Status: done (2026-10-27), but for one open question: HyperPixel 4.0 (see the deviations, D7b).**
+**Status: done (2026-10-27).**
 
 Written on 2026-10-27 from `PERSPECTIVE-SCREENS.md`, its last section ("What
 the catalog needs for them"). Boards with a screen on them are in the
@@ -308,10 +308,33 @@ together, as families where only parts differ.
   the window flares; the slope; clamps on the Lid tab; a Pi on the back and
   its ports; a project file round trip with all of it.
 
+## D9. A display carried by the board under it (added 2026-10-27)
+
+**Decision (with the user):** HyperPixel 4.0 and the like are HATs whose
+glass covers their whole PCB: nothing holds them from the front, and the
+Pi under them stands on the floor. So the board on the floor carries the
+display — D6 the other way round.
+
+**Plan.**
+- A floor board's placement may carry `top: { board, rot, standoff,
+  variant, cuts }`: a display whose back pattern faces `top` (a HAT) and
+  fits the board's holes. Its frame is the inverse of D6's
+  (`attachTransform` inverted): the same data serves both directions.
+- Layout: the carried display comes after every placed board, `attached`
+  to its board (as in D6); the board's stack reaches up to the display's
+  front. The case's inner height puts the ceiling the gap (0.3 mm) above
+  the display's front unless another board needs more, so the window is
+  flush; the window is chamfered and the glass gets its rim, as on a hung
+  display.
+- Card: *On top* (`#board<i>_top`), *Turned*, *Standoff height*, the
+  display's toggles; captions `<i>t:<port>`.
+- Entry: Pimoroni HyperPixel 4.0 (rectangular, touch and non-touch).
+- Golden: HyperPixel on a Pi 4 under a top lid.
+
 ## Order
 
 D1 → D2 → D3 → D7a (modules) → D4 → D5 → D6 → D7b (SBC displays) → D7c
-(e-paper and Touch-LCD-7) → D8. Each item ends with its golden states, smoke
+(e-paper and Touch-LCD-7) → D8 → D9. Each item ends with its golden states, smoke
 steps, docs and translations; D8's presets need D4–D6 and the D7 entries.
 The 0.96″ OLED goes in as ≈ (no vendor drawing; a user's measurement of a
 few sellers' boards verifies it later); BTT TFT35-SPI's drawing is opened
@@ -445,4 +468,15 @@ below).
   are; only battery clamps lift off (upwards they went through the slope).
 - **D8.** No smoke step loads the presets: `tests/presetsBuild.test.ts`
   builds them (closed, no slivers, no overlap, no warnings).
+- **D9.** HyperPixel 4.0 covers a Pi 4's USB and Ethernet (16 mm high): on a
+  plain HAT header (≈ 11 mm) it would sit on them. Its standoff defaults to
+  16.5 mm (an extension header, ≈), and a carried display lower than the
+  parts under it is reported (`warn.carriedOnParts`).
+- **D9.** A board carrying a display keeps its own top parts closed by
+  default (`ownPortDefault`): a Pi's GPIO column opened the lid under the
+  display. The sanitizer, the card and the caption taps share the rule.
+- **D9.** As a hung panel on its own, HyperPixel is a pressing clamp with a
+  Pi on its back: its bars run into the Pi and say so. The D6 test of every
+  back pattern leaves such panels out; the D9 test carries every HAT display
+  on a Pi 4.
 
