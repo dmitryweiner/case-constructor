@@ -613,6 +613,15 @@ await page.waitForTimeout(100);
 if (!(await page.locator('#blockers').textContent()).includes('not a Case Constructor')) {
   errors.push('[file] a foreign JSON was not refused');
 }
+// a user's project (tests/fixtures/korpus-1.json): its messages name the wall and the board in the way; notes are grey, not counted
+label('file:user');
+await page.setInputFiles('#fileInput', join(process.cwd(), 'tests/fixtures/korpus-1.json'));
+await page.waitForTimeout(150);
+await expectWatertight('file:user');
+const userLines = await page.locator('#warnings .warn-line').allTextContents();
+if (!userLines.some((line) => line.includes('not against the right wall: board 3 “KaRadio ESP32”'))) errors.push(`[file:user] ${userLines.join(' | ').slice(0, 200)}`);
+if ((await page.locator('#warnings .warn-line.info').count()) !== 2) errors.push('[file:user] not two notes');
+if ((await page.locator('#warnings .warn-head').textContent()) !== '3 warnings · 2 notes') errors.push(`[file:user] head ${await page.locator('#warnings .warn-head').textContent()}`);
 
 // view modes and export tabs: what is drawn follows both
 label('view');

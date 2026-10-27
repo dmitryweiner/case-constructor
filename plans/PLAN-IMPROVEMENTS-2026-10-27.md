@@ -1,6 +1,6 @@
 # Case Constructor — improvements after the user voice of 2026-10-27
 
-**Status: in progress — U1, U5 done.**
+**Status: in progress — U1, U5, U2 done.**
 
 Written on 2026-10-27 from `user-voices/27-10-2026/` (`message.md`, the
 user's project `case-constructor-Корпус-1.json`, two screenshots). Items
@@ -194,3 +194,16 @@ on the model, the largest; it builds on U2's messages).
   `top` / `bottom` say where the hole goes; the hint line under the fields
   explains the rest. No separate dictionary test: `Key` already makes tsc
   demand every key in all four dictionaries.
+- **U2.** The board's name and the port's type travel as parameters
+  (`boardName`, `aName`, `portType`, a comma list `walls`, a face `side`);
+  `tm` turns them into words ("1 «TPA3118»", "LED · led-1", "front and
+  back" through `Intl.ListFormat`), so no template had to change for the
+  names. `boardParams` lives in `geo/message.ts`: `fastening.ts` cannot
+  import it from `layout.ts` (which imports `fastening.ts`). A board off
+  its wall with no other board further out (a manual size larger than the
+  boards, both opposite walls asked) gets its own code,
+  `warn.notAgainstWallSize`. The recessed note has two codes: connectors
+  that end at the board's edge (nothing but their Out would help) and ones
+  that stick out (it says the wall that brings them flush, when that wall
+  is at least `WALL_MIN`). `#warnings` is a `div` of lines now (`.warn-line`,
+  `.info`, a `.warn-head` with the counts); `snap.mjs` reads `innerText`.

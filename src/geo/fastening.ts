@@ -20,6 +20,7 @@ import type { CutterSpec } from './cutters';
 import { cutterContains } from './cutters';
 import type { PlacedBoard } from './layout';
 import type { Message } from './message';
+import { boardParams } from './message';
 import type { FaceFrame } from './face';
 import type { LidState } from './lidSpec';
 import { postDiameter } from './lidSpec';
@@ -229,7 +230,7 @@ export function postCollisions(spots: readonly PostSpot[], frame: FaceFrame, zp:
       const overlaps = lo[0] < o.x1 && hi[0] > o.x0 && lo[1] < o.y1 && hi[1] > o.y0 && lo[2] < board.zTop && hi[2] > board.zBottom;
       if (overlaps && !hit.has(board.index)) {
         hit.add(board.index);
-        out.push({ code: 'warn.postHitsBoard', params: { board: board.index + 1 } });
+        out.push({ code: 'warn.postHitsBoard', params: boardParams(board) });
       }
     }
   }

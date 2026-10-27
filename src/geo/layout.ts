@@ -23,8 +23,9 @@ import { postLength } from './fastening';
 import type { LidState } from './lidSpec';
 import { postDiameter } from './lidSpec';
 import type { Message } from './message';
+import { boardParams } from './message';
 import type { ShapeState } from './shape';
-import { SIZE_MIN, SIZE_MAX, plateOf, shapeSpec } from './shape';
+import { SIZE_MIN, SIZE_MAX, WALL_MIN, plateOf, shapeSpec } from './shape';
 import { effectiveRadii } from './loft';
 import type { Affine } from './surface';
 import { applyAffine, composeAffine, invertRigid, rotateVec } from './surface';
@@ -77,6 +78,8 @@ export interface PlacedWall {
   line: number;
   /** how much deeper than asked its connectors sit (they are shorter than the wall), mm */
   recessed: number;
+  /** how far the edge's connectors stick out past the board edge (0 at least), mm */
+  protrude: number;
   /** the edge has connectors at all */
   ports: boolean;
   /** the wall really is there: another board did not push it further out */
@@ -250,7 +253,7 @@ function wallOf(input: LayoutInput, def: BoardDef, placement: BoardPlacement, to
   const reach = Math.max(wanted, WALL_GAP);
   const sign = side === 'right' || side === 'back' ? 1 : -1;
   const at = side === 'right' ? outline.x1 : side === 'left' ? outline.x0 : side === 'back' ? outline.y1 : outline.y0;
-  return { side, edge, line: at + sign * reach, recessed: reach - wanted, ports: onEdge.length > 0, against: true };
+  return { side, edge, line: at + sign * reach, recessed: reach - wanted, protrude, ports: onEdge.length > 0, against: true };
 }
 
 /** Whether a placement hangs from the ceiling (a box's or a cylinder's top, the console's slope). */
@@ -676,6 +679,48 @@ export function standoffColumns(board: PlacedBoard): { x: number; y: number; r: 
   });
 }
 
+/** How far a board reaches towards a side of the case, by its outline. */
+function towards(board: PlacedBoard, side: Edge): number {
+  const o = board.outline;
+  return side === 'right' ? o.x1 : side === 'left' ? -o.x0 : side === 'back' ? o.y1 : -o.y0;
+}
+
+/** Why a board is not at a wall it asked for: the board that reaches further, or the case's own size. */
+function notAgainst(board: PlacedBoard, side: Edge, boards: readonly PlacedBoard[]): Message {
+  const others = boards.filter((other) => other.index !== board.index && other.attached === undefined);
+  const further = others.reduce<PlacedBoard | undefined>((best, other) => (!best || towards(other, side) > towards(best, side) ? other : best), undefined);
+  return further && towards(further, side) > towards(board, side) - 1e-6
+    ? { code: 'warn.notAgainstWall', params: { ...boardParams(board), side, ...boardParams(further, 'other') } }
+    : { code: 'warn.notAgainstWallSize', params: { ...boardParams(board), side } };
+}
+
+/**
+ * The note about connectors that cannot reach the outer surface, one per
+ * board and depth: the walls, the wall's thickness, how much deeper than
+ * asked, and — when they do stick out — the wall that would bring them flush.
+ */
+function recessedNotes(board: PlacedBoard): Message[] {
+  const offset = board.placement.wallOffset ?? 0;
+  const byDepth = new Map<string, PlacedWall[]>();
+  for (const one of board.walls) {
+    if (!one.against || !one.ports || one.recessed <= 0.05) continue;
+    const mm = one.recessed.toFixed(1);
+    byDepth.set(mm, [...(byDepth.get(mm) ?? []), one]);
+  }
+  return [...byDepth].map(([mm, walls]): Message => {
+    const sides = EDGES.filter((side) => walls.some((one) => one.side === side)).join(',');
+    // the board stands WALL_GAP off the inner wall: the rest of how deep they sit is the wall
+    const { protrude, recessed } = walls[0];
+    const wall = +(protrude - offset - WALL_GAP + recessed).toFixed(2);
+    const params = { ...boardParams(board), walls: sides, wall, mm };
+    // the wall that brings them flush
+    const flush = protrude - offset - WALL_GAP;
+    return flush >= WALL_MIN
+      ? { code: 'info.portsRecessedOut', params: { ...params, out: protrude.toFixed(1), flush: flush.toFixed(1) } }
+      : { code: 'info.portsRecessed', params };
+  });
+}
+
 /**
  * Warnings about the layout: boards overlapping in 3D, a standoff running
  * into another board, a part on a board's underside landing on its own
@@ -692,7 +737,7 @@ export function collisions(layout: CaseLayout): Message[] {
       if (a.index === b.index) continue;
       const zOverlap = Math.min(a.zTop, b.zTop) - Math.max(a.zBottom, b.zBottom);
       if (zOverlap > 0 && overlap(a.outline, b.outline) > 0.01) {
-        out.push({ code: 'warn.boardsOverlap', params: { a: i + 1, b: j + 1 } });
+        out.push({ code: 'warn.boardsOverlap', params: { ...boardParams(a, 'a'), ...boardParams(b, 'b') } });
       }
     }
   }
@@ -700,27 +745,23 @@ export function collisions(layout: CaseLayout): Message[] {
     // a carried display must clear the parts of the board under it (a Pi's USB and Ethernet: an extension header)
     const carrier = board.carried ? boards[board.attached ?? -1] : undefined;
     if (carrier && board.z0 < carrier.zTop - 1e-6 && overlap(board.outline, carrier.outline) > 0.01) {
-      out.push({ code: 'warn.carriedOnParts', params: { board: board.index + 1, mm: (carrier.zTop - board.z0).toFixed(1) } });
+      out.push({ code: 'warn.carriedOnParts', params: { ...boardParams(board), mm: (carrier.zTop - board.z0).toFixed(1) } });
     }
     if (board.attached !== undefined) continue;
-    for (const wall of board.walls) {
-      if (!wall.against) out.push({ code: 'warn.notAgainstWall', params: { board: board.index + 1 } });
-      else if (wall.ports && wall.recessed > 0.05) {
-        out.push({ code: 'info.portsRecessed', params: { board: board.index + 1, mm: wall.recessed.toFixed(1) } });
-      }
-    }
+    for (const wall of board.walls) if (!wall.against) out.push(notAgainst(board, wall.side, boards));
+    out.push(...recessedNotes(board));
     // the supports are under a floor board and over a hung one
     for (const port of board.def.ports) {
       if (port.edge === (board.hung ? 'top' : 'bottom') && partOnSupport(board, port)) {
-        out.push({ code: board.hung ? 'warn.topPartOnSupport' : 'warn.bottomPartOnSupport', params: { board: board.index + 1, port: port.id } });
+        out.push({ code: board.hung ? 'warn.topPartOnSupport' : 'warn.bottomPartOnSupport', params: { ...boardParams(board), port: port.id, portType: port.type } });
       }
     }
     if (board.def.mount.kind === 'clamp' && (clampHold(board.def, board.placement).blocked || barsOnBack(board, boards))) {
-      out.push({ code: 'warn.clampBlocked', params: { board: board.index + 1 } });
+      out.push({ code: 'warn.clampBlocked', params: boardParams(board) });
     }
     // a clamped panel is pressed against the plate on purpose
     if (board.hung && board.def.mount.kind !== 'clamp' && board.placement.z < CEILING_GAP - 1e-9) {
-      out.push({ code: 'warn.glassGap', params: { board: board.index + 1, mm: CEILING_GAP } });
+      out.push({ code: 'warn.glassGap', params: { ...boardParams(board), mm: CEILING_GAP } });
     }
   }
   for (const a of boards) {
@@ -730,7 +771,7 @@ export function collisions(layout: CaseLayout): Message[] {
         // a floor board's standoffs reach up to its PCB, a hung board's down to its top
         const clear = a.hung ? b.zTop <= a.z0 + a.def.size.t : b.zBottom >= a.z0;
         if (b === a || b.index === a.index || clear || overlap(rect, b.outline) <= 0) continue;
-        out.push({ code: 'warn.standoffHitsBoard', params: { a: a.index + 1, b: b.index + 1 } });
+        out.push({ code: 'warn.standoffHitsBoard', params: { ...boardParams(a, 'a'), ...boardParams(b, 'b') } });
       }
     }
   }

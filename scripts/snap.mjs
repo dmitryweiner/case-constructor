@@ -242,7 +242,7 @@ const evalResult = evalExpr ? await page.evaluate((expr) => {
 }, evalExpr) : null;
 const status = await page.locator('#status').textContent();
 const audit = (await page.locator('#audit').textContent()).trim();
-const warnings = (await page.locator('#warnings').textContent()).trim();
+const warnings = (await page.locator('#warnings').innerText()).trim();
 const blockers = (await page.locator('#blockers').textContent()).trim();
 await app.close();
 

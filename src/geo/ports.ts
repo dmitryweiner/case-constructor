@@ -19,6 +19,7 @@ import type { CaseLayout, PlacedBoard } from './layout';
 import { edgeNormal } from './layout';
 import type { LidState } from './lidSpec';
 import type { Message } from './message';
+import { boardParams } from './message';
 import type { ShapeState } from './shape';
 import { plateOf } from './shape';
 import type { Vec3 } from './surface';
@@ -192,6 +193,18 @@ export function cutterCorners(cutter: CutterSpec): Vec3[] {
   return out;
 }
 
+/** A port's opening in a message: the board (the one with this port under that number) and the port. */
+function sourceParams(layout: CaseLayout, source: { board: number; port: string }): Record<string, string | number> {
+  const board = layout.boards.find((one) => one.index === source.board && one.def.ports.some((port) => port.id === source.port))
+    ?? layout.boards.find((one) => one.index === source.board);
+  const port = board?.def.ports.find((one) => one.id === source.port);
+  return {
+    ...(board ? boardParams(board) : { board: source.board + 1 }),
+    port: source.port,
+    ...(port ? { portType: port.type } : {}),
+  };
+}
+
 /**
  * Warnings about the openings: a port far from its wall, an opening split by
  * the parting plane (information: it is cut in both parts), an opening
@@ -207,7 +220,7 @@ export function cutWarnings(
       if (onFace(port) || !portCut(board.placement, port.id, port.cut)) continue;
       const { face, dir } = portAxis(board, port);
       const gap = portToWall(shape, dims, face, dir);
-      if (gap > PORT_FAR_MM) out.push({ code: 'warn.portFar', params: { board: board.index + 1, port: port.id, mm: gap.toFixed(0) } });
+      if (gap > PORT_FAR_MM) out.push({ code: 'warn.portFar', params: { ...boardParams(board), port: port.id, portType: port.type, mm: gap.toFixed(0) } });
     }
   }
   const frame = faceFrame(lid.face, dims);
@@ -222,7 +235,7 @@ export function cutWarnings(
     const skirt = !split && !throughLid && hi > zp - lid.lip.h && lo < zp;
     if (!split && !skirt) continue;
     if (cutter.source.kind === 'port') {
-      const params = { board: cutter.source.board + 1, port: cutter.source.port };
+      const params = sourceParams(layout, cutter.source);
       out.push({ code: split ? 'info.cutSplit' : 'warn.cutUnderSkirt', params });
     } else {
       out.push({ code: split ? 'info.extraSplit' : 'warn.extraUnderSkirt', params: { n: cutter.source.index + 1 } });
@@ -237,7 +250,7 @@ export function cutWarnings(
     if (!cutter.flare || cutter.source.kind !== 'port' || shape.kind !== 'box') continue;
     const g = flareAt(cutter, cutter.s1);
     const window: ExtraCut = { face: 'top', shape: 'rect', x: cutter.origin[0], y: cutter.origin[1], w: cutter.w + 2 * g, h: cutter.h + 2 * g, r: 0 };
-    if (inCorner(shape, dims, window)) out.push({ code: 'warn.windowInCorner', params: { board: cutter.source.board + 1, port: cutter.source.port } });
+    if (inCorner(shape, dims, window)) out.push({ code: 'warn.windowInCorner', params: sourceParams(layout, cutter.source) });
   }
   return out;
 }

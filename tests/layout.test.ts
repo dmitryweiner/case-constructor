@@ -3,6 +3,8 @@ import { portAxis } from '../src/geo/ports';
 import { catalogBoard, CATALOG } from '../src/boards/catalog';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import { applyAffine } from '../src/geo/surface';
+import { readFileSync } from 'node:fs';
+import { setLang, tm } from '../src/i18n';
 
 const pi = catalogBoard('raspberry-pi-4b') ?? CATALOG[0];
 
@@ -176,7 +178,7 @@ describe('a board against a wall', () => {
     const state = withWall('front', {}, { wall: 4 });
     const layout = caseLayout(state);
     expect(layout.boards[0].outline.y0).toBeCloseTo(4 + WALL_GAP, 6);
-    expect(collisions(layout).map((m) => m.code)).toContain('info.portsRecessed');
+    expect(collisions(layout).some((m) => m.code.startsWith('info.portsRecessed'))).toBe(true);
   });
 
   it('the side and the offset survive a file; garbage falls back to none', () => {
@@ -197,8 +199,8 @@ describe('a board against a wall', () => {
     });
     // the second board reaches 10 mm further right: it takes the wall, the first is left short of it
     const codes = collisions(caseLayout(state));
-    expect(codes).toContainEqual({ code: 'warn.notAgainstWall', params: { board: 1 } });
-    expect(codes).not.toContainEqual({ code: 'warn.notAgainstWall', params: { board: 2 } });
+    const pushed = codes.filter((m) => m.code === 'warn.notAgainstWall').map((m) => m.params);
+    expect(pushed).toEqual([{ board: 1, boardName: 'Raspberry Pi 4 Model B', side: 'right', other: 2, otherName: 'Raspberry Pi 4 Model B' }]);
   });
 
   it('a cylinder, a rail edge and the side lid\'s own face ignore the wall', () => {
@@ -212,3 +214,42 @@ describe('a board against a wall', () => {
     expect(caseLayout(nano).boards[0].walls).toEqual([]);
   });
 });
+
+describe('a user\'s project: the layout messages say where and what to do', () => {
+  const file: unknown = JSON.parse(readFileSync(new URL('./fixtures/korpus-1.json', import.meta.url), 'utf8'));
+  const state = sanitizeState(Reflect.get(file ?? {}, 'state'));
+  const messages = collisions(caseLayout(state));
+
+  it('one note per board for its recessed connectors, naming the walls', () => {
+    const recessed = messages.filter((m) => m.code.startsWith('info.portsRecessed'));
+    expect(recessed).toEqual([
+      { code: 'info.portsRecessed', params: { board: 1, boardName: 'TPA3118', walls: 'front,back', wall: 2, mm: '2.3' } },
+      { code: 'info.portsRecessed', params: { board: 2, boardName: 'DC-DC', walls: 'back', wall: 2, mm: '2.3' } },
+    ]);
+  });
+
+  it('a board off its wall: which wall, and which board pushes it', () => {
+    const pushed = messages.filter((m) => m.code.startsWith('warn.notAgainstWall')).map((m) => m.params);
+    expect(pushed).toEqual([
+      { board: 1, boardName: 'TPA3118', side: 'right', other: 3, otherName: 'KaRadio ESP32' },
+      { board: 2, boardName: 'DC-DC', side: 'left', other: 1, otherName: 'TPA3118' },
+      { board: 2, boardName: 'DC-DC', side: 'right', other: 3, otherName: 'KaRadio ESP32' },
+    ]);
+  });
+
+  it('the text names the board, the walls and the cure', () => {
+    setLang('ru');
+    const text = messages.map(tm);
+    setLang('en');
+    expect(text).toContain('Плата 1 «TPA3118», спереди и сзади: разъёмы кончаются у края платы, а стенка 2 мм — их торцы на 2.3 мм глубже, чем просит «Разъёмы от поверхности». Обычно это не мешает: штекер или палец достаёт их через отверстие. Если разъёмы на самом деле выступают за край платы, укажите это в «Выступ» (редактор своей платы).');
+    expect(text).toContain('Плата 1 «TPA3118» не у стенки справа: её отодвигает плата 3 «KaRadio ESP32». Выровняйте платы по этой стороне или снимите «справа» в «К стенке».');
+  });
+
+  it('connectors that do stick out: how thin a wall brings them flush', () => {
+    const thick = sanitizeState({ ...defaultState(), shape: { ...defaultState().shape, wall: 4 }, boards: [{ ...defaultState().boards[0], walls: ['front'] }] });
+    const [note] = collisions(caseLayout(thick)).filter((m) => m.code.startsWith('info.portsRecessed'));
+    expect(note.code).toBe('info.portsRecessedOut');
+    expect(note.params).toMatchObject({ board: 1, walls: 'front', wall: 4 });
+  });
+});
+

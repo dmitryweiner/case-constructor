@@ -40,6 +40,7 @@ import type { PresetRow } from './ui/presetList';
 import { applyStaticText } from './ui/staticText';
 import { ENDONYMS, LANGS, initLang, isLang, lang, onLangChange, setLang, t, tDynamic, tm, autoPresetPrefixes } from './i18n';
 import type { Key } from './i18n';
+import type { Message } from './geo/message';
 import { faceFrame } from './geo/face';
 import type { Dims, Face } from './geo/face';
 import type { PrintShape } from './geo/print';
@@ -102,7 +103,7 @@ const exportBtn = el('exportBtn', HTMLButtonElement);
 const partList = el('partList', HTMLUListElement);
 const statusEl = el('status', HTMLParagraphElement);
 const auditEl = el('audit', HTMLParagraphElement);
-const warningsEl = el('warnings', HTMLParagraphElement);
+const warningsEl = el('warnings', HTMLDivElement);
 const blockersEl = el('blockers', HTMLParagraphElement);
 const presetBtn = el('presetBtn', HTMLButtonElement);
 const presetsPanel = el('presets', HTMLDivElement);
@@ -223,8 +224,15 @@ let portCaptions: SceneCaption[] = [];
 /** Which ghosts and captions the lid holds (a board hung under a top lid): exploded, they go with it. */
 let ghostsOnLid: boolean[] = [];
 let captionsOnLid: boolean[] = [];
+/** A line of the warnings list: its text, and whether it only informs (grey, ℹ, not counted). */
+interface Notice {
+  text: string;
+  info: boolean;
+}
+const notice = (message: Message): Notice => ({ text: tm(message), info: message.code.startsWith('info.') });
+const said = (key: Key, params?: Readonly<Record<string, string | number>>): Notice => ({ text: t(key, params), info: key.startsWith('info.') });
 /** Warnings the panel computes itself, before the worker answers. */
-let baseWarnings: string[] = [];
+let baseWarnings: Notice[] = [];
 
 function refresh(): void {
   generation++;
@@ -236,39 +244,39 @@ function refresh(): void {
   baseWarnings = [];
   currentLabel = labelRaster(state.label, () => refresh());
   const depthMax = lidDepthMax(state.shape, state.lid, dims);
-  if (state.lid.depth > depthMax) baseWarnings.push(t('warn.depthClamped', { max: depthMax.toFixed(1) }));
-  baseWarnings.push(...collisions(layout).map(tm));
+  if (state.lid.depth > depthMax) baseWarnings.push(said('warn.depthClamped', { max: depthMax.toFixed(1) }));
+  baseWarnings.push(...collisions(layout).map(notice));
   const shapeBuilt = { ...state.shape, console: layout.console };
   const top = outerTopAt(shapeBuilt, dims, layout.console.frontH, layout.console.backH);
   const cutters = [...portCutters(layout, shapeBuilt), ...extraCutters(state.extraCuts, shapeBuilt, dims, top)];
   const lidBuilt = effectiveLid(shapeBuilt, state.lid, dims);
-  if (lidBuilt.depth > state.lid.depth + 0.01) baseWarnings.push(t('info.depthRaised', { d: lidBuilt.depth.toFixed(1) }));
+  if (lidBuilt.depth > state.lid.depth + 0.01) baseWarnings.push(said('info.depthRaised', { d: lidBuilt.depth.toFixed(1) }));
   if (state.lid.face !== state.lid.chosen && !lidFaces(state.shape.kind).includes(state.lid.chosen)) {
-    baseWarnings.push(t('info.lidFaceMoved', { chosen: t(`face.${state.lid.chosen}`), face: t(`face.${state.lid.face}`) }));
+    baseWarnings.push(said('info.lidFaceMoved', { chosen: t(`face.${state.lid.chosen}`), face: t(`face.${state.lid.face}`) }));
   }
-  baseWarnings.push(...cutWarnings(layout, shapeBuilt, lidBuilt, cutters, state.extraCuts).map(tm));
+  baseWarnings.push(...cutWarnings(layout, shapeBuilt, lidBuilt, cutters, state.extraCuts).map(notice));
   if (lidBuilt.fastening !== 'snaps') {
     const { frame, plate, zp, spots } = lidPosts(state);
     const limits = headLimitsOf(state);
     if (lidBuilt.fastening === 'screws' && lidBuilt.screw.head !== 'none' && headSeat(lidBuilt).d > limits.d + 1e-6) {
-      baseWarnings.push(t('warn.headDClamped', { max: limits.d.toFixed(1) }));
+      baseWarnings.push(said('warn.headDClamped', { max: limits.d.toFixed(1) }));
     }
     // the table's depth was always capped quietly; a depth the user set is worth a word
     if (lidBuilt.fastening === 'screws' && lidBuilt.screw.head === 'counterbore' && lidBuilt.head.depth !== null
       && headSeat(lidBuilt).depth > plate - HEAD_FLOOR) {
-      baseWarnings.push(t('warn.headDepthClamped', { max: (plate - HEAD_FLOOR).toFixed(1) }));
+      baseWarnings.push(said('warn.headDepthClamped', { max: (plate - HEAD_FLOOR).toFixed(1) }));
     }
-    baseWarnings.push(...postCollisions(spots, frame, zp, plate, lidBuilt, layout.boards).map(tm));
-    baseWarnings.push(...postsInOpenings(spots, frame, zp, plate, lidBuilt, cutters).map(tm));
+    baseWarnings.push(...postCollisions(spots, frame, zp, plate, lidBuilt, layout.boards).map(notice));
+    baseWarnings.push(...postsInOpenings(spots, frame, zp, plate, lidBuilt, cutters).map(notice));
   }
-  baseWarnings.push(...printedScrewWarnings(lidBuilt).map(tm));
-  baseWarnings.push(...extrasWarnings(state, shapeBuilt, layout, lidBuilt).map(tm));
+  baseWarnings.push(...printedScrewWarnings(lidBuilt).map(notice));
+  baseWarnings.push(...extrasWarnings(state, shapeBuilt, layout, lidBuilt).map(notice));
   if (currentLabel) {
     const place = labelPlacement(state.label, currentLabel, lidBuilt.face, dims, shapeBuilt);
     const region = flatRegion(shapeBuilt, dims, lidBuilt.face, 0);
     const { hw, hh } = labelBox(place.w, place.h, state.label.angle);
     if (place.u - hw < region.u0 || place.u + hw > region.u1 || place.v - hh < region.v0 || place.v + hh > region.v1) {
-      baseWarnings.push(tm({ code: 'warn.labelTooBig' }));
+      baseWarnings.push(notice({ code: 'warn.labelTooBig' }));
     }
     // a screw head on the lid: the label must keep clear of it
     const head = lidBuilt.fastening === 'screws' ? (lidBuilt.screw.head === 'none' ? SCREWS[lidBuilt.screw.size].headD : headSeat(lidBuilt).d) / 2 + 0.5
@@ -278,7 +286,7 @@ function refresh(): void {
       const dv = Math.max(0, Math.abs(spot.centre[1] - place.v) - hh);
       return Math.hypot(du, dv) < head;
     })) {
-      baseWarnings.push(tm({ code: 'warn.labelOverScrew' }));
+      baseWarnings.push(notice({ code: 'warn.labelOverScrew' }));
     }
   }
   showWarnings([]);
@@ -312,9 +320,15 @@ function refresh(): void {
   previewTimer = setTimeout(() => void showPreview(stamp), PREVIEW_DELAY_MS);
 }
 
-function showWarnings(extra: string[]): void {
+function showWarnings(extra: Notice[]): void {
   const all = [...baseWarnings, ...extra];
-  warningsEl.textContent = all.length > 1 ? [t('status.warnings', { n: all.length }), ...all].join('\n') : all.join('\n');
+  const warned = all.filter((line) => !line.info).length;
+  const noted = all.length - warned;
+  const counts = [...(warned ? [t('status.warnings', { n: warned })] : []), ...(noted ? [t('status.notes', { n: noted })] : [])];
+  warningsEl.replaceChildren(
+    ...(all.length > 1 ? [make('div', 'warn-head', counts.join(' · '))] : []),
+    ...all.map((line) => make('div', line.info ? 'warn-line info' : 'warn-line', line.info ? `ℹ ${line.text}` : line.text)),
+  );
 }
 
 async function showPreview(stamp: number): Promise<void> {
@@ -522,7 +536,7 @@ function audit(meshes: SurfaceMesh[], ms: number): void {
   auditEl.textContent = reports.every((report) => report.watertight)
     ? t('audit.watertight', { k: (triangles / 1000).toFixed(1), ms: Math.round(ms) })
     : t('audit.open');
-  showWarnings(assessments.flatMap((assessment) => assessment.warnings).map(tm));
+  showWarnings(assessments.flatMap((assessment) => assessment.warnings).map(notice));
   blockersEl.textContent = blocking.map(tm).join('\n');
   exportBtn.disabled = blocking.length > 0;
 }

@@ -376,8 +376,15 @@ input[type='text'] {
 #warnings {
   color: var(--warn);
   font-size: 12px;
-  white-space: pre-line;
   margin: 4px 2px 0;
+}
+
+.warn-line + .warn-line {
+  margin-top: 3px;
+}
+
+.warn-line.info {
+  color: var(--muted);
 }
 
 #viewWrap {

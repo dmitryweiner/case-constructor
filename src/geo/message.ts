@@ -18,7 +18,9 @@ export type MessageCode =
   | 'warn.boardsOverlap'
   | 'warn.standoffHitsBoard'
   | 'warn.notAgainstWall'
+  | 'warn.notAgainstWallSize'
   | 'info.portsRecessed'
+  | 'info.portsRecessedOut'
   | 'warn.bottomPartOnSupport'
   | 'warn.topPartOnSupport'
   | 'warn.glassGap'
@@ -58,4 +60,9 @@ export type MessageCode =
 export interface Message {
   code: MessageCode;
   params?: Readonly<Record<string, string | number>>;
+}
+
+/** A board in a message: its number and its name (the UI puts them together); `key` for a second board. */
+export function boardParams(board: { index: number; def: { name: string } }, key = 'board'): Record<string, string | number> {
+  return { [key]: board.index + 1, [`${key}Name`]: board.def.name };
 }
