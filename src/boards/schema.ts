@@ -547,7 +547,8 @@ export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
     name: str(r.name, 'Custom board'),
     vendor: str(r.vendor, ''),
     kind,
-    size: { w, d, t: num(size.t, 0.4, kind === 'display' ? PANEL_T_MAX : PCB_T_MAX, 1.6) },
+    // a display, or any clamped panel (a board with a screen screwed from behind), may be a module, not a bare PCB
+    size: { w, d, t: num(size.t, 0.4, kind === 'display' || mountKind === 'clamp' ? PANEL_T_MAX : PCB_T_MAX, 1.6) },
     ...(outline ? { outline } : {}),
     mount: {
       kind: mountKind,

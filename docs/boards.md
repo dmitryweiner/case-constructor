@@ -198,6 +198,7 @@ shows the same mark). New boards: the add-board skill
 | Seeed XIAO ESP32-S3 Sense (with camera board) | Seeed | 17.78 × 21.14 | rails (long) | [source](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/seeed-studio-xiao-esp32s3-sense-3d_model.zip) | yes |
 | Waveshare RP2040-Zero / RP2350-Zero / ESP32-S3-Zero | Waveshare | 18 × 23.5 | rails (long) | [source](https://files.waveshare.com/wiki/RP2350-Zero/RP2350_Zero_step.zip) | yes |
 | ESP32-S3-Touch-LCD-4.3 | Waveshare | 106 × 68 | 4 × M2.5 | [source](https://www.waveshare.com/w/upload/7/7f/Esp32-s3-touch-lcd-4.3-003.jpg) | yes |
+| e-Paper Driver HAT (Rev 2.3) | Waveshare | 65 × 30.5 | 4 × M2.5 | [source](https://www.waveshare.com/img/devkit/LCD/7.5inch-e-Paper-HAT/7.5inch-e-Paper-HAT-details-size-2.jpg) | yes |
 
 ### Displays
 
@@ -245,6 +246,20 @@ bezel: its outline and thickness), drawn dark under the window in the view.
 | 4.3inch DSI LCD (800×480) | Waveshare | 106 × 68 | clamp tabs, 4 × M2.5 on the back, Pi on its back | [source](https://www.waveshare.com/img/devkit/LCD/4.3DP/Exterior-Size.jpg) | ≈ |
 | 7inch HDMI LCD (C), 1024×600 | Waveshare | 164.9 × 124.27 | 4 × M3 | [source](https://www.waveshare.com/img/devkit/LCD/7CP/Exterior-Size.jpg) | ≈ |
 | TFT35-SPI V2.1 (3.5-inch SPI, 480×320) | BIGTREETECH | 98 × 56 | 4 × M3 | [source](https://github.com/bigtreetech/TFT35-SPI/blob/master/v2/Hardware/BTT%20TFT35-SPI%20V2.1_SIZE.pdf) | ≈ |
+| 7.3inch e-Paper (E) Spectra 6 (800×480) panel | Waveshare | 170.2 × 111.2 | clamp bars, pressing | [source](https://www.waveshare.com/img/devkit/LCD/7.3inch-e-Paper-HAT-E/7.3inch-e-Paper-E-details-size.jpg) | yes |
+| Inky Impression 7.3-inch (Spectra 6, 800×480) | Pimoroni | 174.2 × 123.2 | 4 × M2, Pi on its back | [source](https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-7-drawing.png) | ≈ |
+| Inky Impression 4-inch (Spectra 6, 600×400) | Pimoroni | 103 × 78 | 4 × M2, Pi on its back | [source](https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-4-drawing_0f7027b5-497b-45f4-81c4-b5053cb8c9af.png) | ≈ |
+| Inky Impression 13.3-inch (Spectra 6, 1600×1200) | Pimoroni | 296.7 × 210 | 4 × M2, Pi on its back | [source](https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-13-drawing.png) | ≈ |
+| 2.9inch e-Paper Module (296×128) | Waveshare | 89.5 × 38 | 4 × M2 | [source](https://www.waveshare.com/img/devkit/LCD/2.9inch-e-Paper-Module/2.9inch-e-Paper-Module-size.jpg) | ≈ |
+| 4.2inch e-Paper Module (400×300) | Waveshare | 103 × 78.5 | 4 × M2.5 | [source](https://www.waveshare.com/img/devkit/LCD/4.2inch-e-Paper-Module/4.2inch-e-Paper-Module-details-size.jpg) | ≈ |
+| MagTag 2.9-inch e-ink (ESP32-S2) | Adafruit | 80.01 × 53.34 | 4 × M3 | [source](https://github.com/adafruit/Adafruit_MagTag_PCBs) | ≈ |
+| ESP32-S3-Touch-LCD-7 (800×480) | Waveshare | 192.96 × 110.76 | clamp tabs, 4 × M3 on the back | [source](https://www.waveshare.com/w/upload/e/e8/ESP32-S3-Touch-LCD-7-details-size-2.png) | ≈ |
+| Inkplate 6 (6-inch e-paper, 1024×758) | Soldered | 144.4 × 107.8 | clamp tabs, 4 × M3 on the back | [source](https://github.com/SolderedElectronics/Soldered-Inkplate-6-hardware-design) | ≈ |
+| Inkplate 10 (9.7-inch e-paper, 1200×825) | Soldered | 224.8 × 162.43 | clamp tabs, 4 × M3 on the back | [source](https://github.com/SolderedElectronics/Soldered-Inkplate-10-hardware-design) | ≈ |
+| Inkplate 6COLOR (5.85-inch 7-colour e-paper, 600×448) | Soldered | 131.4 × 105.5 | clamp tabs, 4 × M3 on the back | [source](https://github.com/SolderedElectronics/Soldered-Inkplate-6-COLOR-hardware-design) | ≈ |
+| Inkplate 2 (2.13-inch e-paper, 212×104) | Soldered | 65.2 × 35.2 | clamp tabs, 4 × M3 on the back | [source](https://github.com/SolderedElectronics/Soldered-Inkplate-2-hardware-design) | ≈ |
+| Inkplate 5 Gen2 (5.2-inch e-paper, 1280×720) | Soldered | 130.59 × 75.23 | clamp tabs, 4 × M3 on the back | [source](https://github.com/SolderedElectronics/Soldered-Inkplate-5-Gen2-hardware-design) | ≈ |
+| T5 V2.3 (2.13-inch e-paper, ESP32) | LilyGO | 36.75 × 66.29 | 4 × M2 | [source](https://github.com/Xinyuan-LilyGO/LilyGo-T5-Epaper-Series/tree/master/dimensions) | ≈ |
 
 ### Battery holders
 

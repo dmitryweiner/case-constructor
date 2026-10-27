@@ -1,0 +1,16 @@
+{
+  "id": "waveshare-epaper-7.3-e",
+  "name": "7.3inch e-Paper (E) Spectra 6 (800×480) panel",
+  "vendor": "Waveshare",
+  "kind": "display",
+  "size": { "w": 170.2, "d": 111.2, "t": 0.4 },
+  "mount": { "kind": "clamp", "holes": [], "screw": "M3" },
+  "topHeight": 0.51,
+  "bottomHeight": 0,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 85.1, "y": 58.5, "w": 160, "d": 96, "h": 0.51, "glass": { "x": 85.1, "y": 55.6, "w": 170.2, "d": 111.2, "t": 0.91 } },
+    { "id": "fpc", "type": "generic", "edge": "bottom", "x": 85.1, "y": 6, "w": 25.5, "d": 12, "h": 2 }
+  ],
+  "source": "https://www.waveshare.com/img/devkit/LCD/7.3inch-e-Paper-HAT-E/7.3inch-e-Paper-E-details-size.jpg",
+  "verified": true
+}

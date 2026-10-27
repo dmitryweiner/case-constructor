@@ -1,0 +1,29 @@
+{
+  "id": "pimoroni-inky-impression-13.3",
+  "name": "Inky Impression 13.3-inch (Spectra 6, 1600×1200)",
+  "vendor": "Pimoroni",
+  "kind": "display",
+  "size": { "w": 296.7, "d": 210, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3, "y": 3, "d": 2.2 },
+      { "x": 293.7, "y": 3, "d": 2.2 },
+      { "x": 3, "y": 207, "d": 2.2 },
+      { "x": 293.7, "y": 207, "d": 2.2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 1.4,
+  "bottomHeight": 3,
+  "back": { "holes": [{ "x": 107.6, "y": 100.1, "d": 2.7 }, { "x": 165.6, "y": 100.1, "d": 2.7 }, { "x": 107.6, "y": 149.1, "d": 2.7 }, { "x": 165.6, "y": 149.1, "d": 2.7 }], "standoff": 11, "facing": "top" },
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 152.5, "y": 104.4, "w": 270.4, "d": 202.8, "h": 1.4, "glass": { "x": 148.37, "y": 105, "w": 284.7, "d": 208.8, "t": 1.2 } },
+    { "id": "button-a", "type": "switch", "edge": "right", "along": 28.95, "w": 6, "h": 3.5, "z": -5.1, "protrude": 0, "cut": false },
+    { "id": "button-b", "type": "switch", "edge": "right", "along": 79.65, "w": 6, "h": 3.5, "z": -5.1, "protrude": 0, "cut": false },
+    { "id": "button-c", "type": "switch", "edge": "right", "along": 130.35, "w": 6, "h": 3.5, "z": -5.1, "protrude": 0, "cut": false },
+    { "id": "button-d", "type": "switch", "edge": "right", "along": 181.05, "w": 6, "h": 3.5, "z": -5.1, "protrude": 0, "cut": false }
+  ],
+  "source": "https://cdn.shopify.com/s/files/1/0174/1800/files/inky-impression-13-drawing.png",
+  "verified": false
+}

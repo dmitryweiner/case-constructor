@@ -215,7 +215,8 @@ HyperPixel 4.0 (open: a HAT the Pi under it carries).
 ## Boards with a screen on them
 
 The display and the MCU on one bare PCB: these are ordinary catalog boards
-with a `display` part on top. Already in the catalog: ESP32-2432S028R (CYD,
+with a `display` part on top. Waveshare ESP32-S3-Touch-LCD-7 went in with D7c (on clamp tabs to its
+frame's studs). Already in the catalog: ESP32-2432S028R (CYD,
 ≈), Heltec WiFi LoRa 32 V3/V4 and Wireless Tracker (small OLEDs). The boards
 plan has LilyGO T-Display S3 in its Tier B; it moves to Tier A here.
 
@@ -550,6 +551,13 @@ holes: it needs a pocket, and its driver is a separate board.
 | Printables `searchPrints2.totalCount` | Cases and frames | Fuzzy ("epaper" 4545, "e-paper" 214); the title-filtered run hit a 429, so raw totals only: order of magnitude |
 
 ### Tier A — high demand, drawing exists
+
+**In the catalog** (plans/PLAN-DISPLAYS.md D7c, 2026-10-27): the 7.5″ panel
+(V2, on clamp bars) and the 7.3″ E, the e-Paper Driver HAT, the three Inky
+Impressions (a Pi on their backs), the Waveshare 2.9″ and 4.2″ modules,
+MagTag, Inkplate 6 / 10 / 6COLOR / 2 / 5 Gen2, LilyGO T5 2.13. Not in:
+WeAct 2.9″ / 4.2″ (no holes in their models), LilyGO T5 4.7″ (the DXF has
+the outline only; no board model is published).
 
 | Display | Size, colours | Outline, mm | Holes | Active area, mm | Why | Drawing | Note |
 |---|---|---|---|---|---|---|---|

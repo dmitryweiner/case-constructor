@@ -1,0 +1,25 @@
+{
+  "id": "soldered-inkplate-6color",
+  "name": "Inkplate 6COLOR (5.85-inch 7-colour e-paper, 600×448)",
+  "vendor": "Soldered",
+  "kind": "mcu",
+  "size": { "w": 131.4, "d": 105.5, "t": 8.65 },
+  "mount": {
+    "kind": "clamp",
+    "holes": [
+      { "x": 127.62, "y": 3.53, "d": 3.2 },
+      { "x": 3.02, "y": 3.53, "d": 3.2 },
+      { "x": 127.62, "y": 102.23, "d": 3.2 },
+      { "x": 3.02, "y": 102.23, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 1.4,
+  "bottomHeight": 0,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 65.7, "y": 53.24, "w": 118.8, "d": 88.4, "h": 1.4, "glass": { "x": 65.7, "y": 53.24, "w": 125.4, "d": 100.47, "t": 1 } },
+    { "id": "usb-c", "type": "usb-c", "edge": "right", "along": 14.98, "w": 8.95, "h": 4.2, "z": -4.81, "protrude": 0.3 }
+  ],
+  "source": "https://github.com/SolderedElectronics/Soldered-Inkplate-6-COLOR-hardware-design",
+  "verified": false
+}

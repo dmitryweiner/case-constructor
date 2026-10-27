@@ -1,0 +1,25 @@
+{
+  "id": "soldered-inkplate-2",
+  "name": "Inkplate 2 (2.13-inch e-paper, 212×104)",
+  "vendor": "Soldered",
+  "kind": "mcu",
+  "size": { "w": 65.2, "d": 35.2, "t": 8.65 },
+  "mount": {
+    "kind": "clamp",
+    "holes": [
+      { "x": 61.42, "y": 3.53, "d": 3.2 },
+      { "x": 3.02, "y": 3.53, "d": 3.2 },
+      { "x": 61.42, "y": 31.93, "d": 3.2 },
+      { "x": 3.02, "y": 31.93, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 1.4,
+  "bottomHeight": 0,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 32.6, "y": 17.6, "w": 48.55, "d": 23.7, "h": 1.4, "glass": { "x": 32.6, "y": 17.6, "w": 58.4, "d": 29.19, "t": 1 } },
+    { "id": "usb-c", "type": "usb-c", "edge": "right", "along": 11.98, "w": 8.95, "h": 4.2, "z": -4.81, "protrude": 0.3 }
+  ],
+  "source": "https://github.com/SolderedElectronics/Soldered-Inkplate-2-hardware-design",
+  "verified": false
+}

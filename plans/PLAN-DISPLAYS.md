@@ -417,4 +417,21 @@ below).
   it sits on the Pi as a HAT, so the Pi standing on the floor holds it — a
   display carried by the board under it, the reverse of D6. To decide with
   the user.
+- **D7c.** In: Waveshare 7.3″ E panel (clamp bars, like the 7.5″), the
+  e-Paper Driver HAT (a board), Pimoroni Inky Impression 7.3 / 4.0 / 13.3
+  (corner holes outside the panel, a Pi on the back facing up; their side
+  buttons' openings off by default — on a hung board that thin they sit in
+  a top lid's skirt band; the 4.0's glass size not drawn, ≈), Waveshare
+  2.9″ (side notch as its outline) and 4.2″ modules, Adafruit MagTag (from
+  its Eagle board, the display side being Eagle's bottom), Waveshare
+  ESP32-S3-Touch-LCD-7 (clamp tabs to its frame's M3 studs, its driver
+  board's USB-C as edge ports set back 34.7 mm), Soldered Inkplate 6 / 10 /
+  6COLOR / 2 / 5 Gen2 (from their STEPs: clamp tabs to the soldered-in M3
+  standoffs on their backs; active areas from the panels' data, centred),
+  LilyGO T5 2.13 (from its STEP). All ≈ but the 7.3″ E and the HAT.
+- **D7c.** A clamped panel of any kind may be up to 20 mm thick (Inkplate's
+  "back" is its standoffs' faces), not only a `display`.
+- **D7c.** Not in: WeAct 2.9″ / 4.2″ (no mounting holes in their models and
+  no panel outline to clamp by), LilyGO T5 4.7″ (its DXF is the outline
+  only; LilyGO publishes shells, not the board's model).
 

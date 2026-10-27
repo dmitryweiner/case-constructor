@@ -1,0 +1,24 @@
+{
+  "id": "waveshare-epaper-module-4.2",
+  "name": "4.2inch e-Paper Module (400×300)",
+  "vendor": "Waveshare",
+  "kind": "display",
+  "size": { "w": 103, "d": 78.5, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3, "y": 3, "d": 2.5 },
+      { "x": 100, "y": 3, "d": 2.5 },
+      { "x": 3, "y": 75.5, "d": 2.5 },
+      { "x": 100, "y": 75.5, "d": 2.5 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 1.4,
+  "bottomHeight": 4,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 51.85, "y": 42.9, "w": 84.8, "d": 63.6, "h": 1.4, "glass": { "x": 51.85, "y": 39.25, "w": 91.8, "d": 76.9, "t": 1.2 } }
+  ],
+  "source": "https://www.waveshare.com/img/devkit/LCD/4.2inch-e-Paper-Module/4.2inch-e-Paper-Module-details-size.jpg",
+  "verified": false
+}

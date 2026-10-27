@@ -110,6 +110,21 @@ import bttPiTft43V2 from './data/btt-pi-tft43-v2.json';
 import waveshareDsiLcd43 from './data/waveshare-dsi-lcd-4.3.json';
 import waveshareHdmiLcd7c from './data/waveshare-hdmi-lcd-7c.json';
 import bttTft35SpiV21 from './data/btt-tft35-spi-v2.1.json';
+import waveshareEpaper73E from './data/waveshare-epaper-7.3-e.json';
+import waveshareEpaperDriverHat from './data/waveshare-epaper-driver-hat.json';
+import pimoroniInkyImpression73 from './data/pimoroni-inky-impression-7.3.json';
+import pimoroniInkyImpression4 from './data/pimoroni-inky-impression-4.json';
+import pimoroniInkyImpression133 from './data/pimoroni-inky-impression-13.3.json';
+import waveshareEpaperModule29 from './data/waveshare-epaper-module-2.9.json';
+import waveshareEpaperModule42 from './data/waveshare-epaper-module-4.2.json';
+import adafruitMagtag from './data/adafruit-magtag.json';
+import waveshareEsp32S3TouchLcd7 from './data/waveshare-esp32-s3-touch-lcd-7.json';
+import solderedInkplate6 from './data/soldered-inkplate-6.json';
+import solderedInkplate10 from './data/soldered-inkplate-10.json';
+import solderedInkplate6color from './data/soldered-inkplate-6color.json';
+import solderedInkplate2 from './data/soldered-inkplate-2.json';
+import solderedInkplate5Gen2 from './data/soldered-inkplate-5-gen2.json';
+import lilygoT5213 from './data/lilygo-t5-2.13.json';
 import waveshareEsp32S3TouchLcd43 from './data/waveshare-esp32-s3-touch-lcd-4-3.json';
 import mpdBh18650W from './data/mpd-bh-18650-w.json';
 import mpdBh2aaW from './data/mpd-bh2aa-w.json';
@@ -225,6 +240,21 @@ export const RAW_BOARDS: readonly unknown[] = [
   waveshareDsiLcd43,
   waveshareHdmiLcd7c,
   bttTft35SpiV21,
+  waveshareEpaper73E,
+  waveshareEpaperDriverHat,
+  pimoroniInkyImpression73,
+  pimoroniInkyImpression4,
+  pimoroniInkyImpression133,
+  waveshareEpaperModule29,
+  waveshareEpaperModule42,
+  adafruitMagtag,
+  waveshareEsp32S3TouchLcd7,
+  solderedInkplate6,
+  solderedInkplate10,
+  solderedInkplate6color,
+  solderedInkplate2,
+  solderedInkplate5Gen2,
+  lilygoT5213,
   // battery holders, screwed down like boards (their own group in the picker)
   mpdBh18650W,
   mpdBh2aaW,

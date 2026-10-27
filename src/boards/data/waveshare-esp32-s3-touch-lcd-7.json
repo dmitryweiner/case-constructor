@@ -1,0 +1,26 @@
+{
+  "id": "waveshare-esp32-s3-touch-lcd-7",
+  "name": "ESP32-S3-Touch-LCD-7 (800×480)",
+  "vendor": "Waveshare",
+  "kind": "mcu",
+  "size": { "w": 192.96, "d": 110.76, "t": 6 },
+  "mount": {
+    "kind": "clamp",
+    "holes": [
+      { "x": 33.38, "y": 19.71, "d": 3 },
+      { "x": 159.58, "y": 19.71, "d": 3 },
+      { "x": 33.38, "y": 85.36, "d": 3 },
+      { "x": 159.58, "y": 85.36, "d": 3 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 0.7,
+  "bottomHeight": 16,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 96.48, "y": 54.36, "w": 154.88, "d": 86.72, "h": 0.7, "glass": { "x": 96.48, "y": 55.38, "w": 192.96, "d": 110.76, "t": 0.7 } },
+    { "id": "usb-c-uart", "type": "usb-c", "edge": "right", "along": 59.2, "z": -14.8, "protrude": -34.7 },
+    { "id": "usb-c", "type": "usb-c", "edge": "right", "along": 42.5, "z": -14.8, "protrude": -34.7 }
+  ],
+  "source": "https://www.waveshare.com/w/upload/e/e8/ESP32-S3-Touch-LCD-7-details-size-2.png",
+  "verified": false
+}
