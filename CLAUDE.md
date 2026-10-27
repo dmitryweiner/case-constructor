@@ -209,6 +209,13 @@ freely; a temporary script that turns out useful becomes a permanent one.
   (`stacksHeight`); a hung board's footprint takes its bosses' overhang (a
   top lid's skirt hangs right there). `heldByLid` boards go with the lid in
   the exploded view. Not on a console yet (`hangs`).
+  Its display part's window flares 45° outwards (`CutterSpec.flare`, built
+  as one hull — every section is convex); a rim around its glass
+  (`rim.ts` pure, `rimSolids.ts` worker) is a support, so it goes where the
+  standoffs go; it steps aside for the board's other top parts, and the
+  board's own supports step aside for the glass (`glassKeepOut`). A hung
+  board keeps the top edge's rounded zone plus the skirt band from the
+  walls (`hungMargin`): only there is the ceiling flat and the skirt clear.
 - Supports (`geo/standoffs.ts`) go to the part that owns the floor under
   them (the lid when the floor is the lid), minus whatever of them would
   enter the other part; holes are drilled after the union. A deep side lid
@@ -374,7 +381,7 @@ Boards: `#boardAdd` opens `#boardPicker` (`#boardSearch`, rows
 `#boardList [data-board="<id>"]`, batteries `[data-board="battery-<kind>"]`, `#boardPickerClose`); with two boards or more
 `#boardsArrange_row|column|compact` and `#boards_gap` (geo/arrange.ts);
 per board
-`#board<i>_x|_y|_z`, `#board<i>_on_floor|ceiling` (not on a console, not a battery), `#board<i>_gap` (hung; instead of `_z`), alignment (two boards or more) `#board<i>_align`
+`#board<i>_x|_y|_z`, `#board<i>_on_floor|ceiling` (not on a console, not a battery), `#board<i>_gap` (hung; instead of `_z`), `#board<i>_bevel` (a hung display), alignment (two boards or more) `#board<i>_align`
 (details), `#board<i>_alignRef`,
 `#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_wall_front|back|left|right` (toggles; not on a cylinder), `#board<i>_wallOffset`, `#board<i>_screw`,
 `#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles

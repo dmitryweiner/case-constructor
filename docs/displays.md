@@ -30,3 +30,27 @@ hole, an insert or a nut pocket near the plate, as on the floor.
 - A part on the board's top that lands on a standoff or a rail it hangs
   from is reported, as a part under a floor board is.
 - Not on a console yet: there the board stands on the floor.
+
+## The window and the glass
+
+A display part in the catalog gives two outlines: the **window** — the
+active area of a TFT or OLED (the whole picture shows, the panel's black
+border hides behind the plate), the visible area of a character LCD — and
+the **glass** around it (the lens, the LCD module or the metal bezel).
+
+- The window is cut through the top with its part's clearance (0.3 mm).
+  On a hung board it widens 45° outwards through the plate, so the plate's
+  edge does not shade the picture when you look at it from the side;
+  **Chamfered window** in the board's box turns that off.
+- A **rim** around the glass (0.2 mm of room, a 1.2 mm wall) comes down
+  from the plate as far as the glass is thick, at most 3 mm, plus the gap.
+  It locates the glass; the plate between the window and the rim hides the
+  border. The rim steps aside for the board's other parts on top (a round
+  panel's ribbon tail).
+- The board's own standoffs step aside for the glass: a 1602's holes are
+  only 1.85 mm from its bezel, so their standoffs are trimmed along it.
+  Only a screw hole under the glass is reported.
+- A hung board keeps clear of the rounded edge of the top (its standoffs
+  and rim need the flat ceiling): the case grows with the edge radius.
+  Only a board set against a wall can bring its window over the rounded
+  edge; that is reported.

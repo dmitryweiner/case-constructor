@@ -12,7 +12,7 @@ import type { PortDef } from '../boards/schema';
 import { onFace } from '../boards/schema';
 import { portCut } from '../boards/placement';
 import type { CutterSpec, ExtraCut } from './cutters';
-import { VERTICAL_AXES, horizontalAxes } from './cutters';
+import { VERTICAL_AXES, flareAt, horizontalAxes } from './cutters';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import type { CaseLayout, PlacedBoard } from './layout';
@@ -30,6 +30,8 @@ export const PORT_FAR_MM = 12;
 const COLUMN_GAP = 0.3;
 /** Channels start this far behind the connector face. */
 const CHANNEL_BACK = 0.2;
+/** A display window's chamfer: mm wider per mm through the plate, on every side (45°). */
+export const WINDOW_FLARE = 1;
 
 /** Inner top of the cavity at (x, y): the ceiling, or the console's slope. */
 export function ceilingAt(shape: ShapeState, dims: Dims, frontH: number, backH: number): (x: number, y: number) => number {
@@ -90,7 +92,10 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
         const [s0, s1] = port.edge === 'top'
           ? [Math.min(board.z0 + board.def.size.t + port.h + COLUMN_GAP, ceiling(cx, cy) - 0.2), top(cx, cy) + 1]
           : [-1, Math.max(board.z0 - port.h - COLUMN_GAP, shape.floor + 0.2)];
-        out.push({ origin: [cx, cy, 0], ...VERTICAL_AXES, s0, s1, ...section, w, h, source });
+        // a hung display's window widens 45° outwards from the inside of the top
+        const bevel = board.hung && port.type === 'display' && port.edge === 'top' && board.placement.bevel !== false;
+        const flare = bevel ? { flare: { from: ceiling(cx, cy), rate: WINDOW_FLARE } } : {};
+        out.push({ origin: [cx, cy, 0], ...VERTICAL_AXES, s0, s1, ...section, w, h, ...flare, source });
       } else {
         const { face, dir } = portAxis(board, port);
         // against a wall the connector's body sits in the wall: the channel starts at the board edge
@@ -118,12 +123,13 @@ export function portToWall(shape: ShapeState, dims: Dims, face: Vec3, dir: [numb
   return Math.max(0, Math.min(tx, ty));
 }
 
-/** The eight corners of a cutter, case frame. */
+/** The eight corners of a cutter (its flare's wider end included), case frame. */
 export function cutterCorners(cutter: CutterSpec): Vec3[] {
   const out: Vec3[] = [];
   for (const s of [cutter.s0, cutter.s1]) {
-    for (const a of [-cutter.w / 2, cutter.w / 2]) {
-      for (const b of [-cutter.h / 2, cutter.h / 2]) {
+    const g = flareAt(cutter, s);
+    for (const a of [-cutter.w / 2 - g, cutter.w / 2 + g]) {
+      for (const b of [-cutter.h / 2 - g, cutter.h / 2 + g]) {
         const p: Vec3 = [0, 0, 0];
         for (let k = 0; k < 3; k++) p[k] = cutter.origin[k] + cutter.ex[k] * a + cutter.ey[k] * b + cutter.ez[k] * s;
         out.push(p);
@@ -172,6 +178,13 @@ export function cutWarnings(
   for (const [index, cut] of extras.entries()) {
     if (shape.kind === 'cylinder' || !inCorner(shape, dims, cut)) continue;
     out.push({ code: 'warn.cutInCorner', params: { n: index + 1 } });
+  }
+  // a hung display's window on the top, at its outer width
+  for (const cutter of cutters) {
+    if (!cutter.flare || cutter.source.kind !== 'port' || shape.kind !== 'box') continue;
+    const g = flareAt(cutter, cutter.s1);
+    const window: ExtraCut = { face: 'top', shape: 'rect', x: cutter.origin[0], y: cutter.origin[1], w: cutter.w + 2 * g, h: cutter.h + 2 * g, r: 0 };
+    if (inCorner(shape, dims, window)) out.push({ code: 'warn.windowInCorner', params: { board: cutter.source.board + 1, port: cutter.source.port } });
   }
   return out;
 }

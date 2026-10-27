@@ -127,6 +127,16 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       set: (state, value) => patchBoard(state, index, { z: value }),
     },
     {
+      kind: 'check', key: 'bevel', label: 'board.bevel', hint: 'board.bevel.hint',
+      when: (state) => hung(state) && boardOf(at(state)).ports.some((port) => port.type === 'display' && port.edge === 'top'),
+      get: (state) => at(state).bevel !== false,
+      set: (state, value) => {
+        const placement: BoardPlacement = { ...at(state), bevel: false };
+        if (value) delete placement.bevel;
+        return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
+      },
+    },
+    {
       kind: 'check', key: 'pins', label: 'board.pins', hint: 'board.pins.hint',
       when: (state) => boardOf(at(state)).pins !== undefined,
       get: (state) => pinsDown(boardOf(at(state)), at(state)),

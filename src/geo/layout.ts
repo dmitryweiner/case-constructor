@@ -11,6 +11,7 @@ import type { BoardDef, Edge, TopPort } from '../boards/schema';
 import { EDGES, onFace } from '../boards/schema';
 import type { BoardPlacement, Rotation } from '../boards/placement';
 import { CLAMP_POST_ZONE } from '../boards/battery';
+import { RIM_FIT, rimReach } from './rim';
 import { CEILING_GAP, boardOf, floorZ, pinsDown, undersideOf } from '../boards/placement';
 import type { Dims } from './face';
 import { faceFrame } from './face';
@@ -157,6 +158,14 @@ export function pinEdges(board: Pick<PlacedBoard, 'def' | 'placement'>): Edge[] 
  */
 function edgeReach(def: BoardDef, placement: BoardPlacement, hung: boolean): Record<Edge, number> {
   const reach: Record<Edge, number> = { front: 0, back: 0, left: 0, right: 0 };
+  // the rim around a hung display's glass, which may reach past its edge
+  if (hung) {
+    for (const port of def.ports) {
+      if (!onFace(port) || port.edge !== 'top' || !port.glass) continue;
+      const rim = rimReach(port.glass, def.size);
+      for (const edge of EDGES) reach[edge] = Math.max(reach[edge], rim[edge]);
+    }
+  }
   if (hung && def.mount.kind === 'holes') {
     const r = bossDiameter(placement.mount) / 2;
     for (const hole of def.mount.holes) {
@@ -262,6 +271,18 @@ export function sideMargin(shape: ShapeState, lid: LidState): number {
   return Math.max(shape.margin.side, lid.fit + lid.lip.t + 0.3, posts);
 }
 
+/**
+ * The side margin a hung board keeps: under a rounded top edge the ceiling
+ * is flat only that far in, and a top lid's opening — its skirt — is pushed
+ * in as much. A hung board's rim and standoffs reach the ceiling, so it
+ * keeps the whole rounded zone plus the skirt's band (a round panel's rim
+ * touched the skirt there: slivers).
+ */
+export function hungMargin(shape: ShapeState, lid: LidState): number {
+  const rounded = shape.kind === 'console' ? 0 : Math.max(0, shape.edgeR - Math.min(shape.wall, shape.floor));
+  return Math.max(sideMargin(shape, lid), rounded + lid.fit + lid.lip.t + 0.3);
+}
+
 /** Boards in the layout frame (before centring) — for placing a new one beside them. */
 export function placeBoards(input: LayoutInput): PlacedBoard[] {
   return place(input, 0, 0, null);
@@ -294,7 +315,8 @@ export function lidBand(lid: LidState, shape: ShapeState): { x0: number; x1: num
  */
 function cavityOf(input: LayoutInput, placed: readonly PlacedBoard[]): (Rect & { fixed: Record<Edge, boolean> }) | null {
   if (placed.length === 0) return null;
-  const margin = sideMargin(input.shape, input.lid);
+  const floorMargin = sideMargin(input.shape, input.lid);
+  const ceilingMargin = hungMargin(input.shape, input.lid);
   const fixed: Record<Edge, boolean> = { left: false, right: false, front: false, back: false };
   const sideOf = (board: PlacedBoard, side: Edge, free: number): number => {
     const wall = board.walls.find((one) => one.side === side);
@@ -306,6 +328,7 @@ function cavityOf(input: LayoutInput, placed: readonly PlacedBoard[]): (Rect & {
   const cavity = { x0: f0.x0, x1: f0.x1, y0: f0.y0, y1: f0.y1 };
   placed.forEach((board, i) => {
     const f = board.footprint;
+    const margin = board.hung ? ceilingMargin : floorMargin;
     const x0 = sideOf(board, 'left', f.x0 - margin);
     const x1 = sideOf(board, 'right', f.x1 + margin);
     const y0 = sideOf(board, 'front', f.y0 - margin);
@@ -324,7 +347,7 @@ export function minimumDims(input: LayoutInput): Dims {
   const placed = place(input, 0, 0, null);
   const box = union(placed.map((board) => board.footprint));
   const cavity = cavityOf(input, placed);
-  const margin = sideMargin(shape, input.lid);
+  const margin = placed.some((board) => board.hung) ? hungMargin(shape, input.lid) : sideMargin(shape, input.lid);
   const band = lidBand(input.lid, input.shape);
   let innerW = Math.max(INNER_MIN.w, cavity ? cavity.x1 - cavity.x0 + band.x0 + band.x1 : 0);
   let innerD = Math.max(INNER_MIN.d, cavity ? cavity.y1 - cavity.y0 + band.y0 + band.y1 : 0);
@@ -531,17 +554,22 @@ export function collisions(layout: CaseLayout): Message[] {
 /** Whether a part on the side the supports come from lands on its board's standoffs or rails (board frame). */
 function partOnSupport(board: PlacedBoard, port: TopPort): boolean {
   const { w, d } = board.def.size;
-  const hw = port.w / 2;
-  const hd = (port.shape === 'round' ? port.w : port.d) / 2;
-  const part: Rect = { x0: port.x - hw, y0: port.y - hd, x1: port.x + hw, y1: port.y + hd };
+  // a hung display's standoffs step aside for its glass: only a screw hole under the glass counts
+  const glass = board.hung ? port.glass : undefined;
+  const hw = glass ? glass.w / 2 + RIM_FIT : port.w / 2;
+  const hd = glass ? glass.d / 2 + RIM_FIT : (port.shape === 'round' ? port.w : port.d) / 2;
+  const [cx, cy] = glass ? [glass.x, glass.y] : [port.x, port.y];
+  const part: Rect = { x0: cx - hw, y0: cy - hd, x1: cx + hw, y1: cy + hd };
   if (board.def.mount.kind === 'holes') {
-    const r = bossDiameter(board.placement.mount) / 2;
+    const boss = bossDiameter(board.placement.mount) / 2;
     return board.def.mount.holes.some((hole) => {
       const dx = Math.max(part.x0 - hole.x, 0, hole.x - part.x1);
       const dy = Math.max(part.y0 - hole.y, 0, hole.y - part.y1);
-      return Math.hypot(dx, dy) < r;
+      return Math.hypot(dx, dy) < (glass ? hole.d / 2 : boss);
     });
   }
+  // rails step aside for a glass as standoffs do
+  if (glass) return false;
   // a hung board's rails carry no pin bed: their lip over its top is a plain one
   const pinned = board.hung ? [] : pinEdges(board);
   return railEdges(board.def).some((edge) => {

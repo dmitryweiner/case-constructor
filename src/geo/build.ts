@@ -16,6 +16,7 @@ import { outerSolid, shellSolid } from './shell';
 import type { Support } from './standoffs';
 import { fromCeiling, rails, standoffs, upsideDown } from './standoffs';
 import { batteryClamps, batterySupports } from './batterySolids';
+import { glassKeepOut, rimSolids } from './rimSolids';
 import { cuttersSolid } from './cut';
 import { postSpots } from './fastening';
 import { postSolids, snapSolids } from './lip';
@@ -89,9 +90,16 @@ export function buildCase(
     const held = (board: PlacedBoard): Support[] => (board.def.mount.kind === 'holes'
       ? standoffs(csg, scope, board, shape.floor, segments)
       : rails(csg, scope, board, shape.floor));
+    // and step aside for its glass, which a rim around it locates
+    const hung = (board: PlacedBoard): Support[] => {
+      const keepOut = glassKeepOut(csg, scope, board, segments);
+      const own = fromCeiling(scope, held(upsideDown(board, dims.h)), dims.h)
+        .map((support) => (keepOut ? { ...support, material: scope.keep(support.material.subtract(keepOut)) } : support));
+      return [...own, ...rimSolids(csg, scope, board, shape.floor, segments)];
+    };
     const supports: Support[] = layout.boards.flatMap((board) => (board.def.battery
       ? batterySupports(csg, scope, board, board.def.battery, shape.floor, segments)
-      : board.hung ? fromCeiling(scope, held(upsideDown(board, dims.h)), dims.h) : held(board)));
+      : board.hung ? hung(board) : held(board)));
     // The owner is the part under the support's base; whatever of it reaches
     // into the other part's material (a deep side lid over a manually placed
     // board) is cut away, so the parts never overlap.

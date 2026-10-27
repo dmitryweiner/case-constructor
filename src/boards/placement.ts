@@ -43,6 +43,8 @@ export interface BoardPlacement {
    * ceiling, its top still up and `z` the gap from its front to the ceiling.
    */
   on?: Side;
+  /** a hung display's window without its chamfer (missing: chamfered) */
+  bevel?: false;
 }
 
 export const SIDES = ['floor', 'ceiling'] as const;
@@ -176,6 +178,7 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
     ...(variant !== undefined ? { variant } : {}),
     ...(walls.length > 0 ? { walls, wallOffset: num(Reflect.get(r, 'wallOffset'), WALL_OFFSET_MIN, WALL_OFFSET_MAX, 0) } : {}),
     ...(ceiling ? { on: 'ceiling' as const } : {}),
+    ...(Reflect.get(r, 'bevel') === false ? { bevel: false as const } : {}),
   };
 }
 

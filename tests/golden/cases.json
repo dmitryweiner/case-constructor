@@ -680,20 +680,60 @@
   "msp2807-hung-top-lid-inserts": {
     "body": {
       "triangles": 2816,
-      "volume": 27282.31,
+      "volume": 27724.55,
       "extents": [
-        70.6,
+        72.2,
         106,
         18.09
       ]
     },
     "lid": {
-      "triangles": 2048,
-      "volume": 11234.05,
+      "triangles": 2476,
+      "volume": 12035.76,
       "extents": [
-        70.6,
+        72.2,
         106,
         6.3
+      ]
+    }
+  },
+  "msp1281-cylinder": {
+    "body": {
+      "triangles": 700,
+      "volume": 13727.86,
+      "extents": [
+        67.91,
+        67.91,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1672,
+      "volume": 6281.22,
+      "extents": [
+        67.91,
+        67.91,
+        5
+      ]
+    }
+  },
+  "lcd1602-box": {
+    "body": {
+      "triangles": 764,
+      "volume": 22306.29,
+      "extents": [
+        91.6,
+        47.6,
+        27.79
+      ]
+    },
+    "lid": {
+      "triangles": 2736,
+      "volume": 9593.5,
+      "extents": [
+        91.6,
+        47.6,
+        11.2
       ]
     }
   }

@@ -34,6 +34,13 @@ export interface CutterSpec {
   h: number;
   /** corner radius of a rectangle */
   r: number;
+  /**
+   * From `from` along ez on, the section grows by `rate` per millimetre on
+   * every side (a display window's chamfer: the plate's edge must not shade
+   * the picture at an angle). Sections are convex, so the worker builds it
+   * as one hull.
+   */
+  flare?: { from: number; rate: number };
   /** what made it, for warnings */
   source: { kind: 'port'; board: number; port: string } | { kind: 'extra'; index: number };
 }
@@ -136,6 +143,11 @@ export function extraCutters(cuts: readonly ExtraCut[], shape: ShapeState, dims:
   });
 }
 
+/** How much a cutter's section has grown on every side at s along its axis (its flare). */
+export function flareAt(cutter: CutterSpec, s: number): number {
+  return cutter.flare ? cutter.flare.rate * Math.max(0, Math.min(s, cutter.s1) - cutter.flare.from) : 0;
+}
+
 /** Whether a point lies inside a cutter's prism, grown by `margin` across it. */
 export function cutterContains(cutter: CutterSpec, p: Vec3, margin = 0): boolean {
   const d: Vec3 = [p[0] - cutter.origin[0], p[1] - cutter.origin[1], p[2] - cutter.origin[2]];
@@ -144,6 +156,7 @@ export function cutterContains(cutter: CutterSpec, p: Vec3, margin = 0): boolean
   if (s < cutter.s0 - margin || s > cutter.s1 + margin) return false;
   const a = dot(cutter.ex);
   const b = dot(cutter.ey);
-  if (cutter.shape !== 'rect') return Math.hypot(a, b) <= cutter.w / 2 + margin;
-  return Math.abs(a) <= cutter.w / 2 + margin && Math.abs(b) <= cutter.h / 2 + margin;
+  const grown = margin + flareAt(cutter, s);
+  if (cutter.shape !== 'rect') return Math.hypot(a, b) <= cutter.w / 2 + grown;
+  return Math.abs(a) <= cutter.w / 2 + grown && Math.abs(b) <= cutter.h / 2 + grown;
 }

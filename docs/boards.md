@@ -210,6 +210,8 @@ bezel: its outline and thickness), drawn dark under the window in the view.
 | Display | Vendor | Size, mm | Mount | Source | Checked |
 |---|---|---|---|---|---|
 | 2.8-inch SPI TFT, touch (MSP2807) | LCDwiki | 50 × 86 | 4 × M3 | [source](https://www.lcdwiki.com/res/MSP2807/MSP2807_Size.pdf) | yes |
+| 1.28-inch round IPS, GC9A01 (MSP1281) | LCDwiki | 38.03 × 45.8 | 2 × M2 | [source](https://www.lcdwiki.com/res/MSP1281/MSP1281_Size.pdf) | yes |
+| 1602 character LCD, PCF8574 I2C backpack | Generic | 80 × 36 | 4 × M2.5 | [source](https://cdn-shop.adafruit.com/datasheets/TC1602A-01T.pdf) | ≈ (Tinsharp's drawing; the backpack estimated) |
 
 ### Battery holders
 

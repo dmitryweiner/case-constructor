@@ -257,6 +257,11 @@ const lifted = await page.evaluate(() => {
 if (Math.abs(lifted.lid - lifted.glass) > 1e-6 || lifted.lid <= 0) errors.push(`[hang] exploded, the lid rises ${lifted.lid} and the display ${lifted.glass}`);
 await page.click('#board1_hole_nut');
 await expectWatertight('hang:nut');
+// the window's chamfer, on by default; off, the case still closes
+if (!(await page.isChecked('#board1_bevel'))) errors.push('[window] a hung display\'s window is not chamfered');
+await page.uncheck('#board1_bevel');
+await expectWatertight('window:plain');
+await page.check('#board1_bevel');
 await setRange('board1_gap', 0);
 if (!(await page.textContent('#warnings'))?.includes('0.3')) errors.push('[hang] no warning for a gap under 0.3 mm');
 await page.click('#lid_face_bottom');

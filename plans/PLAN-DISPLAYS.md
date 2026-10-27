@@ -334,3 +334,21 @@ below).
   bottom lid — before, those stayed with the body.
 - **D2.** Until D4, a board marked hung on a console stands on the floor at
   its default floor height; the card hides the choice there.
+- **D3.** Instead of warning that the rim runs into a part, the rim steps
+  aside for the board's other top parts (the MSP1281's ribbon tail sits
+  right under its round glass: every GC9A01 user would see the warning);
+  instead of warning that a boss reaches into the glass, the board's own
+  supports step aside for the glass (a 1602's holes are 1.85 mm from its
+  bezel, an M2.5 boss is Ø5.7). A screw hole under the glass is still
+  reported (`warn.topPartOnSupport`). The rim and another board, and the
+  window over a lid post, are not checked: the side margin keeps boards off
+  the posts, and an overlap is reported already.
+- **D3.** The 1602 entry is generic (`lcd-1602-i2c`, ≈): the outline, holes,
+  bezel and visible area from Tinsharp's TC1602A-01T drawing, the PCF8574
+  backpack's box estimated.
+- **D3.** A hung board keeps the whole rounded zone of the top edge plus the
+  skirt's band from the walls (`hungMargin`): under a rounded top the
+  ceiling is flat only that far in and a top lid's opening is pushed in as
+  much, and the smoke's slider extremes put the MSP1281's rim tangent to the
+  skirt (96 degenerate triangles). So a window reaches the rounded edge only
+  on a board against a wall; the warning stays for that.

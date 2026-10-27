@@ -75,6 +75,8 @@ import seeedXiao from './data/seeed-xiao.json';
 import seeedXiaoEsp32s3Sense from './data/seeed-xiao-esp32s3-sense.json';
 import waveshareZero from './data/waveshare-zero.json';
 import lcdwikiMsp2807 from './data/lcdwiki-msp2807.json';
+import lcdwikiMsp1281 from './data/lcdwiki-msp1281.json';
+import lcd1602I2c from './data/lcd-1602-i2c.json';
 import waveshareEsp32S3TouchLcd43 from './data/waveshare-esp32-s3-touch-lcd-4-3.json';
 import mpdBh18650W from './data/mpd-bh-18650-w.json';
 import mpdBh2aaW from './data/mpd-bh2aa-w.json';
@@ -155,6 +157,8 @@ export const RAW_BOARDS: readonly unknown[] = [
   waveshareEsp32S3TouchLcd43,
   // displays sold on their own (their own group in the picker)
   lcdwikiMsp2807,
+  lcdwikiMsp1281,
+  lcd1602I2c,
   // battery holders, screwed down like boards (their own group in the picker)
   mpdBh18650W,
   mpdBh2aaW,

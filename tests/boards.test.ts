@@ -62,7 +62,9 @@ describe('board catalog', () => {
       const port = board.ports[i];
       // a glass, when written, is kept as written (defaults filled in) and holds the window
       if (p.glass !== undefined) {
-        expect(onFace(port) && port.glass, `${port.id} glass`).toEqual({ r: 0, shape: 'rect', ...rec(p.glass) });
+        const glass = rec(p.glass);
+        // a round glass, like a round part, gives its diameter once
+        expect(onFace(port) && port.glass, `${port.id} glass`).toEqual({ r: 0, shape: 'rect', ...glass, ...(glass.shape === 'round' ? { d: glass.w } : {}) });
         if (onFace(port) && port.glass) expect(windowInGlass(port, port.glass), `${port.id} window in its glass`).toBe(true);
       }
       if (onFace(port)) {
