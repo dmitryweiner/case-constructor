@@ -151,6 +151,8 @@ export const en = {
   'board.gap.hint': 'from the board\'s front (the glass) to the inside of the top, mm; 0.3 leaves room for a glass thicker than drawn',
   'board.bevel': 'Chamfered window',
   'board.bevel.hint': 'the window widens 45° outwards through the top, so its edge does not shade the picture at an angle',
+  'board.press': 'Clamp gap',
+  'board.press.hint': 'how far the bars press into the panel\'s back, mm; negative leaves room for foam tape (−1 by default for a bare panel, 0 for one the bars screw to)',
   'board.pins': 'Pins soldered downwards',
   'board.pins.hint': 'Header pins point down under the board: it sits higher, and rails carry the header on a bed with a slot for the pins',
   'board.variant': 'Model',
@@ -202,6 +204,7 @@ export const en = {
   'warn.bottomPartOnSupport': 'Board {board}, {port}: the part under the board lands on a standoff or a rail.',
   'warn.topPartOnSupport': 'Board {board}, {port}: the part on top lands on a standoff or a rail it hangs from.',
   'warn.glassGap': 'Board {board}: less than {mm} mm to the ceiling — a glass thicker than drawn will press against it.',
+  'warn.clampBlocked': 'Board {board}: a clamp bar finds no free place on the back of the panel — it runs into a part there.',
   'progress.supports': 'Standoffs and rails',
 
   // --- openings ---

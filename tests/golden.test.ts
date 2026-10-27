@@ -25,7 +25,7 @@ interface PartEntry {
   extents: number[];
 }
 
-type Entry = Record<'body' | 'lid', PartEntry> & { clamp?: PartEntry };
+type Entry = Record<'body' | 'lid', PartEntry> & { clamp?: PartEntry; lidClamp?: PartEntry };
 
 /** The M0 base: no boards, the manual 100 × 70 × 35 size. */
 function base(): AppState {
@@ -206,6 +206,17 @@ const STATES: Record<string, AppState> = {
     lid: { ...defaultState().lid, face: 'bottom', fastening: 'screws' },
     boards: [{ board: 'lcdwiki-msp3520', on: 'ceiling', z: 0.3, rot: 90, mount: { size: 'M3', hole: 'insert' } }],
   }),
+  // D5: clamp bars
+  'td2-7-top-lid-clamped': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, fastening: 'screws' },
+    boards: [{ board: 'raspberry-pi-touch-display-2-7', on: 'ceiling', z: 0, mount: { size: 'M3', hole: 'insert' } }],
+  }),
+  'epaper-7.5-bottom-lid-pressed': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, face: 'bottom' },
+    boards: [{ board: 'waveshare-epaper-7.5-v2', on: 'ceiling', z: 0, press: -1, mount: { size: 'M3', hole: 'nut' } }],
+  }),
   'lcd1602-box': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'lcd-1602-i2c', on: 'ceiling', z: 0.3, mount: { size: 'M2.5', hole: 'nut' } }],
@@ -227,7 +238,10 @@ describe('golden cases', () => {
     const actual: Record<string, Entry> = {};
     for (const [name, state] of Object.entries(STATES)) {
       const built = buildCase(csg, state, SEGMENTS);
-      actual[name] = { body: part(built.body), lid: part(built.lid), ...(built.clamps ? { clamp: part(built.clamps) } : {}) };
+      actual[name] = {
+        body: part(built.body), lid: part(built.lid),
+        ...(built.clamps ? { clamp: part(built.clamps) } : {}), ...(built.lidClamps ? { lidClamp: part(built.lidClamps) } : {}),
+      };
     }
     if (process.env.UPDATE_GOLDEN || !existsSync(GOLDEN_PATH)) {
       // say what moved, so a regeneration is a decision and not a blind overwrite

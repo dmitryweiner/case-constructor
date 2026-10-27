@@ -98,6 +98,9 @@ import adafruitTft1543787 from './data/adafruit-tft-1.54-3787.json';
 import adafruitTft134313 from './data/adafruit-tft-1.3-4313.json';
 import adafruitTft1144383 from './data/adafruit-tft-1.14-4383.json';
 import adafruitTft195394 from './data/adafruit-tft-1.9-5394.json';
+import waveshareLcd169 from './data/waveshare-lcd-1.69.json';
+import raspberryPiTouchDisplay27 from './data/raspberry-pi-touch-display-2-7.json';
+import waveshareEpaper75V2 from './data/waveshare-epaper-7.5-v2.json';
 import waveshareEsp32S3TouchLcd43 from './data/waveshare-esp32-s3-touch-lcd-4-3.json';
 import mpdBh18650W from './data/mpd-bh-18650-w.json';
 import mpdBh2aaW from './data/mpd-bh2aa-w.json';
@@ -201,6 +204,9 @@ export const RAW_BOARDS: readonly unknown[] = [
   adafruitTft134313,
   adafruitTft1144383,
   adafruitTft195394,
+  waveshareLcd169,
+  raspberryPiTouchDisplay27,
+  waveshareEpaper75V2,
   // battery holders, screwed down like boards (their own group in the picker)
   mpdBh18650W,
   mpdBh2aaW,

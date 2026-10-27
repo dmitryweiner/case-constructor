@@ -9,7 +9,8 @@ import type { BoardDef, Edge } from './schema';
 import { EDGES, bottomPartsH, resolveVariant, sanitizeBoard } from './schema';
 import { CATALOG, catalogBoard } from './catalog';
 import type { BatterySpec } from './battery';
-import { batteryDef, defaultBattery, sanitizeBattery } from './battery';
+import { PRESS_MAX, PRESS_MIN, batteryDef, defaultBattery, sanitizeBattery } from './battery';
+import { defaultPress } from '../geo/clamp';
 
 export const ROTATIONS = [0, 90, 180, 270] as const;
 export type Rotation = (typeof ROTATIONS)[number];
@@ -45,6 +46,8 @@ export interface BoardPlacement {
   on?: Side;
   /** a hung display's window without its chamfer (missing: chamfered) */
   bevel?: false;
+  /** a clamped panel only: how far its bars press into its back, mm (negative leaves room for foam tape) */
+  press?: number;
 }
 
 export const SIDES = ['floor', 'ceiling'] as const;
@@ -119,13 +122,15 @@ export function defaultPlacement(entry: BoardDef, x = 0, y = 0): BoardPlacement 
     ...(def.battery ? { battery: def.battery } : {}),
     x,
     y,
-    z: hangsByDefault(def) ? CEILING_GAP : floorZ(def, pins),
+    // a clamped panel lies against the plate; anything else hangs the gap below it
+    z: hangsByDefault(def) ? (def.mount.kind === 'clamp' ? 0 : CEILING_GAP) : floorZ(def, pins),
     rot: 0,
     mount: { size: def.mount.screw, hole: 'tap', head: 'none' },
     cuts: {},
     ...(def.pins ? { pins } : {}),
     ...(variant !== undefined ? { variant } : {}),
     ...(hangsByDefault(def) ? { on: 'ceiling' as const } : {}),
+    ...(def.mount.kind === 'clamp' ? { press: defaultPress(def) } : {}),
   };
 }
 
@@ -159,10 +164,11 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
   const wallsRaw: unknown = Reflect.get(r, 'walls');
   const walls = Array.isArray(wallsRaw) ? EDGES.filter((edge) => wallsRaw.includes(edge)) : [];
   // a file without the field stands on the floor, at the height it always had
-  const ceiling = Reflect.get(r, 'on') === 'ceiling' && !def.battery;
+  // a clamped panel has nothing to stand on: it always hangs
+  const ceiling = (Reflect.get(r, 'on') === 'ceiling' || def.mount.kind === 'clamp') && !def.battery;
   const zRaw: unknown = Reflect.get(r, 'z');
   const z = ceiling
-    ? num(zRaw, 0, Z_MAX, CEILING_GAP)
+    ? num(zRaw, 0, Z_MAX, def.mount.kind === 'clamp' ? 0 : CEILING_GAP)
     : num(zRaw, minBoardZ(def, pins), Z_MAX, Math.max(floorZ(def, def.pins?.soldered ?? false), minBoardZ(def, pins)));
   return {
     board: custom ? 'custom' : def.id,
@@ -179,6 +185,7 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
     ...(walls.length > 0 ? { walls, wallOffset: num(Reflect.get(r, 'wallOffset'), WALL_OFFSET_MIN, WALL_OFFSET_MAX, 0) } : {}),
     ...(ceiling ? { on: 'ceiling' as const } : {}),
     ...(Reflect.get(r, 'bevel') === false ? { bevel: false as const } : {}),
+    ...(def.mount.kind === 'clamp' ? { press: num(Reflect.get(r, 'press'), PRESS_MIN, PRESS_MAX, defaultPress(def)) } : {}),
   };
 }
 

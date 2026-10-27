@@ -371,4 +371,20 @@ below).
   under its 5″ glass (it is screwed from behind) — it goes in with D5/D6.
   A tilted edge channel stops just past the wall it opens (a long one dived
   under the floor and was reported as split by the lid).
+- **D5.** A clamped panel always hangs (the sanitizer sets it; the card
+  hides the choice): on the floor nothing would hold it. Its gap defaults
+  to 0 and is not warned about.
+- **D5.** The clamp gap's control is `#board<i>_clampPress`: the battery's
+  `press` control already has `#board<i>_press`.
+- **D5.** The posts stand as far out as their boss needs to clear the rim
+  (`postOut`), not at a fixed 5 mm: a fixed distance put an M3 insert's
+  boss tangent to the rim (slivers). The footprint takes their reach.
+- **D5.** Touch Display 2's "back" in the entry is its brackets' faces
+  (t 8.72 = 6.42 to the back plate + 3 of bracket): the bars screw onto the
+  brackets, and the DSI connector stays within that depth. Waveshare 1.69″
+  likewise ends at its standoffs' faces.
+- **D5.** `EDGE_KEEP` (0.05 mm): a rim or post at a footprint's edge put
+  its face on the side margin's line, where the cavity's corner arc ends,
+  and left a degenerate triangle on the ceiling. The MSP2807, MSP1281 and
+  MSP3520 golden states moved by it (0.1 mm wider).
 

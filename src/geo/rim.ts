@@ -44,9 +44,16 @@ export function rimsOf(board: Pick<PlacedBoard, 'def' | 'placement' | 'hung'>): 
   });
 }
 
+/**
+ * Kept between whatever stands at a footprint's edge and the edge itself, mm:
+ * the edge is the side margin's line, where the cavity's corner arcs end — a
+ * rim face on it put three ceiling vertices on one line (slivers).
+ */
+export const EDGE_KEEP = 0.05;
+
 /** How far a glass with its rim reaches beyond each edge of the board (board frame). */
 export function rimReach(glass: Glass, size: { w: number; d: number }): Record<Edge, number> {
-  const out = RIM_FIT + RIM_W;
+  const out = RIM_FIT + RIM_W + EDGE_KEEP;
   return {
     left: Math.max(0, out - (glass.x - glass.w / 2)),
     right: Math.max(0, glass.x + glass.w / 2 + out - size.w),

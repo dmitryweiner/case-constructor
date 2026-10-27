@@ -12,6 +12,7 @@ import { EDGES, onFace } from '../boards/schema';
 import type { BoardPlacement, Rotation } from '../boards/placement';
 import { CLAMP_POST_ZONE } from '../boards/battery';
 import { RIM_FIT, rimReach } from './rim';
+import { CLAMP_BAR_T, clampHold, postReach } from './clamp';
 import { CEILING_GAP, boardOf, pinsDown, undersideOf } from '../boards/placement';
 import type { Dims } from './face';
 import { faceFrame } from './face';
@@ -185,6 +186,18 @@ function edgeReach(def: BoardDef, placement: BoardPlacement, hung: boolean): Rec
       for (const edge of EDGES) reach[edge] = Math.max(reach[edge], rim[edge]);
     }
   }
+  // a clamped panel's posts stand beyond its long edges
+  if (def.mount.kind === 'clamp') {
+    const across = clampHold(def, placement).across;
+    const posts = postReach(placement);
+    if (across === 'x') {
+      reach.left = Math.max(reach.left, posts);
+      reach.right = Math.max(reach.right, posts);
+    } else {
+      reach.front = Math.max(reach.front, posts);
+      reach.back = Math.max(reach.back, posts);
+    }
+  }
   if (hung && def.mount.kind === 'holes') {
     const r = bossDiameter(placement.mount) / 2;
     for (const hole of def.mount.holes) {
@@ -272,7 +285,9 @@ function place(input: LayoutInput, offsetX: number, offsetY: number, frame: Affi
     const zs = (bz: number): number[] => [[0, 0], [w, 0], [0, d], [w, d]].map(([bx, by]) => applyAffine(toCase, [bx, by, bz])[2]);
     const z0 = Math.min(...zs(0));
     const zTop = Math.max(...zs(front));
-    const zBottom = Math.min(...zs(-undersideOf(def, pins)));
+    // a clamped panel's bars go below its back
+    const below = def.mount.kind === 'clamp' ? Math.max(undersideOf(def, pins), CLAMP_BAR_T - clampHold(def, placement).face) : undersideOf(def, pins);
+    const zBottom = Math.min(...zs(-below));
     const corner = (bx: number, by: number): [number, number] => {
       const p = applyAffine(toCase, [bx, by, 0]);
       return [p[0], p[1]];
@@ -583,7 +598,11 @@ export function collisions(layout: CaseLayout): Message[] {
         out.push({ code: board.hung ? 'warn.topPartOnSupport' : 'warn.bottomPartOnSupport', params: { board: board.index + 1, port: port.id } });
       }
     }
-    if (board.hung && board.placement.z < CEILING_GAP - 1e-9) {
+    if (board.def.mount.kind === 'clamp' && clampHold(board.def, board.placement).blocked) {
+      out.push({ code: 'warn.clampBlocked', params: { board: board.index + 1 } });
+    }
+    // a clamped panel is pressed against the plate on purpose
+    if (board.hung && board.def.mount.kind !== 'clamp' && board.placement.z < CEILING_GAP - 1e-9) {
       out.push({ code: 'warn.glassGap', params: { board: board.index + 1, mm: CEILING_GAP } });
     }
   }
@@ -618,8 +637,8 @@ function partOnSupport(board: PlacedBoard, port: TopPort): boolean {
       return Math.hypot(dx, dy) < (glass ? hole.d / 2 : boss);
     });
   }
-  // rails step aside for a glass as standoffs do
-  if (glass) return false;
+  // rails step aside for a glass as standoffs do; a clamp's bars step aside by themselves
+  if (glass || board.def.mount.kind === 'clamp') return false;
   // a hung board's rails carry no pin bed: their lip over its top is a plain one
   const pinned = board.hung ? [] : pinEdges(board);
   return railEdges(board.def).some((edge) => {

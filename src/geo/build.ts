@@ -8,7 +8,7 @@ import { CsgScope, fromManifold, transformSolid, unionAll } from './csg';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import type { PlacedBoard } from './layout';
-import { caseLayout, effectiveLid, flatFrame } from './layout';
+import { caseLayout, effectiveLid, flatFrame, heldByLid } from './layout';
 import type { Message } from './message';
 import { partingZ, skirtSolid, splitAtParting } from './parting';
 import { plateOf, shapeSpec } from './shape';
@@ -17,6 +17,7 @@ import type { Support } from './standoffs';
 import { fromCeiling, rails, standoffs, upsideDown } from './standoffs';
 import { batteryClamps, batterySupports } from './batterySolids';
 import { glassKeepOut, rimSolids } from './rimSolids';
+import { clampBars, clampPosts } from './clampSolids';
 import { cuttersSolid } from './cut';
 import { postSpots } from './fastening';
 import { postSolids, snapSolids } from './lip';
@@ -41,8 +42,10 @@ export interface CaseBuild {
   lid: SurfaceMesh;
   /** printed screws: one screw in its own frame (head below z = 0, shank up); the main thread places the copies */
   screw: SurfaceMesh | null;
-  /** the batteries' clamp bars, case frame, as screwed down; null without batteries */
+  /** the clamp bars that go with the body (batteries', a panel's the body holds), case frame, as screwed down; null without */
   clamps: SurfaceMesh | null;
+  /** the clamp bars of panels the lid holds, case frame, as screwed down; null without */
+  lidClamps: SurfaceMesh | null;
   dims: Dims;
 }
 
@@ -89,7 +92,9 @@ export function buildCase(
     // a hung board's supports are a floor board's in the case turned upside down
     const held = (board: PlacedBoard): Support[] => (board.def.mount.kind === 'holes'
       ? standoffs(csg, scope, board, shape.floor, segments)
-      : rails(csg, scope, board, shape.floor));
+      : board.def.mount.kind === 'clamp'
+        ? clampPosts(csg, scope, board, shape.floor, segments)
+        : rails(csg, scope, board, shape.floor));
     // and step aside for its glass, which a rim around it locates
     // built in its plate's frame (the top, or the console's slope), then turned into the case
     const hung = (board: PlacedBoard): Support[] => {
@@ -204,9 +209,16 @@ export function buildCase(
     const screw = lid.fastening === 'printed'
       ? fromManifold(screwSolid(csg, scope, screwShape(lid.thread.size, plate, lid.fit), threadPoints(segments)))
       : null;
-    const clampBars = layout.boards.flatMap((board) => (board.def.battery ? [batteryClamps(csg, scope, board, board.def.battery, segments)] : []));
-    const clamps = clampBars.length > 0 ? fromManifold(unionAll(csg, scope, clampBars)) : null;
-    return { body: fromManifold(body), lid: fromManifold(lidSolid), screw, clamps, dims };
+    // clamp bars go with the part that holds what they clamp: battery bars with the body,
+    // a panel's with the lid when the lid holds the panel
+    const bars = layout.boards.flatMap((board) => (board.def.battery
+      ? [{ onLid: false, solid: batteryClamps(csg, scope, board, board.def.battery, segments) }]
+      : board.hung && board.def.mount.kind === 'clamp' ? [{ onLid: heldByLid(board, lid.face), solid: clampBars(csg, scope, board, segments) }] : []));
+    const merged = (onLid: boolean): SurfaceMesh | null => {
+      const solids = bars.filter((bar) => bar.onLid === onLid).map((bar) => bar.solid);
+      return solids.length > 0 ? fromManifold(unionAll(csg, scope, solids)) : null;
+    };
+    return { body: fromManifold(body), lid: fromManifold(lidSolid), screw, clamps: merged(false), lidClamps: merged(true), dims };
   } finally {
     scope.dispose();
   }

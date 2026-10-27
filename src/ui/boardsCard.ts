@@ -41,7 +41,9 @@ function patchBoard(state: AppState, index: number, patch: Partial<BoardPlacemen
 
 function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
   const at = (state: AppState): BoardPlacement => state.boards[index];
-  const holes = (state: AppState): boolean => boardOf(at(state)).mount.kind === 'holes';
+  // the screw and hole kind of the standoffs, or of a clamped panel's posts
+  const holes = (state: AppState): boolean => boardOf(at(state)).mount.kind !== 'rails';
+  const clamped = (state: AppState): boolean => boardOf(at(state)).mount.kind === 'clamp';
   const battery = (state: AppState): BatterySpec | undefined => at(state).battery;
   const hung = (state: AppState): boolean => hangs(at(state));
   const setBattery = (state: AppState, patch: Partial<BatterySpec>): AppState => {
@@ -101,7 +103,8 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
     {
       // on the floor or hung from the ceiling (on a console: its slope)
       kind: 'segmented', key: 'on', label: 'board.on', hint: 'board.on.hint',
-      when: (state) => battery(state) === undefined,
+      // a clamped panel always hangs
+      when: (state) => battery(state) === undefined && !clamped(state),
       options: SIDES.map((side) => ({ value: side, label: `board.on.${side}` as const })),
       get: (state) => at(state).on ?? 'floor',
       set: (state, value) => {
@@ -125,6 +128,13 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       when: hung,
       get: (state) => at(state).z,
       set: (state, value) => patchBoard(state, index, { z: value }),
+    },
+    {
+      // the battery's own press is `press`: a clamped panel's is another control
+      kind: 'range', key: 'clampPress', label: 'board.press', hint: 'board.press.hint', min: PRESS_MIN, max: PRESS_MAX, step: 0.1,
+      when: clamped,
+      get: (state) => at(state).press ?? 0,
+      set: (state, value) => patchBoard(state, index, { press: value }),
     },
     {
       kind: 'check', key: 'bevel', label: 'board.bevel', hint: 'board.bevel.hint',

@@ -61,3 +61,27 @@ the **glass** around it (the lens, the LCD module or the metal bezel).
   and rim need the flat ceiling): the case grows with the edge radius.
   Only a board set against a wall can bring its window over the rounded
   edge; that is reported.
+
+## Clamp bars
+
+A panel with nothing to screw into from the front — Touch Display 2, a bare
+e-paper panel, a module screwed from behind — is held by clamp bars: two
+posts from the plate beyond its long edges, a printed bar across its back
+along the short side (shorter and stiffer), screwed onto the posts with the
+hole kind of the board's box (pilot hole, insert or nut).
+
+- Such a panel always hangs, and lies against the plate (gap 0): the rim
+  locates it, the bars hold it.
+- A panel with threaded holes on its back (Touch Display 2's brackets) gets
+  a bar along each row of them, with a hole for a screw into the panel.
+- One without gets two bars at a fifth of its length from each end; a bar
+  moves along the panel to keep off the parts on its back, and the panel
+  says so when it finds no room.
+- **Clamp gap**: how far the bars press into the back, −3 … 1 mm; −1 by
+  default for a bare panel (room for foam tape — e-paper glass is about a
+  millimetre thick, and a printed bar is not flat), 0 for one the bars are
+  screwed to.
+- The bars are a part of their own: with the lid when the lid holds the
+  panel (the Lid tab and its STL show and export them), with the body when
+  the body does; exploded, they float under the panel.
+

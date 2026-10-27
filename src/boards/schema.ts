@@ -144,7 +144,8 @@ export function bottomPartsH(ports: readonly PortDef[]): number {
 
 export type PortDef = EdgePort | TopPort;
 
-export const MOUNT_KINDS = ['holes', 'rails'] as const;
+/** holes: standoffs into them from the front; rails; clamp: bars across the back (its holes, if any, are on the back) */
+export const MOUNT_KINDS = ['holes', 'rails', 'clamp'] as const;
 export type MountKind = (typeof MOUNT_KINDS)[number];
 
 export interface Hole {
@@ -504,7 +505,7 @@ export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
     const hole = rec(item);
     holes.push({ x: num(hole.x, 0, w, w / 2), y: num(hole.y, 0, d, d / 2), d: num(hole.d, 1, 8, 2.7) });
   }
-  const mountKind: MountKind = mount.kind === 'rails' || holes.length === 0 ? 'rails' : 'holes';
+  const mountKind: MountKind = mount.kind === 'clamp' ? 'clamp' : mount.kind === 'rails' || holes.length === 0 ? 'rails' : 'holes';
   const kind = r.kind === 'sbc' || r.kind === 'holder' || r.kind === 'display' ? r.kind : 'mcu';
   const ports = uniquePorts(Array.isArray(r.ports) ? r.ports : [], { w, d });
   const outline = sanitizeOutline(r.outline, { w, d });
@@ -518,7 +519,7 @@ export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
     ...(outline ? { outline } : {}),
     mount: {
       kind: mountKind,
-      holes: mountKind === 'holes' ? holes : [],
+      holes: mountKind === 'rails' ? [] : holes,
       screw: isScrewSize(mount.screw) ? mount.screw : 'M2.5',
       rails: mount.rails === 'short' ? 'short' : 'long',
     },

@@ -1,0 +1,16 @@
+{
+  "id": "waveshare-epaper-7.5-v2",
+  "name": "7.5inch e-Paper V2 (800×480) panel",
+  "vendor": "Waveshare",
+  "kind": "display",
+  "size": { "w": 170.2, "d": 111.2, "t": 0.4 },
+  "mount": { "kind": "clamp", "holes": [], "screw": "M3" },
+  "topHeight": 0.78,
+  "bottomHeight": 0,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 85.1, "y": 58.74, "w": 163.2, "d": 97.92, "h": 0.78, "glass": { "x": 85.1, "y": 55.6, "w": 170.2, "d": 111.2, "t": 1.18 } },
+    { "id": "fpc", "type": "generic", "edge": "bottom", "x": 85.1, "y": 6, "w": 24, "d": 12, "h": 2 }
+  ],
+  "source": "https://files.waveshare.com/upload/6/60/7.5inch_e-Paper_V2_Specification.pdf",
+  "verified": true
+}

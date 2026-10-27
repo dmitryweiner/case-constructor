@@ -214,6 +214,16 @@ freely; a temporary script that turns out useful becomes a permanent one.
   On the slope its openings follow its own axes (`tiltedCutter`), a tilted
   edge channel stops just past the wall; the console's heights rise together
   (the angle stays) until it clears the floor and the boards under it.
+  A panel with nothing to screw into from the front is `mount.kind:
+  'clamp'` (its `mount.holes` are on its back): it always hangs, against
+  the plate; posts from the plate beyond its long edges (built like
+  standoffs in the plate frame, `clampSolids.ts`), bars across its back
+  along the short side (`clamp.ts`): a bar per row of back holes, or two
+  pressing ones that step aside for parts on the back (`placement.press`).
+  The bars of a panel the lid holds are the part `lidClamp`, printed and
+  exported with the lid. Whatever stands at a footprint's edge keeps
+  `EDGE_KEEP` inside it: the edge is the margin's line, where the cavity's
+  corner arcs end (a face on it left collinear ceiling vertices).
   Its display part's window flares 45° outwards (`CutterSpec.flare`, built
   as one hull — every section is convex); a rim around its glass
   (`rim.ts` pure, `rimSolids.ts` worker) is a support, so it goes where the
@@ -386,7 +396,7 @@ Boards: `#boardAdd` opens `#boardPicker` (`#boardSearch`, rows
 `#boardList [data-board="<id>"]`, batteries `[data-board="battery-<kind>"]`, `#boardPickerClose`); with two boards or more
 `#boardsArrange_row|column|compact` and `#boards_gap` (geo/arrange.ts);
 per board
-`#board<i>_x|_y|_z`, `#board<i>_on_floor|ceiling` (not a battery; on a console the ceiling is the slope), `#board<i>_gap` (hung; instead of `_z`), `#board<i>_bevel` (a hung display), alignment (two boards or more) `#board<i>_align`
+`#board<i>_x|_y|_z`, `#board<i>_on_floor|ceiling` (not a battery; on a console the ceiling is the slope), `#board<i>_gap` (hung; instead of `_z`), `#board<i>_bevel` (a hung display), `#board<i>_clampPress` (a clamped panel), alignment (two boards or more) `#board<i>_align`
 (details), `#board<i>_alignRef`,
 `#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_wall_front|back|left|right` (toggles; not on a cylinder), `#board<i>_wallOffset`, `#board<i>_screw`,
 `#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles
