@@ -103,6 +103,24 @@ export interface EdgePort extends PortCommon {
 }
 
 /**
+ * The glass of a display part — its lens, glass or bezel, whichever is the
+ * outermost: centred at (x, y) in the board frame, w × d (a round one: w is
+ * the diameter), its front at the part's `h` above the PCB and `t` thick.
+ * The part's own rectangle is the window; the glass is what the case's rim
+ * holds and its plate hides.
+ */
+export interface Glass {
+  x: number;
+  y: number;
+  w: number;
+  d: number;
+  /** corner radius of a rectangle */
+  r: number;
+  shape: PortShape;
+  t: number;
+}
+
+/**
  * An element on a face of the PCB: a rectangle (or circle) centred at
  * (x, y), h above the top face — or, on the underside, h below the PCB.
  */
@@ -110,6 +128,8 @@ export interface TopPort extends PortCommon {
   edge: 'top' | 'bottom';
   x: number;
   y: number;
+  /** a display on top only: its glass */
+  glass?: Glass;
 }
 
 /** A part on the top or the underside rather than on an edge. */
@@ -180,8 +200,8 @@ export interface BoardDef {
   /** proper noun, never translated; aliases after a slash */
   name: string;
   vendor: string;
-  /** a battery holder is screwed down like a board; a battery is placed by its spec (boards/battery.ts) */
-  kind: 'sbc' | 'mcu' | 'holder' | 'battery';
+  /** a battery holder is screwed down like a board; a battery is placed by its spec (boards/battery.ts); a display is a screen sold on its own */
+  kind: 'sbc' | 'mcu' | 'holder' | 'battery' | 'display';
   size: { w: number; d: number; t: number };
   /** the PCB's real outline when it is not the rectangle: a simple polygon inside `size`, counter-clockwise */
   outline?: [number, number][];
@@ -214,6 +234,9 @@ export const MAX_PORTS = 40;
 export const MAX_HOLES = 8;
 export const MAX_VARIANTS = 16;
 export const MAX_OUTLINE = 64;
+/** The thickest PCB a board may have, and the thickest display module (a panel's glass, LCD and back plate), mm. */
+export const PCB_T_MAX = 5;
+export const PANEL_T_MAX = 20;
 
 function rec(x: unknown): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -269,14 +292,47 @@ export function sanitizePort(raw: unknown, size: { w: number; d: number }, index
     };
   }
   if (edge === 'top' || edge === 'bottom' || (edge === undefined && base.top)) {
-    return {
+    const port: TopPort = {
       ...common,
       edge: edge === 'bottom' ? 'bottom' : 'top',
       x: num(r.x, 0, size.w, size.w / 2),
       y: num(r.y, 0, size.d, size.d / 2),
     };
+    const glass = type === 'display' && port.edge === 'top' ? sanitizeGlass(r.glass, size) : undefined;
+    return glass && windowInGlass(port, glass) ? { ...port, glass } : port;
   }
   return null;
+}
+
+/** A display's glass clamped into the board; none when it is missing or cannot fit. */
+export function sanitizeGlass(raw: unknown, size: { w: number; d: number }): Glass | undefined {
+  if (typeof raw !== 'object' || raw === null) return undefined;
+  const r = rec(raw);
+  const shape: PortShape = r.shape === 'round' ? 'round' : 'rect';
+  const x = num(r.x, 0, size.w, size.w / 2);
+  const y = num(r.y, 0, size.d, size.d / 2);
+  // as wide as the board allows around its centre
+  const maxW = 2 * Math.min(x, size.w - x);
+  const maxD = 2 * Math.min(y, size.d - y);
+  if (Math.min(maxW, maxD) < 1) return undefined;
+  const w = num(r.w, 1, shape === 'round' ? Math.min(maxW, maxD) : maxW, maxW);
+  const d = shape === 'round' ? w : num(r.d, 1, maxD, maxD);
+  return { x, y, w, d, r: shape === 'round' ? 0 : num(r.r, 0, Math.min(w, d) / 2, 0), shape, t: num(r.t, 0.1, PANEL_T_MAX, 1) };
+}
+
+/** Whether a part's window lies inside its glass (a rounded glass counts as its rectangle). */
+export function windowInGlass(port: Pick<TopPort, 'x' | 'y' | 'w' | 'd' | 'shape'>, glass: Glass): boolean {
+  const eps = 1e-6;
+  const hw = port.w / 2;
+  const hd = (port.shape === 'round' ? port.w : port.d) / 2;
+  if (glass.shape === 'round') {
+    const reach = port.shape === 'round'
+      ? Math.hypot(port.x - glass.x, port.y - glass.y) + hw
+      : Math.max(...[-1, 1].flatMap((sx) => [-1, 1].map((sy) => Math.hypot(port.x + sx * hw - glass.x, port.y + sy * hd - glass.y))));
+    return reach <= glass.w / 2 + eps;
+  }
+  return port.x - hw >= glass.x - glass.w / 2 - eps && port.x + hw <= glass.x + glass.w / 2 + eps
+    && port.y - hd >= glass.y - glass.d / 2 - eps && port.y + hd <= glass.y + glass.d / 2 + eps;
 }
 
 function withPins(pins: BoardPins | undefined): { pins?: BoardPins } {
@@ -448,7 +504,8 @@ export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
     const hole = rec(item);
     holes.push({ x: num(hole.x, 0, w, w / 2), y: num(hole.y, 0, d, d / 2), d: num(hole.d, 1, 8, 2.7) });
   }
-  const kind: MountKind = mount.kind === 'rails' || holes.length === 0 ? 'rails' : 'holes';
+  const mountKind: MountKind = mount.kind === 'rails' || holes.length === 0 ? 'rails' : 'holes';
+  const kind = r.kind === 'sbc' || r.kind === 'holder' || r.kind === 'display' ? r.kind : 'mcu';
   const ports = uniquePorts(Array.isArray(r.ports) ? r.ports : [], { w, d });
   const outline = sanitizeOutline(r.outline, { w, d });
   const variants = sanitizeVariants(r.variants, { w, d }, ports);
@@ -456,12 +513,12 @@ export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
     id: str(r.id, fallbackId, 60),
     name: str(r.name, 'Custom board'),
     vendor: str(r.vendor, ''),
-    kind: r.kind === 'sbc' || r.kind === 'holder' ? r.kind : 'mcu',
-    size: { w, d, t: num(size.t, 0.4, 5, 1.6) },
+    kind,
+    size: { w, d, t: num(size.t, 0.4, kind === 'display' ? PANEL_T_MAX : PCB_T_MAX, 1.6) },
     ...(outline ? { outline } : {}),
     mount: {
-      kind,
-      holes: kind === 'holes' ? holes : [],
+      kind: mountKind,
+      holes: mountKind === 'holes' ? holes : [],
       screw: isScrewSize(mount.screw) ? mount.screw : 'M2.5',
       rails: mount.rails === 'short' ? 'short' : 'long',
     },

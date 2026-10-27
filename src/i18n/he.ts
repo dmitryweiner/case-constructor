@@ -142,6 +142,7 @@ export const he: Record<Key, string> = {
   'board.rot': 'סיבוב',
   'picker.batteries': "סוללות",
   'picker.holders': "מחזיקי סוללות",
+  'picker.displays': "מסכים",
   'battery.kind': "סוללה",
   'battery.kind.18650': "תאי 18650",
   'battery.kind.21700': "תאי 21700",

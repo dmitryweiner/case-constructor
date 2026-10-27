@@ -282,7 +282,11 @@ function refresh(): void {
   })));
   ghosts = layout.boards.flatMap((board): ScenePart[] => {
     const ghost = boardGhost(board);
-    return [{ role: 'board', mesh: ghost.pcb }, ...(ghost.ports ? [{ role: 'port' as const, mesh: ghost.ports }] : [])];
+    return [
+      { role: 'board', mesh: ghost.pcb },
+      ...(ghost.glass ? [{ role: 'glass' as const, mesh: ghost.glass }] : []),
+      ...(ghost.ports ? [{ role: 'port' as const, mesh: ghost.ports }] : []),
+    ];
   });
   drawParts();
   renderPartList();

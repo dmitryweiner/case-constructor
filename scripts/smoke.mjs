@@ -233,6 +233,21 @@ if (!(await page.locator('#boardList [data-board="mpd-bh2aa-w"]').count())) erro
 await page.click('#boardList [data-board="mpd-bh2aa-w"]');
 await expectWatertight('holders:bh2aa');
 await page.click('#board1_remove');
+// a display: found by "screen", in its own group, its glass drawn
+label('displays');
+await page.click('#boardAdd');
+await page.fill('#boardSearch', 'screen');
+const displayGroup = await page.evaluate(() => {
+  const row = document.querySelector('#boardList [data-board="lcdwiki-msp2807"]');
+  let group = row?.previousElementSibling;
+  while (group && !group.classList.contains('preset-group')) group = group.previousElementSibling;
+  return group?.textContent ?? null;
+});
+if (displayGroup !== 'Displays') errors.push(`[displays] MSP2807 under ${displayGroup}, not Displays`);
+await page.click('#boardList [data-board="lcdwiki-msp2807"]');
+await expectWatertight('displays:msp2807');
+if (!(await page.evaluate(() => window.__case.drawn())).includes('glass')) errors.push('[displays] no glass drawn');
+await page.click('#board1_remove');
 label('openings');
 await page.click('#cutAdd');
 await page.click('#cut0_shape_round');

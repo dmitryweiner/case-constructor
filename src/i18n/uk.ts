@@ -141,6 +141,7 @@ export const uk: Record<Key, string> = {
   'board.rot': 'Поворот',
   'picker.batteries': "Акумулятори",
   'picker.holders': "Тримачі акумуляторів",
+  'picker.displays': "Екрани",
   'battery.kind': "Акумулятор",
   'battery.kind.18650': "Елементи 18650",
   'battery.kind.21700': "Елементи 21700",

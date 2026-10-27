@@ -51,7 +51,8 @@ freely; a temporary script that turns out useful becomes a permanent one.
   catalog board from the picker (with nut/insert holes, a rotation and its
   pins toggled), soldered pins raising the board, a family's model, port
   toggles, user openings, the custom board editor and its catalog JSON,
-  board search and overlap warnings, arranging and aligning two boards (and
+  board search and overlap warnings, a display found by "screen" in its own
+  group with its glass drawn, arranging and aligning two boards (and
   undo), every lid face, cylinder/console lid restrictions, snaps and screws
   with every hole and head kind, magnets, printed screws (P4 with its
   warning, the Lid tab with the screws, a lid export), vents, fan, through

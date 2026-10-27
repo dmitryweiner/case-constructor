@@ -150,6 +150,7 @@ export const en = {
   'board.rot': 'Rotation',
   'picker.batteries': "Batteries",
   'picker.holders': "Battery holders",
+  'picker.displays': "Displays",
   'battery.kind': "Battery",
   'battery.kind.18650': "18650 cells",
   'battery.kind.21700': "21700 cells",

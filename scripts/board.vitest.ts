@@ -11,7 +11,7 @@ import { dirname } from 'node:path';
 import { CATALOG, RAW_BOARDS, catalogBoard } from '../src/boards/catalog';
 import { layersFor, writeReview } from './lib/review.mjs';
 import { OVERRIDE_NUMBERS, insidePolygon, isPortType, onFace, resolveVariant, sanitizeBoard } from '../src/boards/schema';
-import type { BoardDef } from '../src/boards/schema';
+import type { BoardDef, Glass } from '../src/boards/schema';
 
 interface Args { check?: string; svg?: string; out?: string; variant?: string; review?: string; only?: string }
 
@@ -100,6 +100,13 @@ function portBox(def: BoardDef, port: BoardDef['ports'][number]): [number, numbe
 
 const esc = (text: string): string => text.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 
+/** A display's glass as an svg element: its outline in display coordinates, `X`/`Y` from the board frame. */
+function glassMarkup(glass: Glass, X: (x: number) => number, Y: (y: number) => number, scale: number, attrs: string): string {
+  if (glass.shape === 'round') return `<circle cx="${X(glass.x)}" cy="${Y(glass.y)}" r="${(glass.w / 2) * scale}" ${attrs}/>`;
+  const r = glass.r * scale;
+  return `<rect x="${X(glass.x - glass.w / 2)}" y="${Math.min(Y(glass.y + glass.d / 2), Y(glass.y - glass.d / 2))}" width="${glass.w * scale}" height="${glass.d * scale}"${r > 0 ? ` rx="${r}"` : ''} ${attrs}/>`;
+}
+
 /** Where a click on the scheme snaps when a drawing is aligned by hand: holes, outline corners, port corners and centres (display mm). */
 function snapPoints(def: BoardDef): [number, number][] {
   const out: [number, number][] = def.mount.holes.map((hole) => [hole.x, -hole.y]);
@@ -107,6 +114,10 @@ function snapPoints(def: BoardDef): [number, number][] {
   for (const port of def.ports) {
     const [x0, y0, x1, y1] = portBox(def, port);
     out.push([x0, -y0], [x1, -y0], [x1, -y1], [x0, -y1], [(x0 + x1) / 2, -(y0 + y1) / 2]);
+    if (onFace(port) && port.glass) {
+      const g = port.glass;
+      out.push([g.x - g.w / 2, -(g.y - g.d / 2)], [g.x + g.w / 2, -(g.y - g.d / 2)], [g.x + g.w / 2, -(g.y + g.d / 2)], [g.x - g.w / 2, -(g.y + g.d / 2)]);
+    }
   }
   return out.map(([x, y]) => [Math.round(x * 100) / 100, Math.round(y * 100) / 100]);
 }
@@ -118,6 +129,9 @@ function schemeMarkup(def: BoardDef): string {
   const board = def.outline ?? [[0, 0], [def.size.w, 0], [def.size.w, def.size.d], [0, def.size.d]];
   parts.push(`<polygon class="pcb" points="${board.map(([x, y]) => `${n(x)},${n(-y)}`).join(' ')}"/>`);
   if (def.outline) parts.push(`<rect class="box" x="0" y="${-def.size.d}" width="${def.size.w}" height="${def.size.d}"/>`);
+  for (const port of def.ports) {
+    if (onFace(port) && port.glass) parts.push(glassMarkup(port.glass, n, (y) => n(-y), 1, `class="glass"`));
+  }
   for (const port of def.ports) {
     const [x0, y0, x1, y1] = portBox(def, port);
     const where = onFace(port) ? `${port.x}, ${port.y}` : `${port.edge} @${port.along}`;
@@ -150,6 +164,10 @@ function svg(def: BoardDef, variant?: string): string {
   for (const hole of def.mount.holes) {
     parts.push(`<circle cx="${X(hole.x)}" cy="${Y(hole.y)}" r="${(hole.d / 2) * s}" fill="#fff" stroke="#000"/>`);
     parts.push(`<text x="${X(hole.x) + 8}" y="${Y(hole.y) - 8}" font-size="10" fill="#fff">${hole.x}, ${hole.y}</text>`);
+  }
+  for (const port of def.ports) {
+    // a display's glass under its window: dark, dashed
+    if (onFace(port) && port.glass) parts.push(glassMarkup(port.glass, X, Y, s, 'fill="#1e2a36" fill-opacity="0.85" stroke="#7fa6c9" stroke-dasharray="6 3"'));
   }
   for (const port of def.ports) {
     const [x0, y0, x1, y1] = portBox(def, port);

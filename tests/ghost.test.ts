@@ -94,6 +94,27 @@ describe('board ghosts', () => {
   });
 });
 
+describe('display ghosts', () => {
+  it('a display with a glass draws it as a closed slab of its outline, its front at the window', () => {
+    const board = placed('lcdwiki-msp2807');
+    const port = board.def.ports.find((item) => item.type === 'display');
+    expect(port && 'glass' in port && port.glass).toBeTruthy();
+    const { glass } = boardGhost(board);
+    expect(glass).not.toBeNull();
+    if (!glass || !port || !('glass' in port) || !port.glass) return;
+    const report = validateMesh(glass);
+    expect(report.watertight).toBe(true);
+    expect(report.volume).toBeCloseTo(port.glass.w * port.glass.d * port.glass.t, 1);
+    let top = -Infinity;
+    for (let i = 2; i < glass.positions.length; i += 3) top = Math.max(top, glass.positions[i]);
+    expect(top).toBeCloseTo(board.z0 + board.def.size.t + port.h, 3);
+  });
+
+  it('a board without a glass draws none', () => {
+    expect(boardGhost(placed('raspberry-pi-4b')).glass).toBeNull();
+  });
+});
+
 describe('port captions', () => {
   it('hang over the middle of each port: on top of an edge connector, over a top part, under a bottom one', () => {
     const layout = caseLayout(defaultState());

@@ -6,7 +6,7 @@
 // case follows after the debounce.
 
 import earcut from 'earcut';
-import type { BoardDef, PortDef } from '../boards/schema';
+import type { BoardDef, Glass, PortDef } from '../boards/schema';
 import { onFace } from '../boards/schema';
 import type { PlacedBoard } from './layout';
 import { PIN_SPACER, PIN_SPACER_W, edgeNormal, pinEdges } from './layout';
@@ -119,11 +119,17 @@ function prismMesh(board: PlacedBoard, outer: [number, number][], holes: [number
   return { positions, indices: index, normals: meshNormals(positions, index) };
 }
 
+/** How thick a display's window is drawn over its glass, mm. */
+const WINDOW_LAYER = 0.1;
+
 /** The block of one port in the board frame (z = 0 at the PCB underside). */
 export function portBlock(board: PlacedBoard, port: PortDef): [number, number, number, number, number, number] {
   const { w, d, t } = board.def.size;
   if (onFace(port)) {
-    const [z0, z1] = port.edge === 'top' ? [t, t + port.h] : [-port.h, 0];
+    // a display with a glass: its window as a thin layer on the glass's front
+    const [z0, z1] = port.edge === 'top'
+      ? [port.glass ? t + port.h - WINDOW_LAYER : t, t + port.h + (port.glass ? WINDOW_LAYER / 2 : 0)]
+      : [-port.h, 0];
     return [port.x - port.w / 2, port.y - port.d / 2, z0, port.x + port.w / 2, port.y + port.d / 2, z1];
   }
   const [nx, ny] = edgeNormal(port.edge);
@@ -174,14 +180,37 @@ export function pinBlocks(board: PlacedBoard): [number, number, number, number, 
   });
 }
 
+/** The outline of a glass in the board frame, counter-clockwise: a circle, or a rectangle with its rounded corners. */
+function glassOutline(glass: Glass): [number, number][] {
+  if (glass.shape === 'round') return circle(glass.x, glass.y, glass.w / 2, false);
+  const hw = glass.w / 2;
+  const hd = glass.d / 2;
+  if (glass.r <= 0) return [[glass.x - hw, glass.y - hd], [glass.x + hw, glass.y - hd], [glass.x + hw, glass.y + hd], [glass.x - hw, glass.y + hd]];
+  const steps = GHOST_CIRCLE / 4;
+  const corners: [number, number, number][] = [[hw - glass.r, -hd + glass.r, -90], [hw - glass.r, hd - glass.r, 0], [-hw + glass.r, hd - glass.r, 90], [-hw + glass.r, -hd + glass.r, 180]];
+  return corners.flatMap(([cx, cy, from]) => Array.from({ length: steps + 1 }, (_, i): [number, number] => {
+    const a = ((from + (90 * i) / steps) * Math.PI) / 180;
+    return [glass.x + cx + glass.r * Math.cos(a), glass.y + cy + glass.r * Math.sin(a)];
+  }));
+}
+
+/** The glass slabs of a board's display parts, case frame: `t` thick, their front at the part's height. */
+function glassGhost(board: PlacedBoard): SurfaceMesh | null {
+  const { t } = board.def.size;
+  const slabs = board.def.ports.flatMap((port) => (onFace(port) && port.glass
+    ? [prismMesh(board, glassOutline(port.glass), [], t + port.h - port.glass.t, t + port.h)]
+    : []));
+  return slabs.length > 0 ? mergeMeshes(slabs) : null;
+}
+
 /**
  * A board's ghost, case frame: the PCB slab with its mounting holes through
  * it; its ports and parts as blocks, soldered pin rows under it, and a pad
  * ring around each hole (drawn
- * in the ports' colour, so the holes read at a glance).
+ * in the ports' colour, so the holes read at a glance); a display's glass.
  */
-export function boardGhost(board: PlacedBoard): { pcb: SurfaceMesh; ports: SurfaceMesh | null } {
-  if (board.def.battery) return { pcb: batteryGhost(board, board.def.battery), ports: null };
+export function boardGhost(board: PlacedBoard): { pcb: SurfaceMesh; ports: SurfaceMesh | null; glass: SurfaceMesh | null } {
+  if (board.def.battery) return { pcb: batteryGhost(board, board.def.battery), ports: null, glass: null };
   const { w, d, t } = board.def.size;
   const blocks = [...board.def.ports.map((port) => portBlock(board, port)), ...pinBlocks(board)]
     .map(([x0, y0, z0, x1, y1, z1]) => boxMesh(board, x0, y0, z0, x1, y1, z1));
@@ -195,7 +224,7 @@ export function boardGhost(board: PlacedBoard): { pcb: SurfaceMesh; ports: Surfa
     board, circle(hole.x, hole.y, hole.r + hole.pad, false), [circle(hole.x, hole.y, hole.r, true)], -PAD_PROUD, t + PAD_PROUD,
   ));
   const parts = [...blocks, ...pads];
-  return { pcb, ports: parts.length > 0 ? mergeMeshes(parts) : null };
+  return { pcb, ports: parts.length > 0 ? mergeMeshes(parts) : null, glass: glassGhost(board) };
 }
 
 /** (u, v, w) → (w, u, v): a prism drawn in the (y, z) plane runs along x. */

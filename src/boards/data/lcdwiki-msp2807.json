@@ -1,0 +1,26 @@
+{
+  "id": "lcdwiki-msp2807",
+  "name": "2.8-inch SPI TFT, touch (MSP2807)",
+  "vendor": "LCDwiki",
+  "kind": "display",
+  "size": { "w": 50, "d": 86, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3, "y": 4.92, "d": 3.2 },
+      { "x": 47, "y": 4.92, "d": 3.2 },
+      { "x": 3, "y": 83, "d": 3.2 },
+      { "x": 47, "y": 83, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 4,
+  "bottomHeight": 2.2,
+  "ports": [
+    { "id": "display", "type": "display", "edge": "top", "x": 25, "y": 47.9, "w": 43.2, "d": 57.6, "h": 4, "glass": { "x": 25, "y": 45, "w": 50, "d": 69.2, "t": 3.5 } },
+    { "id": "header", "type": "header-1xN", "edge": "bottom", "x": 25, "y": 2, "w": 35.56, "d": 2.54, "h": 7.2 },
+    { "id": "microsd", "type": "microsd", "edge": "left", "along": 46.5, "z": -3.1, "protrude": 0 }
+  ],
+  "source": "https://www.lcdwiki.com/res/MSP2807/MSP2807_Size.pdf",
+  "verified": true
+}

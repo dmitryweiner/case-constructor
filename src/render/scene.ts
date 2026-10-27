@@ -8,7 +8,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SurfaceMesh } from '../geo/surface';
 
-export type PartRole = 'body' | 'lid' | 'screw' | 'clamp' | 'board' | 'port';
+export type PartRole = 'body' | 'lid' | 'screw' | 'clamp' | 'board' | 'port' | 'glass';
 
 export interface ScenePart {
   role: PartRole;
@@ -54,6 +54,7 @@ const COLORS: Record<PartRole, number> = {
   clamp: 0xa9b8c8,
   board: 0x3fae6a,
   port: 0xd9b45a,
+  glass: 0x1e2a36,
 };
 /** Vertical field of view of the whole canvas, degrees. */
 const FOV = 40;
@@ -108,6 +109,10 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
     }),
     port: new THREE.MeshStandardMaterial({
       color: COLORS.port, metalness: 0.2, roughness: 0.6, transparent: true, opacity: 0.6, depthWrite: false,
+    }),
+    // a display's glass: dark, its window in the ports' amber over it
+    glass: new THREE.MeshStandardMaterial({
+      color: COLORS.glass, metalness: 0.3, roughness: 0.2, transparent: true, opacity: 0.8, depthWrite: false,
     }),
   };
 

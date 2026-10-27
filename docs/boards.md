@@ -196,6 +196,23 @@ shows the same mark). New boards: the add-board skill
 | Seeed XIAO ESP32-S3 Sense (with camera board) | Seeed | 17.78 × 21.14 | rails (long) | [source](https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32S3/res/seeed-studio-xiao-esp32s3-sense-3d_model.zip) | yes |
 | Waveshare RP2040-Zero / RP2350-Zero / ESP32-S3-Zero | Waveshare | 18 × 23.5 | rails (long) | [source](https://files.waveshare.com/wiki/RP2350-Zero/RP2350_Zero_step.zip) | yes |
 | ESP32-S3-Touch-LCD-4.3 | Waveshare | 106 × 68 | 4 × M2.5 | [source](https://www.waveshare.com/w/upload/7/7f/Esp32-s3-touch-lcd-4.3-003.jpg) | yes |
+
+### Displays
+
+Screens sold on their own have a group of their own in the picker
+(*Displays*; search finds them by "display" or "screen" too). An entry gives
+the window — the active area of a TFT or OLED, the visible area of a
+character LCD — and the glass around it (the lens, the LCD module or the
+bezel: its outline and thickness), drawn dark under the window in the view.
+
+| Display | Vendor | Size, mm | Mount | Source | Checked |
+|---|---|---|---|---|---|
+| 2.8-inch SPI TFT, touch (MSP2807) | LCDwiki | 50 × 86 | 4 × M3 | [source](https://www.lcdwiki.com/res/MSP2807/MSP2807_Size.pdf) | yes |
+
+### Battery holders
+
+| Holder | Vendor | Size, mm | Mount | Source | Checked |
+|---|---|---|---|---|---|
 | MPD BH-18650-W (1 × 18650 holder) | MPD | 77.7 × 20.9 | 2 × M3 | [source](https://memoryprotectiondevices.com/datasheets/BH-18650-W/BH-18650-W-datasheet.pdf) | yes |
 | MPD BH2AA-W (2 × AA holder) | MPD | 57.81 × 31.5 | 2 × M2 | [source](https://www.memoryprotectiondevices.com/datasheets/BH2AAW/BH2AAW-datasheet.pdf) | ≈ (holes along the length taken as centred) |
 | MPD BH4AA-W (4 × AA holder) | MPD | 57.15 × 61.72 | 2 × M2 | [source](https://www.memoryprotectiondevices.com/datasheets/BH4AAW/BH4AAW-datasheet.pdf) | ≈ (holes along the length taken as centred) |
