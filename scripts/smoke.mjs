@@ -170,6 +170,8 @@ await page.selectOption('#board0_top', '');
 await expectWatertight('carry:none');
 // port captions over the ghosts: a click on one toggles its opening, undo brings it back
 label('captions');
+// the Pi 4's skirt warnings put badges over the case, and a badge hides the captions under it: count the captions alone
+await page.uncheck('#viewWarnings');
 await expectWatertight('captions:shown');
 const captions = await page.evaluate(() => window.__case.captions());
 if (captions.length < 4) errors.push(`[captions] only ${captions.length} port captions shown`);
@@ -197,6 +199,7 @@ await page.uncheck('#viewBoards');
 if ((await page.evaluate(() => window.__case.captions())).length) errors.push('[captions] captions stay with the boards hidden');
 if (!(await page.locator('#viewPortNames').isDisabled())) errors.push('[captions] "Connector names" is live with the boards hidden');
 await page.check('#viewBoards');
+await page.check('#viewWarnings');
 // a board against walls: the Pi 4 flush on the front and the right, the case shrinks
 label('walls');
 const sizeOf = async () => (await page.locator('#status').textContent()).trim();

@@ -904,8 +904,15 @@ input.num {
 
 .view-checks {
   display: flex;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 6px 14px;
   margin: 2px 0 8px;
+}
+
+/* a label never breaks inside: the row wraps instead ("X-ray" broke in two) */
+.view-checks .check-inline {
+  flex: none;
+  white-space: nowrap;
 }
 
 .check-inline {
