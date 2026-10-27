@@ -173,6 +173,7 @@ export const en = {
   'picker.batteries': "Batteries",
   'picker.holders': "Battery holders",
   'picker.displays': "Displays",
+  'picker.keyboards': "Keyboards",
   'battery.kind': "Battery",
   'battery.kind.18650': "18650 cells",
   'battery.kind.21700': "21700 cells",
@@ -276,6 +277,8 @@ export const en = {
   'port.fpc': 'ribbon connector',
   'port.antenna': 'antenna connector',
   'port.generic': 'part',
+  'port.keys': 'key field',
+  'port.knob': 'knob',
   'port.wires': "wire leads",
 
   // --- lid fastening ---
@@ -322,6 +325,8 @@ export const en = {
   'custom.side.bottom': 'underneath (hole in the floor)',
   'custom.port.hint.edge': 'Along — its centre along the edge; Z — its bottom above the board’s top, below zero = under the board (−thickness − H: right under it); Out — how far it sticks out past the edge. The cut goes through the wall, mm.',
   'custom.port.hint.face': 'X, Y — its centre on the board; W × D — its size, H — its height. The cut goes through the ceiling (on top) or the floor (underneath), mm.',
+  'custom.port.hint.keys': 'X, Y, W × D — the key field; H — the key tops; Base — what stays under the plate (the switch bodies, the keypad\'s base). The editor\'s field gets one window over it; a hole per key needs the rows of a catalog file, mm.',
+  'custom.port.hint.knob': 'X, Y — the shaft\'s centre, W — its diameter; H — its top; Base — the body under the plate. The hole goes through the ceiling, mm.',
   'custom.remove': 'Remove',
   'custom.save': 'Save as catalog JSON',
   'custom.save.title': 'Download the board in the catalog format, to keep it or to contribute it',
@@ -334,6 +339,7 @@ export const en = {
   'col.z': 'Z',
   'col.along': 'Along',
   'col.protrude': 'Out',
+  'col.base': 'Base',
 
   // --- extras ---
   'panel.vents': 'Ventilation',

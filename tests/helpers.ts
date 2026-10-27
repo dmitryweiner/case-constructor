@@ -89,3 +89,22 @@ export function garbageLike(template: unknown, random: () => number, depth = 0):
   if (typeof template === 'number') return r < 0.5 ? template * (random() * 4 - 1) : (random() - 0.5) * 1000;
   return r < 0.6 ? template : ATOMS[Math.floor(random() * ATOMS.length)];
 }
+
+/**
+ * A keyboard for the tests (plans/PLAN-KEYBOARDS.md): 3 × 4 MX switches at
+ * 19.05 on a 64 × 84 PCB, M3 holes between the rows, the lid as the switch
+ * plate 5 mm above the PCB, the key tops 11.6 above it; an encoder's shaft.
+ */
+export const KEYPAD = {
+  id: 'keypad', name: 'Test keypad', vendor: 'Test', kind: 'keyboard',
+  size: { w: 64, d: 84, t: 1.6 },
+  mount: { kind: 'holes', holes: [{ x: 3, y: 21.5, d: 3.2 }, { x: 61, y: 21.5, d: 3.2 }, { x: 3, y: 59.6, d: 3.2 }, { x: 61, y: 59.6, d: 3.2 }], screw: 'M3' },
+  topHeight: 4, bottomHeight: 2,
+  ports: [
+    { id: 'keys', type: 'keys', edge: 'top', x: 32, y: 40.55, w: 57.15, d: 76.2, h: 11.6, base: 5, open: 'holes',
+      rows: [0, 1, 2, 3].map((i) => ({ y: 12 + i * 19.05, x: 12.95, n: 3, pitch: 19.05, w: 14, d: 14 })) },
+    { id: 'knob', type: 'knob', edge: 'top', x: 54, y: 80, w: 6, h: 20, base: 4 },
+    { id: 'usb-c-1', type: 'usb-c', edge: 'back', along: 20 },
+  ],
+  source: 'https://example.com/keypad', verified: false,
+};

@@ -268,11 +268,15 @@ export function renderCustomEditor(
     head.append(del);
     wrap.append(head);
 
+    // a key field or a knob goes through the plate from its base on
+    const through = onFace(port) && port.edge === 'top' && (port.type === 'keys' || port.type === 'knob');
+    const base: [string, Key][] = through ? [['base', 'col.base']] : [];
     const fields: readonly [string, Key][] = onFace(port)
-      ? [['x', 'col.x'], ['y', 'col.y'], ['w', 'col.w'], ['d', 'col.depth'], ['h', 'col.h']]
+      ? [['x', 'col.x'], ['y', 'col.y'], ['w', 'col.w'], ['d', 'col.depth'], ['h', 'col.h'], ...base]
       : [['along', 'col.along'], ['z', 'col.z'], ['w', 'col.w'], ['h', 'col.h'], ['protrude', 'col.protrude']];
     // what Z and the sides mean is not obvious: a part under the board is a negative Z, not "underneath"
-    const hint = t(onFace(port) ? 'custom.port.hint.face' : 'custom.port.hint.edge');
+    const hint = t(through ? (port.type === 'keys' ? 'custom.port.hint.keys' : 'custom.port.hint.knob')
+      : onFace(port) ? 'custom.port.hint.face' : 'custom.port.hint.edge');
     const values = make('div', 'table-row');
     for (const [key, label] of fields) {
       const cell = make('label', 'cell');

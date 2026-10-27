@@ -67,6 +67,10 @@ export const PORT_TYPES = {
   'fpc': { w: 22, h: 3, d: 3, clearance: 1, shape: 'rect', cut: true, top: true },
   'antenna': { w: 3, h: 1.3, d: 3, clearance: 0.5, shape: 'rect', cut: false, top: true },
   'generic': { w: 5, h: 3, d: 5, clearance: 0.5, shape: 'rect', cut: false, top: true },
+  // a keyboard's key field: the rectangle the keys stand in, `h` their tops (plans/PLAN-KEYBOARDS.md)
+  'keys': { w: 60, h: 3, d: 30, clearance: 0.5, shape: 'rect', cut: true, top: true },
+  // a rotary encoder's or a potentiometer's shaft through the plate
+  'knob': { w: 6, h: 15, d: 6, clearance: 0.5, shape: 'round', cut: true, top: true },
   // a battery holder's wire leads where they leave it: room for the bend, no opening
   'wires': { w: 4, h: 3, d: 2, clearance: 0.5, shape: 'rect', cut: false, top: false },
 } as const satisfies Record<string, PortType>;
@@ -120,6 +124,37 @@ export interface Glass {
   t: number;
 }
 
+/** How the lid opens over a key field: one window over it, or a hole per key. */
+export const KEYS_OPEN = ['window', 'holes'] as const;
+export type KeysOpen = (typeof KEYS_OPEN)[number];
+
+/**
+ * A row of keys in a key field, board frame: `n` keys `pitch` apart along
+ * x, the first one's centre at (x, y), each w × d (a round one: w is the
+ * diameter).
+ */
+export interface KeyRow {
+  y: number;
+  x: number;
+  n: number;
+  pitch: number;
+  w: number;
+  d: number;
+  shape: PortShape;
+}
+
+/** One key of a field: its centre and size, board frame. */
+export interface Key {
+  x: number;
+  y: number;
+  w: number;
+  d: number;
+  shape: PortShape;
+}
+
+export const MAX_KEY_ROWS = 12;
+export const MAX_KEYS_PER_ROW = 24;
+
 /**
  * An element on a face of the PCB: a rectangle (or circle) centred at
  * (x, y), h above the top face — or, on the underside, h below the PCB.
@@ -130,6 +165,28 @@ export interface TopPort extends PortCommon {
   y: number;
   /** a display on top only: its glass */
   glass?: Glass;
+  /**
+   * A part on top that goes through the plate from this height above the
+   * PCB on (a key field's base, an encoder's bushing): what stays under the
+   * plate ends here, `h` is its top beyond the plate.
+   */
+  base?: number;
+  /** a key field only: its keys, row by row */
+  rows?: KeyRow[];
+  /** a key field only: how the lid opens over it by default (missing: a window) */
+  open?: KeysOpen;
+}
+
+/** The keys of a field, row by row: none without rows. */
+export function keysOf(port: Pick<TopPort, 'rows'>): Key[] {
+  return (port.rows ?? []).flatMap((row) => Array.from({ length: row.n }, (_, i) => ({
+    x: row.x + i * row.pitch, y: row.y, w: row.w, d: row.shape === 'round' ? row.w : row.d, shape: row.shape,
+  })));
+}
+
+/** A board's key fields. */
+export function keyFields(def: Pick<BoardDef, 'ports'>): TopPort[] {
+  return def.ports.filter((port): port is TopPort => port.type === 'keys' && port.edge === 'top');
 }
 
 /** A part on the top or the underside rather than on an edge. */
@@ -184,7 +241,7 @@ export interface BoardBack {
 }
 
 /** Fields a variant may change on a port of its entry. */
-export const OVERRIDE_NUMBERS = ['x', 'y', 'along', 'z', 'w', 'h', 'd', 'protrude', 'clearance', 'cutH'] as const;
+export const OVERRIDE_NUMBERS = ['x', 'y', 'along', 'z', 'w', 'h', 'd', 'protrude', 'clearance', 'cutH', 'base'] as const;
 export type PortOverride = Partial<Record<(typeof OVERRIDE_NUMBERS)[number], number>> & {
   cut?: boolean;
   edge?: PortDef['edge'];
@@ -214,8 +271,8 @@ export interface BoardDef {
   /** proper noun, never translated; aliases after a slash */
   name: string;
   vendor: string;
-  /** a battery holder is screwed down like a board; a battery is placed by its spec (boards/battery.ts); a display is a screen sold on its own */
-  kind: 'sbc' | 'mcu' | 'holder' | 'battery' | 'display';
+  /** a battery holder is screwed down like a board; a battery is placed by its spec (boards/battery.ts); a display is a screen sold on its own; a keyboard, keys sold as a board */
+  kind: 'sbc' | 'mcu' | 'holder' | 'battery' | 'display' | 'keyboard';
   size: { w: number; d: number; t: number };
   /** the PCB's real outline when it is not the rectangle: a simple polygon inside `size`, counter-clockwise */
   outline?: [number, number][];
@@ -227,7 +284,7 @@ export interface BoardDef {
     /** rails only: along the long or the short edges */
     rails: 'long' | 'short';
   };
-  /** tallest part above the PCB — sizes the case height */
+  /** tallest part above the PCB — sizes the case height; on a keyboard, the tallest outside its key field (parts through the plate count with their `base`) */
   topHeight: number;
   /** tallest part below the PCB, pins left out — the lowest the bare board may sit (bottom ports count too) */
   bottomHeight: number;
@@ -327,9 +384,37 @@ export function sanitizePort(raw: unknown, size: { w: number; d: number }, index
       y: num(r.y, 0, size.d, size.d / 2),
     };
     const glass = type === 'display' && port.edge === 'top' ? sanitizeGlass(r.glass, size) : undefined;
-    return glass && windowInGlass(port, glass) ? { ...port, glass } : port;
+    const keys = type === 'keys' && port.edge === 'top' ? keyFieldOf(port, r) : {};
+    const base = port.edge === 'top' && typeof r.base === 'number' ? { base: num(r.base, 0, h, 0) } : {};
+    return { ...port, ...base, ...keys, ...(glass && windowInGlass(port, glass) ? { glass } : {}) };
   }
   return null;
+}
+
+/** A key field's rows (the keys inside the field; a row that leaves it is dropped) and its default opening. */
+function keyFieldOf(field: Pick<TopPort, 'x' | 'y' | 'w' | 'd'>, r: Record<string, unknown>): Pick<TopPort, 'rows' | 'open'> {
+  const eps = 0.01;
+  const rows: KeyRow[] = [];
+  for (const item of Array.isArray(r.rows) ? r.rows.slice(0, MAX_KEY_ROWS) : []) {
+    const row = rec(item);
+    const shape: PortShape = row.shape === 'round' ? 'round' : 'rect';
+    const w = num(row.w, 0.5, 30, 4);
+    const kept: KeyRow = {
+      y: num(row.y, 0, BOARD_MAX_MM, field.y),
+      x: num(row.x, 0, BOARD_MAX_MM, field.x),
+      n: Math.round(num(row.n, 1, MAX_KEYS_PER_ROW, 1)),
+      pitch: num(row.pitch, 1, 40, 6),
+      w,
+      d: shape === 'round' ? w : num(row.d, 0.5, 30, w),
+      shape,
+    };
+    const inside = keysOf({ rows: [kept] }).every((key) => key.x - key.w / 2 >= field.x - field.w / 2 - eps
+      && key.x + key.w / 2 <= field.x + field.w / 2 + eps && key.y - key.d / 2 >= field.y - field.d / 2 - eps
+      && key.y + key.d / 2 <= field.y + field.d / 2 + eps);
+    if (inside) rows.push(kept);
+  }
+  const open: KeysOpen = r.open === 'holes' && rows.length > 0 ? 'holes' : 'window';
+  return { ...(rows.length > 0 ? { rows } : {}), ...(open === 'holes' ? { open } : {}) };
 }
 
 /** A display's glass clamped into the board; none when it is missing or cannot fit. */
@@ -550,7 +635,7 @@ export function sanitizeBoard(raw: unknown, fallbackId = 'custom'): BoardDef {
     holes.push({ x: num(hole.x, 0, w, w / 2), y: num(hole.y, 0, d, d / 2), d: num(hole.d, 1, 8, 2.7) });
   }
   const mountKind: MountKind = mount.kind === 'clamp' ? 'clamp' : mount.kind === 'rails' || holes.length === 0 ? 'rails' : 'holes';
-  const kind = r.kind === 'sbc' || r.kind === 'holder' || r.kind === 'display' ? r.kind : 'mcu';
+  const kind = r.kind === 'sbc' || r.kind === 'holder' || r.kind === 'display' || r.kind === 'keyboard' ? r.kind : 'mcu';
   const ports = uniquePorts(Array.isArray(r.ports) ? r.ports : [], { w, d });
   const outline = sanitizeOutline(r.outline, { w, d });
   const variants = sanitizeVariants(r.variants, { w, d }, ports);

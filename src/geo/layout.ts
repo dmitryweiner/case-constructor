@@ -8,13 +8,13 @@
 // depend on the case size, which breaks the circular dependency.
 
 import type { BoardDef, Edge, PortDef, TopPort } from '../boards/schema';
-import { EDGES, onFace, resolveVariant } from '../boards/schema';
+import { EDGES, keysOf, onFace, resolveVariant } from '../boards/schema';
 import type { BoardPlacement, Rotation } from '../boards/placement';
 import { CLAMP_POST_ZONE } from '../boards/battery';
 import { RIM_FIT, rimReach } from './rim';
 import { CLAMP_BAR_T, CLAMP_BAR_W, clampHold, postReach } from './clamp';
 import { attachTransform } from './attach';
-import { CEILING_GAP, backPortDefault, boardOf, ownPortDefault, pinsDown, undersideOf } from '../boards/placement';
+import { CEILING_GAP, backPortDefault, boardOf, frontHeight, ownPortDefault, pinsDown, undersideOf } from '../boards/placement';
 import { catalogBoard } from '../boards/catalog';
 import type { Dims } from './face';
 import { faceFrame } from './face';
@@ -268,7 +268,7 @@ export function hangs(placement: BoardPlacement): boolean {
  * PlacedBoard.frame): parallel to the plate, its front `gap` below the
  * plate's inside, its plan centre where the layout puts it (cx, cy).
  */
-function hungTransform(def: BoardDef, rot: Rotation, cx: number, cy: number, gap: number, plate: number, frame: Affine): Affine {
+function hungTransform(def: BoardDef, front: number, rot: Rotation, cx: number, cy: number, gap: number, plate: number, frame: Affine): Affine {
   const turned = rot === 90 || rot === 270;
   const W = turned ? def.size.d : def.size.w;
   const D = turned ? def.size.w : def.size.d;
@@ -276,7 +276,7 @@ function hungTransform(def: BoardDef, rot: Rotation, cx: number, cy: number, gap
   // frame: y = v·cos − w·sin, so the plan centre cy sits at v = (cy + w·sin) / cos
   const [cos, sin] = [frame[5], frame[9]];
   const v = (cy + wf * sin) / cos;
-  const local = composeAffine([1, 0, 0, cx - W / 2, 0, 1, 0, v - D / 2, 0, 0, 1, wf - def.size.t - def.topHeight], boardTransform(def, rot, 0, 0, 0));
+  const local = composeAffine([1, 0, 0, cx - W / 2, 0, 1, 0, v - D / 2, 0, 0, 1, wf - def.size.t - front], boardTransform(def, rot, 0, 0, 0));
   return composeAffine(frame, local);
 }
 
@@ -379,14 +379,15 @@ function placeOwn(input: LayoutInput, offsetX: number, offsetY: number, frame: A
     const def = placement.top ? { ...own, ports: own.ports.map((port) => ({ ...port, cut: ownPortDefault(placement, port) })) } : own;
     const hung = hangs(placement);
     const pins = pinsDown(def, placement);
-    const front = def.size.t + def.topHeight;
+    const top = frontHeight(def, placement);
+    const front = def.size.t + top;
     const { w, d } = def.size;
     const turned = placement.rot === 90 || placement.rot === 270;
     const cx = placement.x + offsetX + (turned ? d : w) / 2;
     const cy = placement.y + offsetY + (turned ? w : d) / 2;
     const plateFrame = frame ?? flatFrame(0);
     const toCase = hung
-      ? hungTransform(def, placement.rot, cx, cy, placement.z, input.shape.floor, plateFrame)
+      ? hungTransform(def, top, placement.rot, cx, cy, placement.z, input.shape.floor, plateFrame)
       : boardTransform(def, placement.rot, placement.x + offsetX, placement.y + offsetY, input.shape.floor + placement.z);
     // a hung board may be tilted (the slope): its heights are its corners' extremes
     const zs = (bz: number): number[] => [[0, 0], [w, 0], [0, d], [w, d]].map(([bx, by]) => applyAffine(toCase, [bx, by, bz])[2]);
@@ -674,13 +675,17 @@ export function heldByLid(board: Pick<PlacedBoard, 'hung'>, lidFace: string): bo
 /** How thick a display's window is drawn over its glass, mm. */
 const WINDOW_LAYER = 0.1;
 
-/** The block of one port in the board frame (z = 0 at the PCB underside). */
+/** How thick a key field's base is drawn when the entry gives none, mm. */
+export const KEY_SLAB = 0.3;
+
+/** The block of one port in the board frame (z = 0 at the PCB underside); a key field with rows is its base, its keys stand on it. */
 export function portBlock(board: PlacedBoard, port: PortDef): [number, number, number, number, number, number] {
   const { w, d, t } = board.def.size;
   if (onFace(port)) {
     // a display with a glass: its window as a thin layer on the glass's front
+    const top = port.rows ? t + Math.max(port.base ?? KEY_SLAB, 0.1) : t + port.h;
     const [z0, z1] = port.edge === 'top'
-      ? [port.glass ? t + port.h - WINDOW_LAYER : t, t + port.h + (port.glass ? WINDOW_LAYER / 2 : 0)]
+      ? [port.glass ? t + port.h - WINDOW_LAYER : t, top + (port.glass ? WINDOW_LAYER / 2 : 0)]
       : [-port.h, 0];
     return [port.x - port.w / 2, port.y - port.d / 2, z0, port.x + port.w / 2, port.y + port.d / 2, z1];
   }
@@ -892,14 +897,17 @@ function partOnSupport(board: PlacedBoard, port: TopPort): boolean {
   const hw = glass ? glass.w / 2 + RIM_FIT : port.w / 2;
   const hd = glass ? glass.d / 2 + RIM_FIT : (port.shape === 'round' ? port.w : port.d) / 2;
   const [cx, cy] = glass ? [glass.x, glass.y] : [port.x, port.y];
-  const part: Rect = { x0: cx - hw, y0: cy - hd, x1: cx + hw, y1: cy + hd };
+  // a key field's supports go between its keys: only the keys count
+  const parts: Rect[] = port.rows && !glass
+    ? keysOf(port).map((key) => ({ x0: key.x - key.w / 2, y0: key.y - key.d / 2, x1: key.x + key.w / 2, y1: key.y + key.d / 2 }))
+    : [{ x0: cx - hw, y0: cy - hd, x1: cx + hw, y1: cy + hd }];
   if (board.def.mount.kind === 'holes') {
     const boss = bossDiameter(board.placement.mount) / 2;
-    return board.def.mount.holes.some((hole) => {
+    return board.def.mount.holes.some((hole) => parts.some((part) => {
       const dx = Math.max(part.x0 - hole.x, 0, hole.x - part.x1);
       const dy = Math.max(part.y0 - hole.y, 0, hole.y - part.y1);
       return Math.hypot(dx, dy) < (glass ? hole.d / 2 : boss);
-    });
+    }));
   }
   // rails step aside for a glass as standoffs do; a clamp's bars step aside by themselves
   if (glass || board.def.mount.kind === 'clamp') return false;
@@ -911,7 +919,7 @@ function partOnSupport(board: PlacedBoard, port: TopPort): boolean {
       : edge === 'back' ? { x0: RAIL_SHORTEN, y0: d - reach, x1: w - RAIL_SHORTEN, y1: d }
         : edge === 'left' ? { x0: 0, y0: RAIL_SHORTEN, x1: reach, y1: d - RAIL_SHORTEN }
           : { x0: w - reach, y0: RAIL_SHORTEN, x1: w, y1: d - RAIL_SHORTEN };
-    return overlap(part, strip) > 0;
+    return parts.some((part) => overlap(part, strip) > 0);
   });
 }
 

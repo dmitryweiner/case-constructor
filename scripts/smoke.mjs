@@ -367,6 +367,11 @@ const catalogJson = JSON.parse(readFileSync(catalogPath, 'utf8'));
 if (catalogJson.size?.w !== 64 || catalogJson.ports?.length !== 2) errors.push(`[custom] catalog JSON ${JSON.stringify(catalogJson).slice(0, 120)}`);
 await page.selectOption('#board0_custom_mount', 'rails');
 await expectWatertight('custom:rails');
+// a key field on top goes through the plate from its base: the editor asks for it
+await page.selectOption('#board0_custom_port1_type', 'keys');
+if (!(await page.locator('#board0_custom_port1_base').count())) errors.push('[custom] a key field has no base field');
+await page.fill('#board0_custom_port1_base', '1');
+await expectWatertight('custom:keys');
 await page.click('#board0_remove');
 await page.click('#boardAdd');
 await page.click('#boardList [data-board="raspberry-pi-4b"]');

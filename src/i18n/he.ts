@@ -165,6 +165,7 @@ export const he: Record<Key, string> = {
   'picker.batteries': "סוללות",
   'picker.holders': "מחזיקי סוללות",
   'picker.displays': "מסכים",
+  'picker.keyboards': "מקלדות",
   'battery.kind': "סוללה",
   'battery.kind.18650': "תאי 18650",
   'battery.kind.21700': "תאי 21700",
@@ -268,6 +269,8 @@ export const he: Record<Key, string> = {
   'port.fpc': 'מחבר סרט',
   'port.antenna': 'מחבר אנטנה',
   'port.generic': 'רכיב',
+  'port.keys': 'שדה מקשים',
+  'port.knob': 'ידית',
   'port.wires': "חוטים",
 
   // --- lid fastening ---
@@ -314,6 +317,8 @@ export const he: Record<Key, string> = {
   'custom.side.bottom': 'מתחת ללוח (חור ברצפה)',
   'custom.port.hint.edge': 'לאורך — המרכז לאורך הקצה; Z — תחתית הרכיב מעל פני הלוח, פחות מאפס — מתחת ללוח (−עובי − ג: מיד מתחתיו); בולט — כמה הוא יוצא מעבר לקצה. החיתוך עובר דרך הדופן, מ״מ.',
   'custom.port.hint.face': 'X, Y — המרכז על הלוח; ר × ע — הגודל, ג — הגובה. החיתוך עובר דרך התקרה (למעלה) או הרצפה (מתחת), מ״מ.',
+  'custom.port.hint.keys': 'X, Y, W × D — שדה המקשים; H — ראשי המקשים; בסיס — מה שנשאר מתחת ללוח (גופי המתגים, בסיס המקלדת). כאן נחתך חלון אחד מעל השדה; חור לכל מקש דורש את שורות המקשים מקובץ קטלוג, מ"מ.',
+  'custom.port.hint.knob': 'X, Y — מרכז הציר, W — קוטרו; H — ראשו; בסיס — הגוף שמתחת ללוח. החור עובר דרך התקרה, מ"מ.',
   'custom.remove': 'הסרה',
   'custom.save': 'שמירה כ־JSON של הקטלוג',
   'custom.save.title': 'הורדת הלוח בפורמט הקטלוג — לשמירה או להצעה לקטלוג',
@@ -326,6 +331,7 @@ export const he: Record<Key, string> = {
   'col.z': 'Z',
   'col.along': 'לאורך',
   'col.protrude': 'בולט',
+  'col.base': 'בסיס',
 
   // --- extras ---
   'panel.vents': 'אוורור',

@@ -5,8 +5,8 @@
 
 import type { FastenerSpec } from '../geo/fasteners';
 import { sanitizeFastener } from '../geo/fasteners';
-import type { BoardDef, Edge, PortDef } from './schema';
-import { EDGES, autoPortId, bottomPartsH, isAutoPortId, onFace, resolveVariant, sanitizeBoard } from './schema';
+import type { BoardDef, Edge, KeysOpen, PortDef } from './schema';
+import { EDGES, autoPortId, bottomPartsH, isAutoPortId, keyFields, onFace, resolveVariant, sanitizeBoard } from './schema';
 import { CATALOG, catalogBoard } from './catalog';
 import type { BatterySpec } from './battery';
 import { PRESS_MAX, PRESS_MIN, batteryDef, defaultBattery, sanitizeBattery } from './battery';
@@ -53,6 +53,10 @@ export interface BoardPlacement {
   back?: BackPlacement;
   /** a board on the floor only: the HAT display it carries (D6 the other way round) */
   top?: BackPlacement;
+  /** a keyboard only: how the lid opens over its keys, when not the entry's default */
+  keys?: KeysOpen;
+  /** a keyboard only: the room around its window or each key's hole, when not the field's clearance, mm */
+  keyFit?: number;
 }
 
 /**
@@ -125,9 +129,31 @@ export function placementMinZ(placement: BoardPlacement): number {
   return minBoardZ(def, pinsDown(def, placement));
 }
 
-/** A display, or a board with a display on top, hangs from the ceiling when added (its screen at the window). */
+/** A display, a board with a display on top, or a keyboard, hangs from the ceiling when added (its screen at the window, its keys through the lid). */
 export function hangsByDefault(def: BoardDef): boolean {
-  return !def.battery && (def.kind === 'display' || def.ports.some((port) => port.type === 'display' && port.edge === 'top'));
+  return !def.battery && (def.kind === 'display' || def.kind === 'keyboard'
+    || def.ports.some((port) => (port.type === 'display' || port.type === 'keys') && port.edge === 'top'));
+}
+
+/** The most room a key's hole or a key window may get around it, mm. */
+export const KEY_FIT_MAX = 3;
+
+/** How the lid opens over a board's keys: the placement's choice, else its first field's default; holes only with rows. */
+export function keysOpen(def: BoardDef, placement: Pick<BoardPlacement, 'keys'>): KeysOpen {
+  const fields = keyFields(def);
+  const rows = fields.some((field) => field.rows !== undefined);
+  const wanted = placement.keys ?? fields[0]?.open ?? 'window';
+  return wanted === 'holes' && rows ? 'holes' : 'window';
+}
+
+/**
+ * How high the board's parts stand under the plate, above the PCB: its
+ * `topHeight`, or a key field's base where the lid has a hole per key (the
+ * plate lies between the keys; over a window the field rises into it).
+ */
+export function frontHeight(def: BoardDef, placement: Pick<BoardPlacement, 'keys'>): number {
+  if (keysOpen(def, placement) !== 'holes') return def.topHeight;
+  return Math.max(def.topHeight, ...keyFields(def).map((field) => field.base ?? field.h));
 }
 
 /** The height a board stands at on the floor by default: a battery low in its cradles, a board on 4 mm standoffs or higher. */
@@ -232,6 +258,20 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
     ...(def.mount.kind === 'clamp' ? { press: num(Reflect.get(r, 'press'), PRESS_MIN, PRESS_MAX, defaultPress(def)) } : {}),
     ...withBackBoard(def, Reflect.get(r, 'back')),
     ...carried,
+    ...withKeys(def, r),
+  };
+}
+
+/** A keyboard's opening choice and fit, kept only when they differ from the entry's. */
+function withKeys(def: BoardDef, r: object): Pick<BoardPlacement, 'keys' | 'keyFit'> {
+  const fields = keyFields(def);
+  if (fields.length === 0) return {};
+  const raw: unknown = Reflect.get(r, 'keys');
+  const chosen = keysOpen(def, { keys: raw === 'holes' || raw === 'window' ? raw : undefined });
+  const fit: unknown = Reflect.get(r, 'keyFit');
+  return {
+    ...(chosen !== keysOpen(def, {}) ? { keys: chosen } : {}),
+    ...(typeof fit === 'number' && Number.isFinite(fit) ? { keyFit: num(fit, 0, KEY_FIT_MAX, fields[0].clearance) } : {}),
   };
 }
 
