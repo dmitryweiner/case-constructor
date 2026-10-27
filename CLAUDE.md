@@ -9,7 +9,12 @@ rules.
 `plans/PLAN-IMPROVEMENTS-NEW-BOARDS.md` — what the Tier A boards left (B1…B9):
 done; read it only for its decisions and deviations.
 `plans/PLAN-IMPROVEMENTS-2026-10-25.md` — what the user trial asked for
-(R1…R8), the current plan; on the branch `improvements-2026-10-25`.
+(R1…R8): done.
+`plans/PLAN-DISPLAYS.md` — standalone displays (D1…D8): hung from the
+ceiling or the console's slope, the window and the glass rim, clamp bars, a
+board on the display's back, the Tier A screens. The current plan; on the
+branch `displays-2026-10-27`.
+`plans/PERSPECTIVE-SCREENS.md` — the ranked screen list it serves.
 
 ## Node
 
