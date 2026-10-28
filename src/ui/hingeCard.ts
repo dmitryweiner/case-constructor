@@ -9,9 +9,10 @@ import { t } from '../i18n';
 import type { AppState } from '../state/schema';
 import type { Half, HingeState } from '../state/hinged';
 import { GAP_MAX, HALVES } from '../state/hinged';
+import { HOLE_KINDS } from '../geo/fasteners';
 import type { Cable } from '../geo/hinge';
 import {
-  CABLE_KINDS, CABLE_W_MAX, MAX_CABLES, PLUG_MAX, defaultCable,
+  CABLE_KINDS, CABLE_W_MAX, HINGE_KINDS, MAX_CABLES, PLUG_MAX, axlesFor, defaultCable,
   AXLES, BARREL_D_MAX, BARREL_D_MIN, HINGE_LAYOUTS, HINGE_SCREWS, KNUCKLE_COUNTS, KNUCKLE_LENGTH_MAX, KNUCKLE_LENGTH_MIN, PIN_D_MAX, PIN_D_MIN,
 } from '../geo/hinge';
 
@@ -25,6 +26,12 @@ export function hingeControls(): Control<AppState>[] {
       kind: 'range', key: 'gap', label: 'hinge.gap', hint: 'hinge.gap.hint', min: 0, max: GAP_MAX, step: 0.1,
       get: (state) => state.hinge.gap,
       set: (state, value) => hingeOf(state, { gap: value }),
+    },
+    {
+      kind: 'segmented', key: 'kind', label: 'hinge.kind', hint: 'hinge.kind.hint',
+      options: HINGE_KINDS.map((value) => ({ value, label: `hinge.kind.${value}` as const })),
+      get: (state) => state.hinge.kind,
+      set: (state, value) => hingeOf(state, { kind: HINGE_KINDS.find((one) => one === value) ?? state.hinge.kind }),
     },
     {
       kind: 'segmented', key: 'layout', label: 'hinge.layout', hint: 'hinge.layout.hint',
@@ -57,6 +64,8 @@ export function hingeControls(): Control<AppState>[] {
     {
       kind: 'segmented', key: 'axle', label: 'hinge.axle', hint: 'hinge.axle.hint',
       options: AXLES.map((value) => ({ value, label: `hinge.axle.${value}` as const })),
+      // cones print in place: only in a printed hinge, its leaves together
+      optionDisabled: (state, value) => !axlesFor(state.hinge.kind).some((axle) => axle === value),
       get: (state) => state.hinge.axle,
       set: (state, value) => hingeOf(state, { axle: AXLES.find((one) => one === value) ?? state.hinge.axle }),
     },
@@ -65,6 +74,18 @@ export function hingeControls(): Control<AppState>[] {
       options: HINGE_SCREWS.map((value) => ({ value, text: value })),
       get: (state) => state.hinge.screw,
       set: (state, value) => hingeOf(state, { screw: HINGE_SCREWS.find((one) => one === value) ?? state.hinge.screw }),
+    },
+    {
+      kind: 'segmented', key: 'leafScrew', label: 'hinge.leafScrew', hint: 'hinge.leafScrew.hint', when: (state) => state.hinge.kind === 'leaves',
+      options: HINGE_SCREWS.map((value) => ({ value, text: value })),
+      get: (state) => state.hinge.leafScrew,
+      set: (state, value) => hingeOf(state, { leafScrew: HINGE_SCREWS.find((one) => one === value) ?? state.hinge.leafScrew }),
+    },
+    {
+      kind: 'segmented', key: 'leafHole', label: 'hinge.leafHole', hint: 'hinge.leafHole.hint', when: (state) => state.hinge.kind === 'leaves',
+      options: HOLE_KINDS.map((value) => ({ value, label: `hole.${value}` as const })),
+      get: (state) => state.hinge.leafHole,
+      set: (state, value) => hingeOf(state, { leafHole: HOLE_KINDS.find((one) => one === value) ?? state.hinge.leafHole }),
     },
     {
       kind: 'range', key: 'pinD', label: 'hinge.pinD', hint: 'hinge.pinD.hint', min: PIN_D_MIN, max: PIN_D_MAX, step: 0.05,

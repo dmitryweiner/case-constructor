@@ -33,7 +33,7 @@ import { earSolids, keyholePadSolids, labelSolid } from './extrasSolids';
 import { screwSolid } from './screwSolids';
 import type { HalfHinge } from './hinge';
 import { bodyRange, cableCutters } from './hinge';
-import { knuckleSolids } from './hingeSolids';
+import { knuckleSolids, leafSolids } from './hingeSolids';
 import { effectiveRadii } from './loft';
 import { screwShape, threadPoints } from './thread';
 import type { LabelRaster } from './label';
@@ -51,6 +51,8 @@ export interface CaseBuild {
   clamps: SurfaceMesh | null;
   /** the clamp bars of panels the lid holds, case frame, as screwed down; null without */
   lidClamps: SurfaceMesh | null;
+  /** a hinged half with a printed hinge: its leaf and knuckles, in the half's frame; null without */
+  hinge: SurfaceMesh | null;
   dims: Dims;
 }
 
@@ -140,8 +142,16 @@ export function buildCase(
     body = attach(csg, scope, body, forBody, lidSolid);
     lidSolid = attach(csg, scope, lidSolid, forLid, rawBody);
     // a hinged half's knuckles hold on to its body's part of the hinge wall;
-    // before the openings, so a port through that wall cuts them too (and is warned about)
-    if (hinge) {
+    // before the openings, so a port through that wall cuts them too (and is warned about).
+    // A printed hinge is a part of its own: the half gets the pads and holes for its screws.
+    let leaf: Manifold | null = null;
+    if (hinge?.kind === 'leaves') {
+      const solids = leafSolids(csg, scope, hinge, dims, shape.wall, segments);
+      if (solids) {
+        leaf = solids.leaf;
+        body = scope.keep(scope.keep(body.add(scope.keep(solids.pads.subtract(lidSolid)))).subtract(solids.holes));
+      }
+    } else if (hinge) {
       const range = bodyRange(dims.h, lid.face, plate, lid.depth);
       const knuckles = knuckleSolids(csg, scope, hinge, dims, effectiveRadii(spec.outer).edgeR, range, segments);
       if (knuckles) {
@@ -245,7 +255,9 @@ export function buildCase(
       const solids = bars.filter((bar) => bar.onLid === onLid).map((bar) => bar.solid);
       return solids.length > 0 ? fromManifold(unionAll(csg, scope, solids)) : null;
     };
-    return { body: fromManifold(body), lid: fromManifold(lidSolid), screw, clamps: merged(false), lidClamps: merged(true), dims };
+    return {
+      body: fromManifold(body), lid: fromManifold(lidSolid), screw, clamps: merged(false), lidClamps: merged(true), hinge: leaf ? fromManifold(leaf) : null, dims,
+    };
   } finally {
     scope.dispose();
   }

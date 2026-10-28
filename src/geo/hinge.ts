@@ -17,14 +17,19 @@
 import type { Affine } from './surface';
 import { composeAffine, translation } from './surface';
 import { clampNum } from './shape';
-import { NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE } from './fasteners';
+import type { HoleKind } from './fasteners';
+import { HOLE_KINDS, NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE, bossDiameter } from './fasteners';
 import type { CutterSpec } from './cutters';
 import { extraCutters } from './cutters';
 import type { Dims } from './face';
 import type { ShapeState } from './shape';
 
-/** What the hinge is: knuckles printed with the halves. */
-export const HINGE_KINDS = ['knuckles'] as const;
+/**
+ * What the hinge is: knuckles printed with the halves, or a separate printed
+ * hinge — two leaves with the knuckles between them — screwed onto the
+ * hinge walls (any lid on any side; replaceable).
+ */
+export const HINGE_KINDS = ['knuckles', 'leaves'] as const;
 export type HingeKind = (typeof HINGE_KINDS)[number];
 /**
  * What the knuckles turn on: a pin through them (a filament, a rod, a nail),
@@ -33,8 +38,13 @@ export type HingeKind = (typeof HINGE_KINDS)[number];
  * half's knuckles joined by a printed bar on the axis and the upper half's
  * knuckles split rings that click onto it.
  */
-export const AXLES = ['pin', 'screw', 'snap'] as const;
+export const AXLES = ['pin', 'screw', 'snap', 'cones'] as const;
 export type Axle = (typeof AXLES)[number];
+
+/** The axles a kind of hinge takes: cones only print in place, the leaves together. */
+export function axlesFor(kind: HingeKind): readonly Axle[] {
+  return kind === 'leaves' ? AXLES : ['pin', 'screw', 'snap'];
+}
 export const HINGE_SCREWS = ['M2', 'M2.5', 'M3'] as const;
 export type HingeScrew = (typeof HINGE_SCREWS)[number];
 /** Two blocks of knuckles near the ends, or one along the whole edge. */
@@ -114,6 +124,9 @@ export interface HingeSpec {
   /** the screw of a screw axle */
   screw: HingeScrew;
   cables: Cable[];
+  /** a printed hinge's leaves: the screws through them and what they screw into inside the wall */
+  leafScrew: HingeScrew;
+  leafHole: HoleKind;
 }
 
 export const BARREL_D_MIN = 5;
@@ -148,10 +161,21 @@ export const SNAP_FIT = 0.2;
 export const SNAP_GRIP = 0.15;
 /** A snap: the thinnest bar, radius, mm. */
 export const SNAP_BAR_MIN = 1.2;
+/** Cones printed in place: between a cone and its socket, square to their faces, mm. */
+export const CONE_FIT = 0.35;
+/** Cones: how far into the next knuckle a cone reaches past the gap, mm. */
+export const CONE_REACH = 1.2;
+/** A printed hinge's leaf: its thickness, mm. */
+export const LEAF_T = 2.4;
+/** A leaf's plate: at least this tall under its knuckles, mm (more for a wide head). */
+export const LEAF_PLATE_MIN = 8;
+/** A leaf's screws stay this far from the block's ends, at least, mm. */
+export const LEAF_SCREW_INSET = 4;
 
 export function defaultHingeSpec(): HingeSpec {
   return {
     kind: 'knuckles', axle: 'pin', layout: 'ends', barrelD: 8, knuckles: 3, length: 10, clearance: 0.4, pinD: 1.75, pinFit: 0.15, screw: 'M2.5', cables: [],
+    leafScrew: 'M2.5', leafHole: 'insert',
   };
 }
 
@@ -170,14 +194,22 @@ export interface AxleHoles {
    * half's ring around it, and the ring's slit, outwards from its wall
    */
   snap: { barR: number; ringR: number; slit: number } | null;
+  /**
+   * cones printed in place: the upper half's knuckles carry a cone (45°) on
+   * each end, its base `r` on the knuckle's face, cut `reach` past it; the
+   * lower half's knuckles a socket, the same cone grown by `CONE_FIT`
+   */
+  cones: { r: number; reach: number } | null;
 }
 
 export function axleHoles(spec: Pick<HingeSpec, 'axle' | 'pinD' | 'pinFit' | 'screw' | 'barrelD'>): AxleHoles {
-  if (spec.axle === 'pin') return { r: spec.pinD / 2 + spec.pinFit, screw: null, snap: null };
+  const none = { screw: null, snap: null, cones: null };
+  if (spec.axle === 'pin') return { ...none, r: spec.pinD / 2 + spec.pinFit };
   if (spec.axle === 'snap') {
     const barR = Math.max(SNAP_BAR_MIN, spec.barrelD / 2 - SNAP_RING - SNAP_FIT);
-    return { r: 0, screw: null, snap: { barR, ringR: barR + SNAP_FIT, slit: 2 * barR * (1 - SNAP_GRIP) } };
+    return { ...none, r: 0, snap: { barR, ringR: barR + SNAP_FIT, slit: 2 * barR * (1 - SNAP_GRIP) } };
   }
+  if (spec.axle === 'cones') return { ...none, r: 0, cones: { r: spec.barrelD / 2 - BARREL_WALL, reach: CONE_REACH } };
   const dims = SCREWS[spec.screw];
   return {
     r: (dims.d + THROUGH_CLEARANCE) / 2,
@@ -188,12 +220,15 @@ export function axleHoles(spec: Pick<HingeSpec, 'axle' | 'pinD' | 'pinFit' | 'sc
       nutDepth: dims.nutH + NUT_CLEARANCE,
     },
     snap: null,
+    cones: null,
   };
 }
 
 /** The thinnest barrel that holds the axle's holes with a wall around them. */
 export function barrelMin(spec: Pick<HingeSpec, 'axle' | 'pinD' | 'pinFit' | 'screw'>): number {
   if (spec.axle === 'snap') return 2 * (SNAP_BAR_MIN + SNAP_FIT + SNAP_RING);
+  // a cone reaching past the gap, and the socket's wall around it
+  if (spec.axle === 'cones') return 2 * (CONE_REACH + 1 + CONE_FIT + BARREL_WALL);
   const holes = axleHoles({ ...spec, barrelD: 0 });
   if (!holes.screw) return 2 * holes.r + 2 * BARREL_WALL;
   // a hex nut's corners are its flats over cos 30°
@@ -204,15 +239,16 @@ export function barrelMin(spec: Pick<HingeSpec, 'axle' | 'pinD' | 'pinFit' | 'sc
 export function sanitizeHingeSpec(raw: unknown): HingeSpec {
   const d = defaultHingeSpec();
   const r = typeof raw === 'object' && raw !== null ? raw : {};
+  const kind = oneOf(HINGE_KINDS, Reflect.get(r, 'kind'), d.kind);
   const axle = {
-    axle: oneOf(AXLES, Reflect.get(r, 'axle'), d.axle),
+    axle: oneOf(axlesFor(kind), Reflect.get(r, 'axle'), d.axle),
     pinD: clampNum(Reflect.get(r, 'pinD'), PIN_D_MIN, PIN_D_MAX, d.pinD),
     pinFit: clampNum(Reflect.get(r, 'pinFit'), 0, 0.5, d.pinFit),
     screw: oneOf(HINGE_SCREWS, Reflect.get(r, 'screw'), d.screw),
   };
   const barrelD = clampNum(Reflect.get(r, 'barrelD'), BARREL_D_MIN, BARREL_D_MAX, d.barrelD);
   return {
-    kind: oneOf(HINGE_KINDS, Reflect.get(r, 'kind'), d.kind),
+    kind,
     layout: oneOf(HINGE_LAYOUTS, Reflect.get(r, 'layout'), d.layout),
     // + 0: never -0 (JSON would make it 0, and the sanitizer must be idempotent through a file)
     barrelD: Math.min(BARREL_D_MAX, Math.max(barrelD, Math.ceil(barrelMin(axle) * 2) / 2)) + 0,
@@ -221,6 +257,8 @@ export function sanitizeHingeSpec(raw: unknown): HingeSpec {
     clearance: clampNum(Reflect.get(r, 'clearance'), 0.2, 1, d.clearance),
     ...axle,
     cables: sanitizeCables(Reflect.get(r, 'cables')),
+    leafScrew: oneOf(HINGE_SCREWS, Reflect.get(r, 'leafScrew'), d.leafScrew),
+    leafHole: oneOf(HOLE_KINDS, Reflect.get(r, 'leafHole'), d.leafHole),
   };
 }
 
@@ -255,9 +293,11 @@ export function axisOffset(spec: Pick<HingeSpec, 'barrelD' | 'clearance'>): numb
  * print knuckles with the halves (`printable` false; split in the middle).
  */
 export function axisSplit(
-  spec: Pick<HingeSpec, 'barrelD'>, gap: number, lidA: string, lidB: string,
+  spec: Pick<HingeSpec, 'barrelD' | 'kind'>, gap: number, lidA: string, lidB: string,
 ): { zA: number; printable: boolean } {
   const r = spec.barrelD / 2;
+  // a printed hinge prints on its own: the axis in the gap's middle
+  if (spec.kind === 'leaves') return { zA: gap / 2, printable: true };
   if (lidA === 'bottom' && lidB === 'bottom') return { zA: gap / 2, printable: false };
   if (lidA === 'bottom') return { zA: -r, printable: true };
   if (lidB === 'bottom') return { zA: gap + r, printable: true };
@@ -381,13 +421,66 @@ export interface HalfHinge {
   e: number;
   /** the axis's height */
   zAxis: number;
-  /** this half's knuckles */
+  /** this half's knuckles, and the other half's (the cones' sockets face them) */
   runs: { x0: number; x1: number }[];
+  others: { x0: number; x1: number }[];
+  /** between neighbouring knuckles */
+  clearance: number;
   /** every block, for its axle's holes */
   blocks: { x0: number; x1: number }[];
   holes: AxleHoles;
   /** the cables' slots through the hinge wall: middle along x, size, the middle's height */
   slots: { x: number; w: number; h: number; z: number }[];
+  kind: HingeKind;
+  /** a printed hinge: this half's leaf (null for knuckles) */
+  leaf: LeafLayout | null;
+}
+
+/**
+ * A printed hinge's leaf on a half's hinge wall, in the half's frame: a
+ * plate `t` thick on the wall's outer face under the knuckles (`z0`…`z1`,
+ * the half's side of the axis), each knuckle on a pedestal up to `pedestal`
+ * — the axis: past it, turning, it would run into the other half's wall — and the
+ * screws through plate and wall at `z`, into a pad inside the wall.
+ */
+export interface LeafLayout {
+  t: number;
+  z0: number;
+  z1: number;
+  pedestal: number;
+  screws: { x: number }[];
+  z: number;
+  screw: HingeScrew;
+  hole: HoleKind;
+  /** where the pads inside the wall may go: the body's part of it less the lid's skirt */
+  padZ: [number, number];
+}
+
+/**
+ * The leaf of a half whose axis is at `zAxis` (`e` behind the wall): its plate as tall as the screw's head needs, under the
+ * barrels and their clearance; two screws per block near its ends (one in
+ * the middle of a short block). Null when the plate does not fit the body's
+ * part of the wall's flat (`body`, `flat`).
+ */
+export function leafLayout(input: {
+  zAxis: number; e: number; blocks: readonly { x0: number; x1: number }[]; screw: HingeScrew; hole: HoleKind;
+  body: readonly [number, number]; flat: readonly [number, number]; pads: readonly [number, number];
+}): LeafLayout | null {
+  const { zAxis, e, blocks, screw, hole } = input;
+  const head = SCREWS[screw].headD;
+  const z1 = zAxis - e;
+  // the screws go into the body's part of the wall's flat, their heads on the plate, their pads clear of the skirt;
+  // as near the knuckles as that allows, and the plate reaches down past their heads
+  const padR = bossDiameter({ size: screw, hole, head: 'none' }) / 2;
+  const lo = Math.max(Math.max(input.body[0], input.flat[0]) + head / 2 + 0.5, input.pads[0] + padR);
+  const hi = Math.min(Math.min(input.body[1], input.flat[1], z1) - head / 2 - 0.5, input.pads[1] - padR);
+  if (hi < lo) return null;
+  const z = Math.max(lo, Math.min(hi, z1 - LEAF_PLATE_MIN / 2));
+  const z0 = Math.min(z1 - LEAF_PLATE_MIN, z - head / 2 - 1.5);
+  const inset = Math.max(LEAF_SCREW_INSET, head / 2 + 1);
+  const screws = blocks.flatMap((block) => (block.x1 - block.x0 >= 2 * inset + head + 2
+    ? [{ x: block.x0 + inset }, { x: block.x1 - inset }] : [{ x: (block.x0 + block.x1) / 2 }]));
+  return { t: LEAF_T, z0, z1, pedestal: zAxis, screws, z, screw, hole, padZ: [input.pads[0], input.pads[1]] };
 }
 
 /**
@@ -406,5 +499,20 @@ export function cableCutters(hinge: HalfHinge, shape: ShapeState, dims: Dims, sl
     face, shape: 'rect' as const, x: face === 'back' ? dims.w - slot.x : slot.x, y: slot.z, w: slot.w, h: slot.h, r: Math.min(slot.w, slot.h) / 2,
   }));
   return extraCutters(cuts, shape, dims, slopeTop).map((cutter, index): CutterSpec => ({ ...cutter, source: { kind: 'cable', index } }));
+}
+
+/** How deep a leaf screw's pad reaches in from the wall, mm: what its hole kind needs. */
+export function padLength(leaf: Pick<LeafLayout, 'screw' | 'hole'>): number {
+  const dims = SCREWS[leaf.screw];
+  if (leaf.hole === 'insert') return dims.insertLen + 1;
+  if (leaf.hole === 'nut') return dims.nutH + NUT_CLEARANCE + 2;
+  return 2.5 * dims.d;
+}
+
+/** A printed hinge's screws: how many, and how long — through the leaf and the wall into the pad, the nearest shorter. */
+export function leafScrews(leaves: readonly LeafLayout[], wall: number): { count: number; length: number } | null {
+  if (leaves.length === 0) return null;
+  const leaf = leaves[0];
+  return { count: leaves.reduce((sum, one) => sum + one.screws.length, 0), length: Math.floor(leaf.t + wall + padLength(leaf) - 0.5) };
 }
 

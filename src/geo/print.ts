@@ -165,3 +165,16 @@ export function withClamps(parts: SurfaceMesh[], clamps: SurfaceMesh | null): Su
   const right = Math.max(...parts.map((part) => meshBounds(part).max[0]));
   return [...parts, clampsForPrint(clamps, right + PRINT_GAP_MM)];
 }
+
+/**
+ * A printed hinge as it prints (plans/PLAN-HINGED.md, H7): its leaves in the
+ * closed pose, side by side on one plane, that plane — the faces that go on
+ * the walls — on the bed, the bed's corner at (x0, y0).
+ */
+export function hingeForPrint(leaves: SurfaceMesh, x0: number, y0: number): SurfaceMesh {
+  // the leaves face the walls along −y: turn −y to −z
+  const turned = transformMesh(leaves, [1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0]);
+  const { min } = meshBounds(turned);
+  return transformMesh(turned, translation(x0 - min[0], y0 - min[1], -min[2]));
+}
+

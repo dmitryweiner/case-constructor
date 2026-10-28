@@ -437,6 +437,15 @@ freely; a temporary script that turns out useful becomes a permanent one.
   source `cable`); `knuckleRuns` keeps the knuckles off them; `hingeNotes`
   gives the slot-to-slot length over the opening and the corner/overlap
   warnings.
+  A printed hinge (`hinge.kind: 'leaves'`, `HalfHinge.leaf`, `leafLayout`):
+  each half's leaf (plate on its wall, knuckles on pedestals up to the axis —
+  past it, turning, they would enter the other wall) is the part `hinge`
+  of that half's build, in its frame; the half gets pads (clear of the
+  skirt, `padZ`) and the screws' holes. The view draws each leaf with its
+  half; the print layout poses the upper leaf closed (`upperPose(fold, 0)`)
+  and lays both on their wall faces behind everything (`hingeForPrint`).
+  Cones (`axle: 'cones'`, leaves only) print in place. The axle's solids are
+  shared by both kinds (`axleSolids`).
 - Visible text comes only from `src/i18n/` dictionaries; `en.ts` is the
   reference and gives `Key`. The core and the worker speak in message codes
   (`geo/message.ts`). A test fails on any Cyrillic or Hebrew in a string
@@ -528,8 +537,9 @@ Case card: `#case_kind_box|cylinder|console|hinged`, `#case_cornerR`, `#case_edg
 `#case_d`, `#case_h`, `#case_hA|_hB` (hinged), `#case_frontH`, `#case_backH`.
 Hinged: the card `#hingeCard` (`#hinge_gap`, `#hinge_layout_ends|full`,
 `#hinge_knuckles_3|5|7`, `#hinge_length` (two blocks), `#hinge_barrelD`,
-`#hinge_clearance`, `#hinge_axle_pin|screw|snap`, `#hinge_pinD`, `#hinge_pinFit` (a pin),
-`#hinge_screw_M2|M2.5|M3` (a screw)), cables `#cableAdd`, per cable
+`#hinge_clearance`, `#hinge_axle_pin|screw|snap|cones`, `#hinge_pinD`, `#hinge_pinFit` (a pin),
+`#hinge_screw_M2|M2.5|M3` (a screw), `#hinge_kind_knuckles|leaves`,
+`#hinge_axle_cones` (leaves only), `#hinge_leafScrew_M2|M2.5|M3`, `#hinge_leafHole_tap|insert|nut` (leaves)), cables `#cableAdd`, per cable
 `#cable<i>_kind_flat|round`, `#cable<i>_x|_w|_t|_d|_plugW|_plugH|_remove`, the half switch `#halfBar`
 (`#edit_half_a|b`), the view's angle `#view_angle` (in the View and export
 card).

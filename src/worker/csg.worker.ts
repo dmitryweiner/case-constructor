@@ -74,6 +74,7 @@ function run(csg: CsgApi, jobId: number, job: CsgJob): JobPart[] {
       ...(built.screw ? [part('screw', built.screw, exporting)] : []),
       ...(built.clamps ? [part('clamp', built.clamps, exporting)] : []),
       ...(built.lidClamps ? [part('lidClamp', built.lidClamps, exporting)] : []),
+      ...(built.hinge ? [part('hinge', built.hinge, exporting)] : []),
     ];
     return half ? parts.map((one): JobPart => ({ ...one, half })) : parts;
   });
@@ -121,6 +122,7 @@ function copyBuild(built: CaseBuild): CaseBuild {
     screw: optional(built.screw),
     clamps: optional(built.clamps),
     lidClamps: optional(built.lidClamps),
+    hinge: optional(built.hinge),
   };
 }
 

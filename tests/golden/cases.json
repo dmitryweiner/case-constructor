@@ -1361,5 +1361,63 @@
         5
       ]
     }
+  },
+  "hinged-leaves-cones:a": {
+    "body": {
+      "triangles": 3778,
+      "volume": 26118.19,
+      "extents": [
+        97.9,
+        66.5,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 1710,
+      "volume": 14399.76,
+      "extents": [
+        97.9,
+        66.5,
+        6
+      ]
+    },
+    "hinge": {
+      "triangles": 776,
+      "volume": 3339.78,
+      "extents": [
+        87.9,
+        8.4,
+        16.4
+      ]
+    }
+  },
+  "hinged-leaves-cones:b": {
+    "body": {
+      "triangles": 1788,
+      "volume": 24317.46,
+      "extents": [
+        97.9,
+        66.5,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 14144.45,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    },
+    "hinge": {
+      "triangles": 672,
+      "volume": 2358.9,
+      "extents": [
+        87.9,
+        8.4,
+        16.4
+      ]
+    }
   }
 }

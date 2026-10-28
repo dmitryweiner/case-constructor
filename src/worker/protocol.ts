@@ -32,9 +32,9 @@ export type CsgJob = (
  * 'screw': one printed screw in its own frame, when the lid holds on printed
  * screws; 'clamp': the clamp bars that go with the body (batteries', a
  * panel's the body holds), 'lidClamp': those of panels the lid holds — case
- * frame, screwed down
+ * frame, screwed down; 'hinge': a hinged half's leaf of a printed hinge, in the half's frame
  */
-export type PartId = 'body' | 'lid' | 'screw' | 'clamp' | 'lidClamp';
+export type PartId = 'body' | 'lid' | 'screw' | 'clamp' | 'lidClamp' | 'hinge';
 
 /** A finished part: the mesh plus what the panel shows about it. */
 export interface JobPart {

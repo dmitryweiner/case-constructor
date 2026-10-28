@@ -261,3 +261,14 @@ stands alone.
   slots' mouths at every 5° from closed to flat. The plug's size only
   widens the slot (no separate connector model).
 
+- **H7 (2026-10-28).** Done. Per block of knuckles one printed hinge; its
+  leaves are a 2.4 mm plate on each half's hinge wall under that half's
+  knuckles, the knuckles on pedestals that stop at the axis (past it, the
+  turning half's pedestal ran into the other wall: the rotation test found
+  it). Cones are a fourth axle, for the leaves only (`axlesFor`); the
+  snap and the pin and screw axles work on leaves too. The screws: two per
+  leaf and block, as near the knuckles as the body's part of the wall and
+  the lid's skirt let the pads be; the plate grows down past their heads.
+  The pads' boxes are checked against the boards (`leafPadWarnings`), not
+  as supports. No bought hinge (decided).
+

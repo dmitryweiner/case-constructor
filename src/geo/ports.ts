@@ -17,10 +17,11 @@ import { VERTICAL_AXES, flareAt, horizontalAxes } from './cutters';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import type { CaseLayout, PlacedBoard } from './layout';
-import { edgeNormal, opensKeys, portBlock } from './layout';
+import { dedupe, edgeNormal, opensKeys, portBlock } from './layout';
 import type { LidState } from './lidSpec';
 import type { HalfHinge } from './hinge';
-import { KNUCKLE_SINK } from './hinge';
+import { KNUCKLE_SINK, padLength } from './hinge';
+import { bossDiameter } from './fasteners';
 import type { Message, MessageSpot, SpotBox } from './message';
 import { boardParams, boxAround, boxSpot } from './message';
 import type { ShapeState } from './shape';
@@ -478,3 +479,28 @@ export function knuckleCutWarnings(layout: CaseLayout, hinge: HalfHinge, strip0:
   return out;
 }
 
+/**
+ * A printed hinge's pads inside a half's hinge wall that run into a board
+ * (its outline and parts, from under its parts to their tops).
+ */
+export function leafPadWarnings(layout: CaseLayout, hinge: HalfHinge, wall: number): Message[] {
+  const { leaf } = hinge;
+  if (!leaf) return [];
+  const { dims } = layout;
+  const r = bossDiameter({ size: leaf.screw, hole: leaf.hole, head: 'none' }) / 2;
+  const length = padLength(leaf);
+  const [y0, y1] = hinge.wall === 'back' ? [dims.d - wall - length, dims.d - wall] : [wall, wall + length];
+  const out: Message[] = [];
+  for (const screw of leaf.screws) {
+    const pad: SpotBox = { min: [screw.x - r, y0, Math.max(leaf.padZ[0], leaf.z - r - length)], max: [screw.x + r, y1, Math.min(leaf.padZ[1], leaf.z + r + length)] };
+    for (const board of layout.boards) {
+      const box = board.footprint;
+      if (pad.min[0] >= box.x1 || pad.max[0] <= box.x0 || pad.min[1] >= box.y1 || pad.max[1] <= box.y0) continue;
+      if (pad.min[2] >= board.zTop || pad.max[2] <= board.zBottom) continue;
+      out.push({ code: 'warn.leafPadHitsBoard', params: boardParams(board), spot: boxSpot(pad, 'body') });
+      break;
+    }
+  }
+  // one line per board, its spot on every pad that hits it
+  return dedupe(out);
+}

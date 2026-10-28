@@ -44,7 +44,7 @@ iron), a rod or a nail — or a screw (below).
 | Knuckle length | 4–40 mm | 10 | two blocks only; shorter when the edge is short |
 | Knuckle diameter | 5–16 mm | 8 | never less than the pin's hole plus 1.2 mm of wall on each side |
 | Knuckle clearance | 0.2–1 mm | 0.4 | between neighbouring knuckles, and between a barrel and the other half's wall |
-| Axle | pin, screw, snap | pin | |
+| Axle | pin, screw, snap (cones: a printed hinge) | pin | |
 | Pin diameter | 1–5 mm | 1.75 | a pin |
 | Pin hole clearance | 0–0.5 mm | 0.15 | a pin; added to the pin's radius |
 | Screw | M2, M2.5, M3 | M2.5 | a screw |
@@ -74,11 +74,36 @@ on its **bottom** therefore lies on its inner face, and its knuckles must
 not stand out of that face: its barrels stay inside its height, and the
 other half's barrels take the whole gap and both radii. With **both** lids
 on the bottom the knuckles cannot be printed with the halves at all — the
-panel warns; put one half's lid on top.
+panel warns; put one half's lid on top, or take the printed hinge (below).
 
 A port or an opening through the hinge wall where knuckles stand behind it
 is warned about: the opening cuts the knuckles, and a plug has no way out
 there.
+
+## A printed hinge on screws
+
+**Hinge → printed hinge**: instead of knuckles printed with the halves, a
+hinge of its own — per block of knuckles, two leaves, each a plate that
+lies on its half's hinge wall with its knuckles on it — screwed onto the
+walls. It works with any lids (both on the bottom, like a laptop's covers,
+included) and can be replaced.
+
+It prints in one piece, as the case is closed: both plates side by side on
+the bed (the faces that go on the walls down), the knuckles over them. Its
+axle is any of the knuckles' — a pin, a screw, a snap — or **cones**,
+printed in place: each upper-half knuckle carries a cone (45°) on each end
+inside a socket of the lower-half knuckle next to it, 0.35 mm apart; break
+it loose with a few turns after printing.
+
+| Parameter | Choice | Default | Notes |
+|---|---|---|---|
+| Leaf screws | M2, M2.5, M3 | M2.5 | two per leaf and block (one on a short block), through the plate and the wall |
+| Into | tap, insert, nut | insert | inside the wall each screw goes into a pad: a tapped hole, a heat-set insert pressed in from inside, or a nut dropped into its pocket from inside |
+
+The pads are wedges on the inside of the hinge wall (45° above and below,
+so they print either way up), clear of the lid's skirt; the screws stay on
+the body's part of the wall. A note says which screws to buy and how long;
+a pad that runs into a board is warned about.
 
 ## Cables
 
@@ -122,7 +147,8 @@ it.
 ## Export
 
 The three parts tabs mean the same for both halves: **Both** is every
-part, **Body** both bodies, **Lid** both lids — one STL each. In the print
+part, **Body** both bodies (and a printed hinge), **Lid** both lids — one
+STL each. A printed hinge lies behind everything, as it prints. In the print
 layout and the STL the upper half's parts lie behind the lower half's, each
 half laid out as a single case's (**Lid's place** and **Gap** apply to
 both). The caption over the view says which parts, how far the case is

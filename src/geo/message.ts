@@ -24,6 +24,11 @@ export type MessageCode =
   | 'warn.cableAtCorner'
   | 'warn.cablesOverlap'
   | 'info.cableLength'
+  | 'info.leafScrews.tap'
+  | 'info.leafScrews.insert'
+  | 'info.leafScrews.nut'
+  | 'warn.leafNoWall'
+  | 'warn.leafPadHitsBoard'
   // layout checks (layout)
   | 'warn.boardsOverlap'
   | 'warn.standoffHitsBoard'

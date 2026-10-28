@@ -161,7 +161,7 @@ it('inspect', async () => {
     console.log(`${half ? `half ${half}: ` : ''}state: ${JSON.stringify({ shape: one.shape.kind, lid: one.lid.face, depth: one.lid.depth, boards: one.boards.map((b) => b.board) })}`);
     console.log(`dims ${built.dims.w.toFixed(2)}×${built.dims.d.toFixed(2)}×${built.dims.h.toFixed(2)}, segments ${segments}, ${total.toFixed(0)} ms`);
     console.log(`stages: ${stages.join(', ')}`);
-    for (const [id, mesh] of Object.entries({ body: built.body, lid: built.lid, ...(built.screw ? { screw: built.screw } : {}) })) {
+    for (const [id, mesh] of Object.entries({ body: built.body, lid: built.lid, ...(built.screw ? { screw: built.screw } : {}), ...(built.hinge ? { hinge: built.hinge } : {}) })) {
       const r = validateMesh(mesh);
       console.log(`${id}: ${r.triangleCount} tri, ${r.degenerateTriangles} degenerate, watertight ${r.watertight}, `
         + `volume ${(r.volume / 1000).toFixed(2)} cm³, bbox ${r.bbox.min.map((v) => v.toFixed(2))} … ${r.bbox.max.map((v) => v.toFixed(2))}`);

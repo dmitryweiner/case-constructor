@@ -27,7 +27,7 @@ interface PartEntry {
   extents: number[];
 }
 
-type Entry = Record<'body' | 'lid', PartEntry> & { clamp?: PartEntry; lidClamp?: PartEntry };
+type Entry = Record<'body' | 'lid', PartEntry> & { clamp?: PartEntry; lidClamp?: PartEntry; hinge?: PartEntry };
 
 /** The M0 base: no boards, the manual 100 × 70 × 35 size. */
 function base(): AppState {
@@ -332,6 +332,13 @@ const STATES: Record<string, AppState> = {
       b: { boards: [] },
     },
   }),
+  // H7: a printed hinge on screws into nuts, cones printed in place, both lids on the bottom
+  'hinged-leaves-cones': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    lid: { ...defaultState().lid, face: 'bottom' },
+    hinge: { kind: 'leaves', axle: 'cones', leafHole: 'nut', b: { boards: [], lid: { face: 'bottom' } } },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {
@@ -354,6 +361,7 @@ describe('golden cases', () => {
         actual[half ? `${name}:${half}` : name] = {
           body: part(built.body), lid: part(built.lid),
           ...(built.clamps ? { clamp: part(built.clamps) } : {}), ...(built.lidClamps ? { lidClamp: part(built.lidClamps) } : {}),
+          ...(built.hinge ? { hinge: part(built.hinge) } : {}),
         };
       }
     }

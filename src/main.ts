@@ -30,7 +30,7 @@ import { SCREWS } from './geo/fasteners';
 import { screwShape } from './geo/thread';
 import { extrasWarnings, faceSpot, flatRegion } from './geo/extras';
 import type { CutsCardHandle } from './ui/cutsCard';
-import { cutWarnings, knuckleCutWarnings, outerTopAt, portCutters } from './geo/ports';
+import { cutWarnings, knuckleCutWarnings, leafPadWarnings, outerTopAt, portCutters } from './geo/ports';
 import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
 import { effectiveLid } from './geo/layout';
 import { HEAD_FLOOR, headSeat, lidFaces } from './geo/lidSpec';
@@ -54,7 +54,9 @@ import type { BoardDef } from './boards/schema';
 import { resolveVariant } from './boards/schema';
 import { catalogBoard } from './boards/catalog';
 import type { LidPlace, PrintArrange } from './geo/print';
-import { LID_PLACES, PRINT_GAP_MAX, PRINT_GAP_MIN, bodyForPrint, bothForPrint, lidWithScrews, screwsInCase, withClamps } from './geo/print';
+import {
+  LID_PLACES, PRINT_GAP_MAX, PRINT_GAP_MIN, bodyForPrint, bothForPrint, hingeForPrint, lidWithScrews, screwsInCase, withClamps,
+} from './geo/print';
 import { capsInCase, keyCaps, withCaps } from './geo/caps';
 import { restWarnings } from './geo/rests';
 import type { Affine, SurfaceMesh } from './geo/surface';
@@ -307,6 +309,8 @@ interface BuiltCase {
   screw: SurfaceMesh | null;
   clamps: SurfaceMesh | null;
   lidClamps: SurfaceMesh | null;
+  /** a printed hinge's leaf of this half */
+  hinge: SurfaceMesh | null;
 }
 /** The last preview from the worker, kept so view toggles redraw without a rebuild. */
 let lastParts: { state: AppState; cases: BuiltCase[] } | null = null;
@@ -362,8 +366,12 @@ function caseNotices(one: AppState, label: LabelRaster | null, hinged: ReturnTyp
   }
   out.push(...cutWarnings(layout, shapeBuilt, lidBuilt, cutters, one.extraCuts).map(notice));
   if (hinged && hinged.hinge.runs.length > 0) {
-    if (!hinged.strip) out.push(notice({ code: 'warn.knuckleNoWall' }));
-    else out.push(...knuckleCutWarnings(layout, hinged.hinge, hinged.strip[0], cutters).map(notice));
+    // what stands behind the hinge wall: the knuckles' webs, or a printed hinge's leaf
+    const { leaf } = hinged.hinge;
+    const from = hinged.hinge.kind === 'leaves' ? leaf?.z0 : hinged.strip?.[0];
+    if (from === undefined) out.push(notice({ code: hinged.hinge.kind === 'leaves' ? 'warn.leafNoWall' : 'warn.knuckleNoWall' }));
+    else out.push(...knuckleCutWarnings(layout, hinged.hinge, from, cutters).map(notice));
+    out.push(...leafPadWarnings(layout, hinged.hinge, one.shape.wall).map(notice));
   }
   if (lidBuilt.fastening !== 'snaps') {
     const { frame, plate, zp, spots } = lidPosts(one);
@@ -579,12 +587,13 @@ function builtCases(parts: JobPart[]): BuiltCase[] {
       screw: optionalPart(own, 'screw'),
       clamps: optionalPart(own, 'clamp'),
       lidClamps: optionalPart(own, 'lidClamp'),
+      hinge: optionalPart(own, 'hinge'),
     };
   });
 }
 
 function caseMeshes(one: BuiltCase): SurfaceMesh[] {
-  return [one.body, one.lid, ...[one.screw, one.clamps, one.lidClamps].flatMap((mesh) => (mesh ? [mesh] : []))];
+  return [one.body, one.lid, ...[one.screw, one.clamps, one.lidClamps, one.hinge].flatMap((mesh) => (mesh ? [mesh] : []))];
 }
 
 /** Where the last print layout of Both put the lid: the caption names it (auto decides by the meshes). */
@@ -624,18 +633,25 @@ function printParts(built: AppState, one: BuiltCase, arrange: PrintArrange = bui
   return capped(roles(withClampBars, [...names.slice(0, placed.length), 'clamp']));
 }
 
-/** Every case's parts on one bed: a hinged case's upper half behind the lower one. */
+/**
+ * Every case's parts on one bed: a hinged case's upper half behind the lower
+ * one, and a printed hinge — both leaves, in the closed pose — behind them
+ * (with the bodies: not on the Lid tab).
+ */
 function printAll(built: AppState, cases: BuiltCase[], arrange: PrintArrange = built.print): ScenePart[] {
   const out: ScenePart[] = [];
+  const behind = (): number => Math.max(...out.map((part) => meshBounds(part.mesh).max[1])) + arrange.gap;
   let place = lidPlaced;
   for (const one of cases) {
     const parts = printParts(one.half ? halfState(built, one.half) : built, one, arrange);
     // the caption names where the first case's lid went
     if (out.length === 0) place = lidPlaced;
-    const behind = out.length > 0 ? Math.max(...out.map((part) => meshBounds(part.mesh).max[1])) + arrange.gap : 0;
-    out.push(...(behind > 0 ? parts.map((part): ScenePart => ({ ...part, mesh: transformMesh(part.mesh, translation(0, behind, 0)) })) : parts));
+    const y0 = out.length > 0 ? behind() : 0;
+    out.push(...(y0 > 0 ? parts.map((part): ScenePart => ({ ...part, mesh: transformMesh(part.mesh, translation(0, y0, 0)) })) : parts));
   }
   lidPlaced = place;
+  const leaves = cases.flatMap((one) => (one.hinge ? [one.half === 'b' ? transformMesh(one.hinge, upperPose(foldOfState(built), 0)) : one.hinge] : []));
+  if (leaves.length > 0 && built.exportMode !== 'lid') out.push({ role: 'hinge', mesh: hingeForPrint(mergeMeshes(leaves), 0, behind()) });
   return out;
 }
 
@@ -710,6 +726,8 @@ function drawParts(): void {
       // battery clamps on their posts; exploded, lifted off the battery (a panel's bars under a slope stay put)
       const liftedBars = mode === 'exploded' && own.boards.some((board) => board.board === 'battery');
       if (one.clamps) local.push({ role: 'clamp', mesh: one.clamps, offset: [0, 0, liftedBars ? LIFT_MM / 2 : 0] });
+      // a printed hinge's leaf stays on its wall
+      if (one.hinge) local.push({ role: 'hinge', mesh: one.hinge });
     }
     if (showLid && showBody) {
       local.push({ role: 'lid', mesh: one.lid, offset: lifted(true) });

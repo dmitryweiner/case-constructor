@@ -413,3 +413,56 @@ describe('cables', () => {
   }
 });
 
+describe('a printed hinge', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+
+  function shared(one: SurfaceMesh, other: SurfaceMesh): number {
+    const scope = new CsgScope();
+    try {
+      return scope.keep(scope.keep(toManifold(csg, one)).intersect(scope.keep(toManifold(csg, other)))).volume();
+    } finally {
+      scope.dispose();
+    }
+  }
+
+  for (const [lidA, lidB, axle] of [['bottom', 'bottom', 'cones'], ['top', 'bottom', 'pin'], ['top', 'top', 'screw']] as const) {
+    it(`leaves on the walls turn clear, ${axle}, lids ${lidA}/${lidB}`, () => {
+      const base = hinged();
+      const state = sanitizeState({
+        ...base,
+        lid: { ...base.lid, face: lidA },
+        hinge: { ...base.hinge, kind: 'leaves', axle, leafHole: 'nut', b: { ...base.hinge.b, lid: { ...base.hinge.b.lid, face: lidB } } },
+      });
+      // both lids on the bottom are fine: the hinge prints on its own
+      expect(hingeNotes(state).some((note) => note.code === 'warn.hingeUnprintable')).toBe(false);
+      const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, null, halfHinge(state, half)));
+      if (!a.hinge || !b.hinge) throw new Error('no leaves');
+      for (const built of [a, b]) {
+        for (const mesh of [built.body, built.lid, built.hinge]) if (mesh) expect(validateMesh(mesh).watertight).toBe(true);
+        expect(shared(built.body, built.lid)).toBeLessThan(1e-6);
+      }
+      const fold = foldOfState(state);
+      const d = caseDims(halfState(state, 'a')).d;
+      // closed, both leaves lie on one plane: the walls' (the faces that print on the bed)
+      expect(validateMesh(a.hinge).bbox.min[1]).toBeCloseTo(d, 6);
+      expect(validateMesh(transformMesh(b.hinge, upperPose(fold, 0))).bbox.min[1]).toBeCloseTo(d, 6);
+      const lower = mergeMeshes([a.body, a.lid, a.hinge]);
+      const upper = mergeMeshes([b.body, b.lid, b.hinge]);
+      for (let angle = 0; angle <= 180; angle += 15) {
+        expect(shared(lower, transformMesh(upper, upperPose(fold, angle))), `${angle}°`).toBeLessThan(1e-6);
+      }
+      // the leaves sit on their walls without entering them
+      expect(shared(a.hinge, a.body)).toBeLessThan(1e-6);
+      expect(shared(b.hinge, b.body)).toBeLessThan(1e-6);
+    });
+  }
+
+  it('a knuckle hinge takes no cones', () => {
+    expect(sanitizeHingeSpec({ kind: 'knuckles', axle: 'cones' }).axle).toBe('pin');
+    expect(sanitizeHingeSpec({ kind: 'leaves', axle: 'cones' }).axle).toBe('cones');
+  });
+});
+

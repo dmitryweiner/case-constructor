@@ -19,7 +19,7 @@ import { SIZE_MAX, SIZE_MIN, clampNum, plateOf, shapeSpec } from '../geo/shape';
 import type { Fold, HalfHinge, HingeSpec } from '../geo/hinge';
 import {
   CABLE_KEEP, CABLE_TOP_GAP, upperPose, axisOffset, axisSplit, axleHoles, bodyRange, cableSlot, defaultHingeSpec, foldOf, hingeScrews, knuckleRuns,
-  knuckleStrip, sanitizeHingeSpec,
+  knuckleStrip, leafLayout, leafScrews, sanitizeHingeSpec,
 } from '../geo/hinge';
 import type { Message, SpotBox } from '../geo/message';
 import { boxSpot } from '../geo/message';
@@ -165,16 +165,40 @@ export function halfHinge(state: AppState, half: Half): HalfHinge | null {
   const { blocks, runs } = knuckleRuns(state.hinge, dims.w, cornerR, keepOut);
   const { hinge } = state;
   const ceiling = dims.h - one.shape.floor;
+  const zAxis = half === 'a' ? fold.z : fold.zB;
   return {
     wall: half === 'a' ? 'back' : 'front',
     r: hinge.barrelD / 2,
     e: axisOffset(hinge),
-    zAxis: half === 'a' ? fold.z : fold.zB,
+    zAxis,
     runs: runs.filter((run) => run.half === half),
+    others: runs.filter((run) => run.half !== half),
+    clearance: hinge.clearance,
     blocks,
     holes: axleHoles(hinge),
     slots: slots.map((slot) => ({ ...slot, z: Math.max(one.shape.floor + slot.h / 2, ceiling - CABLE_TOP_GAP - slot.h / 2) })),
+    kind: hinge.kind,
+    leaf: hinge.kind === 'leaves' ? leafLayout({
+      zAxis, e: axisOffset(hinge), blocks, screw: hinge.leafScrew, hole: hinge.leafHole, ...wallOf(one),
+    }) : null,
   };
+}
+
+/**
+ * A half's hinge wall: the z range its body owns, the flat between the edge
+ * fillets, and inside the cavity the body's part clear of the lid's skirt
+ * and of the plates.
+ */
+function wallOf(one: AppState): { body: [number, number]; flat: [number, number]; pads: [number, number] } {
+  const dims = caseDims(one);
+  const lid = effectiveLid(one.shape, one.lid, dims);
+  const { edgeR } = effectiveRadii(shapeSpec(one.shape, dims).outer);
+  const body = bodyRange(dims.h, lid.face, plateOf(one.shape, lid.face), lid.depth);
+  const skirt = lid.lip.h + 0.5;
+  const pads: [number, number] = lid.face === 'top'
+    ? [one.shape.floor, body[1] - skirt]
+    : [body[0] + skirt, dims.h - one.shape.floor];
+  return { body, flat: [edgeR, dims.h - edgeR], pads };
 }
 
 /**
@@ -185,11 +209,8 @@ export function halfStrip(state: AppState, half: Half): [number, number] | null 
   const hinge = halfHinge(state, half);
   if (!hinge) return null;
   const one = halfState(state, half);
-  const dims = caseDims(one);
-  const lid = effectiveLid(one.shape, one.lid, dims);
-  const body = bodyRange(dims.h, lid.face, plateOf(one.shape, lid.face), lid.depth);
-  const { edgeR } = effectiveRadii(shapeSpec(one.shape, dims).outer);
-  return knuckleStrip({ h: dims.h, edgeR, zAxis: hinge.zAxis, r: hinge.r, e: hinge.e, body });
+  const { body, flat } = wallOf(one);
+  return knuckleStrip({ h: caseDims(one).h, edgeR: flat[0], zAxis: hinge.zAxis, r: hinge.r, e: hinge.e, body });
 }
 
 /**
@@ -205,6 +226,11 @@ export function hingeNotes(state: AppState): Message[] {
   const screws = hinge ? hingeScrews(state.hinge, hinge.blocks) : null;
   if (screws) out.push({ code: 'info.hingeScrews', params: { n: screws.count, size: state.hinge.screw, len: screws.length } });
   if (state.hinge.axle === 'snap') out.push({ code: 'info.hingeSnap' });
+  if (state.hinge.kind === 'leaves') {
+    const leaves = HALVES.flatMap((half) => halfHinge(state, half)?.leaf ?? []);
+    const screws = leafScrews(leaves, state.shape.wall);
+    if (screws) out.push({ code: `info.leafScrews.${state.hinge.leafHole}`, params: { n: screws.count, size: state.hinge.leafScrew, len: screws.length } });
+  }
   out.push(...cableNotes(state));
   return out;
 }
