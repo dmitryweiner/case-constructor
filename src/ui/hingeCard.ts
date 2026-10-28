@@ -2,11 +2,16 @@
 // half being edited and the view's angle are view settings, not the
 // project's: their rows are built over `HalfView`.
 
-import type { Control } from './controls';
+import type { Control, ControlsHandle } from './controls';
+import { renderControls } from './controls';
+import { make } from './dom';
+import { t } from '../i18n';
 import type { AppState } from '../state/schema';
 import type { Half, HingeState } from '../state/hinged';
 import { GAP_MAX, HALVES } from '../state/hinged';
+import type { Cable } from '../geo/hinge';
 import {
+  CABLE_KINDS, CABLE_W_MAX, MAX_CABLES, PLUG_MAX, defaultCable,
   AXLES, BARREL_D_MAX, BARREL_D_MIN, HINGE_LAYOUTS, HINGE_SCREWS, KNUCKLE_COUNTS, KNUCKLE_LENGTH_MAX, KNUCKLE_LENGTH_MIN, PIN_D_MAX, PIN_D_MIN,
 } from '../geo/hinge';
 
@@ -104,4 +109,85 @@ export function angleControls(flat: () => boolean): Control<HalfView>[] {
       set: (view, value) => ({ ...view, angle: value }),
     },
   ];
+}
+
+function patchCable(state: AppState, index: number, patch: Partial<Cable>): AppState {
+  return hingeOf(state, { cables: state.hinge.cables.map((cable, i) => (i === index ? { ...cable, ...patch } : cable)) });
+}
+
+function cableControls(index: number): Control<AppState>[] {
+  const at = (state: AppState): Cable => state.hinge.cables[index];
+  const round = (state: AppState): boolean => at(state).kind === 'round';
+  // `key` names the element (#cable0_d), `field` the value it edits: a round cable's diameter is its w
+  const range = (key: string, field: 'x' | 'w' | 't' | 'plugW' | 'plugH', label: Control<AppState>['label'], min: number, max: number, step: number,
+    when?: (state: AppState) => boolean, hint?: Control<AppState>['hint']): Control<AppState> => ({
+    kind: 'range', key, label, min, max, step, when, ...(hint ? { hint } : {}),
+    get: (state) => at(state)[field],
+    set: (state, value) => patchCable(state, index, { [field]: value }),
+  });
+  return [
+    {
+      kind: 'segmented', key: 'kind', label: 'cable.kind',
+      options: CABLE_KINDS.map((value) => ({ value, label: `cable.kind.${value}` as const })),
+      get: (state) => at(state).kind,
+      set: (state, value) => patchCable(state, index, { kind: CABLE_KINDS.find((one) => one === value) ?? at(state).kind }),
+    },
+    range('x', 'x', 'cable.x', 0, 400, 0.5, undefined, 'cable.x.hint'),
+    range('w', 'w', 'cable.w', 1, CABLE_W_MAX, 0.5, (state) => !round(state)),
+    range('t', 't', 'cable.t', 0.1, 5, 0.05, (state) => !round(state)),
+    range('d', 'w', 'cable.d', 1, CABLE_W_MAX, 0.5, round),
+    range('plugW', 'plugW', 'cable.plugW', 0, PLUG_MAX, 0.5, undefined, 'cable.plug.hint'),
+    range('plugH', 'plugH', 'cable.plugH', 0, PLUG_MAX, 0.5, undefined, 'cable.plug.hint'),
+  ];
+}
+
+export interface CablesCardHandle {
+  sync(state: AppState): void;
+}
+
+/** The cables between the halves: a box per cable, like the openings' cards. */
+export function renderCablesCard(container: HTMLElement, read: () => AppState, onChange: (next: AppState) => void): CablesCardHandle {
+  let handles: ControlsHandle<AppState>[] = [];
+  let count = -1;
+
+  function build(state: AppState): void {
+    container.replaceChildren();
+    handles = state.hinge.cables.map((_, index) => {
+      const box = make('div', 'board-box');
+      box.id = `cable${index}`;
+      const head = make('div', 'board-head');
+      head.append(make('span', 'board-name', t('cable.title', { n: index + 1 })));
+      const remove = make('button', 'tb-btn board-del', '✕');
+      remove.type = 'button';
+      remove.id = `cable${index}_remove`;
+      remove.title = t('cable.remove');
+      remove.setAttribute('aria-label', t('cable.remove'));
+      remove.addEventListener('click', () => {
+        const current = read();
+        onChange(hingeOf(current, { cables: current.hinge.cables.filter((__, i) => i !== index) }));
+      });
+      head.append(remove);
+      const controls = make('div');
+      box.append(head, controls);
+      container.append(box);
+      return renderControls(controls, cableControls(index), read, onChange, `cable${index}`);
+    });
+  }
+
+  function sync(state: AppState): void {
+    if (state.hinge.cables.length !== count) {
+      count = state.hinge.cables.length;
+      build(state);
+    }
+    for (const handle of handles) handle.sync(state);
+  }
+
+  sync(read());
+  return { sync };
+}
+
+/** A new cable in the middle of the hinge edge `w` long. */
+export function addCable(state: AppState, w: number): AppState {
+  if (state.hinge.cables.length >= MAX_CABLES) return state;
+  return hingeOf(state, { cables: [...state.hinge.cables, defaultCable(Math.round(w / 2))] });
 }

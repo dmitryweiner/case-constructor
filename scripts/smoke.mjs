@@ -564,6 +564,14 @@ if (await page.locator('#hinge_screw').isVisible()) errors.push('[hinged] a snap
 if (!(await page.textContent('#warnings'))?.includes('split rings')) errors.push('[hinged] no word on how a snap goes together');
 await expectWatertight('hinged:snap');
 await page.click('#hinge_axle_pin');
+await page.click('#cableAdd');
+if (!(await page.locator('#cable0_w').isVisible())) errors.push('[hinged] no cable card');
+await page.click('#cable0_kind_round');
+if (await page.locator('#cable0_t').isVisible()) errors.push('[hinged] a round cable offers a thickness');
+await setRange('cable0_plugH', 5);
+if (!(await page.textContent('#warnings'))?.includes('from slot to slot')) errors.push('[hinged] no word on the cable\'s length');
+await expectWatertight('hinged:cable');
+await page.click('#cable0_remove');
 if (await page.locator('#board0_remove').count()) errors.push('[hinged] the lower half shows the upper half\'s board');
 if ((await page.locator('#lid_face_top').getAttribute('class'))?.includes('active') !== true) errors.push('[hinged] the lower half shows the upper half\'s lid');
 await setRange('view_angle', 0);

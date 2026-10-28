@@ -18,9 +18,13 @@ import { caseDims, effectiveLid, minimumDims } from '../geo/layout';
 import { SIZE_MAX, SIZE_MIN, clampNum, plateOf, shapeSpec } from '../geo/shape';
 import type { Fold, HalfHinge, HingeSpec } from '../geo/hinge';
 import {
-  axisOffset, axisSplit, axleHoles, bodyRange, defaultHingeSpec, foldOf, hingeScrews, knuckleRuns, knuckleStrip, sanitizeHingeSpec,
+  CABLE_KEEP, CABLE_TOP_GAP, upperPose, axisOffset, axisSplit, axleHoles, bodyRange, cableSlot, defaultHingeSpec, foldOf, hingeScrews, knuckleRuns,
+  knuckleStrip, sanitizeHingeSpec,
 } from '../geo/hinge';
-import type { Message } from '../geo/message';
+import type { Message, SpotBox } from '../geo/message';
+import { boxSpot } from '../geo/message';
+import type { Vec3 } from '../geo/surface';
+import { applyAffine } from '../geo/surface';
 import { effectiveRadii } from '../geo/loft';
 import type { AppState } from './schema';
 
@@ -140,14 +144,27 @@ export function foldOfState(state: AppState): Fold {
   return foldOf(state.hinge, dimsA.d, dimsA.h, caseDims(b).h, state.hinge.gap, zA);
 }
 
-/** What one half's build adds for the hinge: its knuckles on its hinge wall and the pins' holes; null for a single case. */
+/** The cables' slots along the hinge: x range and size, the same in both halves. */
+export function cableSlots(state: AppState): { x: number; w: number; h: number }[] {
+  return state.hinge.cables.map((cable) => ({ x: cable.x, ...cableSlot(cable) }));
+}
+
+/**
+ * What one half's build adds for the hinge: its knuckles on its hinge wall
+ * (clear of the cables' slots), the axles' holes, the slots — as close to
+ * the inner face as its wall allows; null for a single case.
+ */
 export function halfHinge(state: AppState, half: Half): HalfHinge | null {
   if (!isHinged(state)) return null;
   const fold = foldOfState(state);
-  const dims = caseDims(halfState(state, half));
+  const one = halfState(state, half);
+  const dims = caseDims(one);
   const cornerR = Math.max(0, Math.min(state.shape.cornerR, dims.w / 2, dims.d / 2));
-  const { blocks, runs } = knuckleRuns(state.hinge, dims.w, cornerR);
+  const slots = cableSlots(state);
+  const keepOut = slots.map((slot) => ({ x0: slot.x - slot.w / 2 - CABLE_KEEP, x1: slot.x + slot.w / 2 + CABLE_KEEP }));
+  const { blocks, runs } = knuckleRuns(state.hinge, dims.w, cornerR, keepOut);
   const { hinge } = state;
+  const ceiling = dims.h - one.shape.floor;
   return {
     wall: half === 'a' ? 'back' : 'front',
     r: hinge.barrelD / 2,
@@ -156,6 +173,7 @@ export function halfHinge(state: AppState, half: Half): HalfHinge | null {
     runs: runs.filter((run) => run.half === half),
     blocks,
     holes: axleHoles(hinge),
+    slots: slots.map((slot) => ({ ...slot, z: Math.max(one.shape.floor + slot.h / 2, ceiling - CABLE_TOP_GAP - slot.h / 2) })),
   };
 }
 
@@ -187,6 +205,38 @@ export function hingeNotes(state: AppState): Message[] {
   const screws = hinge ? hingeScrews(state.hinge, hinge.blocks) : null;
   if (screws) out.push({ code: 'info.hingeScrews', params: { n: screws.count, size: state.hinge.screw, len: screws.length } });
   if (state.hinge.axle === 'snap') out.push({ code: 'info.hingeSnap' });
+  out.push(...cableNotes(state));
+  return out;
+}
+
+/**
+ * Each cable: whether its slot leaves the straight part of the hinge edge
+ * or runs into another's, and how long it is from slot to slot as the case
+ * opens — the slack it needs inside.
+ */
+function cableNotes(state: AppState): Message[] {
+  const lower = halfHinge(state, 'a');
+  const upper = halfHinge(state, 'b');
+  if (!lower || !upper) return [];
+  const dims = caseDims(halfState(state, 'a'));
+  const cornerR = Math.max(0, Math.min(state.shape.cornerR, dims.w / 2, dims.d / 2));
+  const fold = foldOfState(state);
+  const out: Message[] = [];
+  lower.slots.forEach((slot, i) => {
+    const n = i + 1;
+    const box: SpotBox = { min: [slot.x - slot.w / 2, dims.d - state.shape.wall, slot.z - slot.h / 2], max: [slot.x + slot.w / 2, dims.d, slot.z + slot.h / 2] };
+    const spot = boxSpot(box, 'body');
+    if (slot.x - slot.w / 2 < cornerR || slot.x + slot.w / 2 > dims.w - cornerR) out.push({ code: 'warn.cableAtCorner', params: { n }, spot });
+    const other = lower.slots.findIndex((one, j) => j > i && Math.abs(one.x - slot.x) < (one.w + slot.w) / 2);
+    if (other >= 0) out.push({ code: 'warn.cablesOverlap', params: { n, m: other + 1 }, spot });
+    // from the lower half's slot mouth to the upper half's, as the upper half turns
+    const from: Vec3 = [slot.x, dims.d, slot.z];
+    const lengths = Array.from({ length: 37 }, (_, k) => {
+      const to = applyAffine(upperPose(fold, k * 5), [slot.x, 0, upper.slots[i].z]);
+      return Math.hypot(to[0] - from[0], to[1] - from[1], to[2] - from[2]);
+    });
+    out.push({ code: 'info.cableLength', params: { n, min: Math.floor(Math.min(...lengths)), max: Math.ceil(Math.max(...lengths)) } });
+  });
   return out;
 }
 

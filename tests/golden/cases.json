@@ -1321,5 +1321,45 @@
         5
       ]
     }
+  },
+  "hinged-cables:a": {
+    "body": {
+      "triangles": 3340,
+      "volume": 28814.44,
+      "extents": [
+        97.9,
+        74.9,
+        32.9
+      ]
+    },
+    "lid": {
+      "triangles": 1988,
+      "volume": 12894.27,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-cables:b": {
+    "body": {
+      "triangles": 1348,
+      "volume": 24129.77,
+      "extents": [
+        97.9,
+        74.9,
+        24.5
+      ]
+    },
+    "lid": {
+      "triangles": 1188,
+      "volume": 14122.94,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
   }
 }

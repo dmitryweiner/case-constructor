@@ -432,6 +432,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   `tests/hinged.test.ts` turns the upper half from closed to open flat and
   demands zero shared volume at every 15°. Golden entries of a hinged state
   are per half (`<name>:a`, `<name>:b`); `inspect.mjs` reports each half.
+  Cables (`hinge.cables`): a slot per cable through each half's hinge wall
+  (`HalfHinge.slots`, cut by `cableCutters` in the common cutter pass,
+  source `cable`); `knuckleRuns` keeps the knuckles off them; `hingeNotes`
+  gives the slot-to-slot length over the opening and the corner/overlap
+  warnings.
 - Visible text comes only from `src/i18n/` dictionaries; `en.ts` is the
   reference and gives `Key`. The core and the worker speak in message codes
   (`geo/message.ts`). A test fails on any Cyrillic or Hebrew in a string
@@ -524,7 +529,8 @@ Case card: `#case_kind_box|cylinder|console|hinged`, `#case_cornerR`, `#case_edg
 Hinged: the card `#hingeCard` (`#hinge_gap`, `#hinge_layout_ends|full`,
 `#hinge_knuckles_3|5|7`, `#hinge_length` (two blocks), `#hinge_barrelD`,
 `#hinge_clearance`, `#hinge_axle_pin|screw|snap`, `#hinge_pinD`, `#hinge_pinFit` (a pin),
-`#hinge_screw_M2|M2.5|M3` (a screw)), the half switch `#halfBar`
+`#hinge_screw_M2|M2.5|M3` (a screw)), cables `#cableAdd`, per cable
+`#cable<i>_kind_flat|round`, `#cable<i>_x|_w|_t|_d|_plugW|_plugH|_remove`, the half switch `#halfBar`
 (`#edit_half_a|b`), the view's angle `#view_angle` (in the View and export
 card).
 Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets|printed`,

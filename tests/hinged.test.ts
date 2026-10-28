@@ -11,13 +11,13 @@ import { buildCase } from '../src/geo/build';
 import { validateMesh } from '../src/geo/validate';
 import { caseDims } from '../src/geo/layout';
 import { lidFaces } from '../src/geo/lidSpec';
-import { axleHoles, barrelMin, defaultHingeSpec, foldOf, hingeScrews, sanitizeHingeSpec, upperPose } from '../src/geo/hinge';
+import { axleHoles, barrelMin, cableSlot, defaultCable, defaultHingeSpec, foldOf, hingeScrews, knuckleRuns, sanitizeHingeSpec, upperPose } from '../src/geo/hinge';
 import { applyAffine, rotateVec } from '../src/geo/surface';
 import { catalogBoard } from '../src/boards/catalog';
 import { defaultPlacement } from '../src/boards/placement';
 import { defaultState, sanitizeState, withShapeKind } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
-import { casesOf, foldOfState, halfHinge, halfState, withHalf } from '../src/state/hinged';
+import { casesOf, foldOfState, halfHinge, halfState, hingeNotes, withHalf } from '../src/state/hinged';
 
 function hinged(patch: Partial<AppState> = {}): AppState {
   return sanitizeState({ ...withShapeKind(defaultState(), 'hinged'), ...patch });
@@ -336,5 +336,80 @@ describe('the knuckles', () => {
     expect(validateMesh(b.body).bbox.max[2]).toBeCloseTo(hB + state.hinge.gap + state.hinge.barrelD, 1);
     for (const mesh of [a.body, b.body]) expect(validateMesh(mesh).watertight).toBe(true);
   });
+});
+
+describe('cables', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+
+  it('the knuckles step aside from a cable\'s slot', () => {
+    const spec = defaultHingeSpec();
+    const zone = { x0: 40, x1: 60 };
+    const ends = knuckleRuns(spec, 100, 4, [zone]);
+    expect(ends.blocks).toHaveLength(2);
+    const full = knuckleRuns({ ...spec, layout: 'full' }, 100, 4, [zone]);
+    expect(full.blocks).toHaveLength(2);
+    for (const { runs } of [ends, full]) {
+      for (const run of runs) expect(run.x1 <= zone.x0 || run.x0 >= zone.x1).toBe(true);
+    }
+    // a cable near one end pushes that block inwards
+    const near = knuckleRuns(spec, 100, 4, [{ x0: 4, x1: 12 }]);
+    expect(Math.min(...near.runs.map((run) => run.x0))).toBeGreaterThanOrEqual(12);
+  });
+
+  it('a slot through each half\'s hinge wall, and the halves still turn clear', () => {
+    const base = hinged();
+    const cable = { ...defaultCable(49), plugH: 4 };
+    const state = sanitizeState({ ...base, hinge: { ...base.hinge, cables: [cable] } });
+    const slot = cableSlot(state.hinge.cables[0]);
+    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, null, halfHinge(state, half)));
+    const plainA = buildCase(csg, halfState(state, 'a'), 8, () => {}, null, halfHinge(sanitizeState({ ...state, hinge: { ...state.hinge, cables: [] } }), 'a'));
+    // the slot takes wall away (a little less than its full prism: the knuckles moved too)
+    expect(validateMesh(a.body).volume).toBeLessThan(validateMesh(plainA.body).volume);
+    for (const [half, built] of [['a', a], ['b', b]] as const) {
+      const hinge = halfHinge(state, half);
+      if (!hinge) throw new Error('no hinge');
+      const { z } = hinge.slots[0];
+      const dims = caseDims(halfState(state, half));
+      const y = half === 'a' ? dims.d - state.shape.wall / 2 : state.shape.wall / 2;
+      // a probe in the middle of the slot, through the wall
+      const scope = new CsgScope();
+      try {
+        // inside the slot's straight part: its ends are half circles
+        const probe = fromManifold(scope.keep(csg.Manifold.cube([slot.w - slot.h - 1, state.shape.wall + 0.4, slot.h - 1], true).translate([49, y, z])));
+        expect(shared(probe, built.body), half).toBeLessThan(1e-6);
+        expect(shared(probe, built.lid), half).toBeLessThan(1e-6);
+      } finally {
+        scope.dispose();
+      }
+    }
+    const fold = foldOfState(state);
+    for (let angle = 0; angle <= 180; angle += 30) {
+      expect(shared(mergeMeshes([a.body, a.lid]), transformMesh(mergeMeshes([b.body, b.lid]), upperPose(fold, angle)))).toBeLessThan(1e-6);
+    }
+  });
+
+  it('says how long a cable runs between its slots, and when a slot meets a corner or another', () => {
+    const base = hinged();
+    const state = sanitizeState({ ...base, hinge: { ...base.hinge, cables: [defaultCable(49), defaultCable(2), defaultCable(55)] } });
+    const notes = hingeNotes(state);
+    const length = notes.find((note) => note.code === 'info.cableLength' && note.params?.n === 1);
+    expect(Number(length?.params?.min)).toBeGreaterThan(0);
+    expect(Number(length?.params?.max)).toBeGreaterThanOrEqual(Number(length?.params?.min));
+    expect(notes.some((note) => note.code === 'warn.cableAtCorner' && note.params?.n === 2)).toBe(true);
+    expect(notes.some((note) => note.code === 'warn.cablesOverlap' && note.params?.n === 1 && note.params?.m === 3)).toBe(true);
+    expect(notes.some((note) => note.code === 'warn.cableAtCorner' && note.params?.n === 1)).toBe(false);
+  });
+
+  function shared(one: SurfaceMesh, other: SurfaceMesh): number {
+    const scope = new CsgScope();
+    try {
+      return scope.keep(scope.keep(toManifold(csg, one)).intersect(scope.keep(toManifold(csg, other)))).volume();
+    } finally {
+      scope.dispose();
+    }
+  }
 });
 

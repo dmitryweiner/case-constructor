@@ -322,6 +322,16 @@ const STATES: Record<string, AppState> = {
     shape: { ...defaultState().shape, kind: 'hinged' },
     hinge: { axle: 'snap', barrelD: 9, b: { boards: [] } },
   }),
+  // H6: two cables — a flat one in the middle with its plug, a round one near an end; one block per stretch
+  'hinged-cables': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    hinge: {
+      layout: 'full',
+      cables: [{ x: 50, kind: 'flat', w: 16, t: 0.3, plugW: 0, plugH: 4 }, { x: 20, kind: 'round', w: 5 }],
+      b: { boards: [] },
+    },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

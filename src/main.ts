@@ -14,7 +14,8 @@ import type { Control, ControlsHandle } from './ui/controls';
 import { caseControls } from './ui/caseCard';
 import { lidControls } from './ui/lidCard';
 import type { HalfView } from './ui/hingeCard';
-import { angleControls, halfControls, hingeControls } from './ui/hingeCard';
+import type { CablesCardHandle } from './ui/hingeCard';
+import { addCable, angleControls, halfControls, hingeControls, renderCablesCard } from './ui/hingeCard';
 import { renderBoardsCard } from './ui/boardsCard';
 import type { BoardsCardHandle } from './ui/boardsCard';
 import { renderBoardList } from './ui/boardPicker';
@@ -59,7 +60,7 @@ import { restWarnings } from './geo/rests';
 import type { Affine, SurfaceMesh } from './geo/surface';
 import { IDENTITY, applyAffine, composeAffine, meshBounds, mergeMeshes, rotateVec, transformMesh, translation } from './geo/surface';
 import type { HalfHinge } from './geo/hinge';
-import { ANGLE_DEFAULT, upperPose } from './geo/hinge';
+import { ANGLE_DEFAULT, MAX_CABLES, upperPose } from './geo/hinge';
 import { encodeSTL } from './geo/stl';
 import { assessExport, validateMesh } from './geo/validate';
 import type { AppState, ExportMode } from './state/schema';
@@ -110,6 +111,8 @@ const hingeParams = el('hingeParams', HTMLDivElement);
 const halfBar = el('halfBar', HTMLElement);
 const halfParams = el('halfParams', HTMLDivElement);
 const angleParams = el('angleParams', HTMLDivElement);
+const cableCards = el('cableCards', HTMLDivElement);
+const cableAdd = el('cableAdd', HTMLButtonElement);
 const printParams = el('printParams', HTMLDivElement);
 const resolutionSel = el('resolution', HTMLSelectElement);
 const exportBtn = el('exportBtn', HTMLButtonElement);
@@ -171,6 +174,7 @@ let printRows: ControlsHandle<AppState>;
 let hingeRows: ControlsHandle<AppState>;
 let halfRows: ControlsHandle<HalfView>;
 let angleRows: ControlsHandle<HalfView>;
+let cableRows: CablesCardHandle;
 
 /** Which half of a hinged case the cards edit, and how far it is open in the view — view settings, not the project. */
 let halfView: HalfView = { half: 'a', angle: ANGLE_DEFAULT };
@@ -223,6 +227,7 @@ let extraRows: ExtrasHandle;
 function renderPanel(): void {
   caseRows = renderControls(caseParams, caseControls(), () => state, (next) => applyState(next), 'case');
   hingeRows = renderControls(hingeParams, hingeControls(), () => state, (next) => applyState(next), 'hinge');
+  cableRows = renderCablesCard(cableCards, () => state, (next) => applyState(next));
   halfRows = renderControls(halfParams, halfControls(), () => halfView, setHalfView, 'edit');
   angleRows = renderControls(angleParams, angleControls(() => effectiveView(state.exportMode) === 'print'), () => halfView, setHalfView, 'view');
   boardRows = renderBoardsCard(boardCards, () => edited(), applyEdit,
@@ -247,6 +252,8 @@ function syncPanel(): void {
   hingeCard.hidden = !hinged;
   halfBar.hidden = !hinged;
   hingeRows.sync(state);
+  cableRows.sync(state);
+  cableAdd.disabled = state.hinge.cables.length >= MAX_CABLES;
   halfRows.sync(halfView);
   angleRows.sync(halfView);
   syncCards();
@@ -897,6 +904,7 @@ boardCustom.addEventListener('click', () => {
   applyEdit({ ...one, boards: [...one.boards, { ...defaultPlacement(custom, Math.round(x), 0), board: 'custom', custom }] });
 });
 cutAdd.addEventListener('click', () => applyEdit(addCut(edited())));
+cableAdd.addEventListener('click', () => applyState(addCable(state, caseLayout(halfState(state, 'a')).dims.w)));
 boardPickerClose.addEventListener('click', closePicker);
 boardPicker.addEventListener('click', (event) => {
   if (event.target === boardPicker) closePicker();

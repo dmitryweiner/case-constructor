@@ -32,7 +32,7 @@ import { closedKeyholes, earSpecs, extrasCutters } from './extras';
 import { earSolids, keyholePadSolids, labelSolid } from './extrasSolids';
 import { screwSolid } from './screwSolids';
 import type { HalfHinge } from './hinge';
-import { bodyRange } from './hinge';
+import { bodyRange, cableCutters } from './hinge';
 import { knuckleSolids } from './hingeSolids';
 import { effectiveRadii } from './loft';
 import { screwShape, threadPoints } from './thread';
@@ -158,6 +158,8 @@ export function buildCase(
       ...ports,
       ...extraCutters(state.extraCuts, shape, dims, top),
       ...extrasCutters(state, shape, layout, lid, top, ports),
+      // a hinged half: the cables' slots through its hinge wall
+      ...(hinge ? cableCutters(hinge, shape, dims, top) : []),
     ];
     let skirt = skirtSolid(csg, scope, spec, outer, frame, zp, lid, shape, segments);
     const opening = openingPolygon(spec, frame, zp, lid.lip.h, segments);

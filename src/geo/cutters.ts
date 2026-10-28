@@ -42,7 +42,7 @@ export interface CutterSpec {
    */
   flare?: { from: number; rate: number };
   /** what made it, for warnings */
-  source: { kind: 'port'; board: number; port: string } | { kind: 'extra'; index: number };
+  source: { kind: 'port'; board: number; port: string } | { kind: 'extra'; index: number } | { kind: 'cable'; index: number };
 }
 
 /** A user-defined opening on a face. */

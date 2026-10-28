@@ -80,6 +80,30 @@ A port or an opening through the hinge wall where knuckles stand behind it
 is warned about: the opening cuts the knuckles, and a plug has no way out
 there.
 
+## Cables
+
+**+ Add cable** in the Hinge card (up to four): a flat cable (an FFC, an
+IDC ribbon: its width and thickness) or a round one (a bundle of wires, a
+USB cable: its diameter), and where it crosses the hinge — the slot's
+middle from the left end, the same number in both halves. Each half gets a
+rounded slot through its hinge wall, its top half a millimetre under the
+inner face's plate, as close to the axis as the wall allows; the knuckles
+step aside from it (a block moves inwards, or one block along the edge
+becomes one per stretch between the cables). The cable runs outside,
+between the blocks, from slot to slot.
+
+| Parameter | Range | Default | Notes |
+|---|---|---|---|
+| Along the hinge | 0–400 mm | the middle | the slot's middle |
+| Width / Thickness | 1–60 / 0.1–5 mm | 16 / 0.3 | a flat cable |
+| Diameter | 1–60 mm | — | a round cable |
+| Plug width, Plug height | 0–40 mm | 0 | a plug that has to pass through the slot; 0 = the cable alone |
+
+The slot is the cable (or its plug, whichever is larger) plus 0.5 mm on
+every side. A note gives the cable's length from slot to slot as the case
+opens from closed to flat — leave the difference as slack inside. A slot
+that runs into the rounded corner, or into another slot, is warned about.
+
 ## Lids
 
 Each half has its own lid on its **top** (the inner face) or its

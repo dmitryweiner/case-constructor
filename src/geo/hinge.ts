@@ -18,6 +18,10 @@ import type { Affine } from './surface';
 import { composeAffine, translation } from './surface';
 import { clampNum } from './shape';
 import { NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE } from './fasteners';
+import type { CutterSpec } from './cutters';
+import { extraCutters } from './cutters';
+import type { Dims } from './face';
+import type { ShapeState } from './shape';
 
 /** What the hinge is: knuckles printed with the halves. */
 export const HINGE_KINDS = ['knuckles'] as const;
@@ -39,6 +43,59 @@ export type HingeLayout = (typeof HINGE_LAYOUTS)[number];
 /** Knuckles per block: odd, so a block starts and ends on the lower half. */
 export const KNUCKLE_COUNTS = [3, 5, 7] as const;
 
+/** A cable from one half to the other: flat (an FFC, an IDC ribbon) or round (a bundle, a USB cable). */
+export const CABLE_KINDS = ['flat', 'round'] as const;
+export type CableKind = (typeof CABLE_KINDS)[number];
+
+export interface Cable {
+  /** its middle along the hinge, x in either half's frame */
+  x: number;
+  kind: CableKind;
+  /** a flat cable's width and thickness; a round one's diameter is `w` */
+  w: number;
+  t: number;
+  /** a plug that has to pass through the slot, 0 = none */
+  plugW: number;
+  plugH: number;
+}
+
+export const MAX_CABLES = 4;
+export const CABLE_W_MAX = 60;
+export const PLUG_MAX = 40;
+/** A cable's slot: the cable plus this on every side, mm. */
+export const CABLE_FIT = 0.5;
+/** The slot's top this far under the inner face's plate, mm. */
+export const CABLE_TOP_GAP = 0.5;
+/** The knuckles keep this far off a cable's slot, mm. */
+export const CABLE_KEEP = 1;
+
+export function defaultCable(x = 50): Cable {
+  return { x, kind: 'flat', w: 16, t: 0.3, plugW: 0, plugH: 0 };
+}
+
+export function sanitizeCables(raw: unknown): Cable[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.slice(0, MAX_CABLES).map((item): Cable => {
+    const r = typeof item === 'object' && item !== null ? item : {};
+    const d = defaultCable();
+    return {
+      x: clampNum(Reflect.get(r, 'x'), 0, 400, d.x),
+      kind: oneOf(CABLE_KINDS, Reflect.get(r, 'kind'), d.kind),
+      w: clampNum(Reflect.get(r, 'w'), 1, CABLE_W_MAX, d.w),
+      t: clampNum(Reflect.get(r, 't'), 0.1, 5, d.t),
+      plugW: clampNum(Reflect.get(r, 'plugW'), 0, PLUG_MAX, d.plugW),
+      plugH: clampNum(Reflect.get(r, 'plugH'), 0, PLUG_MAX, d.plugH),
+    };
+  });
+}
+
+/** A cable's slot through a hinge wall: the cable (or its plug, whichever is larger) and the fit, mm. */
+export function cableSlot(cable: Cable): { w: number; h: number } {
+  const w = cable.w + 2 * CABLE_FIT;
+  const h = (cable.kind === 'round' ? cable.w : cable.t) + 2 * CABLE_FIT;
+  return { w: Math.max(w, cable.plugW + 2 * CABLE_FIT), h: Math.max(h, cable.plugH > 0 ? cable.plugH + 2 * CABLE_FIT : 0) };
+}
+
 export interface HingeSpec {
   kind: HingeKind;
   axle: Axle;
@@ -56,6 +113,7 @@ export interface HingeSpec {
   pinFit: number;
   /** the screw of a screw axle */
   screw: HingeScrew;
+  cables: Cable[];
 }
 
 export const BARREL_D_MIN = 5;
@@ -92,7 +150,9 @@ export const SNAP_GRIP = 0.15;
 export const SNAP_BAR_MIN = 1.2;
 
 export function defaultHingeSpec(): HingeSpec {
-  return { kind: 'knuckles', axle: 'pin', layout: 'ends', barrelD: 8, knuckles: 3, length: 10, clearance: 0.4, pinD: 1.75, pinFit: 0.15, screw: 'M2.5' };
+  return {
+    kind: 'knuckles', axle: 'pin', layout: 'ends', barrelD: 8, knuckles: 3, length: 10, clearance: 0.4, pinD: 1.75, pinFit: 0.15, screw: 'M2.5', cables: [],
+  };
 }
 
 function oneOf<T extends string | number>(list: readonly T[], value: unknown, fallback: T): T {
@@ -160,6 +220,7 @@ export function sanitizeHingeSpec(raw: unknown): HingeSpec {
     length: clampNum(Reflect.get(r, 'length'), KNUCKLE_LENGTH_MIN, KNUCKLE_LENGTH_MAX, d.length),
     clearance: clampNum(Reflect.get(r, 'clearance'), 0.2, 1, d.clearance),
     ...axle,
+    cables: sanitizeCables(Reflect.get(r, 'cables')),
   };
 }
 
@@ -219,38 +280,62 @@ export interface KnuckleRun {
   half: 'a' | 'b';
 }
 
+/** What is left of [lo, hi] once the intervals `out` are taken away, in order. */
+function freeSpans(lo: number, hi: number, out: readonly { x0: number; x1: number }[]): { x0: number; x1: number }[] {
+  let spans = [{ x0: lo, x1: hi }];
+  for (const cut of out) {
+    spans = spans.flatMap((span) => [
+      ...(cut.x0 > span.x0 ? [{ x0: span.x0, x1: Math.min(span.x1, cut.x0) }] : []),
+      ...(cut.x1 < span.x1 ? [{ x0: Math.max(span.x0, cut.x1), x1: span.x1 }] : []),
+    ]).filter((span) => span.x1 - span.x0 > 1e-6);
+  }
+  return spans;
+}
+
 /**
  * The knuckles along an edge `w` long whose straight part starts `cornerR`
- * in from each end: blocks of `knuckles` alternating lower, upper, lower…,
- * two near the ends (or one in the middle when two do not fit apart), or one
- * filling the edge. Each block has its own pin.
+ * in from each end, clear of the cables' slots (`keepOut`): blocks of
+ * `knuckles` alternating lower, upper, lower…, two near the ends (one in the
+ * middle when two do not fit apart), or one filling each stretch between the
+ * cables. Each block has its own axle.
  */
-export function knuckleRuns(spec: HingeSpec, w: number, cornerR: number): { blocks: { x0: number; x1: number }[]; runs: KnuckleRun[] } {
-  const lo = cornerR + KNUCKLE_EDGE;
-  const hi = w - cornerR - KNUCKLE_EDGE;
+export function knuckleRuns(
+  spec: HingeSpec, w: number, cornerR: number, keepOut: readonly { x0: number; x1: number }[] = [],
+): { blocks: { x0: number; x1: number }[]; runs: KnuckleRun[] } {
   const n = spec.knuckles;
   const g = spec.clearance;
-  const span = hi - lo;
-  const fill = (span - (n - 1) * g) / n;
-  if (fill <= 0) return { blocks: [], runs: [] };
-  let length = Math.min(spec.length, fill);
-  let starts: number[];
+  const spans = freeSpans(cornerR + KNUCKLE_EDGE, w - cornerR - KNUCKLE_EDGE, keepOut);
   const blockLen = (one: number): number => n * one + (n - 1) * g;
+  const fill = (span: { x0: number; x1: number }): number => (span.x1 - span.x0 - (n - 1) * g) / n;
+  let length = spec.length;
+  let starts: number[];
   if (spec.layout === 'full') {
-    length = fill;
-    starts = [lo];
-  } else if (2 * blockLen(length) + BLOCKS_APART <= span) {
-    starts = [lo, hi - blockLen(length)];
-  } else {
-    starts = [(lo + hi - blockLen(length)) / 2];
+    // one block per stretch, its knuckles as long as the stretch allows
+    const blocks = spans.filter((span) => fill(span) >= KNUCKLE_LENGTH_MIN / 2);
+    const runs = blocks.flatMap((span) => blockRuns(span.x0, fill(span), n, g));
+    return { blocks: blocks.map((span) => ({ x0: span.x0, x1: span.x1 })), runs };
   }
-  const blocks = starts.map((x0) => ({ x0, x1: x0 + blockLen(length) }));
-  const runs = starts.flatMap((x0) => Array.from({ length: n }, (_, i): KnuckleRun => ({
+  const widest = Math.max(0, ...spans.map(fill));
+  if (widest < KNUCKLE_LENGTH_MIN / 2) return { blocks: [], runs: [] };
+  length = Math.min(length, widest);
+  const fits = spans.filter((span) => span.x1 - span.x0 >= blockLen(length) - 1e-9);
+  const first = fits[0];
+  const last = fits[fits.length - 1];
+  if (first !== last) starts = [first.x0, last.x1 - blockLen(length)];
+  else if (2 * blockLen(length) + BLOCKS_APART <= first.x1 - first.x0) starts = [first.x0, first.x1 - blockLen(length)];
+  else starts = [(first.x0 + first.x1 - blockLen(length)) / 2];
+  return {
+    blocks: starts.map((x0) => ({ x0, x1: x0 + blockLen(length) })),
+    runs: starts.flatMap((x0) => blockRuns(x0, length, n, g)),
+  };
+}
+
+function blockRuns(x0: number, length: number, n: number, g: number): KnuckleRun[] {
+  return Array.from({ length: n }, (_, i): KnuckleRun => ({
     x0: x0 + i * (length + g),
     x1: x0 + i * (length + g) + length,
     half: i % 2 === 0 ? 'a' : 'b',
-  })));
-  return { blocks, runs };
+  }));
 }
 
 /**
@@ -301,6 +386,8 @@ export interface HalfHinge {
   /** every block, for its axle's holes */
   blocks: { x0: number; x1: number }[];
   holes: AxleHoles;
+  /** the cables' slots through the hinge wall: middle along x, size, the middle's height */
+  slots: { x: number; w: number; h: number; z: number }[];
 }
 
 /**
@@ -310,5 +397,14 @@ export interface HalfHinge {
  */
 export function bodyRange(h: number, lidFace: string, plate: number, depth: number): [number, number] {
   return lidFace === 'top' ? [0, h - plate - depth] : [plate + depth, h];
+}
+
+/** The cables' slots of a half as openings through its hinge wall (the face's u runs right to left on the back). */
+export function cableCutters(hinge: HalfHinge, shape: ShapeState, dims: Dims, slopeTop: (x: number, y: number) => number): CutterSpec[] {
+  const face = hinge.wall;
+  const cuts = hinge.slots.map((slot) => ({
+    face, shape: 'rect' as const, x: face === 'back' ? dims.w - slot.x : slot.x, y: slot.z, w: slot.w, h: slot.h, r: Math.min(slot.w, slot.h) / 2,
+  }));
+  return extraCutters(cuts, shape, dims, slopeTop).map((cutter, index): CutterSpec => ({ ...cutter, source: { kind: 'cable', index } }));
 }
 

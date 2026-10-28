@@ -21,6 +21,9 @@ export type MessageCode =
   | 'warn.extraHitsKnuckle'
   | 'info.hingeScrews'
   | 'info.hingeSnap'
+  | 'warn.cableAtCorner'
+  | 'warn.cablesOverlap'
+  | 'info.cableLength'
   // layout checks (layout)
   | 'warn.boardsOverlap'
   | 'warn.standoffHitsBoard'

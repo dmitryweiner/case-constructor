@@ -253,3 +253,11 @@ stands alone.
   upper half goes on by being pushed back over the hinge, and its weight
   presses the ring onto the bar at any angle it stands at.
 
+- **H6 (2026-10-28).** Done. The slot's top is 0.5 mm under the inner
+  face's plate (the cut goes through the skirt as well: the common cutter
+  pass), its ends rounded (a stadium). The cutters carry a source of their
+  own (`cable`) and stay out of the openings' warnings; the knuckles step
+  aside by 1 mm. The length note measures the straight line between the
+  slots' mouths at every 5° from closed to flat. The plug's size only
+  widens the slot (no separate connector model).
+
