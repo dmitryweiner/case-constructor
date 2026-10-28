@@ -165,7 +165,7 @@ export interface TopPort extends PortCommon {
   edge: 'top' | 'bottom';
   x: number;
   y: number;
-  /** a display on top only: its glass */
+  /** a display on top: its glass; a key field: the keypad's flange the plate holds down (its front at `base`) */
   glass?: Glass;
   /**
    * A part on top that goes through the plate from this height above the
@@ -386,7 +386,8 @@ export function sanitizePort(raw: unknown, size: { w: number; d: number }, index
       x: num(r.x, 0, size.w, size.w / 2),
       y: num(r.y, 0, size.d, size.d / 2),
     };
-    const glass = type === 'display' && port.edge === 'top' ? sanitizeGlass(r.glass, size) : undefined;
+    // a display's glass, or a keypad's flange under the plate
+    const glass = (type === 'display' || type === 'keys') && port.edge === 'top' ? sanitizeGlass(r.glass, size) : undefined;
     const keys = type === 'keys' && port.edge === 'top' ? keyFieldOf(port, r) : {};
     const base = port.edge === 'top' && typeof r.base === 'number' ? { base: num(r.base, 0, h, 0) } : {};
     return { ...port, ...base, ...keys, ...(glass && windowInGlass(port, glass) ? { glass } : {}) };

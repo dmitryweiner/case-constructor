@@ -1,0 +1,36 @@
+{
+  "id": "solderparty-keebdeck-basic",
+  "name": "Solder Party KeebDeck Basic",
+  "vendor": "Solder Party",
+  "kind": "keyboard",
+  "size": { "w": 87.4, "d": 67.6, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 4.45, "y": 4.45, "d": 3 },
+      { "x": 82.95, "y": 4.45, "d": 3 },
+      { "x": 4.45, "y": 63.15, "d": 3 },
+      { "x": 82.95, "y": 63.15, "d": 3 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 1.4,
+  "bottomHeight": 3,
+  "ports": [
+    { "id": "keys", "type": "keys", "edge": "top", "x": 43.7, "y": 33.445, "w": 84.5, "d": 46.72, "h": 4, "base": 1.5, "clearance": 0.25, "open": "holes", "rows": [
+      { "y": 53.49, "x": 5.64, "n": 4, "pitch": 9.673, "w": 8.35, "d": 6.6 },
+      { "y": 53.49, "x": 52.74, "n": 4, "pitch": 9.673, "w": 8.35, "d": 6.6 },
+      { "y": 45, "x": 4.1, "n": 13, "pitch": 6.6, "w": 5.2, "d": 6.6 },
+      { "y": 37.1, "x": 4.1, "n": 13, "pitch": 6.6, "w": 5.2, "d": 6.6 },
+      { "y": 29.2, "x": 4.1, "n": 13, "pitch": 6.6, "w": 5.2, "d": 6.6 },
+      { "y": 21.3, "x": 4.1, "n": 13, "pitch": 6.6, "w": 5.2, "d": 6.6 },
+      { "y": 13.4, "x": 4.1, "n": 4, "pitch": 6.6, "w": 5.2, "d": 6.6 },
+      { "y": 13.4, "x": 43.7, "n": 1, "pitch": 6.6, "w": 31.6, "d": 6.6 },
+      { "y": 13.4, "x": 63.5, "n": 4, "pitch": 6.6, "w": 5.2, "d": 6.6 }
+    ], "glass": { "x": 43.7, "y": 33.45, "w": 85.8, "d": 48.6, "t": 0.7 } },
+    { "id": "usb-c", "type": "usb-c", "edge": "back", "along": 43.7 },
+    { "id": "qwiic", "type": "jst", "edge": "back", "along": 32.1, "z": -4.5, "w": 6, "h": 2.9 }
+  ],
+  "source": "https://raw.githubusercontent.com/solderparty/keebdeck_basic_hw/main/keebdeck_basic.kicad_pcb",
+  "verified": false
+}

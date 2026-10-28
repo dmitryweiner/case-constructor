@@ -10,14 +10,14 @@
 
 import type { PortDef, TopPort } from '../boards/schema';
 import { keyFields, keysOf, onFace } from '../boards/schema';
-import { CEILING_GAP, keyFit, keysOpen, portCut } from '../boards/placement';
+import { CEILING_GAP, frontHeight, keyFit, keysOpen, portCut } from '../boards/placement';
 import { CAP_HOLD, capSizes } from './capSize';
 import type { CutterSpec, ExtraCut } from './cutters';
 import { VERTICAL_AXES, flareAt, horizontalAxes } from './cutters';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import type { CaseLayout, PlacedBoard } from './layout';
-import { edgeNormal, portBlock } from './layout';
+import { edgeNormal, opensKeys, portBlock } from './layout';
 import type { LidState } from './lidSpec';
 import type { Message, MessageSpot, SpotBox } from './message';
 import { boardParams, boxAround, boxSpot } from './message';
@@ -67,6 +67,8 @@ function sectionOf(port: PortDef): { shape: 'rect' | 'round'; w: number; h: numb
  */
 function channelBack(board: PlacedBoard, port: PortDef & { edge: 'front' | 'back' | 'left' | 'right' }): number {
   if (port.reach !== undefined) return port.d + CHANNEL_BACK;
+  // a keyboard's connector taller than what the plate lies on (the KeebDeck's USB-C beside its keypad)
+  if ((board.hung || opensKeys(board)) && keyFields(board.def).length > 0 && port.z + port.h > frontHeight(board.def, board.placement) + 1e-6) return port.d + CHANNEL_BACK;
   return board.walls.some((wall) => wall.edge === port.edge) ? Math.max(0, port.protrude) + CHANNEL_BACK : CHANNEL_BACK;
 }
 

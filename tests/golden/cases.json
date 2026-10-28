@@ -1023,5 +1023,45 @@
         5
       ]
     }
+  },
+  "keebdeck-hung-flange": {
+    "body": {
+      "triangles": 844,
+      "volume": 25047.1,
+      "extents": [
+        96.7,
+        75.6,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 12492,
+      "volume": 9499.95,
+      "extents": [
+        96.7,
+        75.6,
+        5
+      ]
+    }
+  },
+  "keyboard-featherwing-floor": {
+    "body": {
+      "triangles": 1572,
+      "volume": 28691.62,
+      "extents": [
+        76,
+        109.45,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1412,
+      "volume": 8724.26,
+      "extents": [
+        76,
+        109.45,
+        5
+      ]
+    }
   }
 }

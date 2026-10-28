@@ -340,6 +340,14 @@ await expectWatertight('keys:bbq20-rests');
 await page.click('#board1_on_ceiling');
 await expectWatertight('keys:bbq20-hung-rests');
 await page.click('#board1_remove');
+// the KeebDeck: its keypad's flange pressed by the lid (gap 0, no gap warning), a hole per key
+await page.click('#boardAdd');
+await page.fill('#boardSearch', 'keebdeck');
+await page.click('#boardList [data-board="solderparty-keebdeck-basic"]');
+await expectWatertight('keys:keebdeck');
+if (Number(await page.inputValue('#board1_gap')) !== 0) errors.push('[keyboards] the KeebDeck is not pressed on its flange');
+if ((await page.textContent('#warnings'))?.includes('glass thicker')) errors.push('[keyboards] a pressed flange warns about the gap');
+await page.click('#board1_remove');
 // a clamped panel: always hung, a clamp gap, its bars printed with the lid that holds it
 label('clamp');
 await page.click('#boardAdd');

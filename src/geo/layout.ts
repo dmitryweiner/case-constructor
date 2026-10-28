@@ -693,8 +693,9 @@ export function portBlock(board: PlacedBoard, port: PortDef): [number, number, n
   if (onFace(port)) {
     // a display with a glass: its window as a thin layer on the glass's front
     const top = port.rows ? t + Math.max(port.base ?? KEY_SLAB, 0.1) : t + port.h;
+    const glass = port.type === 'display' && port.glass;
     const [z0, z1] = port.edge === 'top'
-      ? [port.glass ? t + port.h - WINDOW_LAYER : t, top + (port.glass ? WINDOW_LAYER / 2 : 0)]
+      ? [glass ? t + port.h - WINDOW_LAYER : t, top + (glass ? WINDOW_LAYER / 2 : 0)]
       : [-port.h, 0];
     return [port.x - port.w / 2, port.y - port.d / 2, z0, port.x + port.w / 2, port.y + port.d / 2, z1];
   }
@@ -864,8 +865,9 @@ export function collisions(layout: CaseLayout): Message[] {
     if (board.def.mount.kind === 'clamp' && (clampHold(board.def, board.placement).blocked || barsOnBack(board, boards))) {
       out.push({ code: 'warn.clampBlocked', params: boardParams(board), ...onBoard(board, [boardBox(board)]) });
     }
-    // a clamped panel is pressed against the plate on purpose
-    if (board.hung && board.def.mount.kind !== 'clamp' && board.placement.z < CEILING_GAP - 1e-9) {
+    // a clamped panel is pressed against the plate on purpose, and so is a keypad's flange
+    const pressed = board.def.mount.kind === 'clamp' || keyFields(board.def).some((field) => field.glass);
+    if (board.hung && !pressed && board.placement.z < CEILING_GAP - 1e-9) {
       out.push({ code: 'warn.glassGap', params: { ...boardParams(board), mm: CEILING_GAP }, ...onBoard(board, [boardBox(board)]) });
     }
   }

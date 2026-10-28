@@ -300,3 +300,23 @@ golden states, smoke steps, docs and translations.
 - **K6.** A floor keyboard's default standoff height puts its front the gap
   under the least case's ceiling for any opening (the BBQ20KBD's keys were
   5.4 mm under the face at the 20 mm least height).
+- **K4.** A keypad's flange is the `glass` of its key field, its front at
+  the field's `base` (`rimsOf`, the ghost); it lies under the plate whatever
+  opens over it (`frontHeight`). The plate presses it by design: such a
+  keyboard hangs with gap 0 by default (`pressedOn`, as a clamped panel) and
+  no gap warning. A keyboard's edge connector taller than what the plate
+  lies on gets its opening from behind its body, through the plate (the
+  KeebDeck's USB-C stands on top beside its keypad; without it the plate
+  sat on the connector).
+- **K6c.** KeebDeck Basic: the switch centres from its KiCad layout, the
+  keypad's outline, key sizes (5.2 × 6.6, 8.35 for the top row, a 31.6
+  space bar) and heights (dome sheet 0.8, flange 0.7, keys 2.5 above it)
+  from `keebdeck_keyboard_hw/dimensions.pdf`; a hole per key at a 0.25 fit
+  (webs 0.8–0.9 mm), the lid as the faceplate; USB-C and Qwiic positions
+  along the back edge from the layout, their depth not drawn (≈).
+  Keyboard FeatherWing: from its KiCad layout and STEP, turned over (the
+  TFT and the Q10 keyboard are on the layout's bottom, the Feather sockets
+  on its top), so x is 68 − x; two of its holes are under the keyboard, so
+  it stands on the floor; the TFT's active area (52.8 × 39.6) taken as
+  centred in its module, the Feather on its back counted only as 8.5 mm of
+  `bottomHeight` (its box ran into a corner standoff's boss), ≈.

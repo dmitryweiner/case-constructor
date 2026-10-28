@@ -17,6 +17,7 @@ import type { AppState } from '../src/state/schema';
 import { garbageLike, KEYPAD, boxMesh, rng } from './helpers';
 import { CAP_FIT, CAP_FLANGE_T, CAP_GAP, CAP_GROW, CAP_LIP, CAP_PROUD, capSizes } from '../src/geo/capSize';
 import { capMesh, capsInCase, keyCaps, withCaps } from '../src/geo/caps';
+import { rimsOf } from '../src/geo/rim';
 import { REST_MAX, caseRests, restWarnings, restsOf } from '../src/geo/rests';
 import { applyAffine, meshBounds } from '../src/geo/surface';
 
@@ -498,5 +499,57 @@ describe('rests under a keyboard that rocks (K5)', () => {
     expect(caseRests(layout, s.shape.floor)).toEqual([]);
     expect(restWarnings(layout, s.shape.floor).map((note) => note.code)).toEqual(['warn.restTooLong']);
     expect(REST_MAX).toBe(40);
+  });
+});
+
+describe('a keypad’s flange under the plate (K4) and the last two keyboards', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+  const add = (board: string, extra: Record<string, unknown> = {}): AppState => {
+    const entry = catalogBoard(board);
+    if (!entry) throw new Error(board);
+    return sanitizeState({ ...defaultState(), boards: [{ ...defaultPlacement(entry), ...extra }] });
+  };
+
+  it('the KeebDeck hangs pressed on its flange: the plate on the flange’s front, a rim around it, no gap warning', () => {
+    const s = add('solderparty-keebdeck-basic');
+    expect(s.boards[0]).toMatchObject({ on: 'ceiling', z: 0 });
+    const layout = caseLayout(s);
+    const [board] = layout.boards;
+    expect(board.z0).toBeCloseTo(layout.dims.h - s.shape.floor - 1.5 - 1.6, 6);
+    const [rim] = rimsOf(board);
+    expect(rim).toMatchObject({ port: 'keys', z1: 1.6 + 1.5 });
+    expect(rim.z0).toBeCloseTo(1.6 + 1.5 - 0.7, 6);
+    expect(collisions(layout)).toEqual([]);
+    // over a window the flange still lies under the plate
+    expect(frontHeight(board.def, { keys: 'window' })).toBe(1.5);
+  });
+
+  it('its USB-C stands taller than the flange: its opening starts behind its body, through the plate', () => {
+    const s = add('solderparty-keebdeck-basic');
+    const layout = caseLayout(s);
+    const usb = portCutters(layout, { ...s.shape, console: layout.console }).find((cutter) => cutter.source.kind === 'port' && cutter.source.port === 'usb-c');
+    expect(usb?.s0).toBeLessThan(-7);
+  });
+
+  it('the Keyboard FeatherWing stands on the floor (two holes under its keyboard), two windows in one lid', () => {
+    const s = add('solderparty-keyboard-featherwing');
+    expect(s.boards[0]).not.toHaveProperty('on');
+    const layout = caseLayout(s);
+    const openings = portCutters(layout, { ...s.shape, console: layout.console }).filter((cutter) => cutter.source.kind === 'port' && cutter.ez[2] === 1);
+    expect(openings.map((cutter) => cutter.source.kind === 'port' && cutter.source.port).sort()).toEqual(['display', 'keys']);
+  });
+
+  it.each(['solderparty-bbq20kbd', 'solderparty-keebdeck-basic', 'solderparty-keyboard-featherwing'])('%s builds closed and sliver-free, no layout warnings', (board) => {
+    const s = add(board);
+    expect(collisions(caseLayout(s))).toEqual([]);
+    const built = buildCase(csg, s, 8);
+    for (const mesh of [built.body, built.lid]) {
+      const report = validateMesh(mesh);
+      expect(report.watertight).toBe(true);
+      expect(report.degenerateTriangles).toBe(0);
+    }
   });
 });

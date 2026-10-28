@@ -38,7 +38,8 @@ export function rimsOf(board: Pick<PlacedBoard, 'def' | 'placement' | 'hung' | '
   const { t } = board.def.size;
   return board.def.ports.flatMap((port) => {
     if (!onFace(port) || port.edge !== 'top' || !port.glass) return [];
-    const front = t + port.h;
+    // a keypad's flange lies under the keys, its front at the field's base
+    const front = t + (port.type === 'keys' ? port.base ?? port.h : port.h);
     // never down onto the PCB
     const z0 = Math.max(t + 0.2, front - Math.min(port.glass.t, RIM_H_MAX));
     return [{ glass: port.glass, z0, z1: front + gap, port: port.id }];

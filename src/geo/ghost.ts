@@ -176,9 +176,12 @@ function glassOutline(glass: Glass): [number, number][] {
 /** The glass slabs of a board's display parts, case frame: `t` thick, their front at the part's height. */
 function glassGhost(board: PlacedBoard): SurfaceMesh | null {
   const { t } = board.def.size;
-  const slabs = board.def.ports.flatMap((port) => (onFace(port) && port.glass
-    ? [prismMesh(board, glassOutline(port.glass), [], t + port.h - port.glass.t, t + port.h)]
-    : []));
+  const slabs = board.def.ports.flatMap((port) => {
+    if (!onFace(port) || !port.glass) return [];
+    // a keypad's flange: its front at the field's base, the keys standing out of it
+    const front = t + (port.type === 'keys' ? port.base ?? port.h : port.h);
+    return [prismMesh(board, glassOutline(port.glass), [], front - port.glass.t, front)];
+  });
   return slabs.length > 0 ? mergeMeshes(slabs) : null;
 }
 

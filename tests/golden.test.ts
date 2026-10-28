@@ -268,6 +268,14 @@ const STATES: Record<string, AppState> = {
   'bbq20kbd-hung-rests': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'solderparty-bbq20kbd', on: 'ceiling', z: 0.3, mount: { size: 'M2.5', hole: 'insert' } }],
+  }),  // K4: the KeebDeck's flange pressed by the plate, a hole per key; K6c: the FeatherWing's two windows
+  'keebdeck-hung-flange': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'solderparty-keebdeck-basic', on: 'ceiling', z: 0, mount: { size: 'M2.5', hole: 'insert' } }],
+  }),
+  'keyboard-featherwing-floor': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'solderparty-keyboard-featherwing', z: 11.69, mount: { size: 'M2.5', hole: 'tap' } }],
   }),
 };
 

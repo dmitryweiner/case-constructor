@@ -157,6 +157,11 @@ export function holesAmongKeys(def: BoardDef): boolean {
   }));
 }
 
+/** Whether the plate presses on the board by design: a clamped panel's back bars, a keypad's flange. */
+export function pressedOn(def: BoardDef): boolean {
+  return def.mount.kind === 'clamp' || keyFields(def).some((field) => field.glass !== undefined);
+}
+
 /** The most room a key's hole or a key window may get around it, mm. */
 export const KEY_FIT_MAX = 3;
 
@@ -185,7 +190,8 @@ export function frontHeight(def: BoardDef, placement: Pick<BoardPlacement, 'keys
     if (!(placement.cuts?.[field.id] ?? field.cut)) return field.h;
     // a cap's flange lies on its key, the plate the gap above it
     if (open === 'caps' && field.rows) return field.h + CAP_FLANGE_T;
-    return open === 'holes' ? field.base ?? field.h : 0;
+    // a keypad's flange lies under the plate whatever opens over it
+    return open === 'holes' || field.glass ? field.base ?? field.h : 0;
   }));
 }
 
@@ -213,8 +219,8 @@ export function defaultPlacement(entry: BoardDef, x = 0, y = 0): BoardPlacement 
     ...(def.battery ? { battery: def.battery } : {}),
     x,
     y,
-    // a clamped panel lies against the plate; anything else hangs the gap below it
-    z: hangsByDefault(def) ? (def.mount.kind === 'clamp' ? 0 : CEILING_GAP) : floorZ(def, pins),
+    // a clamped panel, or a keypad's flange, lies against the plate; anything else hangs the gap below it
+    z: hangsByDefault(def) ? (pressedOn(def) ? 0 : CEILING_GAP) : floorZ(def, pins),
     rot: 0,
     mount: { size: def.mount.screw, hole: 'tap', head: 'none' },
     cuts: {},
@@ -281,7 +287,7 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
   // a file without the field stands on the floor, at the height it always had
   const zRaw: unknown = Reflect.get(r, 'z');
   const z = ceiling
-    ? num(zRaw, 0, Z_MAX, def.mount.kind === 'clamp' ? 0 : CEILING_GAP)
+    ? num(zRaw, 0, Z_MAX, pressedOn(def) ? 0 : CEILING_GAP)
     : num(zRaw, minBoardZ(def, pins), Z_MAX, Math.max(floorZ(def, def.pins?.soldered ?? false), minBoardZ(def, pins)));
   return {
     board: custom ? 'custom' : def.id,
