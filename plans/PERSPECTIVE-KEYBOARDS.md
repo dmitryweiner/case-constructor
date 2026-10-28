@@ -82,6 +82,14 @@ What the numbers say:
   BBQ20KBD runs i2c_puppet, which speaks the BBQ10 protocol, so
   Meshtastic's BBQ10 driver serves it (unchecked on hardware).
 
+**In the catalog (2026-10-28, `plans/PLAN-KEYBOARDS.md`):** all of Tier A
+and Tier B — CardKB v1.1, BBQ20KBD, MacroPad RP2040, KeebDeck Basic,
+Keyboard FeatherWing — and the preset `meshtastic-cardkb` (Heltec V3 +
+CardKB). Corrections found on the way are in the plan's deviations (K6a–c):
+the CardKB's keys stand 1.75 mm and its Grove socket is on top; the
+MacroPad's STEMMA QT and reset are on the left edge seen from the front; one
+of the BBQ20KBD's holes is under its keyboard.
+
 ## Tier A — high demand, drawing checked
 
 | Keyboard | Controller, link | PCB, holes | Key field, height | Why | Drawing | Note |

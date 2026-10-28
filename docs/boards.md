@@ -10,7 +10,7 @@ Each board has:
 |---|---|---|
 | Model | the family's models | entries for a family on one outline (XIAO, Feather, Waveshare Zero): where its buttons and parts are, and which openings it gets |
 | X, Y | 0–300 mm | position relative to the other boards; the layout as a whole is centred in the case, so with one board these do nothing |
-| Held | on the floor / from the ceiling | a display, or a board with a screen on top, hangs from the ceiling when added (see [Displays](displays.md)); on a console, from its slope |
+| Held | on the floor / from the ceiling | a display, a board with a screen on top, or a keyboard, hangs from the ceiling when added (see [Displays](displays.md), [Keyboards](keyboards.md)); on a console, from its slope |
 | Standoff height | the board's underside parts + 1 mm … 60 mm | on the floor: PCB underside above the floor |
 | Gap to the ceiling | 0 … 60 mm (default 0.3) | from the ceiling: from the board's front (its glass) to the inside of the top; under 0.3 mm the panel warns |
 | Pins soldered downwards | on / off | boards with header rows; the default is how the board ships; the board goes up with its pins (8.5 mm with the plastic) |
@@ -271,6 +271,22 @@ bezel: its outline and thickness), drawn dark under the window in the view.
 | Inkplate 5 Gen2 (5.2-inch e-paper, 1280×720) | Soldered | 130.59 × 75.23 | clamp tabs, 4 × M3 on the back | [source](https://github.com/SolderedElectronics/Soldered-Inkplate-5-Gen2-hardware-design) | ≈ |
 | T5 V2.3 (2.13-inch e-paper, ESP32) | LilyGO | 36.75 × 66.29 | 4 × M2 | [source](https://github.com/Xinyuan-LilyGO/LilyGo-T5-Epaper-Series/tree/master/dimensions) | ≈ |
 | HyperPixel 4.0 (touch / non-touch, 800×480) | Pimoroni | 97.85 × 58.14 | on a Pi's header (On top); clamp bars when hung | [source](https://cdn.shopify.com/s/files/1/0174/1800/files/hyperpixel-rectangular-dimensional-drawing.png) | ≈ (the active area taken as centred, the standoff for an extension header) |
+
+### Keyboards
+
+Keyboards sold as boards have a group of their own in the picker
+(*Keyboards*; search finds them by "keyboard", "keypad" or "macropad"). An
+entry gives the key field (its rectangle, the key tops, what stays under the
+plate) and, for a hole per key, its rows of keys; see
+[Keyboards](keyboards.md).
+
+| Keyboard | Vendor | Size, mm | Mount | Source | Checked |
+|---|---|---|---|---|---|
+| Unit CardKB v1.1 | M5Stack | 84 × 54 | rails | [source](https://m5stack-doc.oss-cn-shenzhen.aliyuncs.com/806/cardkeyboard_v1_1.pdf) | ≈ (read from the drawing's picture) |
+| MacroPad RP2040 | Adafruit | 59.69 × 104.14 | 4 × M3 (its own standoffs underneath) | [source](https://github.com/adafruit/Adafruit-MacroPad-RP2040-PCB) | ≈ (the OLED's active area taken as centred) |
+| BBQ20KBD | Solder Party | 74 × 53.1 | 2 × M2.5, rests | [source](https://github.com/solderparty/bbq20kbd_hw) | yes |
+| KeebDeck Basic | Solder Party | 87.4 × 67.6 | 4 × M2.5 | [source](https://github.com/solderparty/keebdeck_basic_hw) | ≈ (the connectors' depth) |
+| Keyboard FeatherWing | Solder Party | 68 × 100 | 4 × M2.5 | [source](https://github.com/solderparty/keyboard_featherwing_hw) | ≈ (the TFT's active area taken as centred, the Feather's height) |
 
 ### Battery holders
 

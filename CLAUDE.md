@@ -18,6 +18,9 @@ board on the display's back, the Tier A screens: done.
 (U1…U5): port ids by type, messages that say where and what to do, warnings
 on the model, the lid's place in the Both STL, the editor's hints: done
 (the branch `improvements-2026-10-27`).
+`plans/PLAN-KEYBOARDS.md` — keyboards (K1…K8, K3b): the key field through
+the lid (a window, a hole per key, printed caps), floor keyboards, rests, a
+keypad's flange, the Tier A + B keyboards of `plans/PERSPECTIVE-KEYBOARDS.md`.
 
 ## Node
 
@@ -55,7 +58,10 @@ freely; a temporary script that turns out useful becomes a permanent one.
   pins toggled), soldered pins raising the board, a family's model, port
   toggles, user openings, the custom board editor and its catalog JSON,
   board search and overlap warnings, a display found by "screen" in its own
-  group with its glass drawn, arranging and aligning two boards (and
+  group with its glass drawn, keyboards (found by "keyboard" in their
+  group, a window, holes and printed caps, the key fit and its warnings,
+  the MacroPad on the floor, the BBQ20KBD's rests, the KeebDeck pressed on
+  its flange), arranging and aligning two boards (and
   undo), every lid face, cylinder/console lid restrictions, snaps and screws
   with every hole and head kind, magnets, printed screws (P4 with its
   warning, the Lid tab with the screws, a lid export), vents, fan, through
@@ -247,6 +253,27 @@ freely; a temporary script that turns out useful becomes a permanent one.
   board's own supports step aside for the glass (`glassKeepOut`). A hung
   board keeps the top edge's rounded zone plus the skirt band from the
   walls (`hungMargin`): only there is the ceiling flat and the skirt clear.
+- Keyboards (`kind: "keyboard"`, a `keys` part on top: the field's
+  rectangle, `h` the key tops, `base` what stays under the plate, `rows` of
+  keys; `knob` and any top part may carry `base`, "through the plate from
+  here"). `topHeight` of a keyboard is the tallest part *outside* its field;
+  the plate lies on `frontHeight` (`placement.ts`): topHeight over a window
+  (the field rises into it), the field's base under a hole per key, key tops
+  plus the flange under printed caps, the key tops of a closed field, at
+  least the base under a keypad's flange (`glass` on the field). A keyboard
+  hangs when added unless its holes are among its keys (`holesAmongKeys`):
+  then it stands on the floor and the ceiling comes down to `CEILING_GAP`
+  over its front (`stacksHeight`, like a carried display), its default
+  standoff height filling the least case (`floorZ`). Printed caps
+  (`capSize.ts` sizes, `caps.ts` meshes, pure, no CSG) are built and placed
+  by the main thread like printed screws: in their holes in the view, flange
+  down next to the lid in the Lid and Both STLs (part role `cap`). An edge
+  port's `reach` ends its channel inside the case (a plug's slot through the
+  plate, the CardKB's Grove), starting behind the body; so does a keyboard's
+  connector taller than its front. Rests (`rests.ts` pure, built as floor
+  supports in `build.ts`) stand under the free corners of a keyboard held at
+  one or two holes. Key notes and warnings: `keyNotes` (`ports.ts`), rest
+  warnings `restWarnings` (main thread, next to the collisions).
 - Supports (`geo/standoffs.ts`) go to the part that owns the floor under
   them (the lid when the floor is the lid), minus whatever of them would
   enter the other part; holes are drilled after the union. A deep side lid
@@ -383,6 +410,10 @@ browser is within ~10 % of it):
 | `klipperscreen-console` (TFT50 on the slope, a Pi on its back) — preview | 12 | 270 ms | 14k |
 | `ha-wall-panel` (Touch Display 2, a Pi 5 on its back) — preview | 12 | 255 ms | 19k |
 | `ha-wall-panel` — finest export | 64 | 1.5 s | 89k |
+| `meshtastic-cardkb` (Heltec V3 + CardKB) — preview | 12 | 140 ms | 7k |
+| CardKB with printed caps — preview | 12 | 135 ms | 12.5k + 9.6k of caps |
+| CardKB with printed caps — finest export | 64 | 0.75 s | 64k + the caps |
+| KeebDeck Basic, a hole per key — preview | 12 | 260 ms | 19k |
 
 Decided at M1 and confirmed at M8: the preview is the exact case (the same
 pipeline as the export, 12 segments per quarter arc), rebuilt 120 ms after
@@ -400,7 +431,7 @@ Add a state when a feature lands, never edit an old one.
 
 Built-in presets (`src/state/presets.ts`): `pi4-desktop`, `pi-zero-gpio`,
 `esp32-sensor-box`, `esp32-18650-box`, `arduino-uno-box`, `cylinder-puck`,
-`klipperscreen-console`, `ha-wall-panel`, `plain-box`. Each is
+`klipperscreen-console`, `ha-wall-panel`, `meshtastic-cardkb`, `plain-box`. Each is
 built by `tests/presetsBuild.test.ts` (closed, no slivers, no overlap, no
 layout warnings). A preset's name is one English string in `presets.ts`
 (not translated: the review asked for one name); its note is the
@@ -422,6 +453,7 @@ per board
 `#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles
 `#board<i>_cut_<portId>`.
 Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHeight|_bottomHeight`,
+`#board<i>_keys_window|holes|caps`, `#board<i>_keyFit` (keyboards),
 `#board<i>_custom_mount` (select), `_rails`, `_screw`, holes `_hole<h>_x|_y|_d|_remove`,
 `_hole_add`, ports `_port<p>_type|_edge` (selects), `_port<p>_<field>`, `_port<p>_remove`,
 `_port_add`, `_save`. The card rebuilds only when a custom board's structure changes

@@ -408,6 +408,7 @@ export const uk: Record<Key, string> = {
   'preset.cylinder-puck.note': "Круглий вузол LoRa: дисплей видно крізь кришку, вентиляція знизу, вушка",
   'preset.klipperscreen-console.note': "BTT Pi TFT50 на схилі на притискних лапках, Pi 4 на його спині, кришка знизу, вентиляція ззаду",
   'preset.ha-wall-panel.note': "Touch Display 2 7″ у кришці, Pi 5 на його спині, вентиляція з боків, замкові петлі для стіни",
+  'preset.meshtastic-cardkb.note': "Вузол Meshtastic: Heltec V3 і M5Stack CardKB під кришкою, екран і клавіші у своїх вікнах, отвір для антени LoRa",
   'preset.plain-box.note': "Порожня заокруглена коробка з пласкою кришкою на клямках",
   'show.what': "Деталі — показ і вивантаження",
   'show.how': "Вигляд",

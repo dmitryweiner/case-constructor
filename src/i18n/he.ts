@@ -409,6 +409,7 @@ export const he: Record<Key, string> = {
   'preset.cylinder-puck.note': "צומת LoRa עגול: התצוגה נראית דרך המכסה, אוורור מלמטה, אוזניים",
   'preset.klipperscreen-console.note': "BTT Pi TFT50 על השיפוע על לשוניות לחיצה, Pi 4 על גבו, המכסה מלמטה, אוורור מאחור",
   'preset.ha-wall-panel.note': "Touch Display 2 בגודל 7 אינץ׳ במכסה, Pi 5 על גבו, אוורור בצדדים, חורי תלייה לקיר",
+  'preset.meshtastic-cardkb.note': "צומת Meshtastic: ‏Heltec V3 ו־M5Stack CardKB מתחת למכסה, המסך והמקשים בחלונות שלהם, חור לאנטנת LoRa",
   'preset.plain-box.note': "קופסה מעוגלת ריקה עם מכסה שטוח על תפסים",
   'show.what': "חלקים — תצוגה וייצוא",
   'show.how': "תצוגה",

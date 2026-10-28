@@ -408,6 +408,7 @@ export const ru: Record<Key, string> = {
   'preset.cylinder-puck.note': "Круглый узел LoRa: дисплей виден через крышку, вентиляция снизу, ушки",
   'preset.klipperscreen-console.note': "BTT Pi TFT50 на скате на прижимных лапках, Pi 4 на его спине, крышка снизу, вентиляция сзади",
   'preset.ha-wall-panel.note': "Touch Display 2 7″ в крышке, Pi 5 на его спине, вентиляция по бокам, замочные петли для стены",
+  'preset.meshtastic-cardkb.note': "Узел Meshtastic: Heltec V3 и M5Stack CardKB под крышкой, экран и клавиши в своих окнах, отверстие для антенны LoRa",
   'preset.plain-box.note': "Пустая скруглённая коробка с плоской крышкой на защёлках",
   'show.what': "Детали — показ и выгрузка",
   'show.how': "Вид",

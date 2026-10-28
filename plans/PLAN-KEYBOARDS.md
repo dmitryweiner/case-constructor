@@ -1,6 +1,6 @@
 # Case Constructor — keyboards
 
-**Status: in progress (2026-10-27).**
+**Status: done (2026-10-28).**
 
 Written on 2026-10-27 from `PERSPECTIVE-KEYBOARDS.md`, its last section
 ("What the catalog needs for them"). A keyboard is the board the case is
@@ -320,3 +320,11 @@ golden states, smoke steps, docs and translations.
   it stands on the floor; the TFT's active area (52.8 × 39.6) taken as
   centred in its module, the Feather on its back counted only as 8.5 mm of
   `bottomHeight` (its box ran into a corner standoff's boss), ≈.
+- **K7.** `meshtastic-cardkb`: the CardKB 12 mm right of the Heltec (its
+  Grove slot's reach), both hung under a top lid 9 mm deep (the Heltec's
+  USB-C right under the top opens in the lid's wall, clear of its skirt), on
+  M3 inserts with counterbores; a 6.6 mm hole in the lid's back wall for the
+  LoRa antenna's SMA bulkhead. No battery: a node's LiPo varies too much.
+- **K8.** The cost table has the preset, the CardKB with caps and the
+  KeebDeck's holes. The review page was not regenerated here: it is the
+  user's (`node scripts/board.mjs --review --only m5stack-cardkb-v1.1,...`).
