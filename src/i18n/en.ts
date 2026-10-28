@@ -261,6 +261,8 @@ export const en = {
   'warn.keysPlateHigh': 'Board {board}, {port}: the lid lies {mm} mm above the keys’ base — its holes grip the switches higher than they are made for. Raise the board to {z} mm (Standoff height), or make the case lower.',
   'info.keyCaps': 'Board {board}, {port}: {n} printed caps over the keys, standing 1 mm out of the lid; they print with the lid.',
   'warn.capFlangeSmall': 'Board {board}, {port}: the caps’ flanges reach only {mm} mm past their holes — they may slip out. Lower the Key fit.',
+  'warn.restTooLong': 'Board {board}: a rest under its free corner would be longer than {mm} mm — it is not built; the corner gives under a key press.',
+  'warn.restBlocked': 'Board {board}: another board stands under its free corner — no rest there; the corner gives under a key press.',
   'info.extraSplit': 'Opening {n} crosses the parting line and is cut in both parts.',
   'warn.extraUnderSkirt': 'Opening {n} cuts through the lid skirt.',
   'progress.cutouts': 'Openings',

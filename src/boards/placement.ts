@@ -144,11 +144,13 @@ export function hangsByDefault(def: BoardDef): boolean {
   return keys || def.kind === 'display' || def.ports.some((port) => port.type === 'display' && port.edge === 'top');
 }
 
-/** Whether a support at one of the board's holes (its own screw, tapped) would reach a key. */
+/** Whether a support at one of the board's holes (its own screw, tapped) would reach a key — or a field without rows. */
 export function holesAmongKeys(def: BoardDef): boolean {
   if (def.mount.kind !== 'holes') return false;
   const r = bossDiameter({ size: def.mount.screw, hole: 'tap', head: 'none' }) / 2;
-  return def.mount.holes.some((hole) => keyFields(def).flatMap((field) => keysOf(field)).some((key) => {
+  // a field without rows is keys all over
+  const keys = keyFields(def).flatMap((field) => (field.rows ? keysOf(field) : [{ x: field.x, y: field.y, w: field.w, d: field.d }]));
+  return def.mount.holes.some((hole) => keys.some((key) => {
     const dx = Math.max(key.x - key.w / 2 - hole.x, 0, hole.x - key.x - key.w / 2);
     const dy = Math.max(key.y - key.d / 2 - hole.y, 0, hole.y - key.y - key.d / 2);
     return Math.hypot(dx, dy) < r;
@@ -189,14 +191,15 @@ export function frontHeight(def: BoardDef, placement: Pick<BoardPlacement, 'keys
 
 /**
  * The height a board stands at on the floor by default: a battery low in its
- * cradles, a board on 4 mm standoffs or higher; a keyboard under a hole per
- * key as high as puts its keys' base the gap under the ceiling of the least
- * case (its holes then hold the switches at their plate line).
+ * cradles, a board on 4 mm standoffs or higher; a keyboard as high as puts
+ * its front the gap under the ceiling of the least case (under a hole per
+ * key its holes then hold the switches at their plate line; over a window
+ * its keys come up into it).
  */
 export function floorZ(def: BoardDef, pins: boolean): number {
   if (def.battery) return minBoardZ(def, pins);
   const lowest = Math.max(4, minBoardZ(def, pins));
-  if (keysOpen(def, {}) !== 'holes') return lowest;
+  if (keyFields(def).length === 0) return lowest;
   const { floor } = defaultShape();
   return Math.max(lowest, +(SIZE_MIN - 2 * floor - CEILING_GAP - def.size.t - frontHeight(def, {})).toFixed(2));
 }

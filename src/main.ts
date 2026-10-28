@@ -53,6 +53,7 @@ import { catalogBoard } from './boards/catalog';
 import type { LidPlace, PrintArrange } from './geo/print';
 import { LID_PLACES, PRINT_GAP_MAX, PRINT_GAP_MIN, bodyForPrint, bothForPrint, lidWithScrews, screwsInCase, withClamps } from './geo/print';
 import { capsInCase, keyCaps, withCaps } from './geo/caps';
+import { restWarnings } from './geo/rests';
 import type { SurfaceMesh } from './geo/surface';
 import { mergeMeshes } from './geo/surface';
 import { encodeSTL } from './geo/stl';
@@ -276,6 +277,7 @@ function refresh(): void {
   const depthMax = lidDepthMax(state.shape, state.lid, dims);
   if (state.lid.depth > depthMax) baseWarnings.push(said('warn.depthClamped', { max: depthMax.toFixed(1) }));
   baseWarnings.push(...collisions(layout).map(notice));
+  baseWarnings.push(...restWarnings(layout, state.shape.floor).map(notice));
   const shapeBuilt = { ...state.shape, console: layout.console };
   const top = outerTopAt(shapeBuilt, dims, layout.console.frontH, layout.console.backH);
   const cutters = [...portCutters(layout, shapeBuilt), ...extraCutters(state.extraCuts, shapeBuilt, dims, top)];

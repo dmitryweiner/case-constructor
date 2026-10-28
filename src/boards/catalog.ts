@@ -8,6 +8,7 @@ import { sanitizeBoard } from './schema';
 import raspberryPi3aPlus from './data/raspberry-pi-3a-plus.json';
 import m5stackCardkbV11 from './data/m5stack-cardkb-v1.1.json';
 import adafruitMacropadRp2040 from './data/adafruit-macropad-rp2040.json';
+import solderpartyBbq20kbd from './data/solderparty-bbq20kbd.json';
 import raspberryPi3bPlus from './data/raspberry-pi-3b-plus.json';
 import raspberryPi4b from './data/raspberry-pi-4b.json';
 import raspberryPi5 from './data/raspberry-pi-5.json';
@@ -262,6 +263,7 @@ export const RAW_BOARDS: readonly unknown[] = [
   // keyboards sold as boards (their own group in the picker)
   m5stackCardkbV11,
   adafruitMacropadRp2040,
+  solderpartyBbq20kbd,
   // battery holders, screwed down like boards (their own group in the picker)
   mpdBh18650W,
   mpdBh2aaW,

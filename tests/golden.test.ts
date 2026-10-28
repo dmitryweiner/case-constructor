@@ -260,6 +260,14 @@ const STATES: Record<string, AppState> = {
   'cardkb-caps-top-lid': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0.3, keys: 'caps' }],
+  }),  // K5: rests under the BBQ20KBD's free corners, on the floor and hung from a top lid
+  'bbq20kbd-floor-rests': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'solderparty-bbq20kbd', z: 12.8, mount: { size: 'M2.5', hole: 'tap' } }],
+  }),
+  'bbq20kbd-hung-rests': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'solderparty-bbq20kbd', on: 'ceiling', z: 0.3, mount: { size: 'M2.5', hole: 'insert' } }],
   }),
 };
 

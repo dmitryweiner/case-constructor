@@ -332,6 +332,14 @@ await expectWatertight('keys:macropad');
 if (!(await page.locator('#board1_on_floor').getAttribute('class'))?.includes('active')) errors.push('[keyboards] the MacroPad is not on the floor');
 if (!(await page.locator('#board1_keys_holes').getAttribute('class'))?.includes('active')) errors.push('[keyboards] the MacroPad does not get a hole per key');
 await page.click('#board1_remove');
+// the BBQ20KBD: on the floor, a rest under each free corner (the worker builds them; the case stays closed)
+await page.click('#boardAdd');
+await page.fill('#boardSearch', 'bbq20');
+await page.click('#boardList [data-board="solderparty-bbq20kbd"]');
+await expectWatertight('keys:bbq20-rests');
+await page.click('#board1_on_ceiling');
+await expectWatertight('keys:bbq20-hung-rests');
+await page.click('#board1_remove');
 // a clamped panel: always hung, a clamp gap, its bars printed with the lid that holds it
 label('clamp');
 await page.click('#boardAdd');

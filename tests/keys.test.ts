@@ -17,6 +17,7 @@ import type { AppState } from '../src/state/schema';
 import { garbageLike, KEYPAD, boxMesh, rng } from './helpers';
 import { CAP_FIT, CAP_FLANGE_T, CAP_GAP, CAP_GROW, CAP_LIP, CAP_PROUD, capSizes } from '../src/geo/capSize';
 import { capMesh, capsInCase, keyCaps, withCaps } from '../src/geo/caps';
+import { REST_MAX, caseRests, restWarnings, restsOf } from '../src/geo/rests';
 import { applyAffine, meshBounds } from '../src/geo/surface';
 
 function rec(x: unknown): Record<string, unknown> {
@@ -433,5 +434,69 @@ describe('printed caps over the keys (K3b)', () => {
     const bounds = meshBounds(placed[1]);
     expect(bounds.min[0]).toBeGreaterThanOrEqual(60 - 1e-6);
     expect(bounds.min[2]).toBeCloseTo(0, 6);
+  });
+});
+
+describe('rests under a keyboard that rocks (K5)', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+  const bbq = (extra: Record<string, unknown> = {}, patch: Partial<AppState> = {}): AppState => {
+    const entry = catalogBoard('solderparty-bbq20kbd');
+    if (!entry) throw new Error('bbq20kbd');
+    return sanitizeState({ ...defaultState(), ...patch, boards: [{ ...defaultPlacement(entry), ...extra }] });
+  };
+  const solid = (part: ReturnType<typeof toManifold>, x: number, y: number, z: number): boolean => {
+    const probe = csg.Manifold.cube([0.1, 0.1, 0.1], true).translate([x, y, z]);
+    const common = part.intersect(probe);
+    const filled = common.volume() > 0.0009;
+    probe.delete();
+    common.delete();
+    return filled;
+  };
+
+  it('the BBQ20KBD stands on the floor: one hole is under its keyboard', () => {
+    const entry = catalogBoard('solderparty-bbq20kbd');
+    if (!entry) throw new Error('bbq20kbd');
+    expect(holesAmongKeys(entry)).toBe(true);
+    expect(bbq().boards[0]).not.toHaveProperty('on');
+  });
+
+  it('a rest under each free corner, none by a hole; clear of the parts underneath', () => {
+    const s = bbq();
+    const layout = caseLayout(s);
+    const rests = restsOf(layout.boards[0], layout, s.shape.floor);
+    expect(rests.map((rest) => [Math.round(rest.x), Math.round(rest.y)])).toEqual([[71, 3], [3, 50]]);
+    expect(rests.every((rest) => rest.problem === undefined)).toBe(true);
+    // on the floor a rest touches the PCB
+    expect(rests[0].top).toBeCloseTo(layout.boards[0].z0, 6);
+    // no keyboard, no rests: an ESP32 on two holes is not pressed
+    expect(caseRests(caseLayout(defaultState()), 2)).toEqual([]);
+  });
+
+  it('built into the body under a top lid, up to the PCB; hung, from the floor to just short of it', () => {
+    for (const s of [bbq(), bbq({ on: 'ceiling', z: CEILING_GAP })]) {
+      const layout = caseLayout(s);
+      const [rest] = restsOf(layout.boards[0], layout, s.shape.floor);
+      const built = buildCase(csg, s, 8);
+      for (const mesh of [built.body, built.lid]) {
+        const report = validateMesh(mesh);
+        expect(report.watertight).toBe(true);
+        expect(report.degenerateTriangles).toBe(0);
+      }
+      const body = toManifold(csg, built.body);
+      expect(solid(body, rest.cx, rest.cy, rest.top - 0.2)).toBe(true);
+      expect(solid(body, rest.cx, rest.cy, rest.top + 0.1)).toBe(false);
+      body.delete();
+    }
+  });
+
+  it('a rest longer than REST_MAX is not built, and says so', () => {
+    const s = bbq({ on: 'ceiling', z: CEILING_GAP }, { shape: { ...defaultState().shape, auto: false, size: { w: 100, d: 80, h: 60 } } });
+    const layout = caseLayout(s);
+    expect(caseRests(layout, s.shape.floor)).toEqual([]);
+    expect(restWarnings(layout, s.shape.floor).map((note) => note.code)).toEqual(['warn.restTooLong']);
+    expect(REST_MAX).toBe(40);
   });
 });

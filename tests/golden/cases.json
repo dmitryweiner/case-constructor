@@ -983,5 +983,45 @@
         7.05
       ]
     }
+  },
+  "bbq20kbd-floor-rests": {
+    "body": {
+      "triangles": 1296,
+      "volume": 19450.55,
+      "extents": [
+        82,
+        61.1,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1336,
+      "volume": 3965.61,
+      "extents": [
+        82,
+        61.1,
+        5
+      ]
+    }
+  },
+  "bbq20kbd-hung-rests": {
+    "body": {
+      "triangles": 1040,
+      "volume": 19078.93,
+      "extents": [
+        82.25,
+        61.35,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1790,
+      "volume": 3530.01,
+      "extents": [
+        82.25,
+        61.35,
+        5
+      ]
+    }
   }
 }

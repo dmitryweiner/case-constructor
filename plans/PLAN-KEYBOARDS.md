@@ -278,3 +278,25 @@ golden states, smoke steps, docs and translations.
   MX key tops are the switch housing (11.6 mm), without keycaps.
 - **K6a.** A key field closed by its toggle stays under the plate whole:
   `frontHeight` counts its key tops then.
+- **K6b.** The BBQ20KBD (from its KiCad layout and its full STEP): the PCB is
+  2 mm, the keyboard module's base 3…5 mm above it, the key tops (the top
+  row with the trackpad) 6.15. The keys are packed edge to edge: no holes,
+  a window over the module (its rows are not entered). One of its two holes
+  (11.4, 3.8) is under the module, so nothing comes down to it from the
+  lid: it stands on the floor (`holesAmongKeys` counts a field without rows
+  as keys all over), the module coming up through the lid's window; the
+  lid is a frame around it. Its USB-C, STEMMA QT and PMOD are on the
+  underside at the back edge; standing right under the lid they cut its
+  skirt (reported, as for any board there).
+- **K5.** Rests only for boards with one or two holes (a board on three or
+  more does not rock), at a corner with no hole within `REST_REACH`;
+  inset 3 mm, stepping in along the diagonal up to 12 mm to clear the parts
+  underneath. On the floor a rest touches the PCB (a standoff without a
+  screw), under a hung board it stops `REST_GAP` short. Built as supports
+  from the floor, so the owner rule is the standoffs'. Their warnings
+  (`warn.restTooLong`, `warn.restBlocked`) come from the main thread next
+  to the collisions (they need the floor's thickness). No ghost: the case
+  mesh shows them.
+- **K6.** A floor keyboard's default standoff height puts its front the gap
+  under the least case's ceiling for any opening (the BBQ20KBD's keys were
+  5.4 mm under the face at the 20 mm least height).

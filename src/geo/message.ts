@@ -34,6 +34,8 @@ export type MessageCode =
   | 'warn.keysPlateHigh'
   | 'info.keyCaps'
   | 'warn.capFlangeSmall'
+  | 'warn.restTooLong'
+  | 'warn.restBlocked'
   // cutouts (ports)
   | 'warn.portFar'
   | 'info.cutSplit'
