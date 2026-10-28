@@ -1,20 +1,23 @@
 // Keyboards (plans/PLAN-KEYBOARDS.md K1): the key field, its rows and
 // default opening, parts through the plate, the placement's choice.
 
-import { KEYS_OPEN, PORT_TYPES, keyFields, keysOf, sanitizeBoard, sanitizePort } from '../src/boards/schema';
-import { defaultPlacement, frontHeight, hangsByDefault, keysOpen, sanitizePlacement } from '../src/boards/placement';
+import { KEYS_OPEN, PORT_TYPES, keyFields, keysOf, onFace, sanitizeBoard, sanitizePort } from '../src/boards/schema';
+import { defaultPlacement, frontHeight, hangsByDefault, holesAmongKeys, keysOpen, sanitizePlacement } from '../src/boards/placement';
 import { CEILING_GAP } from '../src/boards/placement';
-import { RAW_BOARDS } from '../src/boards/catalog';
-import { initCSG } from '../src/geo/csg';
+import { RAW_BOARDS, catalogBoard } from '../src/boards/catalog';
+import { initCSG, toManifold } from '../src/geo/csg';
 import type { CsgApi } from '../src/geo/csg';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, collisions } from '../src/geo/layout';
 import type { Message } from '../src/geo/message';
-import { WINDOW_FLARE, keyNotes, keysProud, portCutters, thinnestWeb } from '../src/geo/ports';
+import { WINDOW_FLARE, cutWarnings, portAxis, keyNotes, keysProud, portCutters, thinnestWeb } from '../src/geo/ports';
 import { validateMesh } from '../src/geo/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
-import { garbageLike, KEYPAD, rng } from './helpers';
+import { garbageLike, KEYPAD, boxMesh, rng } from './helpers';
+import { CAP_FIT, CAP_FLANGE_T, CAP_GAP, CAP_GROW, CAP_LIP, CAP_PROUD, capSizes } from '../src/geo/capSize';
+import { capMesh, capsInCase, keyCaps, withCaps } from '../src/geo/caps';
+import { applyAffine, meshBounds } from '../src/geo/surface';
 
 function rec(x: unknown): Record<string, unknown> {
   return typeof x === 'object' && x !== null ? Object.fromEntries(Object.entries(x)) : {};
@@ -47,7 +50,7 @@ describe('a key field', () => {
   it('port types: a field and a knob open the lid by default', () => {
     expect(PORT_TYPES.keys).toMatchObject({ top: true, cut: true });
     expect(PORT_TYPES.knob).toMatchObject({ top: true, cut: true, shape: 'round' });
-    expect(KEYS_OPEN).toEqual(['window', 'holes']);
+    expect(KEYS_OPEN).toEqual(['window', 'holes', 'caps']);
   });
 
   it('fuzz with a key field: never throws and is idempotent', () => {
@@ -80,6 +83,8 @@ describe('a keyboard entry', () => {
     const bare = sanitizeBoard({ ...KEYPAD, ports: [{ ...KEYPAD.ports[0], rows: undefined }] });
     expect(keysOpen(bare, { keys: 'holes' })).toBe('window');
     expect(frontHeight(bare, { keys: 'holes' })).toBe(4);
+    // a closed field stays under the plate whole
+    expect(frontHeight(keypad, { cuts: { keys: false } })).toBe(11.6);
   });
 
   it('the placement keeps a choice that differs from the entry, and a fit', () => {
@@ -251,5 +256,182 @@ describe('openings over the keys (K3)', () => {
       expect(report.watertight).toBe(true);
       expect(report.degenerateTriangles).toBe(0);
     }
+  });
+});
+
+describe('the catalog keyboards (K6a)', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+  const add = (board: string, patch: Partial<AppState> = {}, extra: Record<string, unknown> = {}): AppState => {
+    const entry = catalogBoard(board);
+    if (!entry) throw new Error(board);
+    return sanitizeState({ ...defaultState(), ...patch, boards: [{ ...defaultPlacement(entry), ...extra }] });
+  };
+
+  it('the CardKB hangs, a window over its whole face; its Grove plug gets a slot, not a way through the wall', () => {
+    const s = add('m5stack-cardkb-v1.1');
+    expect(s.boards[0].on).toBe('ceiling');
+    const layout = caseLayout(s);
+    const shape = { ...s.shape, console: layout.console };
+    const grove = portCutters(layout, shape).find((cutter) => cutter.source.kind === 'port' && cutter.source.port === 'grove');
+    expect(grove?.s1).toBe(12);
+    // the keys sit just under the face in their window: a word, no warning
+    expect(keyNotes(layout, shape).map((note) => note.code)).toEqual(['info.keysSunk']);
+    expect(cutWarnings(layout, shape, s.lid, portCutters(layout, shape), []).map((note) => note.code)).toEqual(['info.keysSunk']);
+    // the slot stays inside the case: the wall stands beyond it
+    expect(layout.boards[0].footprint.x0).toBeLessThanOrEqual(layout.boards[0].outline.x0 - 12);
+  });
+
+  it('the MacroPad stands on the floor (its holes are among the keys); the ceiling comes down to its switch plate line', () => {
+    const entry = catalogBoard('adafruit-macropad-rp2040');
+    if (!entry) throw new Error('macropad');
+    expect(holesAmongKeys(entry)).toBe(true);
+    expect(add('adafruit-macropad-rp2040').boards[0]).not.toHaveProperty('on');
+    // tall enough standoffs that the stack, not the case's least height, sets the ceiling
+    const s = add('adafruit-macropad-rp2040', {}, { z: 12 });
+    const layout = caseLayout(s);
+    const [board] = layout.boards;
+    const ceiling = layout.dims.h - s.shape.floor;
+    expect(ceiling - (board.z0 + entry.size.t + 2.7)).toBeCloseTo(CEILING_GAP, 6);
+    // closed, the keys stay under the lid: the ceiling clears their tops by the margin
+    const closed = caseLayout(add('adafruit-macropad-rp2040', {}, { z: 12, cuts: { keys: false } }));
+    expect(closed.dims.h - s.shape.floor - (closed.boards[0].z0 + entry.size.t + 11.6)).toBeCloseTo(s.shape.margin.top, 6);
+  });
+
+  it('on low standoffs under the case’s least height, the lid lies above its switches’ plate line: a warning with the height to raise it to', () => {
+    const codes = (s: AppState): Message[] => {
+      const layout = caseLayout(s);
+      return keyNotes(layout, { ...s.shape, console: layout.console });
+    };
+    // added, it stands just high enough; lowered to the least its standoffs allow, too low
+    expect(codes(add('adafruit-macropad-rp2040')).map((note) => note.code)).not.toContain('warn.keysPlateHigh');
+    const low = codes(add('adafruit-macropad-rp2040', {}, { z: 7 }));
+    const high = low.find((note) => note.code === 'warn.keysPlateHigh');
+    expect(high).toBeDefined();
+    const z = Number(high?.params?.z);
+    expect(codes(add('adafruit-macropad-rp2040', {}, { z })).map((note) => note.code)).not.toContain('warn.keysPlateHigh');
+  });
+
+  it.each(['m5stack-cardkb-v1.1', 'adafruit-macropad-rp2040'])('%s builds closed and sliver-free, no layout warnings', (board) => {
+    const s = add(board);
+    expect(collisions(caseLayout(s))).toEqual([]);
+    const built = buildCase(csg, s, 8);
+    for (const mesh of [built.body, built.lid]) {
+      const report = validateMesh(mesh);
+      expect(report.watertight).toBe(true);
+      expect(report.degenerateTriangles).toBe(0);
+    }
+  });
+});
+
+describe('a plug’s slot through the lid', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+
+  it('the hung CardKB’s Grove plug passes through the top plate beside the board', () => {
+    const s = sanitizeState({ ...defaultState(), boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: CEILING_GAP }] });
+    const layout = caseLayout(s);
+    const [board] = layout.boards;
+    const grove = board.def.ports.find((port) => port.id === 'grove');
+    if (!grove || onFace(grove)) throw new Error('grove');
+    const { face, dir } = portAxis(board, grove);
+    const built = buildCase(csg, s, 8);
+    const lid = toManifold(csg, built.lid);
+    const at = (s1: number): boolean => {
+      const probe = csg.Manifold.cube([0.1, 0.1, 0.1], true).translate([face[0] + dir[0] * s1, face[1] + dir[1] * s1, layout.dims.h - s.shape.floor / 2]);
+      const common = lid.intersect(probe);
+      const solid = common.volume() > 0.0009;
+      probe.delete();
+      common.delete();
+      return solid;
+    };
+    expect(at(6)).toBe(false);
+    expect(at(14)).toBe(true);
+    lid.delete();
+  });
+});
+
+describe('printed caps over the keys (K3b)', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+  const cardkb = (extra: Record<string, unknown> = {}, patch: Partial<AppState> = {}): AppState => sanitizeState({
+    ...defaultState(), ...patch, boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: CEILING_GAP, keys: 'caps', ...extra }],
+  });
+
+  it('a stem over each key, a flange as wide as the neighbours leave room for', () => {
+    const entry = catalogBoard('m5stack-cardkb-v1.1');
+    if (!entry) throw new Error('cardkb');
+    const sizes = capSizes(keyFields(entry)[0]);
+    expect(sizes).toHaveLength(50);
+    expect(sizes[0].stemR).toBeCloseTo(2.1 / 2 + CAP_GROW, 6);
+    // 6 mm apart: the flanges keep CAP_GAP between them
+    expect(sizes[0].flangeR).toBeCloseTo(Math.min(sizes[0].stemR + CAP_LIP, (6 - CAP_GAP) / 2), 6);
+  });
+
+  it('a cap is a closed solid', () => {
+    const report = validateMesh(capMesh({ stemR: 1.8, flangeR: 2.8, length: 4 }));
+    expect(report.watertight).toBe(true);
+    expect(report.degenerateTriangles).toBe(0);
+    expect(report.volume).toBeGreaterThan(0);
+  });
+
+  it('the plate lies the gap over the flanges; each cap stands CAP_PROUD out of the lid through its hole', () => {
+    const s = cardkb();
+    const layout = caseLayout(s);
+    const shape = { ...s.shape, console: layout.console };
+    const [board] = layout.boards;
+    expect(board.z0).toBeCloseTo(layout.dims.h - s.shape.floor - CEILING_GAP - (1.75 + CAP_FLANGE_T) - 1, 6);
+    const caps = keyCaps(layout, shape);
+    expect(caps).toHaveLength(50);
+    expect(caps[0].length).toBeCloseTo(CAP_FLANGE_T + CEILING_GAP + s.shape.floor + CAP_PROUD, 6);
+    const holes = portCutters(layout, shape).filter((cutter) => cutter.source.kind === 'port' && cutter.source.port === 'keys');
+    expect(holes).toHaveLength(50);
+    expect(holes[0]).toMatchObject({ shape: 'round', w: 2 * caps[0].stemR + 2 * CAP_FIT });
+    expect(keyNotes(layout, shape).map((note) => note.code)).toEqual(['info.keyCaps']);
+  });
+
+  it('a fit so loose the flanges no longer hold is a warning', () => {
+    const s = cardkb({ keyFit: 1 });
+    const layout = caseLayout(s);
+    expect(keyNotes(layout, { ...s.shape, console: layout.console }).map((note) => note.code)).toContain('warn.capFlangeSmall');
+  });
+
+  it('the case builds clean, the caps sit in their holes without touching the lid, and the Grove socket is clear of the plate', () => {
+    const s = cardkb();
+    const layout = caseLayout(s);
+    const built = buildCase(csg, s, 8);
+    for (const mesh of [built.body, built.lid]) {
+      const report = validateMesh(mesh);
+      expect(report.watertight).toBe(true);
+      expect(report.degenerateTriangles).toBe(0);
+    }
+    const caps = capsInCase(keyCaps(layout, { ...s.shape, console: layout.console }));
+    if (!caps) throw new Error('caps');
+    const lid = toManifold(csg, built.lid);
+    const solid = toManifold(csg, caps);
+    const common = lid.intersect(solid);
+    expect(common.volume()).toBeLessThan(1e-3);
+    // the Grove socket's body under the plate: an opening over it
+    const [board] = layout.boards;
+    const [x, y, z] = [...applyAffine(board.toCase, [5, 38.85, 0]).slice(0, 2), layout.dims.h - s.shape.floor / 2];
+    const probe = csg.Manifold.cube([0.1, 0.1, 0.1], true).translate([x, y, z]);
+    const hit = lid.intersect(probe);
+    expect(hit.volume()).toBeLessThan(1e-6);
+    for (const one of [lid, solid, common, probe, hit]) one.delete();
+  });
+
+  it('the Lid STL and Both lay the caps out flange down next to the lid', () => {
+    const caps = keyCaps(caseLayout(cardkb()), { ...cardkb().shape, console: caseLayout(cardkb()).console });
+    const placed = withCaps([boxMesh(50, 40, 3)], caps, 10);
+    expect(placed).toHaveLength(2);
+    const bounds = meshBounds(placed[1]);
+    expect(bounds.min[0]).toBeGreaterThanOrEqual(60 - 1e-6);
+    expect(bounds.min[2]).toBeCloseTo(0, 6);
   });
 });

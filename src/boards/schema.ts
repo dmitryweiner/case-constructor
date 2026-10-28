@@ -104,6 +104,8 @@ export interface EdgePort extends PortCommon {
   z: number;
   /** how far the body sticks out beyond the edge */
   protrude: number;
+  /** the plug stays inside: its channel ends this far past the face, a slot for it and its cable (missing: through the wall) */
+  reach?: number;
 }
 
 /**
@@ -124,8 +126,8 @@ export interface Glass {
   t: number;
 }
 
-/** How the lid opens over a key field: one window over it, or a hole per key. */
-export const KEYS_OPEN = ['window', 'holes'] as const;
+/** How the lid opens over a key field: one window over it, a hole per key, or a hole per key with a printed cap in it. */
+export const KEYS_OPEN = ['window', 'holes', 'caps'] as const;
 export type KeysOpen = (typeof KEYS_OPEN)[number];
 
 /**
@@ -241,7 +243,7 @@ export interface BoardBack {
 }
 
 /** Fields a variant may change on a port of its entry. */
-export const OVERRIDE_NUMBERS = ['x', 'y', 'along', 'z', 'w', 'h', 'd', 'protrude', 'clearance', 'cutH', 'base'] as const;
+export const OVERRIDE_NUMBERS = ['x', 'y', 'along', 'z', 'w', 'h', 'd', 'protrude', 'clearance', 'cutH', 'base', 'reach'] as const;
 export type PortOverride = Partial<Record<(typeof OVERRIDE_NUMBERS)[number], number>> & {
   cut?: boolean;
   edge?: PortDef['edge'];
@@ -374,6 +376,7 @@ export function sanitizePort(raw: unknown, size: { w: number; d: number }, index
       along: num(r.along, 0, length, length / 2),
       z: num(r.z, -50, 100, 0),
       protrude: num(r.protrude, -20, 30, 0),
+      ...(typeof r.reach === 'number' ? { reach: num(r.reach, 1, 100, 10) } : {}),
     };
   }
   if (edge === 'top' || edge === 'bottom' || (edge === undefined && base.top)) {
@@ -413,8 +416,8 @@ function keyFieldOf(field: Pick<TopPort, 'x' | 'y' | 'w' | 'd'>, r: Record<strin
       && key.y + key.d / 2 <= field.y + field.d / 2 + eps);
     if (inside) rows.push(kept);
   }
-  const open: KeysOpen = r.open === 'holes' && rows.length > 0 ? 'holes' : 'window';
-  return { ...(rows.length > 0 ? { rows } : {}), ...(open === 'holes' ? { open } : {}) };
+  const open: KeysOpen = (r.open === 'holes' || r.open === 'caps') && rows.length > 0 ? r.open : 'window';
+  return { ...(rows.length > 0 ? { rows } : {}), ...(open !== 'window' ? { open } : {}) };
 }
 
 /** A display's glass clamped into the board; none when it is missing or cannot fit. */

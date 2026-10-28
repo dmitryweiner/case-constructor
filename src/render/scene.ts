@@ -8,7 +8,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SurfaceMesh } from '../geo/surface';
 
-export type PartRole = 'body' | 'lid' | 'screw' | 'clamp' | 'board' | 'port' | 'glass';
+export type PartRole = 'body' | 'lid' | 'screw' | 'clamp' | 'cap' | 'board' | 'port' | 'glass';
 
 export interface ScenePart {
   role: PartRole;
@@ -63,6 +63,7 @@ const COLORS: Record<PartRole, number> = {
   lid: 0xb8c6d4,
   screw: 0xd4dde6,
   clamp: 0xa9b8c8,
+  cap: 0xe2e8ee,
   board: 0x3fae6a,
   port: 0xd9b45a,
   glass: 0x1e2a36,
@@ -114,6 +115,7 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
     lid: new THREE.MeshStandardMaterial({ color: COLORS.lid, metalness: 0.05, roughness: 0.6, side: THREE.DoubleSide }),
     screw: new THREE.MeshStandardMaterial({ color: COLORS.screw, metalness: 0.05, roughness: 0.6, side: THREE.DoubleSide }),
     clamp: new THREE.MeshStandardMaterial({ color: COLORS.clamp, metalness: 0.05, roughness: 0.6, side: THREE.DoubleSide }),
+    cap: new THREE.MeshStandardMaterial({ color: COLORS.cap, metalness: 0.05, roughness: 0.6, side: THREE.DoubleSide }),
     // Boards are drawn schematically and see-through, so they never read as
     // part of the case: the PCB green, its connectors and parts amber.
     board: new THREE.MeshStandardMaterial({

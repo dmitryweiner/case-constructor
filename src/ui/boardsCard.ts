@@ -11,7 +11,7 @@ import { t } from '../i18n';
 import type { BackPlacement, BoardPlacement } from '../boards/placement';
 import {
   BACK_STANDOFF_MAX, BACK_STANDOFF_MIN, CEILING_GAP, NEW_BOARD_GAP, backPortDefault, backStandoffMin, withBackCut, POSITION_MAX, ROTATIONS, SIDES, WALL_OFFSET_MAX, WALL_OFFSET_MIN, Z_MAX, boardOf, entryOf, floorZ, pinsDown, placementMinZ,
-  ownPortDefault, portCut, withPortCut, withSide, withTopCut, KEY_FIT_MAX, keysOpen, sanitizePlacement,
+  ownPortDefault, portCut, withPortCut, withSide, withTopCut, KEY_FIT_MAX, keyFit, keysOpen, sanitizePlacement,
 } from '../boards/placement';
 import type { BoardDef } from '../boards/schema';
 import { KEYS_OPEN, keyFields, resolveVariant } from '../boards/schema';
@@ -146,7 +146,7 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       kind: 'segmented', key: 'keys', label: 'board.keys', hint: 'board.keys.hint',
       when: (state) => keyFields(boardOf(at(state))).length > 0,
       options: KEYS_OPEN.map((open) => ({ value: open, label: `board.keys.${open}` as const })),
-      optionDisabled: (state, value) => value === 'holes' && !keyFields(boardOf(at(state))).some((field) => field.rows !== undefined),
+      optionDisabled: (state, value) => value !== 'window' && !keyFields(boardOf(at(state))).some((field) => field.rows !== undefined),
       get: (state) => keysOpen(boardOf(at(state)), at(state)),
       set: (state, value) => {
         const placement = sanitizePlacement({ ...at(state), keys: value });
@@ -156,7 +156,10 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
     {
       kind: 'range', key: 'keyFit', label: 'board.keyFit', hint: 'board.keyFit.hint', min: 0, max: KEY_FIT_MAX, step: 0.05,
       when: (state) => keyFields(boardOf(at(state))).length > 0,
-      get: (state) => at(state).keyFit ?? keyFields(boardOf(at(state)))[0]?.clearance ?? 0,
+      get: (state) => {
+        const field = keyFields(boardOf(at(state)))[0];
+        return field ? keyFit(boardOf(at(state)), at(state), field) : 0;
+      },
       set: (state, value) => patchBoard(state, index, { keyFit: value }),
     },
     {

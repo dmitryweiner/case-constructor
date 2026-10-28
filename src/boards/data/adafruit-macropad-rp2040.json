@@ -1,0 +1,35 @@
+{
+  "id": "adafruit-macropad-rp2040",
+  "name": "Adafruit MacroPad RP2040",
+  "vendor": "Adafruit",
+  "kind": "keyboard",
+  "size": { "w": 59.69, "d": 104.14, "t": 1.6 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3.81, "y": 19.05, "d": 3.2 },
+      { "x": 55.88, "y": 19.05, "d": 3.2 },
+      { "x": 3.81, "y": 100.33, "d": 3.2 },
+      { "x": 55.88, "y": 100.33, "d": 3.2 }
+    ],
+    "screw": "M3"
+  },
+  "topHeight": 2,
+  "bottomHeight": 6,
+  "ports": [
+    { "id": "keys", "type": "keys", "edge": "top", "x": 29.85, "y": 39.375, "w": 52.1, "d": 71.15, "h": 11.6, "base": 2.7, "open": "holes", "rows": [
+      { "y": 10.8, "x": 10.8, "n": 3, "pitch": 19.05, "w": 14, "d": 14 },
+      { "y": 29.85, "x": 10.8, "n": 3, "pitch": 19.05, "w": 14, "d": 14 },
+      { "y": 48.9, "x": 10.8, "n": 3, "pitch": 19.05, "w": 14, "d": 14 },
+      { "y": 67.95, "x": 10.8, "n": 3, "pitch": 19.05, "w": 14, "d": 14 }
+    ] },
+    { "id": "oled", "type": "display", "edge": "top", "x": 18.03, "y": 91.39, "w": 29.42, "d": 14.7, "h": 2, "glass": { "x": 18.03, "y": 91.39, "w": 34.4, "d": 23, "t": 1.4 } },
+    { "id": "encoder", "type": "knob", "edge": "top", "x": 48.22, "y": 90.12, "w": 17.6, "h": 26.5, "base": 0 },
+    { "id": "usb-c", "type": "usb-c", "edge": "back", "along": 29.85, "z": -4.3, "h": 3.4, "protrude": 1.1 },
+    { "id": "stemma-qt", "type": "jst", "edge": "left", "along": 92.71, "z": -4.53, "w": 6, "h": 2.96 },
+    { "id": "reset", "type": "switch", "edge": "left", "along": 84.45, "z": -4.5, "w": 3, "h": 2, "d": 4.4, "protrude": 1.06 },
+    { "id": "speaker", "type": "generic", "edge": "bottom", "x": 20.32, "y": 56.52, "w": 7.5, "d": 7.5, "h": 2.7 }
+  ],
+  "source": "https://raw.githubusercontent.com/adafruit/Adafruit-MacroPad-RP2040-PCB/main/Adafruit%20MacroPad%202040%20rev%20D.brd",
+  "verified": false
+}

@@ -31,6 +31,9 @@ export type MessageCode =
   | 'info.keysSunk'
   | 'warn.keysUnderFace'
   | 'warn.keyWebThin'
+  | 'warn.keysPlateHigh'
+  | 'info.keyCaps'
+  | 'warn.capFlangeSmall'
   // cutouts (ports)
   | 'warn.portFar'
   | 'info.cutSplit'

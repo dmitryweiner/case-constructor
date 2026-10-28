@@ -8,13 +8,13 @@
 // depend on the case size, which breaks the circular dependency.
 
 import type { BoardDef, Edge, PortDef, TopPort } from '../boards/schema';
-import { EDGES, keysOf, onFace, resolveVariant } from '../boards/schema';
+import { EDGES, keyFields, keysOf, onFace, resolveVariant } from '../boards/schema';
 import type { BoardPlacement, Rotation } from '../boards/placement';
 import { CLAMP_POST_ZONE } from '../boards/battery';
 import { RIM_FIT, rimReach } from './rim';
 import { CLAMP_BAR_T, CLAMP_BAR_W, clampHold, postReach } from './clamp';
 import { attachTransform } from './attach';
-import { CEILING_GAP, backPortDefault, boardOf, frontHeight, ownPortDefault, pinsDown, undersideOf } from '../boards/placement';
+import { CEILING_GAP, backPortDefault, boardOf, frontHeight, portCut, ownPortDefault, pinsDown, undersideOf } from '../boards/placement';
 import { catalogBoard } from '../boards/catalog';
 import type { Dims } from './face';
 import { faceFrame } from './face';
@@ -226,7 +226,10 @@ function edgeReach(def: BoardDef, placement: BoardPlacement, hung: boolean): Rec
     }
   }
   for (const port of def.ports) {
-    if (!onFace(port)) reach[port.edge] = Math.max(reach[port.edge], port.protrude);
+    if (onFace(port)) continue;
+    // a plug that stays inside keeps its slot clear of the wall
+    const slot = port.reach !== undefined && portCut(placement, port.id, port.cut) ? port.protrude + port.reach : 0;
+    reach[port.edge] = Math.max(reach[port.edge], port.protrude, slot);
   }
   if (def.mount.kind === 'rails') {
     for (const edge of railEdges(def)) reach[edge] = Math.max(reach[edge], RAIL_THICK - RAIL_GRIP + RAIL_GAP);
@@ -540,15 +543,21 @@ function stacksHeight(placed: readonly PlacedBoard[], shape: ShapeState): number
   const hungDepth = (board: PlacedBoard): number => board.placement.z + board.zTop - board.zBottom;
   const floor = placed.filter((board) => !board.hung && !board.carried);
   const hung = placed.filter((board) => board.hung);
-  // a carried display wants the ceiling the gap above its front: its window flush
-  const carried = placed.filter((board) => board.carried).map((board) => floorTop(board) + CEILING_GAP);
-  let need = Math.max(Math.max(0, ...floor.map(floorTop), ...hung.map(hungDepth)) + shape.margin.top, ...carried);
+  // a carried display wants the ceiling the gap above its front: its window flush; so does a keyboard on the floor, its keys through the lid
+  const flush = placed.filter((board) => board.carried || (!board.hung && opensKeys(board)));
+  const rest = floor.filter((board) => !flush.includes(board));
+  let need = Math.max(Math.max(0, ...rest.map(floorTop), ...hung.map(hungDepth)) + shape.margin.top, ...flush.map((board) => floorTop(board) + CEILING_GAP));
   for (const above of hung) {
     for (const below of floor) {
       if (overlap(above.outline, below.outline) > 0.01) need = Math.max(need, floorTop(below) + shape.margin.top + hungDepth(above));
     }
   }
   return need;
+}
+
+/** Whether a board opens the lid over a key field of its own. */
+export function opensKeys(board: Pick<PlacedBoard, 'def' | 'placement'>): boolean {
+  return keyFields(board.def).some((field) => portCut(board.placement, field.id, field.cut));
 }
 
 /**

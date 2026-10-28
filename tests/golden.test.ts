@@ -247,6 +247,19 @@ const STATES: Record<string, AppState> = {
   'keypad-window-top-lid': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'custom', custom: { ...KEYPAD, id: 'custom' }, on: 'ceiling', z: 0.3, keys: 'window', keyFit: 1, mount: { size: 'M3', hole: 'tap' } }],
+  }),  // K6a: the CardKB in its window, the Grove plug's slot; the MacroPad on the floor, the ceiling at its switch plate line
+  'cardkb-hung-top-lid': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0.3 }],
+  }),
+  'macropad-floor-holes': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'adafruit-macropad-rp2040', z: 12, mount: { size: 'M3', hole: 'insert' } }],
+  }),
+  // K3b: a hole per key for printed caps (the caps themselves are the main thread's meshes)
+  'cardkb-caps-top-lid': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0.3, keys: 'caps' }],
   }),
 };
 

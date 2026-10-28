@@ -923,5 +923,65 @@
         6.3
       ]
     }
+  },
+  "cardkb-hung-top-lid": {
+    "body": {
+      "triangles": 764,
+      "volume": 23897.05,
+      "extents": [
+        104,
+        65.3,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1476,
+      "volume": 6231.87,
+      "extents": [
+        104,
+        65.3,
+        5
+      ]
+    }
+  },
+  "macropad-floor-holes": {
+    "body": {
+      "triangles": 1956,
+      "volume": 28403.16,
+      "extents": [
+        68.75,
+        113.24,
+        18.59
+      ]
+    },
+    "lid": {
+      "triangles": 3230,
+      "volume": 9951.04,
+      "extents": [
+        68.75,
+        113.24,
+        5
+      ]
+    }
+  },
+  "cardkb-caps-top-lid": {
+    "body": {
+      "triangles": 764,
+      "volume": 23897.05,
+      "extents": [
+        104,
+        65.3,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 7800,
+      "volume": 14938.46,
+      "extents": [
+        104,
+        65.3,
+        7.05
+      ]
+    }
   }
 }

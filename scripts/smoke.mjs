@@ -291,6 +291,47 @@ await page.click('#board1_on_floor');
 if (!(await page.locator('#board1_z').isVisible())) errors.push('[hang] back on the floor without its standoff height');
 await expectWatertight('hang:floor');
 await page.click('#board1_remove');
+// a keyboard: found by "keyboard", in its own group; it hangs, one window over its keys or a hole per key
+label('keyboards');
+await page.click('#boardAdd');
+await page.fill('#boardSearch', 'keyboard');
+const keyboardGroup = await page.evaluate(() => {
+  const row = document.querySelector('#boardList [data-board="m5stack-cardkb-v1.1"]');
+  let group = row?.previousElementSibling;
+  while (group && !group.classList.contains('preset-group')) group = group.previousElementSibling;
+  return group?.textContent ?? null;
+});
+if (keyboardGroup !== 'Keyboards') errors.push(`[keyboards] CardKB under ${keyboardGroup}, not Keyboards`);
+await page.click('#boardList [data-board="m5stack-cardkb-v1.1"]');
+await expectWatertight('keys:cardkb');
+if (!(await page.locator('#board1_on_ceiling').getAttribute('class'))?.includes('active')) errors.push('[keyboards] the CardKB is not hung when added');
+if (!(await page.locator('#board1_keys_window').getAttribute('class'))?.includes('active')) errors.push('[keyboards] the CardKB does not open a window');
+if (!(await page.textContent('#warnings'))?.includes('under the lid')) errors.push('[keyboards] no word on how deep the keys sit');
+// its keys are too low for holes: a hole per key says so
+await page.click('#board1_keys_holes');
+await expectWatertight('keys:holes');
+if (!(await page.textContent('#warnings'))?.includes('a finger will not press')) errors.push('[keyboards] no warning for keys under the face in their holes');
+await setRange('board1_keyFit', 2);
+await expectWatertight('keys:fit');
+if (!(await page.textContent('#warnings'))?.includes('of lid between')) errors.push('[keyboards] no warning for a thin web between holes');
+// printed caps over the keys: drawn in their holes, and on the Lid tab next to the lid
+await page.click('#board1_keys_caps');
+await expectWatertight('keys:caps');
+if (!(await drawn()).includes('cap')) errors.push(`[keyboards] caps chosen, drawn ${await drawn()}`);
+await page.click('#tabLid');
+await page.waitForTimeout(300);
+if (!(await drawn()).includes('cap')) errors.push(`[keyboards] the Lid tab draws ${await drawn()}, no caps`);
+await page.click('#tabBoth');
+await page.click('#board1_keys_window');
+await page.click('#board1_remove');
+// the MacroPad's holes are among its switches: it stands on the floor, its keys through a hole each
+await page.click('#boardAdd');
+await page.fill('#boardSearch', 'macropad');
+await page.click('#boardList [data-board="adafruit-macropad-rp2040"]');
+await expectWatertight('keys:macropad');
+if (!(await page.locator('#board1_on_floor').getAttribute('class'))?.includes('active')) errors.push('[keyboards] the MacroPad is not on the floor');
+if (!(await page.locator('#board1_keys_holes').getAttribute('class'))?.includes('active')) errors.push('[keyboards] the MacroPad does not get a hole per key');
+await page.click('#board1_remove');
 // a clamped panel: always hung, a clamp gap, its bars printed with the lid that holds it
 label('clamp');
 await page.click('#boardAdd');

@@ -137,6 +137,32 @@ request when the first item lands; the user reviews and merges.
 - A tap on the field's caption toggles its opening, as for any part.
 - Golden: holes on a 3 × 4 MX fixture; the window chamfered.
 
+## K3b. Printed caps over the keys (added 2026-10-28, the user's request)
+
+**Decision (with the user):** keys too low for a finger (the CardKB's tact
+switches stand 1.75 mm) get either the window, the Grove cable inside, or a
+hole per key with a printed cap in it: a cylinder over the button with a
+flange under the lid that keeps it from falling out.
+
+**Plan.**
+- `placement.keys: "caps"` (`#board<i>_keys_caps`, rows needed). Each cap
+  (`capSize.ts`, pure): a stem over its key, the key plus `CAP_GROW` (0.75)
+  a side; a flange `CAP_FLANGE_T` (0.8) thick, `CAP_LIP` (1) past the stem
+  at most and never closer than `CAP_GAP` (0.3) to a neighbour's; the hole
+  the stem plus the key fit (`CAP_FIT`, 0.25, by default). The flange lies
+  on the key, the plate the gap above it (`frontHeight`: the key tops plus
+  the flange); the stem stands `CAP_PROUD` (1) out of the lid.
+- The caps are solids of revolution built in the main thread (`caps.ts`,
+  no CSG) and placed like the printed screws: in their holes in the view
+  (exploded, over the lifted lid), flange down in rows next to the lid in
+  the print layout and in the Lid and Both STLs. Part role `cap`.
+- `info.keyCaps` (how many, that they print with the lid);
+  `warn.capFlangeSmall` when the fit leaves a flange less than `CAP_HOLD`
+  (0.4) past its hole; the web check as for holes.
+- Golden: the CardKB under a top lid with caps (the lid; the caps are not
+  the worker's). Tests: the cap mesh is closed, the caps do not touch the
+  lid in their holes.
+
 ## K4. A keypad's flange under the plate
 
 **Plan.** (P6) `glass` allowed on a `keys` part; its front at `base`. The
@@ -223,3 +249,32 @@ golden states, smoke steps, docs and translations.
   (`min(1.5, fit)`), like every rectangular opening. Golden: the two K2
   keypad states moved with it (holes are the keypad's default), one state
   added for the window.
+- **K6a.** Read from the drawing, the CardKB is not what the perspective
+  had: its key tops are 1.75 mm above the PCB (the 2.75 is from its
+  underside), the Grove socket stands on top at the left edge, 5.3 mm, its
+  plug going in sideways, and the key legends are printed on the PCB beside
+  the keys. Decided with the user: the window covers the whole face of the
+  board (socket included), the plate lies right above the PCB, and the
+  socket's plug gets a slot in the lid: an edge port's `reach` ends its
+  channel that far past the face (and starts it behind the socket's body,
+  so under holes or caps the plate does not lie on it); the footprint keeps
+  the slot clear of the wall, `portFar` and the split note leave it alone.
+  Its keys are rows of round Ø2.1 buttons (the drawing's), so holes and
+  caps size from the buttons.
+- **K6a.** The MacroPad cannot hang: its holes are at the switches' edges,
+  and a post from the lid would run into the switch bodies. It has 8 mm M3
+  standoffs soldered under it (the STEP; the Eagle part says "SMT nut"), so
+  it stands on the floor (`hangsByDefault` leaves out a keyboard whose
+  holes are among its keys, `holesAmongKeys`), and a floor keyboard brings
+  the ceiling down to `CEILING_GAP` over its front (`stacksHeight`, like a
+  carried display). Its default standoff height puts the switches' plate
+  line under the least case's ceiling (`floorZ`); lower,
+  `warn.keysPlateHigh` says how high to raise it. The STEP is the front
+  view: the STEMMA QT and the reset button are on the left edge (the
+  perspective's "right" was Eagle's back view), USB-C, STEMMA QT, reset and
+  the speaker on the underside; the OLED's glass covers the top-left hole
+  (it is screwed from below); its active area is taken as centred (≈). The
+  encoder sits turned 45°: its opening is a round Ø17.6 over its body.
+  MX key tops are the switch housing (11.6 mm), without keycaps.
+- **K6a.** A key field closed by its toggle stays under the plate whole:
+  `frontHeight` counts its key tops then.

@@ -4,14 +4,16 @@
 // boards — the layout as a whole is centred in the cavity (plans/PLAN.md §0.4).
 
 import type { FastenerSpec } from '../geo/fasteners';
-import { sanitizeFastener } from '../geo/fasteners';
+import { bossDiameter, sanitizeFastener } from '../geo/fasteners';
 import type { BoardDef, Edge, KeysOpen, PortDef } from './schema';
-import { EDGES, autoPortId, bottomPartsH, isAutoPortId, keyFields, onFace, resolveVariant, sanitizeBoard } from './schema';
+import { EDGES, KEYS_OPEN, autoPortId, bottomPartsH, isAutoPortId, keyFields, keysOf, onFace, resolveVariant, sanitizeBoard } from './schema';
 import { CATALOG, catalogBoard } from './catalog';
 import type { BatterySpec } from './battery';
 import { PRESS_MAX, PRESS_MIN, batteryDef, defaultBattery, sanitizeBattery } from './battery';
 import { defaultPress } from '../geo/clamp';
 import { attachTurns } from '../geo/attach';
+import { SIZE_MIN, defaultShape } from '../geo/shape';
+import { CAP_FIT, CAP_FLANGE_T } from '../geo/capSize';
 
 export const ROTATIONS = [0, 90, 180, 270] as const;
 export type Rotation = (typeof ROTATIONS)[number];
@@ -129,36 +131,74 @@ export function placementMinZ(placement: BoardPlacement): number {
   return minBoardZ(def, pinsDown(def, placement));
 }
 
-/** A display, a board with a display on top, or a keyboard, hangs from the ceiling when added (its screen at the window, its keys through the lid). */
+/**
+ * A display, a board with a display on top, or a keyboard, hangs from the
+ * ceiling when added (its screen at the window, its keys through the lid) —
+ * except a keyboard whose holes are among its keys: supports from the lid
+ * would run into them (the MacroPad stands on its own standoffs).
+ */
 export function hangsByDefault(def: BoardDef): boolean {
-  return !def.battery && (def.kind === 'display' || def.kind === 'keyboard'
-    || def.ports.some((port) => (port.type === 'display' || port.type === 'keys') && port.edge === 'top'));
+  if (def.battery) return false;
+  const keys = def.kind === 'keyboard' || keyFields(def).length > 0;
+  if (keys && holesAmongKeys(def)) return false;
+  return keys || def.kind === 'display' || def.ports.some((port) => port.type === 'display' && port.edge === 'top');
+}
+
+/** Whether a support at one of the board's holes (its own screw, tapped) would reach a key. */
+export function holesAmongKeys(def: BoardDef): boolean {
+  if (def.mount.kind !== 'holes') return false;
+  const r = bossDiameter({ size: def.mount.screw, hole: 'tap', head: 'none' }) / 2;
+  return def.mount.holes.some((hole) => keyFields(def).flatMap((field) => keysOf(field)).some((key) => {
+    const dx = Math.max(key.x - key.w / 2 - hole.x, 0, hole.x - key.x - key.w / 2);
+    const dy = Math.max(key.y - key.d / 2 - hole.y, 0, hole.y - key.y - key.d / 2);
+    return Math.hypot(dx, dy) < r;
+  }));
 }
 
 /** The most room a key's hole or a key window may get around it, mm. */
 export const KEY_FIT_MAX = 3;
 
-/** How the lid opens over a board's keys: the placement's choice, else its first field's default; holes only with rows. */
+/** How the lid opens over a board's keys: the placement's choice, else its first field's default; holes and caps only with rows. */
 export function keysOpen(def: BoardDef, placement: Pick<BoardPlacement, 'keys'>): KeysOpen {
   const fields = keyFields(def);
   const rows = fields.some((field) => field.rows !== undefined);
   const wanted = placement.keys ?? fields[0]?.open ?? 'window';
-  return wanted === 'holes' && rows ? 'holes' : 'window';
+  return wanted !== 'window' && rows ? wanted : 'window';
+}
+
+/** The room around a key's hole or window: the placement's, else a cap's own fit or the field's clearance. */
+export function keyFit(def: BoardDef, placement: Pick<BoardPlacement, 'keys' | 'keyFit'>, field: { clearance: number }): number {
+  return placement.keyFit ?? (keysOpen(def, placement) === 'caps' ? CAP_FIT : field.clearance);
 }
 
 /**
  * How high the board's parts stand under the plate, above the PCB: its
  * `topHeight`, or a key field's base where the lid has a hole per key (the
- * plate lies between the keys; over a window the field rises into it).
+ * plate lies between the keys; over a window the field rises into it), or
+ * the key tops of a field left closed.
  */
-export function frontHeight(def: BoardDef, placement: Pick<BoardPlacement, 'keys'>): number {
-  if (keysOpen(def, placement) !== 'holes') return def.topHeight;
-  return Math.max(def.topHeight, ...keyFields(def).map((field) => field.base ?? field.h));
+export function frontHeight(def: BoardDef, placement: Pick<BoardPlacement, 'keys'> & Partial<Pick<BoardPlacement, 'cuts'>>): number {
+  const open = keysOpen(def, placement);
+  return Math.max(def.topHeight, ...keyFields(def).map((field) => {
+    if (!(placement.cuts?.[field.id] ?? field.cut)) return field.h;
+    // a cap's flange lies on its key, the plate the gap above it
+    if (open === 'caps' && field.rows) return field.h + CAP_FLANGE_T;
+    return open === 'holes' ? field.base ?? field.h : 0;
+  }));
 }
 
-/** The height a board stands at on the floor by default: a battery low in its cradles, a board on 4 mm standoffs or higher. */
+/**
+ * The height a board stands at on the floor by default: a battery low in its
+ * cradles, a board on 4 mm standoffs or higher; a keyboard under a hole per
+ * key as high as puts its keys' base the gap under the ceiling of the least
+ * case (its holes then hold the switches at their plate line).
+ */
 export function floorZ(def: BoardDef, pins: boolean): number {
-  return def.battery ? minBoardZ(def, pins) : Math.max(4, minBoardZ(def, pins));
+  if (def.battery) return minBoardZ(def, pins);
+  const lowest = Math.max(4, minBoardZ(def, pins));
+  if (keysOpen(def, {}) !== 'holes') return lowest;
+  const { floor } = defaultShape();
+  return Math.max(lowest, +(SIZE_MIN - 2 * floor - CEILING_GAP - def.size.t - frontHeight(def, {})).toFixed(2));
 }
 
 export function defaultPlacement(entry: BoardDef, x = 0, y = 0): BoardPlacement {
@@ -267,7 +307,7 @@ function withKeys(def: BoardDef, r: object): Pick<BoardPlacement, 'keys' | 'keyF
   const fields = keyFields(def);
   if (fields.length === 0) return {};
   const raw: unknown = Reflect.get(r, 'keys');
-  const chosen = keysOpen(def, { keys: raw === 'holes' || raw === 'window' ? raw : undefined });
+  const chosen = keysOpen(def, { keys: KEYS_OPEN.find((open) => open === raw) });
   const fit: unknown = Reflect.get(r, 'keyFit');
   return {
     ...(chosen !== keysOpen(def, {}) ? { keys: chosen } : {}),

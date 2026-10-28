@@ -50,6 +50,13 @@ function expectEdgePortsOpen(state: AppState): void {
     for (const port of board.def.ports) {
       if (onFace(port) || !port.cut) continue;
       const { face, dir } = portAxis(board, port);
+      // a plug that stays inside: its slot ends short of the wall, and the wall stays whole
+      if (port.reach !== undefined) {
+        const wall = portToWall(shape, layout.dims, face, dir) + state.shape.wall / 2;
+        expect(solidAt(parts, face[0] + dir[0] * wall, face[1] + dir[1] * wall, face[2]), `${board.def.id}: ${port.id} wall`).toBe(true);
+        checked++;
+        continue;
+      }
       const s = portToWall(shape, layout.dims, face, dir) + state.shape.wall / 2;
       const [x, y, z] = [face[0] + dir[0] * s, face[1] + dir[1] * s, face[2]];
       expect(solidAt(parts, x, y, z), `${board.def.id} rot ${board.placement.rot}: ${port.id}`).toBe(false);
