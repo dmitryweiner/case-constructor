@@ -22,6 +22,7 @@ description in the tooltip is translated):
 | KlipperScreen console | a BTT Pi TFT50 on the console's slope on clamp tabs, a Pi 4 on its back, the lid underneath on screws, one hole at the back for the cables |
 | Home Assistant wall panel | Touch Display 2 7-inch held by the lid, a Pi 5 on its back, vents on the sides, keyholes and a cable hole in the back for the wall |
 | Meshtastic node with CardKB | a Heltec WiFi LoRa 32 V3 and an M5Stack CardKB hung side by side from the lid, the screen and the keys in their windows, the Grove cable inside, a hole for the LoRa antenna; the lid on M3 screws |
+| Meshtastic clamshell | the same pair folding like a laptop ([Hinged case](hinged.md)): the CardKB in the lower half, the Heltec V3's screen in the upper, the Grove cable through the hinge, both lids underneath, a printed hinge on screw axles, magnets to keep it closed |
 | Plain box | an empty rounded box with a flat lid on snaps |
 
 The interface language (🌐) is remembered by the browser and is not part of

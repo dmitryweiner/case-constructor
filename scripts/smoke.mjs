@@ -525,6 +525,16 @@ await page.click('#case_kind_console');
 if (!(await page.locator('#lid_face_top').isDisabled())) errors.push('[lid] the console allows a lid on its slope');
 await expectWatertight('lid:console');
 
+// the hinged preset: two halves, a printed hinge, a cable, magnets
+label('preset:meshtastic-clamshell');
+await page.click('#presetBtn');
+await page.click('#presetList [data-preset="b:meshtastic-clamshell"]');
+await expectWatertight('preset:meshtastic-clamshell');
+if ((await page.locator('#warnings .warn-line:not(.info)').count()) > 0) errors.push('[preset:meshtastic-clamshell] warnings');
+if (!(await drawn()).includes('hinge')) errors.push('[preset:meshtastic-clamshell] no printed hinge drawn');
+await page.click('#presetBtn');
+await page.click('#presetList [data-preset="b:plain-box"]');
+
 // a hinged case: two halves, each with its own boards and lid (plans/PLAN-HINGED.md)
 label('hinged');
 await page.click('#case_kind_hinged');

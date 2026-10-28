@@ -507,6 +507,7 @@ export const ru: Record<Key, string> = {
   'preset.klipperscreen-console.note': "BTT Pi TFT50 на скате на прижимных лапках, Pi 4 на его спине, крышка снизу, вентиляция сзади",
   'preset.ha-wall-panel.note': "Touch Display 2 7″ в крышке, Pi 5 на его спине, вентиляция по бокам, замочные петли для стены",
   'preset.meshtastic-cardkb.note': "Узел Meshtastic: Heltec V3 и M5Stack CardKB под крышкой, экран и клавиши в своих окнах, отверстие для антенны LoRa",
+  'preset.meshtastic-clamshell.note': 'Складной коммуникатор Meshtastic: CardKB внизу, экран Heltec V3 сверху, кабель Grove через петлю, печатная петля на винтах, магниты держат его закрытым',
   'preset.plain-box.note': "Пустая скруглённая коробка с плоской крышкой на защёлках",
   'show.what': "Детали — показ и выгрузка",
   'show.how': "Вид",

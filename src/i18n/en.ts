@@ -516,6 +516,7 @@ export const en = {
   'preset.klipperscreen-console.note': "A BTT Pi TFT50 on the slope on clamp tabs, a Pi 4 on its back, the lid underneath, vents at the back",
   'preset.ha-wall-panel.note': "Touch Display 2 7-inch held by the lid, a Pi 5 on its back, side vents, keyholes for the wall",
   'preset.meshtastic-cardkb.note': "A Meshtastic node: Heltec V3 and an M5Stack CardKB under the lid, the screen and the keys in their windows, a hole for the LoRa antenna",
+  'preset.meshtastic-clamshell.note': "A Meshtastic communicator that folds: the CardKB below, the Heltec V3's screen above, the Grove cable through the hinge, a printed hinge on screws, magnets to keep it closed",
   'preset.plain-box.note': "An empty rounded box with a flat lid on snaps",
   'show.what': "Parts — shown and exported",
   'show.how': "View",

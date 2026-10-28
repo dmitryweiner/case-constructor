@@ -482,6 +482,8 @@ browser is within ~10 % of it):
 | CardKB with printed caps — preview | 12 | 135 ms | 12.5k + 9.6k of caps |
 | CardKB with printed caps — finest export | 64 | 0.75 s | 64k + the caps |
 | KeebDeck Basic, a hole per key — preview | 12 | 260 ms | 19k |
+| `meshtastic-clamshell` (two halves, a printed hinge) — preview | 12 | 160 + 125 ms (a half's build is reused while the other is edited) | 9k + 10k + 2k of leaves |
+| `meshtastic-clamshell` — finest export | 64 | 0.8 + 0.7 s | 43k + 44k + 10k of leaves |
 
 Decided at M1 and confirmed at M8: the preview is the exact case (the same
 pipeline as the export, 12 segments per quarter arc), rebuilt 120 ms after
@@ -499,9 +501,9 @@ Add a state when a feature lands, never edit an old one.
 
 Built-in presets (`src/state/presets.ts`): `pi4-desktop`, `pi-zero-gpio`,
 `esp32-sensor-box`, `esp32-18650-box`, `arduino-uno-box`, `cylinder-puck`,
-`klipperscreen-console`, `ha-wall-panel`, `meshtastic-cardkb`, `plain-box`. Each is
+`klipperscreen-console`, `ha-wall-panel`, `meshtastic-cardkb`, `meshtastic-clamshell`, `plain-box`. Each is
 built by `tests/presetsBuild.test.ts` (closed, no slivers, no overlap, no
-layout warnings). A preset's name is one English string in `presets.ts`
+layout warnings; a hinged one per half, with no hinge warnings). A preset's name is one English string in `presets.ts`
 (not translated: the review asked for one name); its note is the
 dictionary key `preset.<id>.note`.
 

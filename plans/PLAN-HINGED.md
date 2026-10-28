@@ -1,6 +1,6 @@
 # Case Constructor — a hinged case
 
-**Status: in progress (2026-10-28).**
+**Status: done (2026-10-29).**
 
 Written on 2026-10-28 from the user's request: a new kind of case, two
 halves joined by hinges — a clamshell (a cyberdeck, a Meshtastic
@@ -279,4 +279,13 @@ stands alone.
   (the lid's corner posts are there), one clearance off the wall for both
   halves so they meet, built as supports of the inner face's plate. Their
   bosses are checked against the boards' boxes.
+
+- **H9 (2026-10-29).** Done. The preset is `meshtastic-clamshell` (the
+  CardKB below, the Heltec V3 above, the Grove cable through the hinge, a
+  printed hinge on M2.5 screw axles, both lids underneath, 6 × 2 magnets),
+  not the 7″ cyberdeck: its parts are all in the catalog's tested presets.
+  Its depth is set by hand (86 mm) so the magnets clear the CardKB, and the
+  Heltec stands against the left wall with its USB-C sunk 1.5 mm into it.
+  `tests/presetsBuild.test.ts` builds a hinged preset per half, its leaves
+  included, and wants no hinge warnings.
 
