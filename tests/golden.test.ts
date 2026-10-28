@@ -286,6 +286,16 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0, hold: 'clamp', mount: { size: 'M2', hole: 'insert' } }],
   }),
+  // review: the widest round caps the CardKB's neighbours leave room for
+  'cardkb-caps-widest': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0.3, keys: 'caps', capSize: 4.4 }],
+  }),
+  // review: sunk 1.3 mm under the lid on clamp bars, held between them and the pads
+  'cardkb2-clamp-pads-caps': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'm5stack-cardkb2', on: 'ceiling', z: 1.3, hold: 'clamp', keys: 'caps', mount: { size: 'M2', hole: 'insert' } }],
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

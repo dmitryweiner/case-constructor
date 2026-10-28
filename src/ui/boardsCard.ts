@@ -15,7 +15,7 @@ import {
 } from '../boards/placement';
 import type { BoardDef } from '../boards/schema';
 import { KEYS_OPEN, keyFields, resolveVariant } from '../boards/schema';
-import { CAP_R_MAX, CAP_R_MIN, CAP_SHAPES } from '../geo/capSize';
+import { CAP_FIT, CAP_R_MAX, CAP_R_MIN, CAP_SHAPES, capSizeRange, capSizes } from '../geo/capSize';
 import { CATALOG, catalogBoard } from '../boards/catalog';
 import { attachTurns } from '../geo/attach';
 import type { BatterySpec } from '../boards/battery';
@@ -186,6 +186,24 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
         const placement: BoardPlacement = { ...at(state), capShape: 'square' };
         if (value !== 'square') delete placement.capShape;
         return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
+      },
+    },
+    {
+      // the caps' width: from covering the buttons to as wide as the neighbours leave room for
+      kind: 'range', key: 'capSize', label: 'board.capSize', hint: 'board.capSize.hint',
+      min: capRange(entry, CAP_FIT).min, max: capRange(entry, CAP_FIT).max, step: 0.1,
+      when: (state) => keysOpen(boardOf(at(state)), at(state)) === 'caps',
+      get: (state) => {
+        const def = boardOf(at(state));
+        const field = keyFields(def).find((one) => one.rows);
+        const [cap] = field ? capSizes(field, { size: at(state).capSize, fit: keyFit(def, at(state), field) }) : [];
+        return cap ? +(2 * cap.stemR).toFixed(2) : 0;
+      },
+      set: (state, value) => {
+        const def = boardOf(at(state));
+        const field = keyFields(def).find((one) => one.rows);
+        const range = capRange(def, field ? keyFit(def, at(state), field) : CAP_FIT);
+        return patchBoard(state, index, { capSize: Math.min(range.max, Math.max(range.min, value)) });
       },
     },
     {
@@ -462,6 +480,14 @@ const ALIGN_LABELS: Record<Align, Key> = {
 
 export interface BoardsCardHandle {
   sync(state: AppState): void;
+}
+
+/** The cap widths a keyboard's every field allows at a fit: the widest key at least, the tightest field's room at most. */
+function capRange(def: BoardDef, fit: number): { min: number; max: number } {
+  const ranges = keyFields(def).flatMap((field) => capSizeRange(field, fit) ?? []);
+  if (ranges.length === 0) return { min: 0, max: 0 };
+  const min = Math.max(...ranges.map((range) => range.min));
+  return { min, max: Math.max(min, Math.min(...ranges.map((range) => range.max))) };
 }
 
 /** What the card's layout depends on; a change rebuilds it (a value edit does not). */

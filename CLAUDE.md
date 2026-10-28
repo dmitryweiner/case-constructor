@@ -59,9 +59,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   toggles, user openings, the custom board editor and its catalog JSON,
   board search and overlap warnings, a display found by "screen" in its own
   group with its glass drawn, keyboards (found by "keyboard" in their
-  group, a window, holes and printed caps, the key fit and its warnings,
-  the MacroPad on the floor, the BBQ20KBD's rests, the KeebDeck pressed on
-  its flange), arranging and aligning two boards (and
+  group, a window, holes and printed caps — square ones, their corner
+  radius and widest size — the key fit and its warnings, the CardKB on
+  clamp bars sunk under the lid until its Grove socket's note goes, the
+  MacroPad on the floor, the BBQ20KBD's rests, the KeebDeck pressed on its
+  flange), arranging and aligning two boards (and
   undo), every lid face, cylinder/console lid restrictions, snaps and screws
   with every hole and head kind, magnets, printed screws (P4 with its
   warning, the Lid tab with the screws, a lid export), vents, fan, through
@@ -267,10 +269,19 @@ freely; a temporary script that turns out useful becomes a permanent one.
   standoff height filling the least case (`floorZ`). Printed caps
   (`capSize.ts` sizes, `caps.ts` meshes, pure, no CSG) are built and placed
   by the main thread like printed screws: in their holes in the view, flange
-  down next to the lid in the Lid and Both STLs (part role `cap`). An edge
+  down next to the lid in the Lid and Both STLs (part role `cap`); round
+  or square with rounded corners (`capShape`, `capR` ≥ `CAP_R_MIN`), their
+  width `capSize` kept within `capSizeRange` (the flanges hold and never
+  meet). A keyboard that hangs may be held another way than its entry's
+  (`placement.hold`, `holdChoices`: screws, rails, clamp bars); `boardOf`
+  applies it (`withHold`), so everything downstream sees the board as held.
+  A clamped board without a glass rim gets pads from the plate opposite
+  each bar end, as high as the gap, with a lip over its edge (`clampPads`,
+  `clampSolids.ts`). An edge
   port's `reach` ends its channel inside the case (a plug's slot through the
   plate, the CardKB's Grove), starting behind the body; so does a keyboard's
-  connector taller than its front. Rests (`rests.ts` pure, built as floor
+  connector taller than its front. `plugNotes` (`ports.ts`) says how far
+  such a socket stands out of the lid and the gap that sinks it. Rests (`rests.ts` pure, built as floor
   supports in `build.ts`) stand under the free corners of a keyboard held at
   one or two holes. Key notes and warnings: `keyNotes` (`ports.ts`), rest
   warnings `restWarnings` (main thread, next to the collisions).
@@ -453,7 +464,7 @@ per board
 `#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles
 `#board<i>_cut_<portId>`.
 Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHeight|_bottomHeight`,
-`#board<i>_keys_window|holes|caps`, `#board<i>_keyFit`, `#board<i>_capShape_round|square`, `#board<i>_capR`, `#board<i>_hold_holes|rails|clamp` (keyboards),
+`#board<i>_keys_window|holes|caps`, `#board<i>_keyFit`, `#board<i>_capShape_round|square`, `#board<i>_capR`, `#board<i>_capSize`, `#board<i>_hold_holes|rails|clamp` (keyboards),
 `#board<i>_custom_mount` (select), `_rails`, `_screw`, holes `_hole<h>_x|_y|_d|_remove`,
 `_hole_add`, ports `_port<p>_type|_edge` (selects), `_port<p>_<field>`, `_port<p>_remove`,
 `_port_add`, `_save`. The card rebuilds only when a custom board's structure changes

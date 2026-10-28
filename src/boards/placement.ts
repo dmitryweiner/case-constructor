@@ -64,6 +64,8 @@ export interface BoardPlacement {
   capShape?: 'square';
   /** a square cap's corner radius, when not the default, mm */
   capR?: number;
+  /** a keyboard with printed caps only: the stems' width (a round one's diameter), when not the default; kept within `capSizeRange` when built, mm */
+  capSize?: number;
   /** a keyboard that hangs: held another way than its entry's (`holdChoices`) — rails, or clamp bars across its back */
   hold?: MountKind;
 }
@@ -345,7 +347,7 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
 }
 
 /** A keyboard's opening choice and fit, kept only when they differ from the entry's. */
-function withKeys(def: BoardDef, r: object): Pick<BoardPlacement, 'keys' | 'keyFit' | 'capShape' | 'capR'> {
+function withKeys(def: BoardDef, r: object): Pick<BoardPlacement, 'keys' | 'keyFit' | 'capShape' | 'capR' | 'capSize'> {
   const fields = keyFields(def);
   if (fields.length === 0) return {};
   const raw: unknown = Reflect.get(r, 'keys');
@@ -356,6 +358,7 @@ function withKeys(def: BoardDef, r: object): Pick<BoardPlacement, 'keys' | 'keyF
     ...(typeof fit === 'number' && Number.isFinite(fit) ? { keyFit: num(fit, 0, KEY_FIT_MAX, fields[0].clearance) } : {}),
     ...(Reflect.get(r, 'capShape') === 'square' ? { capShape: 'square' as const } : {}),
     ...(typeof Reflect.get(r, 'capR') === 'number' ? { capR: num(Reflect.get(r, 'capR'), CAP_R_MIN, CAP_R_MAX, CAP_R_DEFAULT) } : {}),
+    ...(typeof Reflect.get(r, 'capSize') === 'number' ? { capSize: num(Reflect.get(r, 'capSize'), 0.5, 30, 4) } : {}),
   };
 }
 

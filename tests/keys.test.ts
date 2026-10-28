@@ -10,14 +10,15 @@ import type { CsgApi } from '../src/geo/csg';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, collisions } from '../src/geo/layout';
 import type { Message } from '../src/geo/message';
-import { WINDOW_FLARE, cutWarnings, portAxis, keyNotes, keysProud, portCutters, thinnestWeb } from '../src/geo/ports';
+import { WINDOW_FLARE, cutWarnings, plugNotes, portAxis, keyNotes, keysProud, portCutters, thinnestWeb } from '../src/geo/ports';
 import { validateMesh } from '../src/geo/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import { garbageLike, KEYPAD, boxMesh, rng } from './helpers';
-import { CAP_FIT, CAP_FLANGE_T, CAP_R_MIN, CAP_GAP, CAP_GROW, CAP_LIP, CAP_PROUD, capSizes } from '../src/geo/capSize';
+import { CAP_FIT, CAP_FLANGE_T, CAP_HOLD, CAP_R_MIN, capSizeRange, CAP_GAP, CAP_GROW, CAP_LIP, CAP_PROUD, capSizes } from '../src/geo/capSize';
 import { capMesh, capsInCase, keyCaps, withCaps } from '../src/geo/caps';
 import { rimsOf } from '../src/geo/rim';
+import { clampHold, clampPads } from '../src/geo/clamp';
 import { REST_MAX, caseRests, restWarnings, restsOf } from '../src/geo/rests';
 import { applyAffine, meshBounds } from '../src/geo/surface';
 
@@ -281,7 +282,8 @@ describe('the catalog keyboards (K6a)', () => {
     expect(grove?.s1).toBe(12);
     // the keys sit just under the face in their window: a word, no warning
     expect(keyNotes(layout, shape).map((note) => note.code)).toEqual(['info.keysSunk']);
-    expect(cutWarnings(layout, shape, s.lid, portCutters(layout, shape), []).map((note) => note.code)).toEqual(['info.keysSunk']);
+    // and its socket stands up out of the window: a word on the gap that sinks it
+    expect(cutWarnings(layout, shape, s.lid, portCutters(layout, shape), []).map((note) => note.code)).toEqual(['info.keysSunk', 'info.plugProud']);
     // the slot stays inside the case: the wall stands beyond it
     expect(layout.boards[0].footprint.x0).toBeLessThanOrEqual(layout.boards[0].outline.x0 - 12);
   });
@@ -420,6 +422,31 @@ describe('printed caps over the keys (K3b)', () => {
     expect(report.degenerateTriangles).toBe(0);
     // a corner larger than the stem is the stem's half: round
     expect(keyCaps(caseLayout(cardkb({ capShape: 'square', capR: 5 })), shape)[0].corner).toBeCloseTo(cap.stemR, 6);
+  });
+
+  it('a chosen cap size stays between the button and the room the neighbours leave', () => {
+    const entry = catalogBoard('m5stack-cardkb-v1.1');
+    if (!entry) throw new Error('cardkb');
+    const field = keyFields(entry)[0];
+    const range = capSizeRange(field, CAP_FIT);
+    expect(range?.min).toBeCloseTo(2.1, 6);
+    // 6 mm apart: the flanges keep CAP_GAP, each still CAP_HOLD past its hole
+    expect(range?.max).toBeCloseTo(2 * ((6 - CAP_GAP) / 2 - CAP_HOLD - CAP_FIT), 6);
+    expect(capSizes(field, { size: 99, fit: CAP_FIT })[0].stemR * 2).toBeCloseTo(range?.max ?? 0, 6);
+    expect(capSizes(field, { size: 0.5, fit: CAP_FIT })[0].stemR * 2).toBeCloseTo(2.1, 6);
+    // at the widest the case is clean: no thin web, flanges that hold, closed and sliver-free
+    const s = cardkb({ capSize: 99 });
+    const layout = caseLayout(s);
+    const codes = keyNotes(layout, { ...s.shape, console: layout.console }).map((note) => note.code);
+    expect(codes).not.toContain('warn.capFlangeSmall');
+    expect(codes).not.toContain('warn.keyWebThin');
+    const built = buildCase(csg, s, 8);
+    const report = validateMesh(built.lid);
+    expect(report.watertight).toBe(true);
+    expect(report.degenerateTriangles).toBe(0);
+    const caps = capsInCase(keyCaps(layout, { ...s.shape, console: layout.console }));
+    if (!caps) throw new Error('caps');
+    expect(validateMesh(caps).watertight).toBe(true);
   });
 
   it('a fit so loose the flanges no longer hold is a warning', () => {
@@ -657,5 +684,68 @@ describe('holding a keyboard: screws, rails or clamp bars (review)', () => {
     }
     // a top lid holds the bars of a board it holds: they print with it
     if (hold === 'clamp') expect(built.lidClamps).toBeTruthy();
+  });
+});
+
+describe('pads between a clamped keyboard and the lid (review)', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+  const add = (board: string, extra: Record<string, unknown> = {}): AppState => {
+    const entry = catalogBoard(board);
+    if (!entry) throw new Error(board);
+    return sanitizeState({ ...defaultState(), boards: [{ ...defaultPlacement(entry), hold: 'clamp', ...extra }] });
+  };
+
+  it('a pad opposite each bar end, on both long edges, clear of the parts there', () => {
+    const s = add('m5stack-cardkb2');
+    const [board] = caseLayout(s).boards;
+    const pads = clampPads(board.def, board.placement);
+    const bars = clampHold(board.def, board.placement).bars;
+    expect(pads).toHaveLength(2 * bars.length);
+    for (const pad of pads) expect(bars.some((bar) => Math.abs(bar.at - pad.at) <= 8)).toBe(true);
+    // a panel whose glass has its rim needs none
+    const td2 = catalogBoard('raspberry-pi-touch-display-2-7');
+    if (!td2) throw new Error('td2');
+    expect(clampPads(td2, defaultPlacement(td2))).toEqual([]);
+  });
+
+  it.each([0, 0.8, 1.3])('gap %d: the board is held between the pads and the bars; the case closed and sliver-free', (z) => {
+    for (const board of ['m5stack-cardkb-v1.1', 'm5stack-cardkb2']) {
+      const s = add(board, { z });
+      expect(collisions(caseLayout(s))).toEqual([]);
+      const built = buildCase(csg, s, 8);
+      for (const mesh of [built.body, built.lid, ...(built.lidClamps ? [built.lidClamps] : [])]) {
+        const report = validateMesh(mesh);
+        expect(report.watertight, `${board} gap ${z}`).toBe(true);
+        expect(report.degenerateTriangles, `${board} gap ${z}`).toBe(0);
+      }
+      // a pad's under the board's front, in the lid
+      const layout = caseLayout(s);
+      const [placed] = layout.boards;
+      const [pad] = clampPads(placed.def, placed.placement);
+      const hold = clampHold(placed.def, placed.placement);
+      const across = pad.side === 0 ? 0.5 : (hold.across === 'x' ? placed.def.size.w : placed.def.size.d) - 0.5;
+      const [bx, by] = hold.across === 'x' ? [across, pad.at] : [pad.at, across];
+      const top = placed.def.size.t;
+      const at = applyAffine(placed.toCase, [bx, by, top + Math.max(z, 0.3) / 2]);
+      const lid = toManifold(csg, built.lid);
+      const probe = csg.Manifold.cube([0.1, 0.1, 0.1], true).translate(at);
+      const common = lid.intersect(probe);
+      if (z > 0) expect(common.volume(), `${board} pad`).toBeGreaterThan(0.0009);
+      for (const one of [lid, probe, common]) one.delete();
+    }
+  });
+});
+
+describe('a plug’s socket out of the lid (review)', () => {
+  it('says how far it stands out, and the gap that sinks it', () => {
+    const entry = catalogBoard('m5stack-cardkb-v1.1');
+    if (!entry) throw new Error('cardkb');
+    const notes = (extra: Record<string, unknown>): Message[] => plugNotes(caseLayout(sanitizeState({ ...defaultState(), boards: [{ ...defaultPlacement(entry), ...extra }] })));
+    const [note] = notes({ hold: 'clamp', keys: 'caps', z: 0 });
+    expect(note).toMatchObject({ code: 'info.plugProud', params: { port: 'grove' } });
+    expect(notes({ hold: 'clamp', keys: 'caps', z: Number(note.params?.gap) })).toEqual([]);
   });
 });

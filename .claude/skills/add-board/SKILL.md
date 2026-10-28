@@ -153,6 +153,15 @@ keys come through the lid (`plans/PLAN-KEYBOARDS.md`):
   layout (`board.mjs --kicad <file> --match SW` gives every pad box's
   centre: the rows' x, y and pitch), the heights from the STEP
   (`step.mjs --match` the switch or the keyboard module).
+- **Several fields** when one rectangle would cover a mounting hole: a
+  window over it would cut the post away (the CardKB2's bottom row is a
+  field of its own, clear of its corner holes). `holdChoices` offers a
+  keyboard that hangs rails and clamp bars as well; a field's `glass` is a
+  keypad's flange (its front at `base`).
+- **A plug that stays inside** (a Grove socket beside the keys, its cable
+  into the case): the edge port's `"reach"` (mm) ends its channel that far
+  past the face — a slot through the plate — instead of through the wall.
+  A connector only for flashing may be `"cut": false`.
 - `board.mjs --svg` draws every key over the field: lay it over the
   drawing.
 

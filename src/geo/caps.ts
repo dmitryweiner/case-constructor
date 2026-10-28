@@ -5,7 +5,7 @@
 // as they print, flange down.
 
 import { keyFields } from '../boards/schema';
-import { capStyle, keysOpen, portCut } from '../boards/placement';
+import { capStyle, keyFit, keysOpen, portCut } from '../boards/placement';
 import type { CaseLayout } from './layout';
 import type { ShapeState } from './shape';
 import type { Affine, SurfaceMesh } from './surface';
@@ -46,7 +46,7 @@ export function keyCaps(layout: CaseLayout, shape: ShapeState): KeyCap[] {
       const length = Math.max(CAP_FLANGE_T + 1, depth + CAP_PROUD);
       const top = board.def.size.t + field.h;
       const style = capStyle(board.placement);
-      return capSizes(field).map((cap): KeyCap => ({
+      return capSizes(field, { size: board.placement.capSize, fit: keyFit(board.def, board.placement, field) }).map((cap): KeyCap => ({
         board: board.index, port: field.id, frame: composeAffine(board.toCase, translation(cap.x, cap.y, top)),
         stemR: cap.stemR, flangeR: cap.flangeR, corner: capCorner(style.shape, style.r, cap.stemR), length,
       }));

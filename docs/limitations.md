@@ -29,8 +29,9 @@ Known limits of the current version:
   the drawing does not place it, and a hung panel's thickness is often an
   estimate. The window's clearance and the rim's fit wait for a test print.
 
-- The printed key caps' sizes (the stem 0.75 mm past the button, a 0.8 mm
-  flange, 0.25 mm fit) wait for a test print, like the window's clearance.
+- The printed key caps' defaults (the stem 0.75 mm past the button, a 0.8 mm
+  flange, 0.25 mm fit) and the pads under a clamped keyboard (a 1.2 mm lip
+  0.2 mm off its edge) wait for a test print, like the window's clearance.
 
 - Boards marked **≈** in the catalog are transcribed from specifications or
   typical layouts and wait for a measurement.

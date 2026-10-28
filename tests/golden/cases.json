@@ -1095,12 +1095,61 @@
       ]
     },
     "lid": {
-      "triangles": 2054,
-      "volume": 8287.06,
+      "triangles": 2116,
+      "volume": 8315.86,
       "extents": [
         104,
         78.3,
         5
+      ]
+    },
+    "lidClamp": {
+      "triangles": 296,
+      "volume": 3316.7,
+      "extents": [
+        58.4,
+        70.2,
+        3
+      ]
+    }
+  },
+  "cardkb-caps-widest": {
+    "body": {
+      "triangles": 764,
+      "volume": 23897.05,
+      "extents": [
+        104,
+        65.3,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 7802,
+      "volume": 14375.85,
+      "extents": [
+        104,
+        65.3,
+        7.05
+      ]
+    }
+  },
+  "cardkb2-clamp-pads-caps": {
+    "body": {
+      "triangles": 1060,
+      "volume": 27526.13,
+      "extents": [
+        104.65,
+        78.3,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 7682,
+      "volume": 17179.77,
+      "extents": [
+        104.65,
+        78.3,
+        10.2
       ]
     },
     "lidClamp": {

@@ -358,3 +358,21 @@ golden states, smoke steps, docs and translations.
   Offered to the keyboards that hang (CardKB v1.1, CardKB2, KeebDeck), not
   to the rest of the catalog: a Pi on clamp bars is not a case anyone asked
   for. Control `#board<i>_hold_holes|rails|clamp`.
+- **Pads** (the user: with a gap, a board on clamp bars lies on them with
+  nothing in front). `clampPads` (`clamp.ts`, pure) and the worker's
+  `clampPadSolids`: a pad from the plate down to the board's front opposite
+  each end of each bar (`PAD_W` 6 along the edge, `PAD_IN` 1.5 over the
+  PCB), a lip `PAD_FIT` beyond its edge down past its thickness; with no gap
+  only the lip. They step aside up to 8 mm for a part on the front or an
+  edge connector. Not for a panel whose glass has its rim.
+- **The socket under the face** (the user chose to sink the board rather
+  than a cover: a cover on the lid's face would stand on the bed, the lid
+  printing face down). `info.plugProud` gives the socket's height out of the
+  lid and the gap that sinks it.
+- **Cap size** (the user). `placement.capSize`, the stems' width;
+  `capSizeRange` (`capSize.ts`) keeps it between the widest key (the stem
+  covers its button) and what leaves every flange `CAP_HOLD` past its hole,
+  `CAP_GAP` from its neighbour's and a `KEY_WEB` (moved here from
+  `ports.ts`) between the holes, at the placement's fit; the slider's range
+  is the tightest field's at the caps' default fit. Missing: the button plus
+  `CAP_GROW` a side, as before. Control `#board<i>_capSize`.

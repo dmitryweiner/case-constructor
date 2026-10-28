@@ -8,8 +8,8 @@ lid. The catalog has keyboards sold as boards in a group of their own
 ## Hung from the lid, or on the floor
 
 A keyboard hangs from the top when added, like a display (see
-[Displays](displays.md)): the standoffs or rails come down from the top
-plate, the plate lies over it, the keys come up through it. On a console it
+[Displays](displays.md)): the standoffs, rails or clamp posts come down from
+the top plate, the plate lies over it, the keys come up through it. On a console it
 hangs from the slope.
 
 A keyboard whose mounting holes are among its keys stands on the floor
@@ -33,7 +33,15 @@ beside its long edges; they press it through foam tape (**Clamp gap**,
 −1 mm by default), step aside for parts on its back, take the key presses,
 and print with the lid. The posts make the case about 5 mm wider on each
 long side. A board on bars lies against the plate (**Gap to the ceiling**
-0, no warning).
+0, no warning). With a gap, a pad comes down from the plate opposite each end
+of each bar, as high as the gap, with a lip over the board's edge: the board
+is held between the pads and the bars, and the lips keep it from sliding
+across. A pad moves along the edge to clear a part there.
+
+A socket that stands up out of the lid through its slot (the CardKB's Grove)
+is reported with the gap that sinks it under the face: lowering the board
+hides it — with printed caps the CardKB needs about 0.8 mm. A raised cover on
+the lid would be in the way: the lid prints face down.
 
 ## Over the keys
 
@@ -55,7 +63,10 @@ long side. A board on bars lies against the plate (**Gap to the ceiling**
   in their holes (exploded, over the lid).
   **Caps** picks their shape: round, or square with rounded corners
   (**Corner radius**, 0.3 mm at least — never sharp); the holes follow the
-  stems' outline, grown by the fit.
+  stems' outline, grown by the fit. **Cap size** is the stems' width (a round
+  one's diameter): from covering the button to as wide as the neighbours
+  leave room for — each flange still 0.4 mm past its hole, 0.3 mm from the
+  next one's, 0.8 mm of lid between the holes.
 
 **Key fit** is the room around the window, or around each key (or cap stem)
 in its hole: the field's own clearance by default, 0.25 mm for caps.
@@ -66,7 +77,8 @@ sit in a window. It warns when:
 - the key tops are under the face with a hole per key (a finger cannot
   press a key at the bottom of a hole): open a window, use caps, make the
   top thinner (**Floor and ceiling**) or the gap 0;
-- the web between two holes is thinner than 0.8 mm: lower the fit;
+- the web between two holes is thinner than 0.8 mm: lower the fit (or the
+  cap size);
 - a cap's flange reaches less than 0.4 mm past its hole: lower the fit;
 - a floor keyboard's lid lies above its switches' plate line: raise the
   board by the amount it names.
@@ -82,9 +94,12 @@ display's glass seat. Such a keyboard hangs pressed against the plate (gap
 
 A connector that stands taller than what the plate lies on opens from behind
 its body, through the plate (the KeebDeck's USB-C beside its keypad). The
-CardKB's Grove socket stands up into its window, and its plug gets a slot in
-the lid 12 mm long beside the board, through which the cable goes into the
-case: the wall stays whole, and the case keeps room for the slot.
+CardKBs' Grove socket stands up through the plate (into the v1.1's window,
+through its own opening on the CardKB2), and its plug gets a slot in the lid
+12 mm long beside the board, through which the cable goes into the case: the
+wall stays whole, and the case keeps room for the slot. The CardKB2's USB-C,
+for flashing, is closed by default (the slot's room puts the wall 14 mm from
+it); its toggle opens it.
 
 ## Rests
 

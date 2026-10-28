@@ -9,7 +9,7 @@ import type { PlacedBoard } from './layout';
 import type { Support } from './standoffs';
 import { SINK, box, cylinder, postHole, roundSegments } from './standoffs';
 import { applyAffine } from './surface';
-import { CLAMP_BAR_T, CLAMP_BAR_W, clampHold } from './clamp';
+import { CLAMP_BAR_T, CLAMP_BAR_W, PAD_FIT, PAD_IN, PAD_LIP, PAD_W, clampHold, clampPads } from './clamp';
 
 /** A post's or a hole's (x, y) in the board frame: `side` along the bars, `at` the bar's place. */
 function spot(across: 'x' | 'y', side: number, at: number): [number, number] {
@@ -29,7 +29,7 @@ export function clampPosts(csg: CsgApi, scope: CsgScope, board: PlacedBoard, flo
   // turned upside down, a height above the panel's back is measured down from its front
   const top = board.z0 + board.def.size.t - hold.face;
   const centre = applyAffine(board.toCase, [board.def.size.w / 2, board.def.size.d / 2, 0]);
-  return hold.bars.flatMap((bar) => bar.posts.map((side): Support => {
+  const posts = hold.bars.flatMap((bar) => bar.posts.map((side): Support => {
     const [x, y] = applyAffine(board.toCase, [...spot(hold.across, side, bar.at), 0]);
     return {
       base: [x, y, floor / 2],
@@ -37,6 +37,40 @@ export function clampPosts(csg: CsgApi, scope: CsgScope, board: PlacedBoard, flo
       holes: postHole(csg, scope, spec, x, y, floor, top, [centre[0], centre[1]], n),
     };
   }));
+  return [...posts, ...clampPadSolids(csg, scope, board, floor)];
+}
+
+/**
+ * The pads between a clamped board's front and the plate, for the board as
+ * `upsideDown` gives it: from the plate to its front, and a lip beyond its
+ * edge down past its thickness. Box corners in the board frame, turned into
+ * the case like the posts.
+ */
+/** Below this gap the board lies on the plate itself, mm. */
+const PAD_GAP_MIN = 0.05;
+
+function clampPadSolids(csg: CsgApi, scope: CsgScope, board: PlacedBoard, floor: number): Support[] {
+  const hold = clampHold(board.def, board.placement);
+  const { w, d, t } = board.def.size;
+  const width = hold.across === 'x' ? w : d;
+  // turned upside down, the board's front faces the plate at z0, its back at z0 + t
+  const front = board.z0;
+  return clampPads(board.def, board.placement).map((pad): Support => {
+    const [c0, c1] = pad.side === 0 ? [-PAD_FIT - PAD_LIP, PAD_IN] : [width - PAD_IN, width + PAD_FIT + PAD_LIP];
+    const [l0, l1] = pad.side === 0 ? [-PAD_FIT - PAD_LIP, -PAD_FIT] : [width + PAD_FIT, width + PAD_FIT + PAD_LIP];
+    const block = (a0: number, a1: number, z1: number): Manifold => {
+      const [x0, y0] = spot(hold.across, a0, pad.at - PAD_W / 2);
+      const [x1, y1] = spot(hold.across, a1, pad.at + PAD_W / 2);
+      return box(csg, scope, x0, y0, floor - SINK - front, x1, y1, z1 - front);
+    };
+    // in the board frame, then into the case: z measured from its PCB underside there, which is the front turned over
+    // with no gap the plate is the pad: only the lip
+    const gap = front - floor;
+    const local = gap > PAD_GAP_MIN ? unionAll(csg, scope, [block(c0, c1, front), block(l0, l1, front + t)]) : block(l0, l1, front + t);
+    const material = transformSolid(scope, local, board.toCase);
+    const [bx, by] = applyAffine(board.toCase, [...spot(hold.across, (c0 + c1) / 2, pad.at), 0]);
+    return { base: [bx, by, floor / 2], material, holes: null };
+  });
 }
 
 /**

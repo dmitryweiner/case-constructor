@@ -45,15 +45,49 @@ export interface CapSize {
   flangeR: number;
 }
 
-/** Each key's cap: its stem over the key, its flange as wide as the neighbours leave room for. */
-export function capSizes(field: Pick<TopPort, 'rows'>): CapSize[] {
+/** The thinnest web the lid may keep between two keys' holes, mm. */
+export const KEY_WEB = 0.8;
+
+/** Each key's nearest neighbour's distance, centre to centre (none: a long way). */
+function nearestOf(field: Pick<TopPort, 'rows'>): number[] {
   const keys = keysOf(field);
   return keys.map((key, i) => {
-    const stemR = Math.min(key.w, key.d) / 2 + CAP_GROW;
     let nearest = Infinity;
     keys.forEach((other, j) => {
       if (j !== i) nearest = Math.min(nearest, Math.hypot(other.x - key.x, other.y - key.y));
     });
-    return { x: key.x, y: key.y, stemR, flangeR: Math.max(stemR, Math.min(stemR + CAP_LIP, (nearest - CAP_GAP) / 2)) };
+    return nearest;
+  });
+}
+
+/**
+ * The stem widths a field's caps may have at a fit: at least the widest key
+ * (the stem covers its button), at most what keeps every flange `CAP_HOLD`
+ * past its hole, `CAP_GAP` from its neighbour's, and a `KEY_WEB` between the
+ * holes. Null without keys.
+ */
+export function capSizeRange(field: Pick<TopPort, 'rows'>, fit: number): { min: number; max: number } | null {
+  const keys = keysOf(field);
+  if (keys.length === 0) return null;
+  const nearest = nearestOf(field);
+  const min = Math.max(...keys.map((key) => Math.max(key.w, key.d)));
+  const max = Math.min(...nearest.map((n) => 2 * Math.min((n - CAP_GAP) / 2 - CAP_HOLD - fit, (n - KEY_WEB) / 2 - fit)));
+  return { min, max: Math.max(min, max) };
+}
+
+/**
+ * Each key's cap: its stem over the key — `CAP_GROW` past it a side, or the
+ * chosen width kept within `capSizeRange` — its flange as wide as the
+ * neighbours leave room for.
+ */
+export function capSizes(field: Pick<TopPort, 'rows'>, chosen?: { size?: number; fit: number }): CapSize[] {
+  const keys = keysOf(field);
+  const nearest = nearestOf(field);
+  const range = chosen?.size !== undefined ? capSizeRange(field, chosen.fit) : null;
+  return keys.map((key, i) => {
+    const stemR = range && chosen?.size !== undefined
+      ? Math.min(range.max, Math.max(range.min, chosen.size)) / 2
+      : Math.min(key.w, key.d) / 2 + CAP_GROW;
+    return { x: key.x, y: key.y, stemR, flangeR: Math.max(stemR, Math.min(stemR + CAP_LIP, (nearest[i] - CAP_GAP) / 2)) };
   });
 }

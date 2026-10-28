@@ -11,7 +11,7 @@
 import type { PortDef, TopPort } from '../boards/schema';
 import { keyFields, keysOf, onFace } from '../boards/schema';
 import { CEILING_GAP, capStyle, frontHeight, keyFit, keysOpen, portCut } from '../boards/placement';
-import { CAP_HOLD, capCorner, capSizes } from './capSize';
+import { CAP_HOLD, KEY_WEB, capCorner, capSizes } from './capSize';
 import type { CutterSpec, ExtraCut } from './cutters';
 import { VERTICAL_AXES, flareAt, horizontalAxes } from './cutters';
 import type { Dims } from './face';
@@ -86,8 +86,7 @@ export function portAxis(board: PlacedBoard, port: PortDef & { edge: 'front' | '
   return { face, dir: [dir[0], dir[1]] };
 }
 
-/** The thinnest web the lid may keep between two keys' holes, mm. */
-export const KEY_WEB = 0.8;
+export { KEY_WEB } from './capSize';
 
 /**
  * What a port opens: itself, or — a key field — its window or a hole per
@@ -103,7 +102,7 @@ function openingsOf(board: PlacedBoard, port: PortDef): { port: PortDef; window:
   // a printed cap's stem goes through its hole
   if (open === 'caps') {
     const style = capStyle(board.placement);
-    return capSizes(port).map((cap) => ({
+    return capSizes(port, { size: board.placement.capSize, fit: clearance }).map((cap) => ({
       port: { ...port, x: cap.x, y: cap.y, w: 2 * cap.stemR, d: 2 * cap.stemR, shape: style.shape === 'round' ? 'round' : 'rect', clearance },
       window: false,
       // a square stem's hole follows its rounded corners, grown by the fit
@@ -317,7 +316,7 @@ export function cutWarnings(
     const cutter = cutters.find((one) => one.source.kind === 'extra' && one.source.index === index);
     out.push({ code: 'warn.cutInCorner', params: { n: index + 1 }, ...(cutter ? { spot: cutterSpot(cutter, dims) } : {}) });
   }
-  out.push(...keyNotes(layout, shape));
+  out.push(...keyNotes(layout, shape), ...plugNotes(layout));
   // a hung display's window on the top, at its outer width
   for (const cutter of cutters) {
     if (!cutter.flare || cutter.source.kind !== 'port' || shape.kind !== 'box') continue;
@@ -345,8 +344,8 @@ export function thinnestWeb(field: Pick<TopPort, 'rows'>, fit: number): number {
 }
 
 /** The thinnest web between two caps' holes (their stems grown by `fit`), mm. */
-export function thinnestCapWeb(field: Pick<TopPort, 'rows'>, fit: number): number {
-  const caps = capSizes(field);
+export function thinnestCapWeb(field: Pick<TopPort, 'rows'>, fit: number, size?: number): number {
+  const caps = capSizes(field, { size, fit });
   let thinnest = Infinity;
   caps.forEach((a, i) => caps.slice(i + 1).forEach((b) => {
     thinnest = Math.min(thinnest, Math.hypot(a.x - b.x, a.y - b.y) - a.stemR - b.stemR - 2 * fit);
@@ -383,7 +382,7 @@ export function keyNotes(layout: CaseLayout, shape: ShapeState): Message[] {
       const fit = keyFit(board.def, board.placement, field);
       if (open === 'caps') {
         // the caps stand out by design: say where they are, and whether their flanges hold them in
-        const caps = capSizes(field);
+        const caps = capSizes(field, { size: board.placement.capSize, fit });
         out.push({ code: 'info.keyCaps', params: { ...params, n: caps.length }, spot });
         const hold = Math.min(...caps.map((cap) => cap.flangeR - cap.stemR - fit));
         if (hold < CAP_HOLD - 1e-9) out.push({ code: 'warn.capFlangeSmall', params: { ...params, mm: Math.max(0, hold).toFixed(1) }, spot });
@@ -397,11 +396,34 @@ export function keyNotes(layout: CaseLayout, shape: ShapeState): Message[] {
         const high = ceilingAt(shape, layout.dims, layout.console.frontH, layout.console.backH)(p[0], p[1]) - p[2] - CEILING_GAP;
         if (high > 0.2) out.push({ code: 'warn.keysPlateHigh', params: { ...params, mm: high.toFixed(1), z: (board.placement.z + high).toFixed(1) }, spot });
       }
-      const web = open === 'holes' ? thinnestWeb(field, fit) : open === 'caps' ? thinnestCapWeb(field, fit) : Infinity;
+      const web = open === 'holes' ? thinnestWeb(field, fit) : open === 'caps' ? thinnestCapWeb(field, fit, board.placement.capSize) : Infinity;
       if (web < KEY_WEB - 1e-9) out.push({ code: 'warn.keyWebThin', params: { ...params, mm: Math.max(0, web).toFixed(1), min: KEY_WEB }, spot });
     }
   }
   return out;
+}
+
+/**
+ * A plug's socket that stands up out of the lid through its slot (the
+ * CardKB's Grove beside its keys): how far, and the gap to the ceiling that
+ * sinks it under the face.
+ */
+export function plugNotes(layout: CaseLayout): Message[] {
+  return layout.boards.flatMap((board) => {
+    const frame = board.frame;
+    if (!board.hung || !frame) return [];
+    const toPlate = invertRigid(frame);
+    return board.def.ports.flatMap((port): Message[] => {
+      if (onFace(port) || port.reach === undefined || !portCut(board.placement, port.id, port.cut)) return [];
+      const { face } = portAxis(board, port);
+      const local = applyAffine(invertRigid(board.toCase), face);
+      const top = applyAffine(board.toCase, [local[0], local[1], board.def.size.t + port.z + port.h]);
+      const out = applyAffine(toPlate, top)[2];
+      if (out <= 0.05) return [];
+      const spot = boxSpot(boxAround([face, top]), { board: board.index });
+      return [{ code: 'info.plugProud', params: { ...boardParams(board), port: port.id, portType: port.type, mm: out.toFixed(1), gap: (Math.ceil((board.placement.z + out + 0.05) * 10) / 10).toFixed(1) }, spot }];
+    });
+  });
 }
 
 /** Whether a user cut reaches into a rounded corner zone of a flat face. */

@@ -36,6 +36,7 @@ export type MessageCode =
   | 'warn.capFlangeSmall'
   | 'warn.restTooLong'
   | 'warn.restBlocked'
+  | 'info.plugProud'
   // cutouts (ports)
   | 'warn.portFar'
   | 'info.cutSplit'

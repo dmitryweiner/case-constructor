@@ -327,6 +327,12 @@ await page.click('#board1_capShape_square');
 await expectWatertight('keys:square-caps');
 if (Number(await page.getAttribute('#board1_capR', 'min')) < 0.3) errors.push('[keyboards] a square cap\'s corner may go sharp');
 await setRange('board1_capR', 0.3);
+// the widest caps the neighbours leave room for: no thin web, the flanges still hold (at the caps' own fit:
+// the 2 mm fit above lets no flange hold, whatever the size)
+await setRange('board1_keyFit', 0.25);
+await setRange('board1_capSize', await page.getAttribute('#board1_capSize', 'max'));
+await expectWatertight('keys:caps-widest');
+if ((await page.textContent('#warnings'))?.includes('may slip out')) errors.push('[keyboards] the widest caps slip out');
 await page.waitForTimeout(200);
 if (Number(await page.evaluate(() => window.__case.state().boards[1].capR)) < 0.3) errors.push('[keyboards] a square cap\'s corner went sharp');
 await expectWatertight('keys:square-caps-r');
@@ -335,6 +341,20 @@ await page.click('#board1_keys_window');
 await page.click('#board1_hold_clamp');
 await expectWatertight('keys:cardkb-clamp');
 if ((await page.textContent('#board1'))?.includes('grooved rails')) errors.push('[keyboards] a clamped CardKB still says it is held by rails');
+// sunk under the lid, it lies between the bars and the pads; the socket's note names the gap that hides it
+// (on a 2 mm top: the slider extremes above left a 6 mm one, under which the socket hides anyway)
+const floorBefore = await page.inputValue('#case_floor');
+await setRange('case_floor', 2);
+await setRange('board1_gap', 1.3);
+await expectWatertight('keys:cardkb-pads');
+const sinkTo = (await page.textContent('#warnings'))?.match(/the socket stands [0-9.]+ mm out of the lid through its slot; a Gap to the ceiling of ([0-9.]+) mm/)?.[1];
+if (!sinkTo) errors.push('[keyboards] no word on how far the Grove socket stands out');
+else {
+  await setRange('board1_gap', sinkTo);
+  await expectWatertight('keys:cardkb-sunk');
+  if ((await page.textContent('#warnings'))?.includes('the socket stands')) errors.push(`[keyboards] the Grove socket still stands out at ${sinkTo} mm`);
+}
+await setRange('case_floor', floorBefore);
 await page.click('#tabLid');
 await page.waitForTimeout(300);
 if (!(await drawn()).includes('clamp')) errors.push(`[keyboards] the Lid tab draws ${await drawn()}, no clamp bars`);
