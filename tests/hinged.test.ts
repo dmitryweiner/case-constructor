@@ -11,13 +11,13 @@ import { buildCase } from '../src/geo/build';
 import { validateMesh } from '../src/geo/validate';
 import { caseDims } from '../src/geo/layout';
 import { lidFaces } from '../src/geo/lidSpec';
-import { axleHoles, barrelMin, cableSlot, defaultCable, defaultHingeSpec, foldOf, hingeScrews, knuckleRuns, sanitizeHingeSpec, upperPose } from '../src/geo/hinge';
+import { GAP_DEFAULT, MAGNET_SKIN, axleHoles, barrelMin, cableSlot, gapFor, defaultCable, defaultHingeSpec, foldOf, hingeScrews, knuckleRuns, sanitizeHingeSpec, upperPose } from '../src/geo/hinge';
 import { applyAffine, rotateVec } from '../src/geo/surface';
 import { catalogBoard } from '../src/boards/catalog';
 import { defaultPlacement } from '../src/boards/placement';
 import { defaultState, sanitizeState, withShapeKind } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
-import { casesOf, foldOfState, halfHinge, halfState, hingeNotes, withHalf } from '../src/state/hinged';
+import { casesOf, foldOfState, gapOf, halfHinge, halfState, hingeNotes, innerProtrusion, withHalf } from '../src/state/hinged';
 
 function hinged(patch: Partial<AppState> = {}): AppState {
   return sanitizeState({ ...withShapeKind(defaultState(), 'hinged'), ...patch });
@@ -463,6 +463,77 @@ describe('a printed hinge', () => {
   it('a knuckle hinge takes no cones', () => {
     expect(sanitizeHingeSpec({ kind: 'knuckles', axle: 'cones' }).axle).toBe('pin');
     expect(sanitizeHingeSpec({ kind: 'leaves', axle: 'cones' }).axle).toBe('cones');
+  });
+});
+
+describe('the gap and the magnets', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+
+  it('the gap takes what stands out of both inner faces', () => {
+    expect(gapFor(0, 0)).toBe(GAP_DEFAULT);
+    expect(gapFor(1, 0.4)).toBe(1.9);
+    const base = hinged();
+    // printed caps on a CardKB hung under the lower half's top
+    const caps = sanitizeState({ ...base, boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0.3, keys: 'caps' }] });
+    expect(innerProtrusion(caps, 'a')).toBeGreaterThan(0.5);
+    expect(gapOf(caps)).toBeCloseTo(gapFor(innerProtrusion(caps, 'a'), 0), 9);
+    expect(hingeNotes(caps).some((note) => note.code === 'info.gapAuto')).toBe(true);
+    const tight = sanitizeState({ ...caps, hinge: { ...caps.hinge, gapAuto: false, gap: 0.3 } });
+    expect(gapOf(tight)).toBe(0.3);
+    expect(hingeNotes(tight).some((note) => note.code === 'warn.gapSmall')).toBe(true);
+    // a raised label on a lid on top stands out too
+    const label = sanitizeState({ ...base, boards: [], label: { ...base.label, on: true, raised: true, depth: 0.8 } });
+    expect(innerProtrusion(label, 'a')).toBeCloseTo(0.8, 9);
+  });
+
+  it('magnets inside, meeting through the inner faces when closed', () => {
+    const base = hinged();
+    const state = sanitizeState({
+      ...base, hinge: { ...base.hinge, magnets: true, magnet: '6x3', b: { ...base.hinge.b, lid: { ...base.hinge.b.lid, face: 'bottom' } } },
+    });
+    const fold = foldOfState(state);
+    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, null, halfHinge(state, half)));
+    const ma = halfHinge(state, 'a')?.magnets;
+    const mb = halfHinge(state, 'b')?.magnets;
+    if (!ma || !mb) throw new Error('no magnets');
+    const hA = caseDims(halfState(state, 'a')).h;
+    const hB = caseDims(halfState(state, 'b')).h;
+    const shared = (one: SurfaceMesh, other: SurfaceMesh): number => {
+      const scope = new CsgScope();
+      try {
+        return scope.keep(scope.keep(toManifold(csg, one)).intersect(scope.keep(toManifold(csg, other)))).volume();
+      } finally {
+        scope.dispose();
+      }
+    };
+    const disc = (x: number, y: number, z0: number, z1: number, r: number): SurfaceMesh => {
+      const scope = new CsgScope();
+      try {
+        return fromManifold(scope.keep(csg.Manifold.cylinder(z1 - z0, r, r, 24).translate([x, y, z0])));
+      } finally {
+        scope.dispose();
+      }
+    };
+    for (const [m, built, h] of [[ma, a, hA], [mb, b, hB]] as const) {
+      const parts = mergeMeshes([built.body, built.lid]);
+      for (const spot of m.spots) {
+        // the pocket is empty, the skin over it is there
+        expect(shared(disc(spot.x, spot.y, m.bottom + 0.1, m.top - 0.1, m.pocketR - 0.1), parts)).toBeLessThan(1e-6);
+        expect(shared(disc(spot.x, spot.y, h - MAGNET_SKIN + 0.1, h - 0.1, m.pocketR - 0.1), parts)).toBeGreaterThan(0);
+      }
+    }
+    // the lower half's magnets under the upper half's, closed
+    for (const [i, spot] of ma.spots.entries()) {
+      const over = applyAffine(upperPose(fold, 0), [mb.spots[i].x, mb.spots[i].y, mb.top]);
+      expect(over[0]).toBeCloseTo(spot.x, 6);
+      expect(over[1]).toBeCloseTo(spot.y, 6);
+    }
+    for (let angle = 0; angle <= 180; angle += 30) {
+      expect(shared(mergeMeshes([a.body, a.lid]), transformMesh(mergeMeshes([b.body, b.lid]), upperPose(fold, angle)))).toBeLessThan(1e-6);
+    }
   });
 });
 

@@ -272,3 +272,11 @@ stands alone.
   The pads' boxes are checked against the boards (`leafPadWarnings`), not
   as supports. No bought hinge (decided).
 
+- **H8 (2026-10-29).** Done. The automatic gap adds up both faces'
+  protrusions (closed, they may face each other) plus 0.5 mm, 1 mm when
+  nothing stands out; a manual gap under the bare protrusions is a warning.
+  The magnets sit a quarter in from each side rather than at the corners
+  (the lid's corner posts are there), one clearance off the wall for both
+  halves so they meet, built as supports of the inner face's plate. Their
+  bosses are checked against the boards' boxes.
+

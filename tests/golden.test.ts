@@ -339,6 +339,13 @@ const STATES: Record<string, AppState> = {
     lid: { ...defaultState().lid, face: 'bottom' },
     hinge: { kind: 'leaves', axle: 'cones', leafHole: 'nut', b: { boards: [], lid: { face: 'bottom' } } },
   }),
+  // H8: magnets inside at the front edge (on the lower half's top lid, in the upper half's body), the gap from printed caps
+  'hinged-magnets-caps': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0.3, keys: 'caps' }],
+    hinge: { magnets: true, magnet: '8x2', b: { boards: [], lid: { face: 'bottom' } } },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

@@ -127,6 +127,17 @@ export function buildCase(
       ? (board.carried ? rimSolids(csg, scope, board, shape.floor, segments) : []) : board.def.battery
       ? batterySupports(csg, scope, board, board.def.battery, shape.floor, segments)
       : board.hung ? hung(board) : held(board)));
+    // a hinged half's magnets: a boss under the inner face's plate, its pocket open into the cavity —
+    // a support of that plate, so it goes with the lid when the lid is on top
+    if (hinge?.magnets) {
+      const m = hinge.magnets;
+      const n = roundSegments(segments);
+      for (const spot of m.spots) {
+        const material = cylinder(csg, scope, spot.x, spot.y, m.bottom - 1, dims.h - shape.floor + SINK, m.bossR, n);
+        const pocket = cylinder(csg, scope, spot.x, spot.y, m.bottom - 2, m.top, m.pocketR, n);
+        supports.push({ base: [spot.x, spot.y, dims.h - shape.floor / 2], material, holes: pocket });
+      }
+    }
     // rests under a keyboard's free corners grow from the floor, like a floor board's standoffs
     for (const rest of caseRests(layout, shape.floor)) {
       const material = cylinder(csg, scope, rest.cx, rest.cy, shape.floor - SINK, rest.top, REST_R, roundSegments(segments));

@@ -14,11 +14,12 @@ import type { FanState, LabelState, VentState } from '../geo/extras';
 import { defaultFan, defaultLabel, defaultVents, sanitizeFan, sanitizeLabel, sanitizeVents } from '../geo/extras';
 import type { LidState } from '../geo/lidSpec';
 import { defaultLid, sanitizeLid } from '../geo/lidSpec';
-import { caseDims, effectiveLid, minimumDims } from '../geo/layout';
+import { caseDims, caseLayout, effectiveLid, minimumDims } from '../geo/layout';
+import { topProtrusion } from '../geo/ports';
 import { SIZE_MAX, SIZE_MIN, clampNum, plateOf, shapeSpec } from '../geo/shape';
 import type { Fold, HalfHinge, HingeSpec } from '../geo/hinge';
 import {
-  CABLE_KEEP, CABLE_TOP_GAP, upperPose, axisOffset, axisSplit, axleHoles, bodyRange, cableSlot, defaultHingeSpec, foldOf, hingeScrews, knuckleRuns,
+  CABLE_KEEP, CABLE_TOP_GAP, GAP_DEFAULT, gapFor, magnetBosses, upperPose, axisOffset, axisSplit, axleHoles, bodyRange, cableSlot, defaultHingeSpec, foldOf, hingeScrews, knuckleRuns,
   knuckleStrip, leafLayout, leafScrews, sanitizeHingeSpec,
 } from '../geo/hinge';
 import type { Message, SpotBox } from '../geo/message';
@@ -135,13 +136,30 @@ export function casesOf(state: AppState): { half: Half | null; state: AppState }
   return isHinged(state) ? HALVES.map((half) => ({ half, state: halfState(state, half) })) : [{ half: null, state }];
 }
 
+/**
+ * How far anything stands out of a half's inner face: what goes through its
+ * plate, plugs in their slots, a raised label on a lid on top.
+ */
+export function innerProtrusion(state: AppState, half: Half): number {
+  const one = halfState(state, half);
+  const layout = caseLayout(one);
+  const label = one.label.on && one.label.raised && one.lid.face === 'top' ? one.label.depth : 0;
+  return Math.max(topProtrusion(layout, { ...one.shape, console: layout.console }), label);
+}
+
+/** The gap between the closed halves: from what stands out of their inner faces, or as set. */
+export function gapOf(state: AppState): number {
+  return state.hinge.gapAuto ? gapFor(innerProtrusion(state, 'a'), innerProtrusion(state, 'b')) : state.hinge.gap;
+}
+
 /** The hinge's axis for the halves as they are built (the axis split follows their lids). */
 export function foldOfState(state: AppState): Fold {
   const a = halfState(state, 'a');
   const b = halfState(state, 'b');
   const dimsA = caseDims(a);
-  const { zA } = axisSplit(state.hinge, state.hinge.gap, a.lid.face, b.lid.face);
-  return foldOf(state.hinge, dimsA.d, dimsA.h, caseDims(b).h, state.hinge.gap, zA);
+  const gap = gapOf(state);
+  const { zA } = axisSplit(state.hinge, gap, a.lid.face, b.lid.face);
+  return foldOf(state.hinge, dimsA.d, dimsA.h, caseDims(b).h, gap, zA);
 }
 
 /** The cables' slots along the hinge: x range and size, the same in both halves. */
@@ -178,10 +196,20 @@ export function halfHinge(state: AppState, half: Half): HalfHinge | null {
     holes: axleHoles(hinge),
     slots: slots.map((slot) => ({ ...slot, z: Math.max(one.shape.floor + slot.h / 2, ceiling - CABLE_TOP_GAP - slot.h / 2) })),
     kind: hinge.kind,
+    magnets: hinge.magnets
+      // one clearance for both halves: closed, their magnets meet
+      ? magnetBosses(hinge.magnet, dims.w, dims.d, dims.h, one.shape.wall, half === 'a' ? 'front' : 'back',
+        Math.max(magnetClear(halfState(state, 'a')), magnetClear(halfState(state, 'b'))))
+      : null,
     leaf: hinge.kind === 'leaves' ? leafLayout({
       zAxis, e: axisOffset(hinge), blocks, screw: hinge.leafScrew, hole: hinge.leafHole, ...wallOf(one),
     }) : null,
   };
+}
+
+/** How far a magnet's boss keeps off the wall: a top lid's skirt hangs there. */
+function magnetClear(one: AppState): number {
+  return one.lid.face === 'top' ? one.lid.lip.t + one.lid.fit + 0.5 : 0.5;
 }
 
 /**
@@ -220,12 +248,16 @@ export function halfStrip(state: AppState, half: Half): [number, number] | null 
 export function hingeNotes(state: AppState): Message[] {
   if (!isHinged(state)) return [];
   const out: Message[] = [];
-  const { printable } = axisSplit(state.hinge, state.hinge.gap, state.lid.face, state.hinge.b.lid.face);
+  const { printable } = axisSplit(state.hinge, gapOf(state), state.lid.face, state.hinge.b.lid.face);
   if (!printable) out.push({ code: 'warn.hingeUnprintable' });
   const hinge = halfHinge(state, 'a');
   const screws = hinge ? hingeScrews(state.hinge, hinge.blocks) : null;
   if (screws) out.push({ code: 'info.hingeScrews', params: { n: screws.count, size: state.hinge.screw, len: screws.length } });
   if (state.hinge.axle === 'snap') out.push({ code: 'info.hingeSnap' });
+  const proud = innerProtrusion(state, 'a') + innerProtrusion(state, 'b');
+  const need = gapFor(innerProtrusion(state, 'a'), innerProtrusion(state, 'b'));
+  if (!state.hinge.gapAuto && state.hinge.gap < proud) out.push({ code: 'warn.gapSmall', params: { gap: state.hinge.gap.toFixed(1), need: need.toFixed(1) } });
+  if (state.hinge.gapAuto && need > GAP_DEFAULT) out.push({ code: 'info.gapAuto', params: { gap: need.toFixed(1) } });
   if (state.hinge.kind === 'leaves') {
     const leaves = HALVES.flatMap((half) => halfHinge(state, half)?.leaf ?? []);
     const screws = leafScrews(leaves, state.shape.wall);

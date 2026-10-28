@@ -30,7 +30,7 @@ import { SCREWS } from './geo/fasteners';
 import { screwShape } from './geo/thread';
 import { extrasWarnings, faceSpot, flatRegion } from './geo/extras';
 import type { CutsCardHandle } from './ui/cutsCard';
-import { cutWarnings, knuckleCutWarnings, leafPadWarnings, outerTopAt, portCutters } from './geo/ports';
+import { cutWarnings, knuckleCutWarnings, leafPadWarnings, magnetWarnings, outerTopAt, portCutters } from './geo/ports';
 import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
 import { effectiveLid } from './geo/layout';
 import { HEAD_FLOOR, headSeat, lidFaces } from './geo/lidSpec';
@@ -373,6 +373,7 @@ function caseNotices(one: AppState, label: LabelRaster | null, hinged: ReturnTyp
     else out.push(...knuckleCutWarnings(layout, hinged.hinge, from, cutters).map(notice));
     out.push(...leafPadWarnings(layout, hinged.hinge, one.shape.wall).map(notice));
   }
+  if (hinged) out.push(...magnetWarnings(layout, hinged.hinge).map(notice));
   if (lidBuilt.fastening !== 'snaps') {
     const { frame, plate, zp, spots } = lidPosts(one);
     const limits = headLimitsOf(one);

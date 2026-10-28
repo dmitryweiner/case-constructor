@@ -446,6 +446,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   and lays both on their wall faces behind everything (`hingeForPrint`).
   Cones (`axle: 'cones'`, leaves only) print in place. The axle's solids are
   shared by both kinds (`axleSolids`).
+  The gap (`gapOf`): automatic from `innerProtrusion` of both halves
+  (`topProtrusion` in `ports.ts` plus a raised label on a top lid), or the
+  user's. Magnets (`magnetBosses`): two bosses under each inner face's
+  plate, built as supports of that plate in `buildCase` (so the owner and
+  the pocket follow the support rules).
 - Visible text comes only from `src/i18n/` dictionaries; `en.ts` is the
   reference and gives `Key`. The core and the worker speak in message codes
   (`geo/message.ts`). A test fails on any Cyrillic or Hebrew in a string
@@ -535,7 +540,7 @@ Openings: `#cutAdd`; per cut `#cut<i>_face` (select), `#cut<i>_shape_rect|round`
 Case card: `#case_kind_box|cylinder|console|hinged`, `#case_cornerR`, `#case_edgeR`,
 `#case_wall`, `#case_floor`, `#case_auto`, `#case_w`, `#case_diameter`,
 `#case_d`, `#case_h`, `#case_hA|_hB` (hinged), `#case_frontH`, `#case_backH`.
-Hinged: the card `#hingeCard` (`#hinge_gap`, `#hinge_layout_ends|full`,
+Hinged: the card `#hingeCard` (`#hinge_gapAuto`, `#hinge_gap`, `#hinge_magnets`, `#hinge_magnet`, `#hinge_layout_ends|full`,
 `#hinge_knuckles_3|5|7`, `#hinge_length` (two blocks), `#hinge_barrelD`,
 `#hinge_clearance`, `#hinge_axle_pin|screw|snap|cones`, `#hinge_pinD`, `#hinge_pinFit` (a pin),
 `#hinge_screw_M2|M2.5|M3` (a screw), `#hinge_kind_knuckles|leaves`,

@@ -8,8 +8,8 @@ import { make } from './dom';
 import { t } from '../i18n';
 import type { AppState } from '../state/schema';
 import type { Half, HingeState } from '../state/hinged';
-import { GAP_MAX, HALVES } from '../state/hinged';
-import { HOLE_KINDS } from '../geo/fasteners';
+import { GAP_MAX, HALVES, gapOf } from '../state/hinged';
+import { HOLE_KINDS, MAGNETS, MAGNET_SIZES } from '../geo/fasteners';
 import type { Cable } from '../geo/hinge';
 import {
   CABLE_KINDS, CABLE_W_MAX, HINGE_KINDS, MAX_CABLES, PLUG_MAX, axlesFor, defaultCable,
@@ -23,9 +23,27 @@ function hingeOf(state: AppState, patch: Partial<HingeState>): AppState {
 export function hingeControls(): Control<AppState>[] {
   return [
     {
+      kind: 'check', key: 'gapAuto', label: 'hinge.gapAuto', hint: 'hinge.gapAuto.hint',
+      get: (state) => state.hinge.gapAuto,
+      // switching it off starts from the gap the case has now
+      set: (state, value) => hingeOf(state, value ? { gapAuto: true } : { gapAuto: false, gap: gapOf(state) }),
+    },
+    {
       kind: 'range', key: 'gap', label: 'hinge.gap', hint: 'hinge.gap.hint', min: 0, max: GAP_MAX, step: 0.1,
-      get: (state) => state.hinge.gap,
+      disabled: (state) => state.hinge.gapAuto,
+      get: (state) => gapOf(state),
       set: (state, value) => hingeOf(state, { gap: value }),
+    },
+    {
+      kind: 'check', key: 'magnets', label: 'hinge.magnets', hint: 'hinge.magnets.hint',
+      get: (state) => state.hinge.magnets,
+      set: (state, value) => hingeOf(state, { magnets: value }),
+    },
+    {
+      kind: 'select', key: 'magnet', label: 'lid.magnet', when: (state) => state.hinge.magnets,
+      options: MAGNET_SIZES.map((size) => ({ value: size, text: `${MAGNETS[size].d} × ${MAGNETS[size].h}` })),
+      get: (state) => state.hinge.magnet,
+      set: (state, value) => hingeOf(state, { magnet: MAGNET_SIZES.find((one) => one === value) ?? state.hinge.magnet }),
     },
     {
       kind: 'segmented', key: 'kind', label: 'hinge.kind', hint: 'hinge.kind.hint',

@@ -593,6 +593,15 @@ await page.click('#hinge_kind_knuckles');
 await page.click('#lid_face_top');
 await page.click('#edit_half_a');
 await page.click('#lid_face_top');
+// the gap from what stands out, set by hand; magnets inside
+if (!(await page.locator('#hinge_gap').isDisabled())) errors.push('[hinged] the automatic gap can be dragged');
+await page.click('#hinge_gapAuto');
+await setRange('hinge_gap', 2.5);
+await page.click('#hinge_magnets');
+if (!(await page.locator('#hinge_magnet').isVisible())) errors.push('[hinged] no magnet size');
+await expectWatertight('hinged:magnets');
+await page.click('#hinge_magnets');
+await page.click('#hinge_gapAuto');
 if (await page.locator('#board0_remove').count()) errors.push('[hinged] the lower half shows the upper half\'s board');
 if ((await page.locator('#lid_face_top').getAttribute('class'))?.includes('active') !== true) errors.push('[hinged] the lower half shows the upper half\'s lid');
 await setRange('view_angle', 0);

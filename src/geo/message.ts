@@ -29,6 +29,9 @@ export type MessageCode =
   | 'info.leafScrews.nut'
   | 'warn.leafNoWall'
   | 'warn.leafPadHitsBoard'
+  | 'warn.gapSmall'
+  | 'info.gapAuto'
+  | 'warn.magnetHitsBoard'
   // layout checks (layout)
   | 'warn.boardsOverlap'
   | 'warn.standoffHitsBoard'

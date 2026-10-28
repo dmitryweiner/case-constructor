@@ -17,8 +17,8 @@
 import type { Affine } from './surface';
 import { composeAffine, translation } from './surface';
 import { clampNum } from './shape';
-import type { HoleKind } from './fasteners';
-import { HOLE_KINDS, NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE, bossDiameter } from './fasteners';
+import type { HoleKind, MagnetSize } from './fasteners';
+import { BOSS_WALL, HOLE_KINDS, MAGNETS, MAGNET_SIZES, NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE, bossDiameter } from './fasteners';
 import type { CutterSpec } from './cutters';
 import { extraCutters } from './cutters';
 import type { Dims } from './face';
@@ -127,6 +127,11 @@ export interface HingeSpec {
   /** a printed hinge's leaves: the screws through them and what they screw into inside the wall */
   leafScrew: HingeScrew;
   leafHole: HoleKind;
+  /** the gap between the halves from what stands out of their inner faces, or `gap` as set */
+  gapAuto: boolean;
+  /** magnets at the front edge, inside: a pair facing each other through the inner faces */
+  magnets: boolean;
+  magnet: MagnetSize;
 }
 
 export const BARREL_D_MIN = 5;
@@ -175,7 +180,7 @@ export const LEAF_SCREW_INSET = 4;
 export function defaultHingeSpec(): HingeSpec {
   return {
     kind: 'knuckles', axle: 'pin', layout: 'ends', barrelD: 8, knuckles: 3, length: 10, clearance: 0.4, pinD: 1.75, pinFit: 0.15, screw: 'M2.5', cables: [],
-    leafScrew: 'M2.5', leafHole: 'insert',
+    leafScrew: 'M2.5', leafHole: 'insert', gapAuto: true, magnets: false, magnet: '6x3',
   };
 }
 
@@ -259,6 +264,9 @@ export function sanitizeHingeSpec(raw: unknown): HingeSpec {
     cables: sanitizeCables(Reflect.get(r, 'cables')),
     leafScrew: oneOf(HINGE_SCREWS, Reflect.get(r, 'leafScrew'), d.leafScrew),
     leafHole: oneOf(HOLE_KINDS, Reflect.get(r, 'leafHole'), d.leafHole),
+    gapAuto: typeof Reflect.get(r, 'gapAuto') === 'boolean' ? Reflect.get(r, 'gapAuto') === true : d.gapAuto,
+    magnets: Reflect.get(r, 'magnets') === true,
+    magnet: oneOf(MAGNET_SIZES, Reflect.get(r, 'magnet'), d.magnet),
   };
 }
 
@@ -434,6 +442,8 @@ export interface HalfHinge {
   kind: HingeKind;
   /** a printed hinge: this half's leaf (null for knuckles) */
   leaf: LeafLayout | null;
+  /** magnets inside, at the edge away from the hinge; null without */
+  magnets: MagnetBosses | null;
 }
 
 /**
@@ -514,5 +524,48 @@ export function leafScrews(leaves: readonly LeafLayout[], wall: number): { count
   if (leaves.length === 0) return null;
   const leaf = leaves[0];
   return { count: leaves.reduce((sum, one) => sum + one.screws.length, 0), length: Math.floor(leaf.t + wall + padLength(leaf) - 0.5) };
+}
+
+/** The gap's spare over what stands out of both inner faces, and the gap when nothing does, mm. */
+export const GAP_SPARE = 0.5;
+export const GAP_DEFAULT = 1;
+
+/** The gap that clears what stands out of both inner faces (they may face each other), to 0.1 mm up. */
+export function gapFor(proudA: number, proudB: number): number {
+  const need = proudA + proudB;
+  return need > 0 ? Math.ceil((need + GAP_SPARE) * 10) / 10 : GAP_DEFAULT;
+}
+
+/** Between a magnet and the outside of its inner face, mm: enough to print, thin enough to pull through. */
+export const MAGNET_SKIN = 0.6;
+/** A magnet's pocket: its diameter plus this, mm. */
+export const MAGNET_POCKET_FIT = 0.2;
+
+/** The magnets' bosses of a half, in its frame: centres, the pocket and the boss. */
+export interface MagnetBosses {
+  spots: { x: number; y: number }[];
+  /** the pocket's radius and its top (the skin's underside), its bottom open into the cavity */
+  pocketR: number;
+  top: number;
+  bottom: number;
+  bossR: number;
+}
+
+/**
+ * A half's two magnets at its front edge (the lower half's front, the upper
+ * half's far edge: closed, they meet), a quarter in from each side, clear of
+ * the skirt along the wall: each in a boss under the inner face's plate, its
+ * pocket open into the cavity, `MAGNET_SKIN` of plate left outside.
+ */
+export function magnetBosses(
+  size: MagnetSize, w: number, d: number, h: number, wall: number, side: 'front' | 'back', clear: number,
+): MagnetBosses {
+  const magnet = MAGNETS[size];
+  const pocketR = (magnet.d + MAGNET_POCKET_FIT) / 2;
+  const bossR = pocketR + BOSS_WALL;
+  const inset = wall + clear + bossR;
+  const y = side === 'front' ? inset : d - inset;
+  const top = h - MAGNET_SKIN;
+  return { spots: [{ x: w / 4, y }, { x: (3 * w) / 4, y }], pocketR, top, bottom: top - magnet.h - 0.2, bossR };
 }
 

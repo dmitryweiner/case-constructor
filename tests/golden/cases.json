@@ -1419,5 +1419,45 @@
         16.4
       ]
     }
+  },
+  "hinged-magnets-caps:a": {
+    "body": {
+      "triangles": 1276,
+      "volume": 26545.29,
+      "extents": [
+        104,
+        73.7,
+        29.5
+      ]
+    },
+    "lid": {
+      "triangles": 8120,
+      "volume": 14899.24,
+      "extents": [
+        104,
+        65.3,
+        7.05
+      ]
+    }
+  },
+  "hinged-magnets-caps:b": {
+    "body": {
+      "triangles": 1244,
+      "volume": 25372.53,
+      "extents": [
+        104,
+        73.7,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 14741.63,
+      "extents": [
+        104,
+        65.3,
+        5
+      ]
+    }
   }
 }

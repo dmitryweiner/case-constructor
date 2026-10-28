@@ -11,7 +11,7 @@
 import type { PortDef, TopPort } from '../boards/schema';
 import { keyFields, keysOf, onFace } from '../boards/schema';
 import { CEILING_GAP, capStyle, frontHeight, keyFit, keysOpen, portCut } from '../boards/placement';
-import { CAP_HOLD, KEY_WEB, capCorner, capSizes } from './capSize';
+import { CAP_HOLD, CAP_PROUD, KEY_WEB, capCorner, capSizes } from './capSize';
 import type { CutterSpec, ExtraCut } from './cutters';
 import { VERTICAL_AXES, flareAt, horizontalAxes } from './cutters';
 import type { Dims } from './face';
@@ -504,3 +504,45 @@ export function leafPadWarnings(layout: CaseLayout, hinge: HalfHinge, wall: numb
   // one line per board, its spot on every pad that hits it
   return dedupe(out);
 }
+
+/**
+ * How far anything stands out of a box's top face, mm (0 when nothing
+ * does): the parts through the plate (key tops, a knob's shaft; printed caps
+ * by `CAP_PROUD`) and the plugs standing up out of their slots
+ * (`plugNotes`). A hinged half's inner face: the gap between the halves
+ * must take it (plans/PLAN-HINGED.md, P5).
+ */
+export function topProtrusion(layout: CaseLayout, shape: ShapeState): number {
+  let out = 0;
+  for (const board of layout.boards) {
+    for (const port of board.def.ports) {
+      if (!onFace(port) || port.edge !== 'top' || !portCut(board.placement, port.id, port.cut)) continue;
+      if (port.type !== 'keys' && port.base === undefined) continue;
+      if (port.type === 'keys' && keysOpen(board.def, board.placement) === 'caps') {
+        out = Math.max(out, CAP_PROUD);
+        continue;
+      }
+      out = Math.max(out, keysProud(board, port, shape, layout.dims, layout.console.frontH, layout.console.backH));
+    }
+  }
+  for (const note of plugNotes(layout)) out = Math.max(out, Number(note.params?.mm ?? 0));
+  return out;
+}
+
+/** A hinged half's magnet bosses that run into a board. */
+export function magnetWarnings(layout: CaseLayout, hinge: HalfHinge): Message[] {
+  const m = hinge.magnets;
+  if (!m) return [];
+  const out: Message[] = [];
+  for (const spot of m.spots) {
+    const boss: SpotBox = { min: [spot.x - m.bossR, spot.y - m.bossR, m.bottom - 1], max: [spot.x + m.bossR, spot.y + m.bossR, layout.dims.h] };
+    for (const board of layout.boards) {
+      const box = board.footprint;
+      if (boss.min[0] >= box.x1 || boss.max[0] <= box.x0 || boss.min[1] >= box.y1 || boss.max[1] <= box.y0) continue;
+      if (boss.min[2] >= board.zTop || boss.max[2] <= board.zBottom) continue;
+      out.push({ code: 'warn.magnetHitsBoard', params: boardParams(board), spot: boxSpot(boss, 'body') });
+    }
+  }
+  return dedupe(out);
+}
+

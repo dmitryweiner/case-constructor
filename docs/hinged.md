@@ -24,6 +24,7 @@ that opens like a book is narrow and deep.
 |---|---|---|---|
 | Width, Depth | 20–400 mm | from the boards | shared: both halves have one footprint, the larger of what each half's boards need |
 | Lower half height, Upper half height | 20–400 mm | from the boards | each half's own; with **Size from boards** on, what its boards need |
+| Gap from what stands out | on/off | on | the gap below from what the inner faces carry |
 | Gap when closed | 0–10 mm | 1 | between the inner faces of the closed case |
 
 Corner radius, edge fillet, wall and floor are the same for both halves.
@@ -128,6 +129,24 @@ The slot is the cable (or its plug, whichever is larger) plus 0.5 mm on
 every side. A note gives the cable's length from slot to slot as the case
 opens from closed to flat — leave the difference as slack inside. A slot
 that runs into the rounded corner, or into another slot, is warned about.
+
+## The gap and keeping it closed
+
+**Gap from what stands out** (on by default): the gap between the closed
+halves takes whatever stands out of both inner faces — key tops, printed
+caps, a knob's shaft, a socket standing up out of its slot, a raised label
+on a lid on top — added up (closed, they may face each other) and half a
+millimetre more; with nothing standing out it is 1 mm. A note says the gap
+when it is more than that. Off, the gap is yours; less than what stands
+out is warned about: the case will not close.
+
+**Magnets to keep it closed** (off by default): a pair at the front edge,
+a quarter in from each side — the lower half's front, the upper half's far
+edge: closed, they meet. Each sits in a boss under its inner face's plate,
+its pocket open into the case, with 0.6 mm of plate left outside: nothing
+shows. Glue them in, poles facing. Sizes as for the lid's magnets; the boss
+goes with the plate's part (the lid's, when the lid is on top) and keeps
+off the skirt. A boss that runs into a board is warned about.
 
 ## Lids
 
