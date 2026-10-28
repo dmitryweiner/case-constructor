@@ -11,7 +11,7 @@ import { t } from '../i18n';
 import type { BackPlacement, BoardPlacement } from '../boards/placement';
 import {
   BACK_STANDOFF_MAX, BACK_STANDOFF_MIN, CEILING_GAP, NEW_BOARD_GAP, backPortDefault, backStandoffMin, withBackCut, POSITION_MAX, ROTATIONS, SIDES, WALL_OFFSET_MAX, WALL_OFFSET_MIN, Z_MAX, boardOf, entryOf, floorZ, pinsDown, placementMinZ,
-  ownPortDefault, portCut, withPortCut, withSide, withTopCut, KEY_FIT_MAX, capStyle, keyFit, keysOpen, sanitizePlacement,
+  ownPortDefault, portCut, withPortCut, withSide, withTopCut, KEY_FIT_MAX, capStyle, holdChoices, keyFit, keysOpen, pressedOn, sanitizePlacement,
 } from '../boards/placement';
 import type { BoardDef } from '../boards/schema';
 import { KEYS_OPEN, keyFields, resolveVariant } from '../boards/schema';
@@ -116,6 +116,19 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
         const placement: BoardPlacement = value === 'ceiling'
           ? { ...withSide(at(state), 'ceiling'), z: CEILING_GAP }
           : { ...withSide(at(state), 'floor'), z: floorZ(def, pinsDown(def, at(state))) };
+        return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
+      },
+    },
+    {
+      // a keyboard that hangs: its screws, rails, or clamp bars across its back
+      kind: 'segmented', key: 'hold', label: 'board.hold', hint: 'board.hold.hint',
+      when: () => holdChoices(entry).length > 1,
+      options: holdChoices(entry).map((kind) => ({ value: kind, label: `board.hold.${kind}` as const })),
+      get: (state) => boardOf(at(state)).mount.kind,
+      set: (state, value) => {
+        const next = sanitizePlacement({ ...at(state), hold: value });
+        // bars press the board against the plate; anything else hangs it the gap below
+        const placement = sanitizePlacement({ ...next, z: pressedOn(boardOf(next)) ? 0 : CEILING_GAP });
         return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
       },
     },
@@ -454,10 +467,10 @@ export interface BoardsCardHandle {
 /** What the card's layout depends on; a change rebuilds it (a value edit does not). */
 function signatureOf(state: AppState): string {
   // a variant brings its own ports, and so its own cut toggles
-  // a battery's kind decides its controls, its cell count its name
+  // a battery's kind decides its controls, its cell count its name; how a board is held, its note
   return state.boards.map((board) => (board.board === 'custom' ? `custom:${customSignature(boardOf(board))}`
     : board.battery ? `battery:${board.battery.kind}:${board.battery.count}`
-      : `${board.board}:${board.variant ?? ''}:${board.back?.board ?? ''}:${board.back?.variant ?? ''}:${board.top?.board ?? ''}`)).join('|');
+      : `${board.board}:${board.variant ?? ''}:${board.back?.board ?? ''}:${board.back?.variant ?? ''}:${board.top?.board ?? ''}:${board.hold ?? ''}`)).join('|');
 }
 
 export function renderBoardsCard(

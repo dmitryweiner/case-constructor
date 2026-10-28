@@ -453,7 +453,7 @@ per board
 `#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles
 `#board<i>_cut_<portId>`.
 Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHeight|_bottomHeight`,
-`#board<i>_keys_window|holes|caps`, `#board<i>_keyFit`, `#board<i>_capShape_round|square`, `#board<i>_capR` (keyboards),
+`#board<i>_keys_window|holes|caps`, `#board<i>_keyFit`, `#board<i>_capShape_round|square`, `#board<i>_capR`, `#board<i>_hold_holes|rails|clamp` (keyboards),
 `#board<i>_custom_mount` (select), `_rails`, `_screw`, holes `_hole<h>_x|_y|_d|_remove`,
 `_hole_add`, ports `_port<p>_type|_edge` (selects), `_port<p>_<field>`, `_port<p>_remove`,
 `_port_add`, `_save`. The card rebuilds only when a custom board's structure changes

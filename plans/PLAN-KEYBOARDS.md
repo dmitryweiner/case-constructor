@@ -348,3 +348,13 @@ golden states, smoke steps, docs and translations.
   bottom row), so a window never covers the corner posts. Its USB-C (for
   flashing) is closed by default: the Grove slot's room puts the left wall
   14 mm from it. ≈: rows and heights read from the drawing's picture.
+- **Fixing** (the user: the CardKB does not tilt into its rails under the
+  lid's skirt, the Grove socket standing up). `placement.hold`: a keyboard
+  that hangs may be held by its entry's way or by rails or clamp bars
+  (`holdChoices`; screws only with holes); `boardOf` applies it
+  (`withHold`: no holes, rails along the long edges, pressing bars), so the
+  layout, the worker and the card see the board as held. Bars set the gap
+  to 0 (pressed by design). The card rebuilds on a change (its rails note).
+  Offered to the keyboards that hang (CardKB v1.1, CardKB2, KeebDeck), not
+  to the rest of the catalog: a Pi on clamp bars is not a case anyone asked
+  for. Control `#board<i>_hold_holes|rails|clamp`.

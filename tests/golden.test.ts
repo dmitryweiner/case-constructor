@@ -281,6 +281,11 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     boards: [{ board: 'm5stack-cardkb2', on: 'ceiling', z: 0.3, keys: 'caps', capShape: 'square', capR: 0.6, mount: { size: 'M2', hole: 'tap' } }],
   }),
+  // review: the CardKB held by clamp bars across its back instead of rails
+  'cardkb-clamp-top-lid': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0, hold: 'clamp', mount: { size: 'M2', hole: 'insert' } }],
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

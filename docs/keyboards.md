@@ -20,6 +20,21 @@ keyboard). On the floor the case's ceiling comes down to it — the gap
 keys reach through the lid. Added, it stands just high enough for the least
 case (20 mm); lower, the panel says how far the lid lies above its switches.
 
+## Screws, rails or clamp bars
+
+**Fixing** (in the board's box) picks how a keyboard that hangs is held:
+on **Screws** into posts from the lid (a board with holes), in **Rails**
+along its long edges, or by **Clamp bars** across its back. Rails need the
+board to go in at an angle, and under a lid's skirt, with a connector
+standing up beside the keys (the CardKBs' Grove), it hardly does. Clamp
+bars do not slide anything in: the board lies face down in the lid (which
+prints face down), two bars go across its back and are screwed to posts
+beside its long edges; they press it through foam tape (**Clamp gap**,
+−1 mm by default), step aside for parts on its back, take the key presses,
+and print with the lid. The posts make the case about 5 mm wider on each
+long side. A board on bars lies against the plate (**Gap to the ceiling**
+0, no warning).
+
 ## Over the keys
 
 **Over the keys** in the board's box:

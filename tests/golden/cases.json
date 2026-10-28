@@ -1083,5 +1083,34 @@
         7.2
       ]
     }
+  },
+  "cardkb-clamp-top-lid": {
+    "body": {
+      "triangles": 764,
+      "volume": 27432.52,
+      "extents": [
+        104,
+        78.3,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 2054,
+      "volume": 8287.06,
+      "extents": [
+        104,
+        78.3,
+        5
+      ]
+    },
+    "lidClamp": {
+      "triangles": 296,
+      "volume": 3316.7,
+      "extents": [
+        58.4,
+        70.2,
+        3
+      ]
+    }
   }
 }

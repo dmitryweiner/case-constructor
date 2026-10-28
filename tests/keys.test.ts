@@ -2,7 +2,7 @@
 // default opening, parts through the plate, the placement's choice.
 
 import { KEYS_OPEN, PORT_TYPES, keyFields, keysOf, onFace, sanitizeBoard, sanitizePort } from '../src/boards/schema';
-import { defaultPlacement, frontHeight, hangsByDefault, holesAmongKeys, keysOpen, sanitizePlacement } from '../src/boards/placement';
+import { boardOf, defaultPlacement, frontHeight, hangsByDefault, holdChoices, holesAmongKeys, keysOpen, sanitizePlacement } from '../src/boards/placement';
 import { CEILING_GAP } from '../src/boards/placement';
 import { RAW_BOARDS, catalogBoard } from '../src/boards/catalog';
 import { initCSG, toManifold } from '../src/geo/csg';
@@ -606,4 +606,56 @@ describe('the CardKB2', () => {
       }
     },
   );
+});
+
+describe('holding a keyboard: screws, rails or clamp bars (review)', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+  const add = (board: string, extra: Record<string, unknown> = {}): AppState => {
+    const entry = catalogBoard(board);
+    if (!entry) throw new Error(board);
+    return sanitizeState({ ...defaultState(), boards: [{ ...defaultPlacement(entry), ...extra }] });
+  };
+
+  it('a keyboard that hangs offers its own way and the others; the rest of the catalog keeps its own', () => {
+    const choices = (id: string): string[] => {
+      const entry = catalogBoard(id);
+      if (!entry) throw new Error(id);
+      return holdChoices(entry);
+    };
+    expect(choices('m5stack-cardkb-v1.1')).toEqual(['rails', 'clamp']);
+    expect(choices('m5stack-cardkb2')).toEqual(['holes', 'rails', 'clamp']);
+    expect(choices('adafruit-macropad-rp2040')).toEqual(['holes']);
+    expect(choices('raspberry-pi-4b')).toEqual(['holes']);
+    expect(choices('raspberry-pi-touch-display-2-7')).toEqual(['clamp']);
+  });
+
+  it('the choice is kept only where it is one, and the board is built held that way', () => {
+    expect(sanitizePlacement({ board: 'm5stack-cardkb-v1.1', on: 'ceiling', hold: 'rails' })).not.toHaveProperty('hold');
+    expect(sanitizePlacement({ board: 'raspberry-pi-4b', hold: 'clamp' })).not.toHaveProperty('hold');
+    const clamped = sanitizePlacement({ board: 'm5stack-cardkb2', on: 'ceiling', hold: 'clamp' });
+    expect(clamped).toMatchObject({ hold: 'clamp', on: 'ceiling', z: 0 });
+    expect(boardOf(clamped).mount).toMatchObject({ kind: 'clamp', holes: [] });
+    expect(boardOf(sanitizePlacement({ board: 'm5stack-cardkb2', on: 'ceiling', hold: 'rails' })).mount).toMatchObject({ kind: 'rails', holes: [], rails: 'long' });
+    const once = sanitizePlacement({ board: 'm5stack-cardkb-v1.1', on: 'ceiling', hold: 'clamp', press: -0.5 });
+    expect(sanitizePlacement(once)).toEqual(once);
+  });
+
+  it.each([
+    ['m5stack-cardkb-v1.1', 'rails'], ['m5stack-cardkb-v1.1', 'clamp'],
+    ['m5stack-cardkb2', 'holes'], ['m5stack-cardkb2', 'rails'], ['m5stack-cardkb2', 'clamp'],
+  ])('%s on %s: closed, sliver-free, no layout warnings', (board, hold) => {
+    const s = add(board, { hold, ...(hold === 'clamp' ? { z: 0 } : {}) });
+    expect(collisions(caseLayout(s))).toEqual([]);
+    const built = buildCase(csg, s, 8);
+    for (const mesh of [built.body, built.lid, ...(built.lidClamps ? [built.lidClamps] : [])]) {
+      const report = validateMesh(mesh);
+      expect(report.watertight).toBe(true);
+      expect(report.degenerateTriangles).toBe(0);
+    }
+    // a top lid holds the bars of a board it holds: they print with it
+    if (hold === 'clamp') expect(built.lidClamps).toBeTruthy();
+  });
 });

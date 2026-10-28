@@ -5,7 +5,7 @@
 
 import type { FastenerSpec } from '../geo/fasteners';
 import { bossDiameter, sanitizeFastener } from '../geo/fasteners';
-import type { BoardDef, Edge, KeysOpen, PortDef } from './schema';
+import type { BoardDef, Edge, KeysOpen, MountKind, PortDef } from './schema';
 import { EDGES, KEYS_OPEN, autoPortId, bottomPartsH, isAutoPortId, keyFields, keysOf, onFace, resolveVariant, sanitizeBoard } from './schema';
 import { CATALOG, catalogBoard } from './catalog';
 import type { BatterySpec } from './battery';
@@ -64,6 +64,8 @@ export interface BoardPlacement {
   capShape?: 'square';
   /** a square cap's corner radius, when not the default, mm */
   capR?: number;
+  /** a keyboard that hangs: held another way than its entry's (`holdChoices`) — rails, or clamp bars across its back */
+  hold?: MountKind;
 }
 
 /**
@@ -109,8 +111,25 @@ export function entryOf(placement: Pick<BoardPlacement, 'board' | 'custom' | 'ba
 }
 
 /** The board a placement builds: its entry with the chosen variant applied. */
-export function boardOf(placement: Pick<BoardPlacement, 'board' | 'custom' | 'battery' | 'variant'>): BoardDef {
-  return resolveVariant(entryOf(placement), placement.variant);
+export function boardOf(placement: Pick<BoardPlacement, 'board' | 'custom' | 'battery' | 'variant' | 'hold'>): BoardDef {
+  return withHold(resolveVariant(entryOf(placement), placement.variant), placement.hold);
+}
+
+/**
+ * How a board may be held: its entry's way, and for a keyboard that hangs
+ * also rails, or clamp bars across its back — a keyboard with a connector
+ * standing up beside its keys (the CardKBs' Grove) does not tilt into rails
+ * under a lid, while it lies face down in the lid for bars.
+ */
+export function holdChoices(entry: BoardDef): MountKind[] {
+  if (entry.battery || entry.mount.kind === 'clamp' || keyFields(entry).length === 0 || !hangsByDefault(entry)) return [entry.mount.kind];
+  return entry.mount.kind === 'holes' ? ['holes', 'rails', 'clamp'] : ['rails', 'clamp'];
+}
+
+/** The board held another way: rails along its long edges, or pressing clamp bars (no holes on its back to screw them to). */
+export function withHold(def: BoardDef, hold: MountKind | undefined): BoardDef {
+  if (!hold || hold === def.mount.kind || hold === 'holes') return def;
+  return { ...def, mount: { ...def.mount, kind: hold, holes: [], rails: 'long' } };
 }
 
 /** Whether the placed board has its pins soldered pointing down. */
@@ -276,7 +295,10 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
   const entry = custom ?? (battery ? batteryDef(battery) : undefined) ?? (typeof id === 'string' ? catalogBoard(id) : undefined) ?? CATALOG[0];
   const variantRaw: unknown = Reflect.get(r, 'variant');
   const variant = entry.variants?.find((item) => item.id === variantRaw)?.id ?? entry.variants?.[0].id;
-  const def = resolveVariant(entry, variant);
+  const plain = resolveVariant(entry, variant);
+  const holdRaw: unknown = Reflect.get(r, 'hold');
+  const hold = holdChoices(plain).find((kind) => kind === holdRaw && kind !== plain.mount.kind);
+  const def = withHold(plain, hold);
   const base = defaultPlacement(entry);
   // a clamped panel has nothing to stand on: it always hangs; a floor board may carry a display on top
   const ceiling = (Reflect.get(r, 'on') === 'ceiling' || def.mount.kind === 'clamp') && !def.battery;
@@ -318,6 +340,7 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
     ...withBackBoard(def, Reflect.get(r, 'back')),
     ...carried,
     ...withKeys(def, r),
+    ...(hold ? { hold } : {}),
   };
 }
 

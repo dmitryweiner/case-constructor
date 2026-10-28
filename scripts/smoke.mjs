@@ -331,6 +331,14 @@ await page.waitForTimeout(200);
 if (Number(await page.evaluate(() => window.__case.state().boards[1].capR)) < 0.3) errors.push('[keyboards] a square cap\'s corner went sharp');
 await expectWatertight('keys:square-caps-r');
 await page.click('#board1_keys_window');
+// held by clamp bars instead of rails: they print with the lid that holds it
+await page.click('#board1_hold_clamp');
+await expectWatertight('keys:cardkb-clamp');
+if ((await page.textContent('#board1'))?.includes('grooved rails')) errors.push('[keyboards] a clamped CardKB still says it is held by rails');
+await page.click('#tabLid');
+await page.waitForTimeout(300);
+if (!(await drawn()).includes('clamp')) errors.push(`[keyboards] the Lid tab draws ${await drawn()}, no clamp bars`);
+await page.click('#tabBoth');
 await page.click('#board1_remove');
 // the MacroPad's holes are among its switches: it stands on the floor, its keys through a hole each
 await page.click('#boardAdd');
