@@ -13,7 +13,8 @@ import { PRESS_MAX, PRESS_MIN, batteryDef, defaultBattery, sanitizeBattery } fro
 import { defaultPress } from '../geo/clamp';
 import { attachTurns } from '../geo/attach';
 import { SIZE_MIN, defaultShape } from '../geo/shape';
-import { CAP_FIT, CAP_FLANGE_T } from '../geo/capSize';
+import type { CapShape } from '../geo/capSize';
+import { CAP_FIT, CAP_FLANGE_T, CAP_R_DEFAULT, CAP_R_MAX, CAP_R_MIN } from '../geo/capSize';
 
 export const ROTATIONS = [0, 90, 180, 270] as const;
 export type Rotation = (typeof ROTATIONS)[number];
@@ -59,6 +60,10 @@ export interface BoardPlacement {
   keys?: KeysOpen;
   /** a keyboard only: the room around its window or each key's hole, when not the field's clearance, mm */
   keyFit?: number;
+  /** a keyboard with printed caps only: square stems with rounded corners (missing: round) */
+  capShape?: 'square';
+  /** a square cap's corner radius, when not the default, mm */
+  capR?: number;
 }
 
 /**
@@ -171,6 +176,11 @@ export function keysOpen(def: BoardDef, placement: Pick<BoardPlacement, 'keys'>)
   const rows = fields.some((field) => field.rows !== undefined);
   const wanted = placement.keys ?? fields[0]?.open ?? 'window';
   return wanted !== 'window' && rows ? wanted : 'window';
+}
+
+/** How the placement's printed caps are shaped: round, or square with this corner radius. */
+export function capStyle(placement: Pick<BoardPlacement, 'capShape' | 'capR'>): { shape: CapShape; r: number } {
+  return { shape: placement.capShape ?? 'round', r: placement.capR ?? CAP_R_DEFAULT };
 }
 
 /** The room around a key's hole or window: the placement's, else a cap's own fit or the field's clearance. */
@@ -312,7 +322,7 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
 }
 
 /** A keyboard's opening choice and fit, kept only when they differ from the entry's. */
-function withKeys(def: BoardDef, r: object): Pick<BoardPlacement, 'keys' | 'keyFit'> {
+function withKeys(def: BoardDef, r: object): Pick<BoardPlacement, 'keys' | 'keyFit' | 'capShape' | 'capR'> {
   const fields = keyFields(def);
   if (fields.length === 0) return {};
   const raw: unknown = Reflect.get(r, 'keys');
@@ -321,6 +331,8 @@ function withKeys(def: BoardDef, r: object): Pick<BoardPlacement, 'keys' | 'keyF
   return {
     ...(chosen !== keysOpen(def, {}) ? { keys: chosen } : {}),
     ...(typeof fit === 'number' && Number.isFinite(fit) ? { keyFit: num(fit, 0, KEY_FIT_MAX, fields[0].clearance) } : {}),
+    ...(Reflect.get(r, 'capShape') === 'square' ? { capShape: 'square' as const } : {}),
+    ...(typeof Reflect.get(r, 'capR') === 'number' ? { capR: num(Reflect.get(r, 'capR'), CAP_R_MIN, CAP_R_MAX, CAP_R_DEFAULT) } : {}),
   };
 }
 

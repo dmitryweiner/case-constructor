@@ -24,6 +24,19 @@ export const CAP_GAP = 0.3;
 /** The least a flange reaches past its hole, per side, to hold the cap in, mm. */
 export const CAP_HOLD = 0.4;
 
+/** A cap's stem: round, or a square with rounded corners. */
+export const CAP_SHAPES = ['round', 'square'] as const;
+export type CapShape = (typeof CAP_SHAPES)[number];
+/** A square cap's corner radius: never sharp (a sharp corner would not print or fit), by default, at most, mm. */
+export const CAP_R_MIN = 0.3;
+export const CAP_R_DEFAULT = 0.8;
+export const CAP_R_MAX = 5;
+
+/** The stem's corner radius: a round stem is all corner; a square one's is the placement's, no more than the stem allows. */
+export function capCorner(shape: CapShape, r: number, stemR: number): number {
+  return shape === 'round' ? stemR : Math.min(stemR, Math.max(CAP_R_MIN, r));
+}
+
 export interface CapSize {
   /** the key's centre, board frame */
   x: number;

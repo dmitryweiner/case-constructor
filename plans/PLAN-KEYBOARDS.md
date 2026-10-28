@@ -328,3 +328,23 @@ golden states, smoke steps, docs and translations.
 - **K8.** The cost table has the preset, the CardKB with caps and the
   KeebDeck's holes. The review page was not regenerated here: it is the
   user's (`node scripts/board.mjs --review --only m5stack-cardkb-v1.1,...`).
+
+## After the review (2026-10-28)
+
+- **Cap shapes** (the user): `placement.capShape` round (missing) or
+  `square`, `placement.capR` its corner radius, `CAP_R_MIN` (0.3) at least,
+  0.8 by default, never more than the stem's half (then it is round). The
+  flange's corners grow by the lip, the hole's by the fit
+  (`openingsOf`'s `corner`); the cap mesh is one outline per ring, the same
+  number of points for a circle and a rounded square (`caps.ts`). Controls
+  `#board<i>_capShape_round|square`, `#board<i>_capR`.
+- **CardKB2** (U215, the user; it was not in the perspective list: M5Stack's
+  page appeared after it was researched). From its dimension drawing: 84 ×
+  54 × 1, four M2 holes at 3 mm from the corners (78 × 48), 42 tact keys in
+  four rows at 6.5 mm (Ø3.2 buttons, 2.0 mm bodies, tops 4.1 mm above the
+  PCB), Grove (5.15 mm, on top) and USB-C on the left edge, reset and boot
+  side buttons at the back and front edges. Unlike the v1.1 it has holes, so
+  it hangs on M2 posts; its keys are two fields (the top three rows, the
+  bottom row), so a window never covers the corner posts. Its USB-C (for
+  flashing) is closed by default: the Grove slot's room puts the left wall
+  14 mm from it. ≈: rows and heights read from the drawing's picture.

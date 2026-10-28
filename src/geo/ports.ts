@@ -10,8 +10,8 @@
 
 import type { PortDef, TopPort } from '../boards/schema';
 import { keyFields, keysOf, onFace } from '../boards/schema';
-import { CEILING_GAP, frontHeight, keyFit, keysOpen, portCut } from '../boards/placement';
-import { CAP_HOLD, capSizes } from './capSize';
+import { CEILING_GAP, capStyle, frontHeight, keyFit, keysOpen, portCut } from '../boards/placement';
+import { CAP_HOLD, capCorner, capSizes } from './capSize';
 import type { CutterSpec, ExtraCut } from './cutters';
 import { VERTICAL_AXES, flareAt, horizontalAxes } from './cutters';
 import type { Dims } from './face';
@@ -95,13 +95,21 @@ export const KEY_WEB = 0.8;
  * chamfered as a display's is; a key's hole is not (an MX switch clips into
  * a straight one).
  */
-function openingsOf(board: PlacedBoard, port: PortDef): { port: PortDef; window: boolean }[] {
+function openingsOf(board: PlacedBoard, port: PortDef): { port: PortDef; window: boolean; corner?: number }[] {
   if (port.type !== 'keys' || !onFace(port) || port.edge !== 'top') return [{ port, window: port.type === 'display' }];
   const clearance = keyFit(board.def, board.placement, port);
   const open = keysOpen(board.def, board.placement);
   if (open === 'window' || !port.rows) return [{ port: { ...port, clearance }, window: true }];
   // a printed cap's stem goes through its hole
-  if (open === 'caps') return capSizes(port).map((cap) => ({ port: { ...port, x: cap.x, y: cap.y, w: 2 * cap.stemR, d: 2 * cap.stemR, shape: 'round', clearance }, window: false }));
+  if (open === 'caps') {
+    const style = capStyle(board.placement);
+    return capSizes(port).map((cap) => ({
+      port: { ...port, x: cap.x, y: cap.y, w: 2 * cap.stemR, d: 2 * cap.stemR, shape: style.shape === 'round' ? 'round' : 'rect', clearance },
+      window: false,
+      // a square stem's hole follows its rounded corners, grown by the fit
+      ...(style.shape === 'square' ? { corner: capCorner('square', style.r, cap.stemR) + clearance } : {}),
+    }));
+  }
   return keysOf(port).map((key) => ({ port: { ...port, ...key, clearance }, window: false }));
 }
 
@@ -118,7 +126,7 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
     for (const opening of board.def.ports.flatMap((port) => (portCut(board.placement, port.id, port.cut) ? openingsOf(board, port) : []))) {
       const { port, window } = opening;
       const source = { kind: 'port' as const, board: board.index, port: port.id };
-      const section = sectionOf(port);
+      const section = opening.corner === undefined ? sectionOf(port) : { ...sectionOf(port), r: opening.corner };
       if (tilted) {
         out.push(tiltedCutter(board, port, window, section, shape, dims, reach, source));
         continue;

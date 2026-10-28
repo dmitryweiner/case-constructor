@@ -276,6 +276,10 @@ const STATES: Record<string, AppState> = {
   'keyboard-featherwing-floor': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'solderparty-keyboard-featherwing', z: 11.69, mount: { size: 'M2.5', hole: 'tap' } }],
+  }),  // review: square caps with rounded corners, on the CardKB2
+  'cardkb2-square-caps': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'm5stack-cardkb2', on: 'ceiling', z: 0.3, keys: 'caps', capShape: 'square', capR: 0.6, mount: { size: 'M2', hole: 'tap' } }],
   }),
 };
 

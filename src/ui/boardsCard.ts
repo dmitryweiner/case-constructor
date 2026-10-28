@@ -11,10 +11,11 @@ import { t } from '../i18n';
 import type { BackPlacement, BoardPlacement } from '../boards/placement';
 import {
   BACK_STANDOFF_MAX, BACK_STANDOFF_MIN, CEILING_GAP, NEW_BOARD_GAP, backPortDefault, backStandoffMin, withBackCut, POSITION_MAX, ROTATIONS, SIDES, WALL_OFFSET_MAX, WALL_OFFSET_MIN, Z_MAX, boardOf, entryOf, floorZ, pinsDown, placementMinZ,
-  ownPortDefault, portCut, withPortCut, withSide, withTopCut, KEY_FIT_MAX, keyFit, keysOpen, sanitizePlacement,
+  ownPortDefault, portCut, withPortCut, withSide, withTopCut, KEY_FIT_MAX, capStyle, keyFit, keysOpen, sanitizePlacement,
 } from '../boards/placement';
 import type { BoardDef } from '../boards/schema';
 import { KEYS_OPEN, keyFields, resolveVariant } from '../boards/schema';
+import { CAP_R_MAX, CAP_R_MIN, CAP_SHAPES } from '../geo/capSize';
 import { CATALOG, catalogBoard } from '../boards/catalog';
 import { attachTurns } from '../geo/attach';
 import type { BatterySpec } from '../boards/battery';
@@ -161,6 +162,24 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
         return field ? keyFit(boardOf(at(state)), at(state), field) : 0;
       },
       set: (state, value) => patchBoard(state, index, { keyFit: value }),
+    },
+    {
+      // printed caps: round, or square with rounded corners
+      kind: 'segmented', key: 'capShape', label: 'board.capShape', hint: 'board.capShape.hint',
+      when: (state) => keysOpen(boardOf(at(state)), at(state)) === 'caps',
+      options: CAP_SHAPES.map((shape) => ({ value: shape, label: `board.capShape.${shape}` as const })),
+      get: (state) => capStyle(at(state)).shape,
+      set: (state, value) => {
+        const placement: BoardPlacement = { ...at(state), capShape: 'square' };
+        if (value !== 'square') delete placement.capShape;
+        return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
+      },
+    },
+    {
+      kind: 'range', key: 'capR', label: 'board.capR', hint: 'board.capR.hint', min: CAP_R_MIN, max: CAP_R_MAX, step: 0.1,
+      when: (state) => keysOpen(boardOf(at(state)), at(state)) === 'caps' && capStyle(at(state)).shape === 'square',
+      get: (state) => capStyle(at(state)).r,
+      set: (state, value) => patchBoard(state, index, { capR: Math.max(CAP_R_MIN, value) }),
     },
     {
       kind: 'check', key: 'bevel', label: 'board.bevel', hint: 'board.bevel.hint',

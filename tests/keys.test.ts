@@ -15,7 +15,7 @@ import { validateMesh } from '../src/geo/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import { garbageLike, KEYPAD, boxMesh, rng } from './helpers';
-import { CAP_FIT, CAP_FLANGE_T, CAP_GAP, CAP_GROW, CAP_LIP, CAP_PROUD, capSizes } from '../src/geo/capSize';
+import { CAP_FIT, CAP_FLANGE_T, CAP_R_MIN, CAP_GAP, CAP_GROW, CAP_LIP, CAP_PROUD, capSizes } from '../src/geo/capSize';
 import { capMesh, capsInCase, keyCaps, withCaps } from '../src/geo/caps';
 import { rimsOf } from '../src/geo/rim';
 import { REST_MAX, caseRests, restWarnings, restsOf } from '../src/geo/rests';
@@ -377,10 +377,15 @@ describe('printed caps over the keys (K3b)', () => {
   });
 
   it('a cap is a closed solid', () => {
-    const report = validateMesh(capMesh({ stemR: 1.8, flangeR: 2.8, length: 4 }));
-    expect(report.watertight).toBe(true);
-    expect(report.degenerateTriangles).toBe(0);
-    expect(report.volume).toBeGreaterThan(0);
+    for (const corner of [1.8, 0.3, 1]) {
+      const report = validateMesh(capMesh({ stemR: 1.8, flangeR: 2.8, corner, length: 4 }));
+      expect(report.watertight, `corner ${corner}`).toBe(true);
+      expect(report.degenerateTriangles).toBe(0);
+      expect(report.volume).toBeGreaterThan(0);
+    }
+    // a square stem with rounded corners holds more than a round one
+    const square = validateMesh(capMesh({ stemR: 1.8, flangeR: 2.8, corner: 0.3, length: 4 })).volume;
+    expect(square).toBeGreaterThan(validateMesh(capMesh({ stemR: 1.8, flangeR: 2.8, corner: 1.8, length: 4 })).volume);
   });
 
   it('the plate lies the gap over the flanges; each cap stands CAP_PROUD out of the lid through its hole', () => {
@@ -396,6 +401,25 @@ describe('printed caps over the keys (K3b)', () => {
     expect(holes).toHaveLength(50);
     expect(holes[0]).toMatchObject({ shape: 'round', w: 2 * caps[0].stemR + 2 * CAP_FIT });
     expect(keyNotes(layout, shape).map((note) => note.code)).toEqual(['info.keyCaps']);
+  });
+
+  it('square caps: rounded corners never under CAP_R_MIN, their holes rounded alike', () => {
+    expect(sanitizePlacement({ ...cardkb().boards[0], capShape: 'square', capR: 0 })).toMatchObject({ capShape: 'square', capR: CAP_R_MIN });
+    expect(sanitizePlacement({ ...cardkb().boards[0], capShape: 'round' })).not.toHaveProperty('capShape');
+    const s = cardkb({ capShape: 'square', capR: 0.5 });
+    const layout = caseLayout(s);
+    const shape = { ...s.shape, console: layout.console };
+    const [cap] = keyCaps(layout, shape);
+    expect(cap.corner).toBeCloseTo(0.5, 6);
+    const [hole] = portCutters(layout, shape).filter((cutter) => cutter.source.kind === 'port' && cutter.source.port === 'keys');
+    expect(hole).toMatchObject({ shape: 'rect', w: 2 * cap.stemR + 2 * CAP_FIT });
+    expect(hole.r).toBeCloseTo(0.5 + CAP_FIT, 6);
+    const built = buildCase(csg, s, 8);
+    const report = validateMesh(built.lid);
+    expect(report.watertight).toBe(true);
+    expect(report.degenerateTriangles).toBe(0);
+    // a corner larger than the stem is the stem's half: round
+    expect(keyCaps(caseLayout(cardkb({ capShape: 'square', capR: 5 })), shape)[0].corner).toBeCloseTo(cap.stemR, 6);
   });
 
   it('a fit so loose the flanges no longer hold is a warning', () => {
@@ -552,4 +576,34 @@ describe('a keypad’s flange under the plate (K4) and the last two keyboards', 
       expect(report.degenerateTriangles).toBe(0);
     }
   });
+});
+
+describe('the CardKB2', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+
+  it('hangs on its four M2 holes, its keys in two fields clear of the corner posts', () => {
+    const entry = catalogBoard('m5stack-cardkb2');
+    if (!entry) throw new Error('cardkb2');
+    expect(holesAmongKeys(entry)).toBe(false);
+    expect(keyFields(entry).flatMap((field) => keysOf(field))).toHaveLength(42);
+    expect(defaultPlacement(entry).on).toBe('ceiling');
+  });
+
+  it.each([['window', {}], ['holes', { keys: 'holes' }], ['round caps', { keys: 'caps' }], ['square caps', { keys: 'caps', capShape: 'square', capR: 0.6 }]])(
+    'builds closed and sliver-free, no layout warnings: %s', (_name, extra) => {
+      const entry = catalogBoard('m5stack-cardkb2');
+      if (!entry) throw new Error('cardkb2');
+      const s = sanitizeState({ ...defaultState(), boards: [{ ...defaultPlacement(entry), ...extra }] });
+      expect(collisions(caseLayout(s))).toEqual([]);
+      const built = buildCase(csg, s, 8);
+      for (const mesh of [built.body, built.lid]) {
+        const report = validateMesh(mesh);
+        expect(report.watertight).toBe(true);
+        expect(report.degenerateTriangles).toBe(0);
+      }
+    },
+  );
 });

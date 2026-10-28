@@ -5,13 +5,13 @@
 // as they print, flange down.
 
 import { keyFields } from '../boards/schema';
-import { keysOpen, portCut } from '../boards/placement';
+import { capStyle, keysOpen, portCut } from '../boards/placement';
 import type { CaseLayout } from './layout';
 import type { ShapeState } from './shape';
 import type { Affine, SurfaceMesh } from './surface';
 import { composeAffine, meshBounds, mergeMeshes, transformMesh, translation } from './surface';
 import { meshNormals } from './normals';
-import { CAP_FLANGE_T, CAP_PROUD, capSizes } from './capSize';
+import { CAP_FLANGE_T, CAP_PROUD, capCorner, capSizes } from './capSize';
 import { keysProud } from './ports';
 
 /** One cap: its frame (z along the board's normal, z = 0 on its key's top), its sizes. */
@@ -19,8 +19,11 @@ export interface KeyCap {
   board: number;
   port: string;
   frame: Affine;
+  /** half the stem's width (a round one's radius), and the flange's */
   stemR: number;
   flangeR: number;
+  /** the stem's corner radius: `stemR` for a round cap */
+  corner: number;
   /** flange bottom to stem top, mm */
   length: number;
 }
@@ -29,8 +32,8 @@ export interface KeyCap {
 const CAP_BED_GAP = 2;
 /** Caps per row on the bed. */
 const CAPS_PER_ROW = 12;
-/** Segments around a cap. */
-const CAP_SEGMENTS = 24;
+/** Points on each quarter of a cap's outline. */
+const CAP_QUARTER = 6;
 
 /** The printed caps of every board whose lid has them over its keys. */
 export function keyCaps(layout: CaseLayout, shape: ShapeState): KeyCap[] {
@@ -42,27 +45,49 @@ export function keyCaps(layout: CaseLayout, shape: ShapeState): KeyCap[] {
       const depth = -keysProud(board, field, shape, layout.dims, layout.console.frontH, layout.console.backH);
       const length = Math.max(CAP_FLANGE_T + 1, depth + CAP_PROUD);
       const top = board.def.size.t + field.h;
+      const style = capStyle(board.placement);
       return capSizes(field).map((cap): KeyCap => ({
         board: board.index, port: field.id, frame: composeAffine(board.toCase, translation(cap.x, cap.y, top)),
-        stemR: cap.stemR, flangeR: cap.flangeR, length,
+        stemR: cap.stemR, flangeR: cap.flangeR, corner: capCorner(style.shape, style.r, cap.stemR), length,
       }));
     });
   });
 }
 
 /**
- * A cap in its own frame: the flange from z = 0, the stem up to `length`,
- * a closed solid of revolution (a centre vertex on each end).
+ * A square of half-width `half` with corners of radius `r`, counter-clockwise
+ * from the right side: a circle when `r` is `half`. Always the same number
+ * of points, so a cap's outlines join ring to ring.
  */
-export function capMesh(cap: Pick<KeyCap, 'stemR' | 'flangeR' | 'length'>, n = CAP_SEGMENTS): SurfaceMesh {
-  const rings: [number, number][] = [[cap.flangeR, 0], [cap.flangeR, CAP_FLANGE_T], [cap.stemR, CAP_FLANGE_T], [cap.stemR, cap.length]];
-  const positions: number[] = [0, 0, 0, 0, 0, cap.length];
-  for (const [r, z] of rings) {
-    for (let i = 0; i < n; i++) {
-      const a = (2 * Math.PI * i) / n;
-      positions.push(r * Math.cos(a), r * Math.sin(a), z);
+function outline(half: number, r: number, k = CAP_QUARTER): [number, number][] {
+  const out: [number, number][] = [];
+  const c = half - r;
+  for (let q = 0; q < 4; q++) {
+    const [sx, sy] = [[1, 1], [-1, 1], [-1, -1], [1, -1]][q];
+    for (let i = 0; i <= k; i++) {
+      const a = (Math.PI / 2) * (q + i / k);
+      // a circle: the quarters' shared points spread out evenly instead
+      const t = c < 1e-9 ? (Math.PI / 2) * (q + i / (k + 1)) : a;
+      out.push([sx * c + r * Math.cos(t), sy * c + r * Math.sin(t)]);
     }
   }
+  return out;
+}
+
+/**
+ * A cap in its own frame: the flange from z = 0, the stem up to `length`,
+ * a closed solid (a centre vertex on each end). Round, or a square with
+ * rounded corners; the flange follows the stem's outline, its corners
+ * grown by the lip.
+ */
+export function capMesh(cap: Pick<KeyCap, 'stemR' | 'flangeR' | 'corner' | 'length'>): SurfaceMesh {
+  const corner = Math.min(cap.corner, cap.stemR);
+  const flange = outline(cap.flangeR, Math.min(cap.flangeR, corner + cap.flangeR - cap.stemR));
+  const stem = outline(cap.stemR, corner);
+  const rings: [[number, number][], number][] = [[flange, 0], [flange, CAP_FLANGE_T], [stem, CAP_FLANGE_T], [stem, cap.length]];
+  const n = stem.length;
+  const positions: number[] = [0, 0, 0, 0, 0, cap.length];
+  for (const [points, z] of rings) for (const [x, y] of points) positions.push(x, y, z);
   const at = (ring: number, i: number): number => 2 + ring * n + (i % n);
   const indices: number[] = [];
   for (let i = 0; i < n; i++) {

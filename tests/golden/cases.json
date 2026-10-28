@@ -1063,5 +1063,25 @@
         5
       ]
     }
+  },
+  "cardkb2-square-caps": {
+    "body": {
+      "triangles": 1060,
+      "volume": 23153.97,
+      "extents": [
+        104.65,
+        62.3,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 7918,
+      "volume": 12182.9,
+      "extents": [
+        104.65,
+        62.3,
+        7.2
+      ]
+    }
   }
 }

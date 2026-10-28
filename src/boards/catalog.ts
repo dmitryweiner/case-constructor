@@ -7,6 +7,7 @@ import type { BoardDef } from './schema';
 import { sanitizeBoard } from './schema';
 import raspberryPi3aPlus from './data/raspberry-pi-3a-plus.json';
 import m5stackCardkbV11 from './data/m5stack-cardkb-v1.1.json';
+import m5stackCardkb2 from './data/m5stack-cardkb2.json';
 import adafruitMacropadRp2040 from './data/adafruit-macropad-rp2040.json';
 import solderpartyBbq20kbd from './data/solderparty-bbq20kbd.json';
 import solderpartyKeebdeckBasic from './data/solderparty-keebdeck-basic.json';
@@ -264,6 +265,7 @@ export const RAW_BOARDS: readonly unknown[] = [
   pimoroniHyperpixel4,
   // keyboards sold as boards (their own group in the picker)
   m5stackCardkbV11,
+  m5stackCardkb2,
   adafruitMacropadRp2040,
   solderpartyBbq20kbd,
   solderpartyKeebdeckBasic,

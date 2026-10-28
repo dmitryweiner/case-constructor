@@ -38,6 +38,9 @@ case (20 mm); lower, the panel says how far the lid lies above its switches.
   plate the gap above it. The caps print with the lid: in the Lid STL and in
   Both they lie flange down in rows next to the lid; in the view they stand
   in their holes (exploded, over the lid).
+  **Caps** picks their shape: round, or square with rounded corners
+  (**Corner radius**, 0.3 mm at least — never sharp); the holes follow the
+  stems' outline, grown by the fit.
 
 **Key fit** is the room around the window, or around each key (or cap stem)
 in its hole: the field's own clearance by default, 0.25 mm for caps.

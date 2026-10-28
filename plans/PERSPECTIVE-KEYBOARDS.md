@@ -83,7 +83,7 @@ What the numbers say:
   Meshtastic's BBQ10 driver serves it (unchecked on hardware).
 
 **In the catalog (2026-10-28, `plans/PLAN-KEYBOARDS.md`):** all of Tier A
-and Tier B — CardKB v1.1, BBQ20KBD, MacroPad RP2040, KeebDeck Basic,
+and Tier B — CardKB v1.1 and CardKB2 (U215, added after the review), BBQ20KBD, MacroPad RP2040, KeebDeck Basic,
 Keyboard FeatherWing — and the preset `meshtastic-cardkb` (Heltec V3 +
 CardKB). Corrections found on the way are in the plan's deviations (K6a–c):
 the CardKB's keys stand 1.75 mm and its Grove socket is on top; the

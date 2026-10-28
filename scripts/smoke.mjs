@@ -322,6 +322,14 @@ await page.click('#tabLid');
 await page.waitForTimeout(300);
 if (!(await drawn()).includes('cap')) errors.push(`[keyboards] the Lid tab draws ${await drawn()}, no caps`);
 await page.click('#tabBoth');
+// square caps with rounded corners: the slider stops short of a sharp corner
+await page.click('#board1_capShape_square');
+await expectWatertight('keys:square-caps');
+if (Number(await page.getAttribute('#board1_capR', 'min')) < 0.3) errors.push('[keyboards] a square cap\'s corner may go sharp');
+await setRange('board1_capR', 0.3);
+await page.waitForTimeout(200);
+if (Number(await page.evaluate(() => window.__case.state().boards[1].capR)) < 0.3) errors.push('[keyboards] a square cap\'s corner went sharp');
+await expectWatertight('keys:square-caps-r');
 await page.click('#board1_keys_window');
 await page.click('#board1_remove');
 // the MacroPad's holes are among its switches: it stands on the floor, its keys through a hole each

@@ -283,6 +283,7 @@ plate) and, for a hole per key, its rows of keys; see
 | Keyboard | Vendor | Size, mm | Mount | Source | Checked |
 |---|---|---|---|---|---|
 | Unit CardKB v1.1 | M5Stack | 84 × 54 | rails | [source](https://m5stack-doc.oss-cn-shenzhen.aliyuncs.com/806/cardkeyboard_v1_1.pdf) | ≈ (read from the drawing's picture) |
+| Unit CardKB2 | M5Stack | 84 × 54 | 4 × M2 | [source](https://m5stack-doc.oss-cn-shenzhen.aliyuncs.com/1225/U215-Unit_CardKB2_Dimension_Diagram.pdf) | ≈ (key rows and heights read from the drawing's picture) |
 | MacroPad RP2040 | Adafruit | 59.69 × 104.14 | 4 × M3 (its own standoffs underneath) | [source](https://github.com/adafruit/Adafruit-MacroPad-RP2040-PCB) | ≈ (the OLED's active area taken as centred) |
 | BBQ20KBD | Solder Party | 74 × 53.1 | 2 × M2.5, rests | [source](https://github.com/solderparty/bbq20kbd_hw) | yes |
 | KeebDeck Basic | Solder Party | 87.4 × 67.6 | 4 × M2.5 | [source](https://github.com/solderparty/keebdeck_basic_hw) | ≈ (the connectors' depth) |
