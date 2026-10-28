@@ -524,6 +524,32 @@ if (!(await page.locator('#lid_face_left').isDisabled())) errors.push('[lid] the
 await page.click('#case_kind_console');
 if (!(await page.locator('#lid_face_top').isDisabled())) errors.push('[lid] the console allows a lid on its slope');
 await expectWatertight('lid:console');
+
+// a hinged case: two halves, each with its own boards and lid (plans/PLAN-HINGED.md)
+label('hinged');
+await page.click('#case_kind_hinged');
+await expectWatertight('hinged');
+if (!(await page.locator('#hingeCard').isVisible()) || !(await page.locator('#halfBar').isVisible())) errors.push('[hinged] no hinge card or half switch');
+if (!(await page.locator('#lid_face_front').isDisabled())) errors.push('[hinged] a half allows a side lid');
+if (await page.locator('#mount_kind').isVisible()) errors.push('[hinged] a hinged case offers a wall mount');
+await page.click('#edit_half_b');
+await page.click('#boardAdd');
+await page.click('#boardList [data-board="esp32-devkitc-v4"]');
+await page.click('#lid_face_bottom');
+await expectWatertight('hinged:upper');
+const halves = await page.evaluate(() => {
+  const state = window.__case.state();
+  return [state.boards.length, state.hinge.b.boards.length, state.lid.face, state.hinge.b.lid.face, window.__case.parts().cases.length].join();
+});
+if (halves !== '0,1,top,bottom,2') errors.push(`[hinged] boards, lids, built halves: ${halves}`);
+await page.click('#edit_half_a');
+if (await page.locator('#board0_remove').count()) errors.push('[hinged] the lower half shows the upper half\'s board');
+if ((await page.locator('#lid_face_top').getAttribute('class'))?.includes('active') !== true) errors.push('[hinged] the lower half shows the upper half\'s lid');
+await setRange('view_angle', 0);
+await page.click('#viewAssembled');
+await expectWatertight('hinged:closed');
+await page.click('#viewExploded');
+await exportStl('hinged');
 await page.click('#case_kind_box');
 await page.click('#lid_face_top');
 // box → console → box: the lid goes to the bottom and comes back on top;

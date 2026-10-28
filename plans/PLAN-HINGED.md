@@ -55,7 +55,7 @@ request when the first item lands; the user reviews and merges.
   split** (P4).
 - **One footprint, two heights** (P1): both halves are `w × d` (the larger
   of what each half's boards need, or the manual size); each has its own
-  height (auto: what its boards need; manual: `#case_h`, `#case_hB`).
+  height (auto: what its boards need; manual: `#case_hA`, `#case_hB`).
   Corner and edge radii, wall and plate thickness are shared.
 - **Lids** (the request): each half has its own lid on its **top** (the
   inner face) or its **bottom** (the outer face) — the existing lid card,
@@ -80,7 +80,7 @@ request when the first item lands; the user reviews and merges.
   the build). Layout, ghosts, cutters, warnings and the worker's
   `buildCase` run per half unchanged. The panel edits **one half at a
   time** — a switch at the top of the panel, *Lower half / Upper half*
-  (`#half_a|b`, a view setting like the view mode, not saved in the
+  (`#edit_half_a|b`, a view setting like the view mode, not saved in the
   project): the boards, lid, openings and extras cards work on
   `halfState(state, edited)`, and `withHalf(state, edited, next)` writes
   their result back. No card learns about halves; their ids stay.
@@ -110,7 +110,7 @@ request when the first item lands; the user reviews and merges.
   shared volume between A's and B's parts at every angle (like the thread
   test turning the screw in its hole), and the barrels' clearance at the
   closest angle.
-- **P7. The view gets an angle** — `#hingeAngle`, 0° closed … 180° open
+- **P7. The view gets an angle** — `#view_angle`, 0° closed … 180° open
   flat, 110° by default; a view setting. Assembled and exploded show the
   halves at that angle (exploded: each lid lifted off its half along its
   normal); the board ghosts, port captions and warning badges move with
@@ -208,3 +208,15 @@ side by side and their export; H3 is the first hinge; each later item
 stands alone.
 
 ## Deviations
+
+- **H1 (2026-10-28).** Done. Control ids follow `renderControls`:
+  `#edit_half_a|b` (the plan said `#half_a|b`), `#view_angle`; the lower
+  half's height is `#case_hA` (a hinged case hides `#case_h`, whose label
+  says *Height*). The half's kind stays `hinged` inside `halfState` rather
+  than `box`: the lid card offers a half's two faces by it, and the only
+  place that asked for `box` exactly (a flared window's corner check) now
+  asks for "not a cylinder or a console". `ScenePart` keeps its offset
+  (P7 said a transform): the upper half's meshes are posed in the main
+  thread with `transformMesh`, which costs nothing at these sizes. New
+  tool: `scripts/i18n.mjs` (keys into all four dictionaries).
+

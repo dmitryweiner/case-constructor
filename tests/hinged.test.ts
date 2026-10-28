@@ -1,0 +1,167 @@
+// A hinged case (plans/PLAN-HINGED.md): two halves, each an ordinary case
+// seen through `halfState`, written back by `withHalf`; the upper half posed
+// about the hinge axis.
+
+import { initCSG } from '../src/geo/csg';
+import type { CsgApi } from '../src/geo/csg';
+import { buildCase } from '../src/geo/build';
+import { validateMesh } from '../src/geo/validate';
+import { caseDims } from '../src/geo/layout';
+import { lidFaces } from '../src/geo/lidSpec';
+import { BARREL_CLEARANCE, BARREL_D, foldOf, upperPose } from '../src/geo/hinge';
+import { applyAffine, rotateVec } from '../src/geo/surface';
+import { catalogBoard } from '../src/boards/catalog';
+import { defaultPlacement } from '../src/boards/placement';
+import { defaultState, sanitizeState, withShapeKind } from '../src/state/schema';
+import type { AppState } from '../src/state/schema';
+import { casesOf, halfState, withHalf } from '../src/state/hinged';
+
+function hinged(patch: Partial<AppState> = {}): AppState {
+  return sanitizeState({ ...withShapeKind(defaultState(), 'hinged'), ...patch });
+}
+
+function board(id: string) {
+  const def = catalogBoard(id);
+  if (!def) throw new Error(`no board ${id}`);
+  return defaultPlacement(def);
+}
+
+describe('a hinged state', () => {
+  it('keeps the box\'s contents in the lower half and the upper half for later', () => {
+    const box = defaultState();
+    const state = sanitizeState(withShapeKind(box, 'hinged'));
+    expect(state.boards).toEqual(box.boards);
+    expect(state.hinge.b.boards).toEqual([]);
+    const withB = { ...state, hinge: { ...state.hinge, b: { ...state.hinge.b, boards: [board('esp32-devkitc-v4')] } } };
+    const back = sanitizeState(withShapeKind(sanitizeState(withShapeKind(withB, 'box')), 'hinged'));
+    expect(back.hinge.b.boards).toHaveLength(1);
+  });
+
+  it('a half\'s lid is on its top or its bottom', () => {
+    expect(lidFaces('hinged')).toEqual(['top', 'bottom']);
+    const state = sanitizeState({ shape: { kind: 'hinged' }, lid: { face: 'front' }, hinge: { b: { lid: { face: 'left' } } } });
+    expect(state.lid.face).toBe('top');
+    expect(state.hinge.b.lid.face).toBe('top');
+  });
+
+  it('sanitizes garbage in the upper half and is idempotent', () => {
+    const state = sanitizeState({ shape: { kind: 'hinged' }, hinge: { gap: -3, b: { h: 'x', boards: 'no', lid: 7 } } });
+    expect(state.hinge.gap).toBe(0);
+    expect(state.hinge.b.boards).toEqual([]);
+    expect(sanitizeState(state)).toEqual(state);
+  });
+});
+
+describe('halfState', () => {
+  it('both halves share the larger footprint and keep their own heights', () => {
+    const state = hinged({ hinge: { ...defaultState().hinge, b: { ...defaultState().hinge.b, boards: [board('arduino-mega-2560')] } } });
+    const a = caseDims(halfState(state, 'a'));
+    const b = caseDims(halfState(state, 'b'));
+    const alone = caseDims(sanitizeState({ ...defaultState(), boards: [board('arduino-mega-2560')] }));
+    expect(a.w).toBe(b.w);
+    expect(a.d).toBe(b.d);
+    expect(b.w).toBeCloseTo(Math.max(alone.w, caseDims(defaultState()).w), 6);
+    // the Pi below and the Mega above need different heights
+    expect(a.h).toBeCloseTo(caseDims(defaultState()).h, 6);
+    expect(b.h).toBeCloseTo(alone.h, 6);
+  });
+
+  it('a manual size sets the footprint and each half\'s height, never below what the boards need', () => {
+    const base = hinged();
+    const manual = sanitizeState({
+      ...base, shape: { ...base.shape, auto: false, size: { w: 150, d: 100, h: 60 } }, hinge: { ...base.hinge, b: { ...base.hinge.b, h: 22 } },
+    });
+    expect(caseDims(halfState(manual, 'a'))).toEqual({ w: 150, d: 100, h: 60 });
+    expect(caseDims(halfState(manual, 'b'))).toEqual({ w: 150, d: 100, h: 22 });
+  });
+
+  it('a half has no wall mount and stays a hinged shape (its lid faces)', () => {
+    const base = hinged();
+    const state = sanitizeState({ ...base, wallMount: { ...base.wallMount, kind: 'ears' } });
+    expect(halfState(state, 'a').wallMount.kind).toBe('none');
+    expect(halfState(state, 'b').shape.kind).toBe('hinged');
+  });
+
+  it('withHalf writes back what a card did, and nothing else', () => {
+    const state = hinged();
+    for (const half of ['a', 'b'] as const) {
+      expect(withHalf(state, half, halfState(state, half))).toEqual(state);
+    }
+    const one = halfState(state, 'b');
+    const next = withHalf(state, 'b', { ...one, boards: [board('esp32-devkitc-v4')], lid: { ...one.lid, face: 'bottom' } });
+    expect(next.hinge.b.boards).toHaveLength(1);
+    expect(next.hinge.b.lid.face).toBe('bottom');
+    expect(next.boards).toEqual(state.boards);
+    expect(next.lid).toEqual(state.lid);
+    expect(next.shape).toEqual(state.shape);
+  });
+
+  it('a single case is one case', () => {
+    expect(casesOf(defaultState())).toEqual([{ half: null, state: defaultState() }]);
+    expect(casesOf(hinged()).map((one) => one.half)).toEqual(['a', 'b']);
+  });
+});
+
+describe('the fold', () => {
+  const d = 70;
+  const hA = 30;
+  const hB = 20;
+  const gap = 1;
+  const fold = foldOf(d, hA, hB, gap);
+  const e = BARREL_D / 2 + BARREL_CLEARANCE;
+
+  it('closed, the upper half lies on the lower one upside down, its inner face the gap above', () => {
+    const pose = upperPose(fold, 0);
+    // the upper half's inner face (its top) over the lower half's top
+    for (const [x, y] of [[0, 0], [100, 0], [0, d], [100, d]]) {
+      const p = applyAffine(pose, [x, y, hB]);
+      expect(p[2]).toBeCloseTo(hA + gap, 9);
+      expect(p[0]).toBeCloseTo(x, 9);
+    }
+    // its hinge edge (front) over the lower half's hinge edge (back), its far edge over the front
+    expect(applyAffine(pose, [0, 0, hB])[1]).toBeCloseTo(d, 9);
+    expect(applyAffine(pose, [0, d, hB])[1]).toBeCloseTo(0, 9);
+    expect(rotateVec(pose, [0, 0, 1])[2]).toBeCloseTo(-1, 9);
+    // its outer face on top
+    expect(applyAffine(pose, [0, 0, 0])[2]).toBeCloseTo(hA + gap + hB, 9);
+  });
+
+  it('open flat, it lies behind with its inner face up, level with the lower one\'s', () => {
+    const pose = upperPose(fold, 180);
+    expect(rotateVec(pose, [0, 0, 1])[2]).toBeCloseTo(1, 9);
+    expect(applyAffine(pose, [0, 0, hB])).toEqual([0, d + 2 * e, hA].map((value) => expect.closeTo(value, 9)));
+  });
+
+  it('the axis is behind the hinge walls, in the gap, at any angle', () => {
+    for (const angle of [0, 45, 110, 180]) {
+      const pose = upperPose(fold, angle);
+      const axis = applyAffine(pose, [0, fold.yB, fold.zB]);
+      expect(axis[1]).toBeCloseTo(d + e, 9);
+      expect(axis[2]).toBeCloseTo(hA + gap / 2, 9);
+    }
+  });
+});
+
+describe('building a hinged case', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+
+  it('both halves build watertight, each with its own lid face', () => {
+    const base = hinged();
+    const state = sanitizeState({
+      ...base,
+      hinge: { ...base.hinge, b: { ...base.hinge.b, boards: [board('esp32-devkitc-v4')], lid: { ...base.hinge.b.lid, face: 'bottom' } } },
+    });
+    for (const { half, state: one } of casesOf(state)) {
+      const built = buildCase(csg, one, 8);
+      for (const mesh of [built.body, built.lid]) {
+        const report = validateMesh(mesh);
+        expect(report.watertight, `${half}`).toBe(true);
+        expect(report.volume).toBeGreaterThan(0);
+      }
+      expect(built.dims).toEqual(caseDims(one));
+    }
+  });
+});

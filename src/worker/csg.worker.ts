@@ -5,7 +5,12 @@
 
 import type { CsgApi } from '../geo/csg';
 import { initCSG } from '../geo/csg';
+import type { CaseBuild } from '../geo/build';
 import { BUILD_STAGES, buildCase } from '../geo/build';
+import type { LabelRaster } from '../geo/label';
+import type { AppState } from '../state/schema';
+import type { Half } from '../state/hinged';
+import { casesOf } from '../state/hinged';
 import type { Message } from '../geo/message';
 import type { SurfaceMesh } from '../geo/surface';
 import { meshBounds } from '../geo/surface';
@@ -50,20 +55,72 @@ function run(csg: CsgApi, jobId: number, job: CsgJob): JobPart[] {
   const exporting = job.kind === 'export';
   if (!exporting && job.kind !== 'preview') throw new Error('the worker does not know this job');
   const segments = exporting ? state.resolution : previewSegments(job.segments);
-  const total = BUILD_STAGES.length + (exporting ? 1 : 0);
+  const cases = casesOf(state);
+  const total = BUILD_STAGES.length * cases.length + (exporting ? 1 : 0);
   let step = 0;
   const stage = (label: Message): void => {
     send({ type: 'progress', jobId, step: step++, total, label });
   };
-  const built = buildCase(csg, state, segments, stage, sanitizeLabelRaster(job.label));
+  const builds = cases.map(({ half, state: one }) => {
+    const label = sanitizeLabelRaster(half === 'b' ? job.labelB : job.label);
+    return { half, built: half ? cachedBuild(csg, half, one, segments, stage, label) : buildCase(csg, one, segments, stage, label) };
+  });
   if (exporting) stage({ code: 'progress.check' });
-  return [
-    part('body', built.body, exporting),
-    part('lid', built.lid, exporting),
-    ...(built.screw ? [part('screw', built.screw, exporting)] : []),
-    ...(built.clamps ? [part('clamp', built.clamps, exporting)] : []),
-    ...(built.lidClamps ? [part('lidClamp', built.lidClamps, exporting)] : []),
-  ];
+  return builds.flatMap(({ half, built }) => {
+    const parts = [
+      part('body', built.body, exporting),
+      part('lid', built.lid, exporting),
+      ...(built.screw ? [part('screw', built.screw, exporting)] : []),
+      ...(built.clamps ? [part('clamp', built.clamps, exporting)] : []),
+      ...(built.lidClamps ? [part('lidClamp', built.lidClamps, exporting)] : []),
+    ];
+    return half ? parts.map((one): JobPart => ({ ...one, half })) : parts;
+  });
+}
+
+/**
+ * The last build of each half of a hinged case, and what it was built from:
+ * editing one half does not rebuild the other (plans/PLAN-HINGED.md, P3).
+ */
+const lastHalves = new Map<Half, { key: string; built: CaseBuild }>();
+
+function cachedBuild(
+  csg: CsgApi, half: Half, state: AppState, segments: number, stage: (label: Message) => void, label: LabelRaster | null,
+): CaseBuild {
+  const key = `${segments}|${rasterKey(label)}|${JSON.stringify(state)}`;
+  const last = lastHalves.get(half);
+  if (last?.key === key) {
+    for (const one of BUILD_STAGES) stage(one);
+    return copyBuild(last.built);
+  }
+  const built = buildCase(csg, state, segments, stage, label);
+  // the buffers sent are transferred away: the cache keeps copies
+  lastHalves.set(half, { key, built: copyBuild(built) });
+  return built;
+}
+
+function rasterKey(label: LabelRaster | null): string {
+  if (!label) return '-';
+  // FNV-1a over the pixels: the raster is derived from the label's state, but a font arriving late redraws it
+  let hash = 0x811c9dc5;
+  for (const value of label.pixels) hash = Math.imul(hash ^ value, 0x01000193);
+  return `${label.w}x${label.h}@${label.mmPerPx}#${hash >>> 0}`;
+}
+
+function copyMesh(mesh: SurfaceMesh): SurfaceMesh {
+  return { positions: mesh.positions.slice(), indices: mesh.indices.slice(), normals: mesh.normals.slice() };
+}
+
+function copyBuild(built: CaseBuild): CaseBuild {
+  const optional = (mesh: SurfaceMesh | null): SurfaceMesh | null => (mesh ? copyMesh(mesh) : null);
+  return {
+    ...built,
+    body: copyMesh(built.body),
+    lid: copyMesh(built.lid),
+    screw: optional(built.screw),
+    clamps: optional(built.clamps),
+    lidClamps: optional(built.lidClamps),
+  };
 }
 
 /** Segments of a preview: whatever came in, as a sane integer. */

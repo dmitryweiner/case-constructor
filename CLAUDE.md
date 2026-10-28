@@ -21,6 +21,10 @@ on the model, the lid's place in the Both STL, the editor's hints: done
 `plans/PLAN-KEYBOARDS.md` — keyboards (K1…K8, K3b): the key field through
 the lid (a window, a hole per key, printed caps), floor keyboards, rests, a
 keypad's flange, the Tier A + B keyboards of `plans/PERSPECTIVE-KEYBOARDS.md`.
+`plans/PLAN-HINGED.md` — a hinged case (H1…H9): two halves, each its own
+case with its own lid, knuckles on a pin, a screw or snapping cones, a
+printed hinge on screws, cable slots, magnets inside (the branch
+`hinged-2026-10-28`).
 
 ## Node
 
@@ -64,7 +68,8 @@ freely; a temporary script that turns out useful becomes a permanent one.
   clamp bars sunk under the lid until its Grove socket's note goes, the
   MacroPad on the floor, the BBQ20KBD's rests, the KeebDeck pressed on its
   flange), arranging and aligning two boards (and
-  undo), every lid face, cylinder/console lid restrictions, snaps and screws
+  undo), every lid face, cylinder/console lid restrictions, a hinged case
+  (the half switch, a board and a lid in the upper half, closed, export), snaps and screws
   with every hole and head kind, magnets, printed screws (P4 with its
   warning, the Lid tab with the screws, a lid export), vents, fan, through
   and closed keyholes, ears by count and walls, a label in a real font,
@@ -165,6 +170,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   "which tool for which drawing"), also for the catalog review: drawings a
   person downloads, the review page's captions, the user's OK/BAD report. No new dependencies without the user's
   explicit approval, subagents included.
+- `scripts/i18n.mjs --file keys.json` — adds keys to all four dictionaries,
+  each after an anchor key (`[{ after, key, en, ru, uk, he }]`); a key
+  already there is replaced in place.
 - `scripts/lib/harness.mjs` — flags, a vite server on ports 5273 / 4273
   (not ClayForm's), console error collection, CPU throttle, browser locale.
   `CASE_BROWSER` overrides the chromium executable.
@@ -394,6 +402,21 @@ freely; a temporary script that turns out useful becomes a permanent one.
   `lidForKind`) puts it back when the new shape allows it (box → console →
   box leaves a top lid on top). The sanitizer only checks the face against
   the shape: it cannot tell a stale choice from one to restore.
+- A hinged case (`shape.kind: 'hinged'`, `state/hinged.ts`): the lower
+  half's contents are where a single case keeps them, the upper half's in
+  `state.hinge.b`. `halfState(state, half)` is either half as an ordinary
+  case (the shared footprint as a fixed size, its own height, no wall
+  mount; its kind stays `hinged`, which everything reads as a box, and its
+  lid faces are top and bottom); `withHalf` writes a card's result back
+  (contents only). The panel's cards edit `halfState(state, edited half)`
+  through `edited()` / `applyEdit` in `main.ts`; the half and the view's
+  angle are view settings (`HalfView`), not in the project. `casesOf`
+  gives the cases to build, warn about and draw: one, or the two halves.
+  The worker builds each half (parts carry `half`) and keeps the last build
+  of each, keyed by its state. The upper half is posed by `upperPose`
+  (`geo/hinge.ts`): the hinge along x on the lower half's back and the upper
+  half's front, the axis behind them in the closing gap. Its port captions'
+  keys start with `u`; a warning's `half` poses its spot.
 - Visible text comes only from `src/i18n/` dictionaries; `en.ts` is the
   reference and gives `Key`. The core and the worker speak in message codes
   (`geo/message.ts`). A test fails on any Cyrillic or Hebrew in a string
@@ -480,9 +503,12 @@ Extras: toggled cards `#on_vents`, `#on_fan`, `#on_label`; vents
 `#label_anchor_<anchor>` (a 3 × 3 grid: topLeft … bottomRight), `#label_margin` (off the centre), `#label_x|_y`, `#label_turn_0|90|180|270`, `#label_angle`.
 Openings: `#cutAdd`; per cut `#cut<i>_face` (select), `#cut<i>_shape_rect|round`,
 `#cut<i>_x|_y|_w|_d|_h|_r` (`_d` is the diameter of a round cut), `#cut<i>_remove`.
-Case card: `#case_kind_box|cylinder|console`, `#case_cornerR`, `#case_edgeR`,
+Case card: `#case_kind_box|cylinder|console|hinged`, `#case_cornerR`, `#case_edgeR`,
 `#case_wall`, `#case_floor`, `#case_auto`, `#case_w`, `#case_diameter`,
-`#case_d`, `#case_h`, `#case_frontH`, `#case_backH`.
+`#case_d`, `#case_h`, `#case_hA|_hB` (hinged), `#case_frontH`, `#case_backH`.
+Hinged: the card `#hingeCard` (`#hinge_gap`), the half switch `#halfBar`
+(`#edit_half_a|b`), the view's angle `#view_angle` (in the View and export
+card).
 Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets|printed`,
 `#lid_screw` (select), `#lid_hole_tap|insert|nut`, `#lid_magnet` (select),
 `#lid_magnetFit` (magnets only), `#lid_thread` (select), `#lid_threadFit`

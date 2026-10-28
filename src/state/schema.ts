@@ -19,6 +19,8 @@ import type { LidState } from '../geo/lidSpec';
 import { defaultLid, lidForKind, sanitizeLid } from '../geo/lidSpec';
 import type { PrintArrange } from '../geo/print';
 import { defaultPrint, sanitizePrint } from '../geo/print';
+import type { HingeState } from './hinged';
+import { defaultHinge, sanitizeHinge } from './hinged';
 
 export const STATE_VERSION = 1;
 
@@ -42,6 +44,8 @@ export interface AppState {
   print: PrintArrange;
   /** segments per quarter arc for the export build */
   resolution: number;
+  /** a hinged case: the upper half and the hinge (the lower half is the fields above); kept for later on any other shape */
+  hinge: HingeState;
 }
 
 export const RESOLUTIONS = [12, 24, 48, 64];
@@ -60,6 +64,7 @@ export function defaultState(): AppState {
     exportMode: 'both',
     print: defaultPrint(),
     resolution: 24,
+    hinge: defaultHinge(),
   };
 }
 
@@ -91,5 +96,6 @@ export function sanitizeState(raw: unknown): AppState {
     exportMode: isExportMode(exportMode) ? exportMode : d.exportMode,
     print: sanitizePrint(Reflect.get(r, 'print')),
     resolution: typeof resolution === 'number' && RESOLUTIONS.includes(resolution) ? resolution : d.resolution,
+    hinge: sanitizeHinge(Reflect.get(r, 'hinge')),
   };
 }

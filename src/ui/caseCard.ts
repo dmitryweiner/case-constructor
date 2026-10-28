@@ -7,21 +7,29 @@ import type { Control } from './controls';
 import { caseDims } from '../geo/layout';
 import { SHAPE_KINDS, SIZE_MAX, SIZE_MIN, WALL_MAX, WALL_MIN, CORNER_MAX, EDGE_MAX } from '../geo/shape';
 import type { ShapeState } from '../geo/shape';
+import type { Dims } from '../geo/face';
 import type { AppState } from '../state/schema';
 import { withShapeKind } from '../state/schema';
+import type { Half } from '../state/hinged';
+import { halfState, isHinged } from '../state/hinged';
 
 type Dim = 'w' | 'd' | 'h';
+
+/** The size the case is built at; a hinged case's footprint and the lower half's height, or the upper half's. */
+function builtDims(state: AppState, half: Half = 'a'): Dims {
+  return caseDims(isHinged(state) ? halfState(state, half) : state);
+}
 
 function shapeOf(state: AppState, patch: Partial<ShapeState>): AppState {
   return { ...state, shape: { ...state.shape, ...patch } };
 }
 
-function sizeControl(key: string, dim: Dim, label: 'param.sizeW' | 'param.sizeD' | 'param.sizeH' | 'param.diameter',
+function sizeControl(key: string, dim: Dim, label: 'param.sizeW' | 'param.sizeD' | 'param.sizeH' | 'param.diameter' | 'param.sizeHA',
   when: (state: AppState) => boolean): Control<AppState> {
   return {
     kind: 'range', key, label, min: SIZE_MIN, max: SIZE_MAX, step: 1, when,
     disabled: (state) => state.shape.auto,
-    get: (state) => Math.round(caseDims(state)[dim]),
+    get: (state) => Math.round(builtDims(state)[dim]),
     set: (state, value) => shapeOf(state, { size: { ...state.shape.size, [dim]: value } }),
   };
 }
@@ -63,12 +71,24 @@ export function caseControls(): Control<AppState>[] {
       kind: 'check', key: 'auto', label: 'param.auto', hint: 'param.auto.hint',
       get: (state) => state.shape.auto,
       // switching auto off starts from the size the case has now, not from a stale manual one
-      set: (state, value) => shapeOf(state, value ? { auto: true } : { auto: false, size: caseDims(state) }),
+      set: (state, value) => {
+        if (value) return shapeOf(state, { auto: true });
+        const manual = shapeOf(state, { auto: false, size: builtDims(state) });
+        return isHinged(state) ? { ...manual, hinge: { ...state.hinge, b: { ...state.hinge.b, h: builtDims(state, 'b').h } } } : manual;
+      },
     },
     sizeControl('w', 'w', 'param.sizeW', (state) => kind(state) !== 'cylinder'),
     sizeControl('diameter', 'w', 'param.diameter', (state) => kind(state) === 'cylinder'),
     sizeControl('d', 'd', 'param.sizeD', (state) => kind(state) !== 'cylinder'),
-    sizeControl('h', 'h', 'param.sizeH', (state) => kind(state) !== 'console'),
+    sizeControl('h', 'h', 'param.sizeH', (state) => kind(state) !== 'console' && kind(state) !== 'hinged'),
+    sizeControl('hA', 'h', 'param.sizeHA', (state) => kind(state) === 'hinged'),
+    {
+      kind: 'range', key: 'hB', label: 'param.sizeHB', min: SIZE_MIN, max: SIZE_MAX, step: 1,
+      when: (state) => kind(state) === 'hinged',
+      disabled: (state) => state.shape.auto,
+      get: (state) => Math.round(builtDims(state, 'b').h),
+      set: (state, value) => ({ ...state, hinge: { ...state.hinge, b: { ...state.hinge.b, h: value } } }),
+    },
     {
       kind: 'range', key: 'frontH', label: 'param.frontH', min: 10, max: SIZE_MAX, step: 1,
       when: (state) => kind(state) === 'console',

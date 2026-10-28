@@ -319,7 +319,7 @@ export function cutWarnings(
   out.push(...keyNotes(layout, shape), ...plugNotes(layout));
   // a hung display's window on the top, at its outer width
   for (const cutter of cutters) {
-    if (!cutter.flare || cutter.source.kind !== 'port' || shape.kind !== 'box') continue;
+    if (!cutter.flare || cutter.source.kind !== 'port' || shape.kind === 'cylinder' || shape.kind === 'console') continue;
     const g = flareAt(cutter, cutter.s1);
     const window: ExtraCut = { face: 'top', shape: 'rect', x: cutter.origin[0], y: cutter.origin[1], w: cutter.w + 2 * g, h: cutter.h + 2 * g, r: 0 };
     if (inCorner(shape, dims, window)) out.push({ code: 'warn.windowInCorner', params: sourceParams(layout, cutter.source), spot: cutterSpot(cutter, dims) });

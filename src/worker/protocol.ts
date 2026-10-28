@@ -8,6 +8,7 @@
 import type { AppState } from '../state/schema';
 import type { Message } from '../geo/message';
 import type { LabelRaster } from '../geo/label';
+import type { Half } from '../state/hinged';
 
 /**
  * A job. A preview builds the exact case at preview resolution; an export
@@ -23,6 +24,8 @@ export type CsgJob = (
    * worker checks only its shape (`sanitizeLabelRaster`).
    */
   label?: LabelRaster | null;
+  /** a hinged case: the upper half's label (`label` is the lower half's) */
+  labelB?: LabelRaster | null;
 };
 
 /**
@@ -43,6 +46,8 @@ export interface JobPart {
   normals: Float32Array;
   /** what keeps the part out of the STL; always empty for a preview */
   blocking: Message[];
+  /** a hinged case: the half the part belongs to, in that half's own frame */
+  half?: Half;
 }
 
 /**

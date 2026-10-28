@@ -1,6 +1,7 @@
 # Case Constructor — user guide
 
 - [Case shape and size](case.md)
+- [Hinged case](hinged.md)
 - [Boards, standoffs and rails](boards.md)
 - [Displays](displays.md)
 - [Keyboards](keyboards.md)

@@ -96,6 +96,8 @@ function mountControls(): Control<AppState>[] {
   return [
     {
       kind: 'segmented', key: 'kind', label: 'mount.kind',
+      // a hinged case hangs on no wall
+      when: (state) => state.shape.kind !== 'hinged',
       options: MOUNT_KINDS.map((value) => ({ value, label: `mount.${value}` as const })),
       get: (state) => state.wallMount.kind,
       set: (state, value) => mount(state, { kind: MOUNT_KINDS.find((k) => k === value) ?? state.wallMount.kind }),

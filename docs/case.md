@@ -1,11 +1,13 @@
 # Case shape and size
 
-**Shape** — three kinds:
+**Shape** — four kinds:
 
 - **Box** — a rectangular case with rounded vertical edges.
 - **Cylinder** — a round case; *Diameter* sets its width and depth.
 - **Console** — a box whose top slopes from *Front height* to *Back height*
   (for a panel you look at from the front).
+- **Hinged** — two boxes joined by a hinge, a clamshell: see
+  [Hinged case](hinged.md).
 
 | Parameter | Range | Default | Notes |
 |---|---|---|---|
