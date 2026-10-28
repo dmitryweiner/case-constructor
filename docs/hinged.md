@@ -29,6 +29,40 @@ that opens like a book is narrow and deep.
 Corner radius, edge fillet, wall and floor are the same for both halves.
 A hinged case has no wall mounting (keyholes, ears).
 
+## Knuckles
+
+The halves turn on knuckles printed with them: barrels behind the hinge
+walls, each tied to its half's wall by a web, alternating lower, upper,
+lower… A pin goes through each block of knuckles: a piece of 1.75 mm
+filament (cut it to length, push it in, melt its ends with a soldering
+iron), a rod or a nail.
+
+| Parameter | Range | Default | Notes |
+|---|---|---|---|
+| Knuckles | at the ends, along the edge | at the ends | two blocks near the ends (one in the middle when the edge is too short for two), or one block along the whole edge |
+| Knuckles per block | 3, 5, 7 | 3 | odd: a block starts and ends on the lower half |
+| Knuckle length | 4–40 mm | 10 | two blocks only; shorter when the edge is short |
+| Knuckle diameter | 5–16 mm | 8 | never less than the pin's hole plus 1.2 mm of wall on each side |
+| Knuckle clearance | 0.2–1 mm | 0.4 | between neighbouring knuckles, and between a barrel and the other half's wall |
+| Pin diameter | 1–5 mm | 1.75 | |
+| Pin hole clearance | 0–0.5 mm | 0.15 | added to the pin's radius |
+
+The knuckles stay on the straight part of the hinge edge, clear of the
+corner radius. Their web holds on to the body's part of the hinge wall —
+never the lid's, so a lid on top still lifts off — and leans at 45° at
+most under the barrel, so the body prints opening up without supports.
+
+**How the halves print.** Each body prints opening up. A half whose lid is
+on its **bottom** therefore lies on its inner face, and its knuckles must
+not stand out of that face: its barrels stay inside its height, and the
+other half's barrels take the whole gap and both radii. With **both** lids
+on the bottom the knuckles cannot be printed with the halves at all — the
+panel warns; put one half's lid on top.
+
+A port or an opening through the hinge wall where knuckles stand behind it
+is warned about: the opening cuts the knuckles, and a plug has no way out
+there.
+
 ## Lids
 
 Each half has its own lid on its **top** (the inner face) or its

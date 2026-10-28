@@ -29,7 +29,7 @@ import { SCREWS } from './geo/fasteners';
 import { screwShape } from './geo/thread';
 import { extrasWarnings, faceSpot, flatRegion } from './geo/extras';
 import type { CutsCardHandle } from './ui/cutsCard';
-import { cutWarnings, outerTopAt, portCutters } from './geo/ports';
+import { cutWarnings, knuckleCutWarnings, outerTopAt, portCutters } from './geo/ports';
 import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
 import { effectiveLid } from './geo/layout';
 import { HEAD_FLOOR, headSeat, lidFaces } from './geo/lidSpec';
@@ -58,7 +58,8 @@ import { capsInCase, keyCaps, withCaps } from './geo/caps';
 import { restWarnings } from './geo/rests';
 import type { Affine, SurfaceMesh } from './geo/surface';
 import { IDENTITY, applyAffine, composeAffine, meshBounds, mergeMeshes, rotateVec, transformMesh, translation } from './geo/surface';
-import { ANGLE_DEFAULT, foldOf, upperPose } from './geo/hinge';
+import type { HalfHinge } from './geo/hinge';
+import { ANGLE_DEFAULT, upperPose } from './geo/hinge';
 import { encodeSTL } from './geo/stl';
 import { assessExport, validateMesh } from './geo/validate';
 import type { AppState, ExportMode } from './state/schema';
@@ -69,7 +70,7 @@ import type { UserPreset } from './state/userPresets';
 import { loadUserPresets, saveUserPresets, nextPresetNumber } from './state/userPresets';
 import { History } from './state/history';
 import type { Half } from './state/hinged';
-import { casesOf, halfState, isHinged, withHalf } from './state/hinged';
+import { casesOf, foldOfState, halfHinge, halfState, halfStrip, hingeNotes, isHinged, withHalf } from './state/hinged';
 import type { JobPart } from './worker/protocol';
 import { CsgClient } from './worker/client';
 
@@ -329,8 +330,14 @@ function inHalf(line: Notice, half: Half): Notice {
   return { ...line, text: t('half.line', { half: t(`half.${half}`), text: line.text }), half };
 }
 
+/** A half's hinge and where its knuckles hold on, for its notes. */
+function hingeOf(half: Half): { hinge: HalfHinge; strip: [number, number] | null } | null {
+  const hinge = halfHinge(state, half);
+  return hinge ? { hinge, strip: halfStrip(state, half) } : null;
+}
+
 /** What the panel says about one case (the state's, or a half of a hinged one) before the worker answers. */
-function caseNotices(one: AppState, label: LabelRaster | null): Notice[] {
+function caseNotices(one: AppState, label: LabelRaster | null, hinged: ReturnType<typeof hingeOf> = null): Notice[] {
   const out: Notice[] = [];
   const layout = caseLayout(one);
   const { dims } = layout;
@@ -347,6 +354,10 @@ function caseNotices(one: AppState, label: LabelRaster | null): Notice[] {
     out.push(said('info.lidFaceMoved', { chosen: t(`face.${one.lid.chosen}`), face: t(`face.${one.lid.face}`) }));
   }
   out.push(...cutWarnings(layout, shapeBuilt, lidBuilt, cutters, one.extraCuts).map(notice));
+  if (hinged && hinged.hinge.runs.length > 0) {
+    if (!hinged.strip) out.push(notice({ code: 'warn.knuckleNoWall' }));
+    else out.push(...knuckleCutWarnings(layout, hinged.hinge, hinged.strip[0], cutters).map(notice));
+  }
   if (lidBuilt.fastening !== 'snaps') {
     const { frame, plate, zp, spots } = lidPosts(one);
     const limits = headLimitsOf(one);
@@ -437,10 +448,11 @@ function refresh(): void {
 
   baseWarnings = [];
   currentLabels = { a: null, b: null };
+  baseWarnings.push(...hingeNotes(state).map(notice));
   for (const { half, state: one } of cases) {
     const label = labelRaster(one.label, () => refresh());
     currentLabels[half ?? 'a'] = label;
-    const notices = caseNotices(one, label);
+    const notices = caseNotices(one, label, half ? hingeOf(half) : null);
     baseWarnings.push(...(half ? notices.map((line) => inHalf(line, half)) : notices));
   }
   showWarnings([]);
@@ -634,10 +646,7 @@ function partById(parts: JobPart[], id: JobPart['id']): JobPart {
 
 /** Where a half lies in the view: the lower half (or a single case) where it is built, the upper one open by the view's angle. */
 function poseOf(built: AppState, half: Half | null): Affine {
-  if (half !== 'b') return IDENTITY;
-  const a = caseLayout(halfState(built, 'a')).dims;
-  const b = caseLayout(halfState(built, 'b')).dims;
-  return upperPose(foldOf(a.d, a.h, b.h, built.hinge.gap), halfView.angle);
+  return half === 'b' ? upperPose(foldOfState(built), halfView.angle) : IDENTITY;
 }
 
 type Vec = [number, number, number];

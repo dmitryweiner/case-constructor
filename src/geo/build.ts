@@ -31,6 +31,10 @@ import { outerTopAt, portCutters } from './ports';
 import { closedKeyholes, earSpecs, extrasCutters } from './extras';
 import { earSolids, keyholePadSolids, labelSolid } from './extrasSolids';
 import { screwSolid } from './screwSolids';
+import type { HalfHinge } from './hinge';
+import { bodyRange } from './hinge';
+import { knuckleSolids } from './hingeSolids';
+import { effectiveRadii } from './loft';
 import { screwShape, threadPoints } from './thread';
 import type { LabelRaster } from './label';
 import { labelPlacement } from './label';
@@ -61,8 +65,10 @@ export const BUILD_STAGES: readonly Message[] = [
   { code: 'progress.extras' },
 ];
 
+/** `hinge`: a half of a hinged case gets its knuckles (`state/hinged.ts`, `halfHinge`). */
 export function buildCase(
   csg: CsgApi, state: AppState, segments: number, onStage: (stage: Message) => void = () => {}, label: LabelRaster | null = null,
+  hinge: HalfHinge | null = null,
 ): CaseBuild {
   const scope = new CsgScope();
   try {
@@ -133,6 +139,13 @@ export function buildCase(
     const rawBody = body;
     body = attach(csg, scope, body, forBody, lidSolid);
     lidSolid = attach(csg, scope, lidSolid, forLid, rawBody);
+    // a hinged half's knuckles hold on to its body's part of the hinge wall;
+    // before the openings, so a port through that wall cuts them too (and is warned about)
+    if (hinge) {
+      const range = bodyRange(dims.h, lid.face, plate, lid.depth);
+      const knuckles = knuckleSolids(csg, scope, hinge, dims, effectiveRadii(spec.outer).edgeR, range, segments);
+      if (knuckles) body = scope.keep(scope.keep(body.add(scope.keep(knuckles.material.subtract(lidSolid)))).subtract(knuckles.holes));
+    }
 
     onStage(BUILD_STAGES[3]);
     const outer = outerSolid(csg, scope, spec, segments);

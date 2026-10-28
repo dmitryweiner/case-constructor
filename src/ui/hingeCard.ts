@@ -4,15 +4,60 @@
 
 import type { Control } from './controls';
 import type { AppState } from '../state/schema';
-import type { Half } from '../state/hinged';
+import type { Half, HingeState } from '../state/hinged';
 import { GAP_MAX, HALVES } from '../state/hinged';
+import {
+  BARREL_D_MAX, BARREL_D_MIN, HINGE_LAYOUTS, KNUCKLE_COUNTS, KNUCKLE_LENGTH_MAX, KNUCKLE_LENGTH_MIN, PIN_D_MAX, PIN_D_MIN,
+} from '../geo/hinge';
+
+function hingeOf(state: AppState, patch: Partial<HingeState>): AppState {
+  return { ...state, hinge: { ...state.hinge, ...patch } };
+}
 
 export function hingeControls(): Control<AppState>[] {
   return [
     {
       kind: 'range', key: 'gap', label: 'hinge.gap', hint: 'hinge.gap.hint', min: 0, max: GAP_MAX, step: 0.1,
       get: (state) => state.hinge.gap,
-      set: (state, value) => ({ ...state, hinge: { ...state.hinge, gap: value } }),
+      set: (state, value) => hingeOf(state, { gap: value }),
+    },
+    {
+      kind: 'segmented', key: 'layout', label: 'hinge.layout', hint: 'hinge.layout.hint',
+      options: HINGE_LAYOUTS.map((value) => ({ value, label: `hinge.layout.${value}` as const })),
+      get: (state) => state.hinge.layout,
+      set: (state, value) => hingeOf(state, { layout: HINGE_LAYOUTS.find((one) => one === value) ?? state.hinge.layout }),
+    },
+    {
+      kind: 'segmented', key: 'knuckles', label: 'hinge.knuckles', hint: 'hinge.knuckles.hint',
+      options: KNUCKLE_COUNTS.map((value) => ({ value: String(value), text: String(value) })),
+      get: (state) => String(state.hinge.knuckles),
+      set: (state, value) => hingeOf(state, { knuckles: KNUCKLE_COUNTS.find((one) => String(one) === value) ?? state.hinge.knuckles }),
+    },
+    {
+      kind: 'range', key: 'length', label: 'hinge.length', hint: 'hinge.length.hint',
+      min: KNUCKLE_LENGTH_MIN, max: KNUCKLE_LENGTH_MAX, step: 0.5, when: (state) => state.hinge.layout === 'ends',
+      get: (state) => state.hinge.length,
+      set: (state, value) => hingeOf(state, { length: value }),
+    },
+    {
+      kind: 'range', key: 'barrelD', label: 'hinge.barrelD', hint: 'hinge.barrelD.hint', min: BARREL_D_MIN, max: BARREL_D_MAX, step: 0.5,
+      get: (state) => state.hinge.barrelD,
+      set: (state, value) => hingeOf(state, { barrelD: value }),
+    },
+    {
+      kind: 'range', key: 'clearance', label: 'hinge.clearance', hint: 'hinge.clearance.hint', min: 0.2, max: 1, step: 0.05,
+      get: (state) => state.hinge.clearance,
+      set: (state, value) => hingeOf(state, { clearance: value }),
+    },
+    {
+      kind: 'range', key: 'pinD', label: 'hinge.pinD', hint: 'hinge.pinD.hint', min: PIN_D_MIN, max: PIN_D_MAX, step: 0.05,
+      get: (state) => state.hinge.pinD,
+      set: (state, value) => hingeOf(state, { pinD: value }),
+    },
+    {
+      kind: 'range', key: 'pinFit', label: 'hinge.pinFit', hint: 'hinge.pinFit.hint', min: 0, max: 0.5, step: 0.05,
+      get: (state) => state.hinge.pinFit,
+      set: (state, value) => hingeOf(state, { pinFit: value }),
     },
   ];
 }

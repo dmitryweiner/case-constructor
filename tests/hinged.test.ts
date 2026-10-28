@@ -2,19 +2,22 @@
 // seen through `halfState`, written back by `withHalf`; the upper half posed
 // about the hinge axis.
 
-import { initCSG } from '../src/geo/csg';
+import { CsgScope, fromManifold, initCSG, toManifold } from '../src/geo/csg';
 import type { CsgApi } from '../src/geo/csg';
+import type { CaseBuild } from '../src/geo/build';
+import type { SurfaceMesh } from '../src/geo/surface';
+import { mergeMeshes, transformMesh } from '../src/geo/surface';
 import { buildCase } from '../src/geo/build';
 import { validateMesh } from '../src/geo/validate';
 import { caseDims } from '../src/geo/layout';
 import { lidFaces } from '../src/geo/lidSpec';
-import { BARREL_CLEARANCE, BARREL_D, foldOf, upperPose } from '../src/geo/hinge';
+import { defaultHingeSpec, foldOf, upperPose } from '../src/geo/hinge';
 import { applyAffine, rotateVec } from '../src/geo/surface';
 import { catalogBoard } from '../src/boards/catalog';
 import { defaultPlacement } from '../src/boards/placement';
 import { defaultState, sanitizeState, withShapeKind } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
-import { casesOf, halfState, withHalf } from '../src/state/hinged';
+import { casesOf, foldOfState, halfHinge, halfState, withHalf } from '../src/state/hinged';
 
 function hinged(patch: Partial<AppState> = {}): AppState {
   return sanitizeState({ ...withShapeKind(defaultState(), 'hinged'), ...patch });
@@ -107,8 +110,9 @@ describe('the fold', () => {
   const hA = 30;
   const hB = 20;
   const gap = 1;
-  const fold = foldOf(d, hA, hB, gap);
-  const e = BARREL_D / 2 + BARREL_CLEARANCE;
+  const spec = defaultHingeSpec();
+  const fold = foldOf(spec, d, hA, hB, gap);
+  const e = spec.barrelD / 2 + spec.clearance;
 
   it('closed, the upper half lies on the lower one upside down, its inner face the gap above', () => {
     const pose = upperPose(fold, 0);
@@ -165,3 +169,88 @@ describe('building a hinged case', () => {
     }
   });
 });
+
+describe('the knuckles', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+
+  function withLids(a: string, b: string): AppState {
+    const base = hinged();
+    return sanitizeState({ ...base, lid: { ...base.lid, face: a }, hinge: { ...base.hinge, b: { ...base.hinge.b, lid: { ...base.hinge.b.lid, face: b } } } });
+  }
+
+  function build(state: AppState): { a: CaseBuild; b: CaseBuild } {
+    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, null, halfHinge(state, half)));
+    return { a, b };
+  }
+
+  /** Volume shared by two meshes. */
+  function shared(one: SurfaceMesh, other: SurfaceMesh): number {
+    const scope = new CsgScope();
+    try {
+      return scope.keep(scope.keep(toManifold(csg, one)).intersect(scope.keep(toManifold(csg, other)))).volume();
+    } finally {
+      scope.dispose();
+    }
+  }
+
+  // P6: the upper half turns from closed to open flat without touching the lower one
+  for (const [lidA, lidB] of [['top', 'top'], ['bottom', 'top'], ['top', 'bottom']]) {
+    it(`turn from closed to open flat without touching (lids ${lidA}/${lidB})`, () => {
+      const state = withLids(lidA, lidB);
+      const { a, b } = build(state);
+      const lower = mergeMeshes([a.body, a.lid]);
+      const upper = mergeMeshes([b.body, b.lid]);
+      const fold = foldOfState(state);
+      for (let angle = 0; angle <= 180; angle += 15) {
+        expect(shared(lower, transformMesh(upper, upperPose(fold, angle))), `${angle}°`).toBeLessThan(1e-6);
+      }
+    });
+  }
+
+  it('each half has its knuckles, and a pin goes through every block at any angle', () => {
+    const state = hinged();
+    const { a, b } = build(state);
+    // the knuckles add to the body
+    expect(validateMesh(a.body).volume).toBeGreaterThan(validateMesh(buildCase(csg, halfState(state, 'a'), 8).body).volume + 50);
+    const fold = foldOfState(state);
+    const hinge = halfHinge(state, 'a');
+    if (!hinge) throw new Error('no hinge');
+    expect(hinge.blocks).toHaveLength(2);
+    // a pin a little thinner than its hole, along the axis through each block
+    const pin = (x0: number, x1: number): SurfaceMesh => {
+      const r = state.hinge.pinD / 2 - 0.05;
+      const points = [x0, x1].flatMap((x) => Array.from({ length: 24 }, (_, i): [number, number, number] => (
+        [x, fold.y + r * Math.cos((Math.PI * i) / 12), fold.z + r * Math.sin((Math.PI * i) / 12)])));
+      const scope = new CsgScope();
+      try {
+        return fromManifold(scope.keep(csg.Manifold.hull(points)));
+      } finally {
+        scope.dispose();
+      }
+    };
+    for (const block of hinge.blocks) {
+      const rod = pin(block.x0 - 2, block.x1 + 2);
+      expect(shared(rod, a.body)).toBeLessThan(1e-6);
+      for (const angle of [0, 90, 180]) {
+        const pose = upperPose(fold, angle);
+        // the rod stays on the axis: posed with the upper half it is the same rod
+        expect(shared(rod, transformMesh(b.body, pose))).toBeLessThan(1e-6);
+      }
+    }
+  });
+
+  it('a half that prints on its inner face keeps its knuckles under that face', () => {
+    const state = withLids('bottom', 'top');
+    const { a, b } = build(state);
+    const hA = caseDims(halfState(state, 'a')).h;
+    expect(validateMesh(a.body).bbox.max[2]).toBeLessThanOrEqual(hA + 1e-6);
+    // the other half's knuckles take the whole gap and both radii
+    const hB = caseDims(halfState(state, 'b')).h;
+    expect(validateMesh(b.body).bbox.max[2]).toBeCloseTo(hB + state.hinge.gap + state.hinge.barrelD, 1);
+    for (const mesh of [a.body, b.body]) expect(validateMesh(mesh).watertight).toBe(true);
+  });
+});
+

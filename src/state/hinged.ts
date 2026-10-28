@@ -14,8 +14,12 @@ import type { FanState, LabelState, VentState } from '../geo/extras';
 import { defaultFan, defaultLabel, defaultVents, sanitizeFan, sanitizeLabel, sanitizeVents } from '../geo/extras';
 import type { LidState } from '../geo/lidSpec';
 import { defaultLid, sanitizeLid } from '../geo/lidSpec';
-import { minimumDims } from '../geo/layout';
-import { SIZE_MAX, SIZE_MIN, clampNum } from '../geo/shape';
+import { caseDims, effectiveLid, minimumDims } from '../geo/layout';
+import { SIZE_MAX, SIZE_MIN, clampNum, plateOf, shapeSpec } from '../geo/shape';
+import type { Fold, HalfHinge, HingeSpec } from '../geo/hinge';
+import { axisOffset, axisSplit, bodyRange, defaultHingeSpec, foldOf, knuckleRuns, knuckleStrip, sanitizeHingeSpec } from '../geo/hinge';
+import type { Message } from '../geo/message';
+import { effectiveRadii } from '../geo/loft';
 import type { AppState } from './schema';
 
 export const HALVES = ['a', 'b'] as const;
@@ -34,7 +38,7 @@ export interface HalfContent {
   label: LabelState;
 }
 
-export interface HingeState {
+export interface HingeState extends HingeSpec {
   /** the upper half */
   b: HalfContent;
   /** between the inner faces when closed, mm */
@@ -48,7 +52,7 @@ export function defaultHalf(): HalfContent {
 }
 
 export function defaultHinge(): HingeState {
-  return { b: defaultHalf(), gap: 1 };
+  return { ...defaultHingeSpec(), b: defaultHalf(), gap: 1 };
 }
 
 function sanitizeHalf(raw: unknown): HalfContent {
@@ -69,6 +73,7 @@ export function sanitizeHinge(raw: unknown): HingeState {
   const d = defaultHinge();
   const r = typeof raw === 'object' && raw !== null ? raw : {};
   return {
+    ...sanitizeHingeSpec(r),
     b: sanitizeHalf(Reflect.get(r, 'b')),
     gap: clampNum(Reflect.get(r, 'gap'), 0, GAP_MAX, d.gap),
   };
@@ -123,3 +128,54 @@ export function withHalf(state: AppState, half: Half, next: AppState): AppState 
 export function casesOf(state: AppState): { half: Half | null; state: AppState }[] {
   return isHinged(state) ? HALVES.map((half) => ({ half, state: halfState(state, half) })) : [{ half: null, state }];
 }
+
+/** The hinge's axis for the halves as they are built (the axis split follows their lids). */
+export function foldOfState(state: AppState): Fold {
+  const a = halfState(state, 'a');
+  const b = halfState(state, 'b');
+  const dimsA = caseDims(a);
+  const { zA } = axisSplit(state.hinge, state.hinge.gap, a.lid.face, b.lid.face);
+  return foldOf(state.hinge, dimsA.d, dimsA.h, caseDims(b).h, state.hinge.gap, zA);
+}
+
+/** What one half's build adds for the hinge: its knuckles on its hinge wall and the pins' holes; null for a single case. */
+export function halfHinge(state: AppState, half: Half): HalfHinge | null {
+  if (!isHinged(state)) return null;
+  const fold = foldOfState(state);
+  const dims = caseDims(halfState(state, half));
+  const cornerR = Math.max(0, Math.min(state.shape.cornerR, dims.w / 2, dims.d / 2));
+  const { blocks, runs } = knuckleRuns(state.hinge, dims.w, cornerR);
+  const { hinge } = state;
+  return {
+    wall: half === 'a' ? 'back' : 'front',
+    r: hinge.barrelD / 2,
+    e: axisOffset(hinge),
+    zAxis: half === 'a' ? fold.z : fold.zB,
+    runs: runs.filter((run) => run.half === half),
+    blocks,
+    holeR: hinge.pinD / 2 + hinge.pinFit,
+  };
+}
+
+/**
+ * Where a half's knuckles hold on to its hinge wall (`knuckleStrip`), as its
+ * build finds it; null when its body keeps no wall there.
+ */
+export function halfStrip(state: AppState, half: Half): [number, number] | null {
+  const hinge = halfHinge(state, half);
+  if (!hinge) return null;
+  const one = halfState(state, half);
+  const dims = caseDims(one);
+  const lid = effectiveLid(one.shape, one.lid, dims);
+  const body = bodyRange(dims.h, lid.face, plateOf(one.shape, lid.face), lid.depth);
+  const { edgeR } = effectiveRadii(shapeSpec(one.shape, dims).outer);
+  return knuckleStrip({ h: dims.h, edgeR, zAxis: hinge.zAxis, r: hinge.r, e: hinge.e, body });
+}
+
+/** What the hinge says about the case as a whole: knuckles with both lids on the bottom cannot print. */
+export function hingeNotes(state: AppState): Message[] {
+  if (!isHinged(state)) return [];
+  const { printable } = axisSplit(state.hinge, state.hinge.gap, state.lid.face, state.hinge.b.lid.face);
+  return printable ? [] : [{ code: 'warn.hingeUnprintable' }];
+}
+

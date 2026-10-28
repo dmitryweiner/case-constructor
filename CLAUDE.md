@@ -417,6 +417,18 @@ freely; a temporary script that turns out useful becomes a permanent one.
   (`geo/hinge.ts`): the hinge along x on the lower half's back and the upper
   half's front, the axis behind them in the closing gap. Its port captions'
   keys start with `u`; a warning's `half` poses its spot.
+  Knuckles (`hinge.ts` pure: `knuckleRuns`, `axisSplit`, `knuckleStrip`;
+  `hingeSolids.ts` worker): `halfHinge(state, half)` goes to `buildCase`,
+  which adds them to the body after the supports, minus the lid, and
+  drills the pins' holes — before the openings, so a port through the hinge
+  wall cuts them (and `knuckleCutWarnings` says so). A knuckle is the hull
+  of its barrel and a strip of its wall; past the strip it keeps
+  `KNUCKLE_LID_GAP` off the wall (the lid lifts past it). A half with its
+  lid on the bottom prints on its inner face: `axisSplit` keeps its barrels
+  under that face; both lids on the bottom cannot print (a warning).
+  `tests/hinged.test.ts` turns the upper half from closed to open flat and
+  demands zero shared volume at every 15°. Golden entries of a hinged state
+  are per half (`<name>:a`, `<name>:b`); `inspect.mjs` reports each half.
 - Visible text comes only from `src/i18n/` dictionaries; `en.ts` is the
   reference and gives `Key`. The core and the worker speak in message codes
   (`geo/message.ts`). A test fails on any Cyrillic or Hebrew in a string
@@ -506,7 +518,9 @@ Openings: `#cutAdd`; per cut `#cut<i>_face` (select), `#cut<i>_shape_rect|round`
 Case card: `#case_kind_box|cylinder|console|hinged`, `#case_cornerR`, `#case_edgeR`,
 `#case_wall`, `#case_floor`, `#case_auto`, `#case_w`, `#case_diameter`,
 `#case_d`, `#case_h`, `#case_hA|_hB` (hinged), `#case_frontH`, `#case_backH`.
-Hinged: the card `#hingeCard` (`#hinge_gap`), the half switch `#halfBar`
+Hinged: the card `#hingeCard` (`#hinge_gap`, `#hinge_layout_ends|full`,
+`#hinge_knuckles_3|5|7`, `#hinge_length` (two blocks), `#hinge_barrelD`,
+`#hinge_clearance`, `#hinge_pinD`, `#hinge_pinFit`), the half switch `#halfBar`
 (`#edit_half_a|b`), the view's angle `#view_angle` (in the View and export
 card).
 Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets|printed`,

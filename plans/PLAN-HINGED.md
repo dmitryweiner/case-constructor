@@ -226,3 +226,13 @@ stands alone.
   lids*, the angle, *the upper half behind*), the part list's lines, and
   the angle greyed out in the print layout and hidden on the Lid tab.
 
+- **H3 (2026-10-28).** Done. Two blocks are inset by the corner radius plus
+  1 mm and merge into one in the middle when they do not fit 10 mm apart.
+  The web's strip is the flat of the wall on the body's side of the parting
+  plane, from 45° under the barrel to its top; past it the web keeps 0.2 mm
+  off the wall (a box subtracted), not the lid itself — the lid is
+  subtracted as well, so the parts never share volume. The knuckles are
+  added after the supports and before the openings (a port through the
+  hinge wall cuts them, with a warning) rather than with the additive
+  extras. `inspect.mjs` and the golden test build a hinged state per half.
+

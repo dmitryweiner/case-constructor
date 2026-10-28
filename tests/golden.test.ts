@@ -16,6 +16,7 @@ import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import type { SurfaceMesh } from '../src/geo/surface';
 import { KEYPAD } from './helpers';
+import { casesOf, halfHinge } from '../src/state/hinged';
 
 const GOLDEN_PATH = join(dirname(fileURLToPath(import.meta.url)), 'golden', 'cases.json');
 const SEGMENTS = 8;
@@ -296,6 +297,19 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     boards: [{ board: 'm5stack-cardkb2', on: 'ceiling', z: 1.3, hold: 'clamp', keys: 'caps', mount: { size: 'M2', hole: 'insert' } }],
   }),
+  // H3: a hinged case, knuckles on a pin — both lids on top (the axis in the gap's middle)
+  'hinged-knuckles': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged', edgeR: 2 },
+    hinge: { b: { boards: [{ board: 'esp32-devkitc-v4' }] } },
+  }),
+  // H3: the lower half prints on its inner face, its knuckles under it; one block of five
+  'hinged-knuckles-bottom-full': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    lid: { ...defaultState().lid, face: 'bottom', depth: 4 },
+    hinge: { layout: 'full', knuckles: 5, barrelD: 7, b: { boards: [] } },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {
@@ -311,12 +325,15 @@ describe('golden cases', () => {
   it('match the pinned geometry', async () => {
     const csg = await initCSG();
     const actual: Record<string, Entry> = {};
-    for (const [name, state] of Object.entries(STATES)) {
-      const built = buildCase(csg, state, SEGMENTS);
-      actual[name] = {
-        body: part(built.body), lid: part(built.lid),
-        ...(built.clamps ? { clamp: part(built.clamps) } : {}), ...(built.lidClamps ? { lidClamp: part(built.lidClamps) } : {}),
-      };
+    for (const [name, whole] of Object.entries(STATES)) {
+      // a hinged case: an entry per half, `<name>:a` and `<name>:b`
+      for (const { half, state } of casesOf(whole)) {
+        const built = buildCase(csg, state, SEGMENTS, () => {}, null, half ? halfHinge(whole, half) : null);
+        actual[half ? `${name}:${half}` : name] = {
+          body: part(built.body), lid: part(built.lid),
+          ...(built.clamps ? { clamp: part(built.clamps) } : {}), ...(built.lidClamps ? { lidClamp: part(built.lidClamps) } : {}),
+        };
+      }
     }
     if (process.env.UPDATE_GOLDEN || !existsSync(GOLDEN_PATH)) {
       // say what moved, so a regeneration is a decision and not a blind overwrite

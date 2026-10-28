@@ -1161,5 +1161,85 @@
         3
       ]
     }
+  },
+  "hinged-knuckles:a": {
+    "body": {
+      "triangles": 3456,
+      "volume": 28809.74,
+      "extents": [
+        97.9,
+        74.9,
+        32.9
+      ]
+    },
+    "lid": {
+      "triangles": 2492,
+      "volume": 12635.6,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-knuckles:b": {
+    "body": {
+      "triangles": 1832,
+      "volume": 28001.26,
+      "extents": [
+        97.9,
+        74.9,
+        26.1
+      ]
+    },
+    "lid": {
+      "triangles": 2176,
+      "volume": 13773.28,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-knuckles-bottom-full:a": {
+    "body": {
+      "triangles": 2620,
+      "volume": 25360.47,
+      "extents": [
+        97.9,
+        73.9,
+        22.39
+      ]
+    },
+    "lid": {
+      "triangles": 2466,
+      "volume": 16925.21,
+      "extents": [
+        97.9,
+        66.5,
+        9
+      ]
+    }
+  },
+  "hinged-knuckles-bottom-full:b": {
+    "body": {
+      "triangles": 1020,
+      "volume": 24746.87,
+      "extents": [
+        97.9,
+        73.9,
+        28
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 14144.45,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
   }
 }

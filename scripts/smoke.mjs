@@ -542,7 +542,18 @@ const halves = await page.evaluate(() => {
   return [state.boards.length, state.hinge.b.boards.length, state.lid.face, state.hinge.b.lid.face, window.__case.parts().cases.length].join();
 });
 if (halves !== '0,1,top,bottom,2') errors.push(`[hinged] boards, lids, built halves: ${halves}`);
+// both lids on the bottom: knuckles printed with the halves would hang under the bed
 await page.click('#edit_half_a');
+await page.click('#lid_face_bottom');
+if (!(await page.textContent('#warnings'))?.includes('below the bed')) errors.push('[hinged] no warning for knuckles with both lids on the bottom');
+await page.click('#lid_face_top');
+await page.click('#hinge_layout_full');
+await page.click('#hinge_knuckles_5');
+if (await page.locator('#hinge_length').isVisible()) errors.push('[hinged] one block along the edge offers a knuckle length');
+await expectWatertight('hinged:knuckles-full');
+await page.click('#hinge_layout_ends');
+await setRange('hinge_pinD', 3);
+await expectWatertight('hinged:knuckles-3mm');
 if (await page.locator('#board0_remove').count()) errors.push('[hinged] the lower half shows the upper half\'s board');
 if ((await page.locator('#lid_face_top').getAttribute('class'))?.includes('active') !== true) errors.push('[hinged] the lower half shows the upper half\'s lid');
 await setRange('view_angle', 0);

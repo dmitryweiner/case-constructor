@@ -19,6 +19,8 @@ import { faceFrame } from './face';
 import type { CaseLayout, PlacedBoard } from './layout';
 import { edgeNormal, opensKeys, portBlock } from './layout';
 import type { LidState } from './lidSpec';
+import type { HalfHinge } from './hinge';
+import { KNUCKLE_SINK } from './hinge';
 import type { Message, MessageSpot, SpotBox } from './message';
 import { boardParams, boxAround, boxSpot } from './message';
 import type { ShapeState } from './shape';
@@ -447,3 +449,32 @@ function inCorner(shape: ShapeState, dims: Dims, cut: ExtraCut): boolean {
   }
   return u0 < corner || u1 > extent.w - corner || v0 < edge || v1 > extent.h - edge;
 }
+
+/**
+ * Openings through a hinged half's hinge wall where its knuckles stand behind
+ * it (plans/PLAN-HINGED.md, P8): a block's x range, from the web's low end
+ * `strip0` up to the barrels' tops. The opening cuts the knuckle, and a plug
+ * has no way out there.
+ */
+export function knuckleCutWarnings(layout: CaseLayout, hinge: HalfHinge, strip0: number, cutters: readonly CutterSpec[]): Message[] {
+  const { dims } = layout;
+  const wallY = hinge.wall === 'back' ? dims.d : 0;
+  const reach = hinge.e + hinge.r;
+  const [y0, y1] = hinge.wall === 'back' ? [dims.d - KNUCKLE_SINK, dims.d + reach] : [-reach, KNUCKLE_SINK];
+  const z0 = strip0;
+  const z1 = hinge.zAxis + hinge.r;
+  const out: Message[] = [];
+  for (const cutter of cutters) {
+    const { min, max } = boxAround(cutterCorners(cutter));
+    // through the hinge wall, beside a block of knuckles
+    if (min[1] > wallY || max[1] < wallY || max[1] < y0 || min[1] > y1) continue;
+    if (min[2] >= z1 || max[2] <= z0) continue;
+    if (!hinge.blocks.some((block) => min[0] < block.x1 && max[0] > block.x0)) continue;
+    const spot = cutterSpot(cutter, dims);
+    out.push(cutter.source.kind === 'port'
+      ? { code: 'warn.cutHitsKnuckle', params: sourceParams(layout, cutter.source), spot }
+      : { code: 'warn.extraHitsKnuckle', params: { n: cutter.source.index + 1 }, spot });
+  }
+  return out;
+}
+

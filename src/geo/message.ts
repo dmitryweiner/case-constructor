@@ -14,6 +14,11 @@ export type MessageCode =
   | 'mesh.inverted'
   | 'mesh.degenerate'
   | 'mesh.tooLarge'
+  // a hinged case (hinge, ports)
+  | 'warn.hingeUnprintable'
+  | 'warn.knuckleNoWall'
+  | 'warn.cutHitsKnuckle'
+  | 'warn.extraHitsKnuckle'
   // layout checks (layout)
   | 'warn.boardsOverlap'
   | 'warn.standoffHitsBoard'
