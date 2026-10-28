@@ -236,3 +236,9 @@ stands alone.
   hinge wall cuts them, with a warning) rather than with the additive
   extras. `inspect.mjs` and the golden test build a hinged state per half.
 
+- **H4 (2026-10-28).** Done. M2.5 by default (an M3's nut pocket needs a
+  9 mm barrel: the barrel grows to `barrelMin` when the axle needs it). The
+  head's seat is a counterbore in the block's first knuckle, the nut's
+  pocket a hex prism with a corner up in its last; a note says the screws
+  to buy (count, size, the block's length less the head's seat).
+

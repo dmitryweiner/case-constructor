@@ -17,13 +17,20 @@
 import type { Affine } from './surface';
 import { composeAffine, translation } from './surface';
 import { clampNum } from './shape';
+import { NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE } from './fasteners';
 
 /** What the hinge is: knuckles printed with the halves. */
 export const HINGE_KINDS = ['knuckles'] as const;
 export type HingeKind = (typeof HINGE_KINDS)[number];
-/** What the knuckles turn on: a pin through them (a filament, a rod, a nail). */
-export const AXLES = ['pin'] as const;
+/**
+ * What the knuckles turn on: a pin through them (a filament, a rod, a nail),
+ * or a screw with its head and its nut sunk in the block's end knuckles —
+ * tightened, it holds the angle.
+ */
+export const AXLES = ['pin', 'screw'] as const;
 export type Axle = (typeof AXLES)[number];
+export const HINGE_SCREWS = ['M2', 'M2.5', 'M3'] as const;
+export type HingeScrew = (typeof HINGE_SCREWS)[number];
 /** Two blocks of knuckles near the ends, or one along the whole edge. */
 export const HINGE_LAYOUTS = ['ends', 'full'] as const;
 export type HingeLayout = (typeof HINGE_LAYOUTS)[number];
@@ -45,6 +52,8 @@ export interface HingeSpec {
   /** the pin's diameter (a 1.75 mm filament by default) and what its hole adds to it, mm */
   pinD: number;
   pinFit: number;
+  /** the screw of a screw axle */
+  screw: HingeScrew;
 }
 
 export const BARREL_D_MIN = 5;
@@ -67,33 +76,78 @@ export const KNUCKLE_PART_GAP = 0.5;
 export const KNUCKLE_SINK = 0.6;
 /** The barrel's wall around the pin's hole, at least, mm. */
 export const BARREL_WALL = 1.2;
+/** The barrel's wall around a screw's head seat and nut pocket, at least, mm. */
+export const SCREW_BARREL_WALL = 1;
+/** A screw's head seat: its diameter plus this, and its depth plus this, mm. */
+export const HEAD_SEAT_FIT = 0.4;
 
 export function defaultHingeSpec(): HingeSpec {
-  return { kind: 'knuckles', axle: 'pin', layout: 'ends', barrelD: 8, knuckles: 3, length: 10, clearance: 0.4, pinD: 1.75, pinFit: 0.15 };
+  return { kind: 'knuckles', axle: 'pin', layout: 'ends', barrelD: 8, knuckles: 3, length: 10, clearance: 0.4, pinD: 1.75, pinFit: 0.15, screw: 'M2.5' };
 }
 
 function oneOf<T extends string | number>(list: readonly T[], value: unknown, fallback: T): T {
   return list.find((item) => item === value) ?? fallback;
 }
 
-/** The spec's fields of a raw object, sane; the barrel always leaves `BARREL_WALL` around the pin's hole. */
+/** The holes an axle needs along a block: through every knuckle, and for a screw its head's seat and its nut's pocket. */
+export interface AxleHoles {
+  /** the hole through every knuckle */
+  r: number;
+  /** a screw's head seat in the block's first knuckle, and its nut's pocket (across flats) in the last */
+  screw: { headR: number; headDepth: number; nutAF: number; nutDepth: number } | null;
+}
+
+export function axleHoles(spec: Pick<HingeSpec, 'axle' | 'pinD' | 'pinFit' | 'screw'>): AxleHoles {
+  if (spec.axle === 'pin') return { r: spec.pinD / 2 + spec.pinFit, screw: null };
+  const dims = SCREWS[spec.screw];
+  return {
+    r: (dims.d + THROUGH_CLEARANCE) / 2,
+    screw: {
+      headR: (dims.headD + HEAD_SEAT_FIT) / 2,
+      headDepth: dims.headH + HEAD_SEAT_FIT,
+      nutAF: dims.nutAF + NUT_CLEARANCE,
+      nutDepth: dims.nutH + NUT_CLEARANCE,
+    },
+  };
+}
+
+/** The thinnest barrel that holds the axle's holes with a wall around them. */
+export function barrelMin(spec: Pick<HingeSpec, 'axle' | 'pinD' | 'pinFit' | 'screw'>): number {
+  const holes = axleHoles(spec);
+  if (!holes.screw) return 2 * holes.r + 2 * BARREL_WALL;
+  // a hex nut's corners are its flats over cos 30°
+  return Math.max(2 * holes.screw.headR, holes.screw.nutAF / Math.cos(Math.PI / 6)) + 2 * SCREW_BARREL_WALL;
+}
+
+/** The spec's fields of a raw object, sane; the barrel always holds its axle's holes with a wall around them. */
 export function sanitizeHingeSpec(raw: unknown): HingeSpec {
   const d = defaultHingeSpec();
   const r = typeof raw === 'object' && raw !== null ? raw : {};
-  const pinD = clampNum(Reflect.get(r, 'pinD'), PIN_D_MIN, PIN_D_MAX, d.pinD);
-  const pinFit = clampNum(Reflect.get(r, 'pinFit'), 0, 0.5, d.pinFit);
+  const axle = {
+    axle: oneOf(AXLES, Reflect.get(r, 'axle'), d.axle),
+    pinD: clampNum(Reflect.get(r, 'pinD'), PIN_D_MIN, PIN_D_MAX, d.pinD),
+    pinFit: clampNum(Reflect.get(r, 'pinFit'), 0, 0.5, d.pinFit),
+    screw: oneOf(HINGE_SCREWS, Reflect.get(r, 'screw'), d.screw),
+  };
   const barrelD = clampNum(Reflect.get(r, 'barrelD'), BARREL_D_MIN, BARREL_D_MAX, d.barrelD);
   return {
     kind: oneOf(HINGE_KINDS, Reflect.get(r, 'kind'), d.kind),
-    axle: oneOf(AXLES, Reflect.get(r, 'axle'), d.axle),
     layout: oneOf(HINGE_LAYOUTS, Reflect.get(r, 'layout'), d.layout),
-    barrelD: Math.min(BARREL_D_MAX, Math.max(barrelD, pinD + 2 * pinFit + 2 * BARREL_WALL)),
+    // + 0: never -0 (JSON would make it 0, and the sanitizer must be idempotent through a file)
+    barrelD: Math.min(BARREL_D_MAX, Math.max(barrelD, Math.ceil(barrelMin(axle) * 2) / 2)) + 0,
     knuckles: oneOf(KNUCKLE_COUNTS, Reflect.get(r, 'knuckles'), 3),
     length: clampNum(Reflect.get(r, 'length'), KNUCKLE_LENGTH_MIN, KNUCKLE_LENGTH_MAX, d.length),
     clearance: clampNum(Reflect.get(r, 'clearance'), 0.2, 1, d.clearance),
-    pinD,
-    pinFit,
+    ...axle,
   };
+}
+
+/** A screw axle's screws: one per block, as long as the block less its head's seat (the nearest shorter will do). */
+export function hingeScrews(spec: HingeSpec, blocks: readonly { x0: number; x1: number }[]): { count: number; length: number } | null {
+  const holes = axleHoles(spec);
+  if (!holes.screw || blocks.length === 0) return null;
+  const length = Math.min(...blocks.map((block) => block.x1 - block.x0)) - holes.screw.headDepth;
+  return { count: blocks.length, length: Math.floor(length) };
 }
 
 export interface Fold {
@@ -223,10 +277,9 @@ export interface HalfHinge {
   zAxis: number;
   /** this half's knuckles */
   runs: { x0: number; x1: number }[];
-  /** every block, for its pin's hole */
+  /** every block, for its axle's holes */
   blocks: { x0: number; x1: number }[];
-  /** the pin's hole */
-  holeR: number;
+  holes: AxleHoles;
 }
 
 /**

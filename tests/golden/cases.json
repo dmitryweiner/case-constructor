@@ -1241,5 +1241,45 @@
         5
       ]
     }
+  },
+  "hinged-screw-m3:a": {
+    "body": {
+      "triangles": 3304,
+      "volume": 29566.77,
+      "extents": [
+        97.9,
+        75.9,
+        33.4
+      ]
+    },
+    "lid": {
+      "triangles": 1916,
+      "volume": 12915.81,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-screw-m3:b": {
+    "body": {
+      "triangles": 1260,
+      "volume": 25275.3,
+      "extents": [
+        97.9,
+        75.9,
+        25
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 14144.45,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
   }
 }

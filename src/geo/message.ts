@@ -19,6 +19,7 @@ export type MessageCode =
   | 'warn.knuckleNoWall'
   | 'warn.cutHitsKnuckle'
   | 'warn.extraHitsKnuckle'
+  | 'info.hingeScrews'
   // layout checks (layout)
   | 'warn.boardsOverlap'
   | 'warn.standoffHitsBoard'

@@ -35,7 +35,7 @@ The halves turn on knuckles printed with them: barrels behind the hinge
 walls, each tied to its half's wall by a web, alternating lower, upper,
 lower… A pin goes through each block of knuckles: a piece of 1.75 mm
 filament (cut it to length, push it in, melt its ends with a soldering
-iron), a rod or a nail.
+iron), a rod or a nail — or a screw (below).
 
 | Parameter | Range | Default | Notes |
 |---|---|---|---|
@@ -44,8 +44,18 @@ iron), a rod or a nail.
 | Knuckle length | 4–40 mm | 10 | two blocks only; shorter when the edge is short |
 | Knuckle diameter | 5–16 mm | 8 | never less than the pin's hole plus 1.2 mm of wall on each side |
 | Knuckle clearance | 0.2–1 mm | 0.4 | between neighbouring knuckles, and between a barrel and the other half's wall |
-| Pin diameter | 1–5 mm | 1.75 | |
-| Pin hole clearance | 0–0.5 mm | 0.15 | added to the pin's radius |
+| Axle | pin, screw | pin | |
+| Pin diameter | 1–5 mm | 1.75 | a pin |
+| Pin hole clearance | 0–0.5 mm | 0.15 | a pin; added to the pin's radius |
+| Screw | M2, M2.5, M3 | M2.5 | a screw |
+
+**A screw for an axle.** One screw per block, through every knuckle: its
+pan head sunk into the block's first knuckle, its hex nut into the last
+(the pocket's roof is a 60° peak, printable as the body lies). Tightened,
+it squeezes the knuckles together and holds the upper half at any angle —
+the friction a screen needs. The knuckles grow to hold the head and the
+nut with a millimetre of wall around them. A note says which screws to
+buy: as long as the block less the head's seat, or the nearest shorter.
 
 The knuckles stay on the straight part of the hinge edge, clear of the
 corner radius. Their web holds on to the body's part of the hinge wall —

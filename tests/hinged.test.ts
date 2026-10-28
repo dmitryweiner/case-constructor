@@ -11,7 +11,7 @@ import { buildCase } from '../src/geo/build';
 import { validateMesh } from '../src/geo/validate';
 import { caseDims } from '../src/geo/layout';
 import { lidFaces } from '../src/geo/lidSpec';
-import { defaultHingeSpec, foldOf, upperPose } from '../src/geo/hinge';
+import { axleHoles, barrelMin, defaultHingeSpec, foldOf, hingeScrews, sanitizeHingeSpec, upperPose } from '../src/geo/hinge';
 import { applyAffine, rotateVec } from '../src/geo/surface';
 import { catalogBoard } from '../src/boards/catalog';
 import { defaultPlacement } from '../src/boards/placement';
@@ -240,6 +240,52 @@ describe('the knuckles', () => {
         expect(shared(rod, transformMesh(b.body, pose))).toBeLessThan(1e-6);
       }
     }
+  });
+
+  it('a screw axle: through every knuckle, its head and its nut sunk in the block\'s ends, and it still turns', () => {
+    const base = hinged();
+    const state = sanitizeState({ ...base, hinge: { ...base.hinge, axle: 'screw', screw: 'M3' } });
+    expect(state.hinge.barrelD).toBeGreaterThanOrEqual(barrelMin(state.hinge));
+    const { a, b } = build(state);
+    const fold = foldOfState(state);
+    const hinge = halfHinge(state, 'a');
+    const holes = axleHoles(state.hinge);
+    if (!hinge || !holes.screw) throw new Error('no screw');
+    const rod = (x0: number, x1: number, r: number): SurfaceMesh => {
+      const points = [x0, x1].flatMap((x) => Array.from({ length: 24 }, (_, i): [number, number, number] => (
+        [x, fold.y + r * Math.cos((Math.PI * i) / 12), fold.z + r * Math.sin((Math.PI * i) / 12)])));
+      const scope = new CsgScope();
+      try {
+        return fromManifold(scope.keep(csg.Manifold.hull(points)));
+      } finally {
+        scope.dispose();
+      }
+    };
+    for (const block of hinge.blocks) {
+      // the shank through the block, the head in its seat, the nut (its inscribed circle) in its pocket
+      const parts = [
+        rod(block.x0, block.x1, holes.r - 0.05),
+        rod(block.x0 - 1, block.x0 + holes.screw.headDepth - 0.1, holes.screw.headR - 0.1),
+        rod(block.x1 - holes.screw.nutDepth + 0.1, block.x1 + 1, holes.screw.nutAF / 2 - 0.1),
+      ];
+      for (const part of parts) {
+        expect(shared(part, a.body)).toBeLessThan(1e-6);
+        for (const angle of [0, 110, 180]) expect(shared(part, transformMesh(b.body, upperPose(fold, angle)))).toBeLessThan(1e-6);
+      }
+    }
+    const lower = mergeMeshes([a.body, a.lid]);
+    const upper = mergeMeshes([b.body, b.lid]);
+    for (let angle = 0; angle <= 180; angle += 30) {
+      expect(shared(lower, transformMesh(upper, upperPose(fold, angle))), `${angle}°`).toBeLessThan(1e-6);
+    }
+    const screws = hingeScrews(state.hinge, hinge.blocks);
+    expect(screws?.count).toBe(2);
+    expect(screws?.length).toBe(Math.floor(hinge.blocks[0].x1 - hinge.blocks[0].x0 - holes.screw.headDepth));
+  });
+
+  it('a barrel never thinner than its axle needs', () => {
+    expect(sanitizeHingeSpec({ axle: 'screw', screw: 'M3', barrelD: 5 }).barrelD).toBeGreaterThanOrEqual(barrelMin({ ...defaultHingeSpec(), axle: 'screw', screw: 'M3' }));
+    expect(sanitizeHingeSpec({ pinD: 4, pinFit: 0.5, barrelD: 5 }).barrelD).toBeGreaterThanOrEqual(4 + 1 + 2.4);
   });
 
   it('a half that prints on its inner face keeps its knuckles under that face', () => {

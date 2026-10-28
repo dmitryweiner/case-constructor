@@ -7,7 +7,7 @@ import type { AppState } from '../state/schema';
 import type { Half, HingeState } from '../state/hinged';
 import { GAP_MAX, HALVES } from '../state/hinged';
 import {
-  BARREL_D_MAX, BARREL_D_MIN, HINGE_LAYOUTS, KNUCKLE_COUNTS, KNUCKLE_LENGTH_MAX, KNUCKLE_LENGTH_MIN, PIN_D_MAX, PIN_D_MIN,
+  AXLES, BARREL_D_MAX, BARREL_D_MIN, HINGE_LAYOUTS, HINGE_SCREWS, KNUCKLE_COUNTS, KNUCKLE_LENGTH_MAX, KNUCKLE_LENGTH_MIN, PIN_D_MAX, PIN_D_MIN,
 } from '../geo/hinge';
 
 function hingeOf(state: AppState, patch: Partial<HingeState>): AppState {
@@ -50,12 +50,26 @@ export function hingeControls(): Control<AppState>[] {
       set: (state, value) => hingeOf(state, { clearance: value }),
     },
     {
+      kind: 'segmented', key: 'axle', label: 'hinge.axle', hint: 'hinge.axle.hint',
+      options: AXLES.map((value) => ({ value, label: `hinge.axle.${value}` as const })),
+      get: (state) => state.hinge.axle,
+      set: (state, value) => hingeOf(state, { axle: AXLES.find((one) => one === value) ?? state.hinge.axle }),
+    },
+    {
+      kind: 'segmented', key: 'screw', label: 'hinge.screw', hint: 'hinge.screw.hint', when: (state) => state.hinge.axle === 'screw',
+      options: HINGE_SCREWS.map((value) => ({ value, text: value })),
+      get: (state) => state.hinge.screw,
+      set: (state, value) => hingeOf(state, { screw: HINGE_SCREWS.find((one) => one === value) ?? state.hinge.screw }),
+    },
+    {
       kind: 'range', key: 'pinD', label: 'hinge.pinD', hint: 'hinge.pinD.hint', min: PIN_D_MIN, max: PIN_D_MAX, step: 0.05,
+      when: (state) => state.hinge.axle === 'pin',
       get: (state) => state.hinge.pinD,
       set: (state, value) => hingeOf(state, { pinD: value }),
     },
     {
       kind: 'range', key: 'pinFit', label: 'hinge.pinFit', hint: 'hinge.pinFit.hint', min: 0, max: 0.5, step: 0.05,
+      when: (state) => state.hinge.axle === 'pin',
       get: (state) => state.hinge.pinFit,
       set: (state, value) => hingeOf(state, { pinFit: value }),
     },

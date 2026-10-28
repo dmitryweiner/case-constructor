@@ -48,10 +48,19 @@ export function knuckleSolids(
   };
   const off = unionAll(csg, scope, [keepOff(zAxis - reach - 1, strip[0]), keepOff(strip[1], zAxis + reach + 1)]);
   const material = scope.keep(unionAll(csg, scope, knuckles).subtract(off));
-  // a pin's hole through each block, along x: a cylinder along z turned onto the axis
-  const holes = unionAll(csg, scope, hinge.blocks.map((block) => {
-    const turn: Affine = [0, 0, 1, 0, 0, 1, 0, back ? dims.d + e : -e, -1, 0, 0, zAxis];
-    return transformSolid(scope, cylinder(csg, scope, 0, 0, block.x0 - 1, block.x1 + 1, hinge.holeR, n), turn);
+  // the axle's holes along each block: cylinders and a hex prism along z turned onto the axis (z → x)
+  const turn: Affine = [0, 0, 1, 0, 0, 1, 0, back ? dims.d + e : -e, -1, 0, 0, zAxis];
+  const along = (solid: Manifold): Manifold => transformSolid(scope, solid, turn);
+  const { holes: axle } = hinge;
+  const holes = unionAll(csg, scope, hinge.blocks.flatMap((block) => {
+    const through = along(cylinder(csg, scope, 0, 0, block.x0 - 1, block.x1 + 1, axle.r, n));
+    if (!axle.screw) return [through];
+    const { headR, headDepth, nutAF, nutDepth } = axle.screw;
+    // the head sunk into the block's first knuckle, the nut into its last; a corner of the hex
+    // up (along −x before the turn), so the pocket's roof prints as a 60° peak
+    const head = along(cylinder(csg, scope, 0, 0, block.x0 - 1, block.x0 + headDepth, headR, n));
+    const nut = along(cylinder(csg, scope, 0, 0, block.x1 - nutDepth, block.x1 + 1, nutAF / Math.sqrt(3), 6));
+    return [through, head, nut];
   }));
   return { material, holes };
 }

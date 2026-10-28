@@ -310,6 +310,12 @@ const STATES: Record<string, AppState> = {
     lid: { ...defaultState().lid, face: 'bottom', depth: 4 },
     hinge: { layout: 'full', knuckles: 5, barrelD: 7, b: { boards: [] } },
   }),
+  // H4: a screw axle, its head and its nut sunk in each block's end knuckles
+  'hinged-screw-m3': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    hinge: { axle: 'screw', screw: 'M3', knuckles: 5, length: 7, b: { boards: [] } },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

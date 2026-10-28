@@ -17,7 +17,9 @@ import { defaultLid, sanitizeLid } from '../geo/lidSpec';
 import { caseDims, effectiveLid, minimumDims } from '../geo/layout';
 import { SIZE_MAX, SIZE_MIN, clampNum, plateOf, shapeSpec } from '../geo/shape';
 import type { Fold, HalfHinge, HingeSpec } from '../geo/hinge';
-import { axisOffset, axisSplit, bodyRange, defaultHingeSpec, foldOf, knuckleRuns, knuckleStrip, sanitizeHingeSpec } from '../geo/hinge';
+import {
+  axisOffset, axisSplit, axleHoles, bodyRange, defaultHingeSpec, foldOf, hingeScrews, knuckleRuns, knuckleStrip, sanitizeHingeSpec,
+} from '../geo/hinge';
 import type { Message } from '../geo/message';
 import { effectiveRadii } from '../geo/loft';
 import type { AppState } from './schema';
@@ -153,7 +155,7 @@ export function halfHinge(state: AppState, half: Half): HalfHinge | null {
     zAxis: half === 'a' ? fold.z : fold.zB,
     runs: runs.filter((run) => run.half === half),
     blocks,
-    holeR: hinge.pinD / 2 + hinge.pinFit,
+    holes: axleHoles(hinge),
   };
 }
 
@@ -172,10 +174,18 @@ export function halfStrip(state: AppState, half: Half): [number, number] | null 
   return knuckleStrip({ h: dims.h, edgeR, zAxis: hinge.zAxis, r: hinge.r, e: hinge.e, body });
 }
 
-/** What the hinge says about the case as a whole: knuckles with both lids on the bottom cannot print. */
+/**
+ * What the hinge says about the case as a whole: knuckles with both lids on
+ * the bottom cannot print; a screw axle's screws to buy.
+ */
 export function hingeNotes(state: AppState): Message[] {
   if (!isHinged(state)) return [];
+  const out: Message[] = [];
   const { printable } = axisSplit(state.hinge, state.hinge.gap, state.lid.face, state.hinge.b.lid.face);
-  return printable ? [] : [{ code: 'warn.hingeUnprintable' }];
+  if (!printable) out.push({ code: 'warn.hingeUnprintable' });
+  const hinge = halfHinge(state, 'a');
+  const screws = hinge ? hingeScrews(state.hinge, hinge.blocks) : null;
+  if (screws) out.push({ code: 'info.hingeScrews', params: { n: screws.count, size: state.hinge.screw, len: screws.length } });
+  return out;
 }
 
