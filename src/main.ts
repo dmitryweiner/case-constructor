@@ -52,6 +52,8 @@ import { resolveVariant } from './boards/schema';
 import { catalogBoard } from './boards/catalog';
 import type { LidPlace, PrintArrange } from './geo/print';
 import { LID_PLACES, PRINT_GAP_MAX, PRINT_GAP_MIN, bodyForPrint, bothForPrint, lidWithScrews, screwsInCase, withClamps } from './geo/print';
+import { capsInCase, keyCaps, withCaps } from './geo/caps';
+import { restWarnings } from './geo/rests';
 import type { SurfaceMesh } from './geo/surface';
 import { mergeMeshes } from './geo/surface';
 import { encodeSTL } from './geo/stl';
@@ -275,6 +277,7 @@ function refresh(): void {
   const depthMax = lidDepthMax(state.shape, state.lid, dims);
   if (state.lid.depth > depthMax) baseWarnings.push(said('warn.depthClamped', { max: depthMax.toFixed(1) }));
   baseWarnings.push(...collisions(layout).map(notice));
+  baseWarnings.push(...restWarnings(layout, state.shape.floor).map(notice));
   const shapeBuilt = { ...state.shape, console: layout.console };
   const top = outerTopAt(shapeBuilt, dims, layout.console.frontH, layout.console.backH);
   const cutters = [...portCutters(layout, shapeBuilt), ...extraCutters(state.extraCuts, shapeBuilt, dims, top)];
@@ -467,9 +470,15 @@ function printParts(
   const count = screw ? lidPosts(built).spots.length : 0;
   const roles = (meshes: SurfaceMesh[], names: ScenePart['role'][]): ScenePart[] =>
     meshes.map((mesh, i): ScenePart => ({ role: names[i] ?? 'screw', mesh }));
+  // printed key caps print with the lid, after everything else on its bed
+  const caps = built.exportMode === 'body' ? [] : keyCaps(layout, { ...built.shape, console: layout.console });
+  const capped = (parts: ScenePart[]): ScenePart[] => {
+    const placed = withCaps(parts.map((part) => part.mesh), caps, arrange.gap);
+    return placed.length > parts.length ? [...parts, { role: 'cap', mesh: placed[placed.length - 1] }] : parts;
+  };
   if (built.exportMode === 'lid') {
     const lidParts = lidWithScrews(lid, screw, count, face, dims);
-    return roles(withClamps(lidParts, lidClamps), [...(['lid', 'screw'] as const).slice(0, lidParts.length), 'clamp']);
+    return capped(roles(withClamps(lidParts, lidClamps), [...(['lid', 'screw'] as const).slice(0, lidParts.length), 'clamp']));
   }
   const both = built.exportMode === 'both' ? bothForPrint(body, lid, screw, count, face, dims, shape, arrange) : null;
   if (both) lidPlaced = both.place;
@@ -477,7 +486,7 @@ function printParts(
   const names: ScenePart['role'][] = built.exportMode === 'both' ? ['body', 'lid', 'screw'] : ['body'];
   const bars = built.exportMode === 'both' && lidClamps ? (clamps ? mergeMeshes([clamps, lidClamps]) : lidClamps) : clamps;
   const withClampBars = withClamps(placed, bars);
-  return roles(withClampBars, [...names.slice(0, placed.length), 'clamp']);
+  return capped(roles(withClampBars, [...names.slice(0, placed.length), 'clamp']));
 }
 
 /** A part the worker sends only sometimes (printed screws, battery clamps), as a mesh. */
@@ -540,6 +549,9 @@ function drawParts(): void {
     // printed screws in their holes; exploded, they hover over the lifted lid
     const screws = screw ? screwsInCase(screw, posts, built.lid.face, dims, 2 * lift) : null;
     if (screws) parts.push({ role: 'screw', mesh: screws });
+    // printed key caps in their holes; exploded, over the lifted lid
+    const caps = capsInCase(keyCaps(layout, { ...built.shape, console: layout.console }), n, 2 * lift);
+    if (caps) parts.push({ role: 'cap', mesh: caps });
   }
   const lift = gridLift(parts);
   show(lift > 0 ? parts.map((part): ScenePart => {

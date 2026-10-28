@@ -1,0 +1,29 @@
+{
+  "id": "solderparty-keyboard-featherwing",
+  "name": "Solder Party Keyboard FeatherWing",
+  "vendor": "Solder Party",
+  "kind": "keyboard",
+  "size": { "w": 68, "d": 100, "t": 1.2 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 7.2, "y": 3.8, "d": 3.2 },
+      { "x": 60.8, "y": 3.8, "d": 3.2 },
+      { "x": 7.2, "y": 96.2, "d": 3.2 },
+      { "x": 60.8, "y": 96.2, "d": 3.2 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 2.81,
+  "bottomHeight": 8.5,
+  "ports": [
+    { "id": "keys", "type": "keys", "edge": "top", "x": 33.845, "y": 19.25, "w": 65.79, "d": 35.64, "h": 3.83 },
+    { "id": "display", "type": "display", "edge": "top", "x": 35.9, "y": 70, "w": 52.8, "d": 39.6, "h": 2.81, "glass": { "x": 35.9, "y": 70, "w": 63.76, "d": 46.18, "t": 2.76 } },
+    { "id": "microsd", "type": "microsd", "edge": "back", "along": 19.86, "z": -2.25, "w": 11, "h": 1.05, "d": 15 },
+    { "id": "stemma-qt", "type": "jst", "edge": "right", "along": 48.1, "z": -4.21, "w": 6, "h": 2.96 },
+    { "id": "reset", "type": "switch", "edge": "back", "along": 42.4, "z": -4.75, "w": 6, "h": 3.5, "d": 9, "protrude": 1.45 },
+    { "id": "fpc", "type": "generic", "edge": "bottom", "x": 42.7, "y": 70.5, "w": 6.4, "d": 29.1, "h": 2.1 }
+  ],
+  "source": "https://raw.githubusercontent.com/solderparty/keyboard_featherwing_hw/master/keyboard_featherwing.kicad_pcb",
+  "verified": false
+}

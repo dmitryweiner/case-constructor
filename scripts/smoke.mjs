@@ -291,6 +291,99 @@ await page.click('#board1_on_floor');
 if (!(await page.locator('#board1_z').isVisible())) errors.push('[hang] back on the floor without its standoff height');
 await expectWatertight('hang:floor');
 await page.click('#board1_remove');
+// a keyboard: found by "keyboard", in its own group; it hangs, one window over its keys or a hole per key
+label('keyboards');
+await page.click('#boardAdd');
+await page.fill('#boardSearch', 'keyboard');
+const keyboardGroup = await page.evaluate(() => {
+  const row = document.querySelector('#boardList [data-board="m5stack-cardkb-v1.1"]');
+  let group = row?.previousElementSibling;
+  while (group && !group.classList.contains('preset-group')) group = group.previousElementSibling;
+  return group?.textContent ?? null;
+});
+if (keyboardGroup !== 'Keyboards') errors.push(`[keyboards] CardKB under ${keyboardGroup}, not Keyboards`);
+await page.click('#boardList [data-board="m5stack-cardkb-v1.1"]');
+await expectWatertight('keys:cardkb');
+if (!(await page.locator('#board1_on_ceiling').getAttribute('class'))?.includes('active')) errors.push('[keyboards] the CardKB is not hung when added');
+if (!(await page.locator('#board1_keys_window').getAttribute('class'))?.includes('active')) errors.push('[keyboards] the CardKB does not open a window');
+if (!(await page.textContent('#warnings'))?.includes('under the lid')) errors.push('[keyboards] no word on how deep the keys sit');
+// its keys are too low for holes: a hole per key says so
+await page.click('#board1_keys_holes');
+await expectWatertight('keys:holes');
+if (!(await page.textContent('#warnings'))?.includes('a finger will not press')) errors.push('[keyboards] no warning for keys under the face in their holes');
+await setRange('board1_keyFit', 2);
+await expectWatertight('keys:fit');
+if (!(await page.textContent('#warnings'))?.includes('of lid between')) errors.push('[keyboards] no warning for a thin web between holes');
+// printed caps over the keys: drawn in their holes, and on the Lid tab next to the lid
+await page.click('#board1_keys_caps');
+await expectWatertight('keys:caps');
+if (!(await drawn()).includes('cap')) errors.push(`[keyboards] caps chosen, drawn ${await drawn()}`);
+await page.click('#tabLid');
+await page.waitForTimeout(300);
+if (!(await drawn()).includes('cap')) errors.push(`[keyboards] the Lid tab draws ${await drawn()}, no caps`);
+await page.click('#tabBoth');
+// square caps with rounded corners: the slider stops short of a sharp corner
+await page.click('#board1_capShape_square');
+await expectWatertight('keys:square-caps');
+if (Number(await page.getAttribute('#board1_capR', 'min')) < 0.3) errors.push('[keyboards] a square cap\'s corner may go sharp');
+await setRange('board1_capR', 0.3);
+// the widest caps the neighbours leave room for: no thin web, the flanges still hold (at the caps' own fit:
+// the 2 mm fit above lets no flange hold, whatever the size)
+await setRange('board1_keyFit', 0.25);
+await setRange('board1_capSize', await page.getAttribute('#board1_capSize', 'max'));
+await expectWatertight('keys:caps-widest');
+if ((await page.textContent('#warnings'))?.includes('may slip out')) errors.push('[keyboards] the widest caps slip out');
+await page.waitForTimeout(200);
+if (Number(await page.evaluate(() => window.__case.state().boards[1].capR)) < 0.3) errors.push('[keyboards] a square cap\'s corner went sharp');
+await expectWatertight('keys:square-caps-r');
+await page.click('#board1_keys_window');
+// held by clamp bars instead of rails: they print with the lid that holds it
+await page.click('#board1_hold_clamp');
+await expectWatertight('keys:cardkb-clamp');
+if ((await page.textContent('#board1'))?.includes('grooved rails')) errors.push('[keyboards] a clamped CardKB still says it is held by rails');
+// sunk under the lid, it lies between the bars and the pads; the socket's note names the gap that hides it
+// (on a 2 mm top: the slider extremes above left a 6 mm one, under which the socket hides anyway)
+const floorBefore = await page.inputValue('#case_floor');
+await setRange('case_floor', 2);
+await setRange('board1_gap', 1.3);
+await expectWatertight('keys:cardkb-pads');
+const sinkTo = (await page.textContent('#warnings'))?.match(/the socket stands [0-9.]+ mm out of the lid through its slot; a Gap to the ceiling of ([0-9.]+) mm/)?.[1];
+if (!sinkTo) errors.push('[keyboards] no word on how far the Grove socket stands out');
+else {
+  await setRange('board1_gap', sinkTo);
+  await expectWatertight('keys:cardkb-sunk');
+  if ((await page.textContent('#warnings'))?.includes('the socket stands')) errors.push(`[keyboards] the Grove socket still stands out at ${sinkTo} mm`);
+}
+await setRange('case_floor', floorBefore);
+await page.click('#tabLid');
+await page.waitForTimeout(300);
+if (!(await drawn()).includes('clamp')) errors.push(`[keyboards] the Lid tab draws ${await drawn()}, no clamp bars`);
+await page.click('#tabBoth');
+await page.click('#board1_remove');
+// the MacroPad's holes are among its switches: it stands on the floor, its keys through a hole each
+await page.click('#boardAdd');
+await page.fill('#boardSearch', 'macropad');
+await page.click('#boardList [data-board="adafruit-macropad-rp2040"]');
+await expectWatertight('keys:macropad');
+if (!(await page.locator('#board1_on_floor').getAttribute('class'))?.includes('active')) errors.push('[keyboards] the MacroPad is not on the floor');
+if (!(await page.locator('#board1_keys_holes').getAttribute('class'))?.includes('active')) errors.push('[keyboards] the MacroPad does not get a hole per key');
+await page.click('#board1_remove');
+// the BBQ20KBD: on the floor, a rest under each free corner (the worker builds them; the case stays closed)
+await page.click('#boardAdd');
+await page.fill('#boardSearch', 'bbq20');
+await page.click('#boardList [data-board="solderparty-bbq20kbd"]');
+await expectWatertight('keys:bbq20-rests');
+await page.click('#board1_on_ceiling');
+await expectWatertight('keys:bbq20-hung-rests');
+await page.click('#board1_remove');
+// the KeebDeck: its keypad's flange pressed by the lid (gap 0, no gap warning), a hole per key
+await page.click('#boardAdd');
+await page.fill('#boardSearch', 'keebdeck');
+await page.click('#boardList [data-board="solderparty-keebdeck-basic"]');
+await expectWatertight('keys:keebdeck');
+if (Number(await page.inputValue('#board1_gap')) !== 0) errors.push('[keyboards] the KeebDeck is not pressed on its flange');
+if ((await page.textContent('#warnings'))?.includes('glass thicker')) errors.push('[keyboards] a pressed flange warns about the gap');
+await page.click('#board1_remove');
 // a clamped panel: always hung, a clamp gap, its bars printed with the lid that holds it
 label('clamp');
 await page.click('#boardAdd');
@@ -367,6 +460,11 @@ const catalogJson = JSON.parse(readFileSync(catalogPath, 'utf8'));
 if (catalogJson.size?.w !== 64 || catalogJson.ports?.length !== 2) errors.push(`[custom] catalog JSON ${JSON.stringify(catalogJson).slice(0, 120)}`);
 await page.selectOption('#board0_custom_mount', 'rails');
 await expectWatertight('custom:rails');
+// a key field on top goes through the plate from its base: the editor asks for it
+await page.selectOption('#board0_custom_port1_type', 'keys');
+if (!(await page.locator('#board0_custom_port1_base').count())) errors.push('[custom] a key field has no base field');
+await page.fill('#board0_custom_port1_base', '1');
+await expectWatertight('custom:keys');
 await page.click('#board0_remove');
 await page.click('#boardAdd');
 await page.click('#boardList [data-board="raspberry-pi-4b"]');

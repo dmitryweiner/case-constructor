@@ -125,6 +125,46 @@ vendor; register it in the displays' block of `RAW_BOARDS`. Its screen is a
 - `board.mjs --svg` draws the glass dark and dashed under the window, the
   review page outlines it in blue: lay both over the drawing's front view.
 
+### Keyboards
+
+Keys sold as a board (a CardKB, a BlackBerry keyboard on its carrier, a
+macropad) are `"kind": "keyboard"`: the picker groups them under
+*Keyboards*; register them in the keyboards' block of `RAW_BOARDS`. The
+keys come through the lid (`plans/PLAN-KEYBOARDS.md`):
+
+- **The key field** is a `keys` part on top: `x, y, w, d` the rectangle
+  every key stands in (the lid's window over it is that plus the
+  clearance), `h` the key tops above the PCB top, `base` what stays under
+  the plate between the keys (the switch bodies, the keypad's base; an MX
+  switch's plate line, 5 mm: the lid is its plate).
+- **Rows** give the keys, for a hole per key: `"rows": [{ "y", "x", "n",
+  "pitch", "w", "d" }]` — the first key's centre, how many along x, their
+  pitch, each key's size (`"shape": "round"` with `w` as the diameter). A
+  staggered row is a row of its own; an arrow cross is rows of one and
+  two. Every key must lie inside the field, or the row is dropped (the
+  check says so). `"open": "holes"` makes holes the default (MX keys);
+  without it the lid gets a window.
+- **`topHeight`** is the tallest part *outside* the field: over a window
+  the field rises into it, under holes the plate lies on the field's
+  `base`. A part that goes through the plate besides the keys (an
+  encoder's shaft: a `knob`, round, `w` the shaft) has its `base` (the body
+  under the plate) within `topHeight`; the check reports one that is not.
+- Where to read them: the switches' footprints in the KiCad or Eagle
+  layout (`board.mjs --kicad <file> --match SW` gives every pad box's
+  centre: the rows' x, y and pitch), the heights from the STEP
+  (`step.mjs --match` the switch or the keyboard module).
+- **Several fields** when one rectangle would cover a mounting hole: a
+  window over it would cut the post away (the CardKB2's bottom row is a
+  field of its own, clear of its corner holes). `holdChoices` offers a
+  keyboard that hangs rails and clamp bars as well; a field's `glass` is a
+  keypad's flange (its front at `base`).
+- **A plug that stays inside** (a Grove socket beside the keys, its cable
+  into the case): the edge port's `"reach"` (mm) ends its channel that far
+  past the face — a slot through the plate — instead of through the wall.
+  A connector only for flashing may be `"cut": false`.
+- `board.mjs --svg` draws every key over the field: lay it over the
+  drawing.
+
 Get the drawing with `node scripts/fetch.mjs <url>` (or `--board <id>` for
 an entry's `source`): it lands in `drawings/`, unpacked (zip, and rar
 through the system `bsdtar`), and stays there for the next check.

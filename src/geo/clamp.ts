@@ -99,3 +99,59 @@ export function clampHold(def: BoardDef, placement: Pick<BoardPlacement, 'press'
   });
   return { across, bars, posts, face, blocked };
 }
+
+/** A pad between a clamped board's front and the plate, opposite a bar's end: how far in over the PCB, its width along the edge, mm. */
+export const PAD_IN = 1.5;
+export const PAD_W = 6;
+/** The pad's lip beyond the PCB's edge: its room to the edge and its thickness, mm. */
+export const PAD_FIT = 0.2;
+export const PAD_LIP = 1.2;
+/** How far a pad moves along its edge to clear a part there, mm. */
+const PAD_SEARCH = 8;
+
+/** One pad: which long edge (0 at `across` = 0, 1 at its far side) and its centre along that edge, board frame. */
+export interface ClampPad {
+  side: 0 | 1;
+  at: number;
+}
+
+/**
+ * The pads of a clamped board: one opposite each end of each bar, on the
+ * front at the long edge, a lip down over the edge (it locates the board
+ * across); the plate's gap above the board is their height. None for a
+ * panel whose glass has its rim (the rim locates it), none where a part on
+ * the front or at that edge leaves no room within `PAD_SEARCH`.
+ */
+export function clampPads(def: BoardDef, placement: Pick<BoardPlacement, 'press' | 'mount'>): ClampPad[] {
+  if (def.mount.kind !== 'clamp' || def.ports.some((port) => onFace(port) && port.glass)) return [];
+  const hold = clampHold(def, placement);
+  const { w, d } = def.size;
+  const width = hold.across === 'x' ? w : d;
+  const length = hold.across === 'x' ? d : w;
+  // the front's parts and the edge's connectors above the back, as boxes (along the edge, across it)
+  const boxes = def.ports.flatMap((port): [number, number, number, number][] => {
+    if (onFace(port)) {
+      if (port.edge !== 'top') return [];
+      const [hw, hd] = [port.w / 2, (port.shape === 'round' ? port.w : port.d) / 2];
+      return hold.across === 'x' ? [[port.y - hd, port.y + hd, port.x - hw, port.x + hw]] : [[port.x - hw, port.x + hw, port.y - hd, port.y + hd]];
+    }
+    if (port.z + port.h <= 0) return [];
+    const half = port.w / 2;
+    const edgeAcross = hold.across === 'x' ? (port.edge === 'left' || port.edge === 'right') : (port.edge === 'front' || port.edge === 'back');
+    if (!edgeAcross) return [];
+    const far = port.edge === 'right' || port.edge === 'back';
+    const [a0, a1] = far ? [width - port.d + port.protrude, width + port.protrude] : [-port.protrude, port.d - port.protrude];
+    return [[port.along - half, port.along + half, a0, a1]];
+  });
+  const free = (side: 0 | 1, at: number): boolean => {
+    const [c0, c1] = side === 0 ? [-PAD_FIT - PAD_LIP, PAD_IN] : [width - PAD_IN, width + PAD_FIT + PAD_LIP];
+    const [s0, s1] = [at - PAD_W / 2, at + PAD_W / 2];
+    return s0 >= 0 && s1 <= length && boxes.every(([b0, b1, a0, a1]) => s1 <= b0 || s0 >= b1 || c1 <= a0 || c0 >= a1);
+  };
+  return hold.bars.flatMap((bar) => ([0, 1] as const).flatMap((side): ClampPad[] => {
+    for (let step = 0; step <= PAD_SEARCH; step += 0.5) {
+      for (const at of [bar.at - step, bar.at + step]) if (free(side, at)) return [{ side, at }];
+    }
+    return [];
+  }));
+}

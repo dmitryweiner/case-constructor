@@ -15,6 +15,7 @@ import { validateMesh } from '../src/geo/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import type { SurfaceMesh } from '../src/geo/surface';
+import { KEYPAD } from './helpers';
 
 const GOLDEN_PATH = join(dirname(fileURLToPath(import.meta.url)), 'golden', 'cases.json');
 const SEGMENTS = 8;
@@ -231,6 +232,69 @@ const STATES: Record<string, AppState> = {
   'lcd1602-box': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'lcd-1602-i2c', on: 'ceiling', z: 0.3, mount: { size: 'M2.5', hole: 'nut' } }],
+  }),  // K2: a keyboard hung from the lid (plans/PLAN-KEYBOARDS.md), the test keypad
+  'keypad-hung-top-lid': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, fastening: 'screws' },
+    boards: [{ board: 'custom', custom: { ...KEYPAD, id: 'custom' }, on: 'ceiling', z: 0.3, mount: { size: 'M3', hole: 'tap' } }],
+  }),
+  'keypad-console-slope': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'console', console: { frontH: 20, backH: 40 } },
+    lid: { ...defaultState().lid, face: 'bottom', fastening: 'screws' },
+    boards: [{ board: 'custom', custom: { ...KEYPAD, id: 'custom' }, on: 'ceiling', z: 0.3, mount: { size: 'M3', hole: 'insert' } }],
+  }),  // K3: one chamfered window over the keys (the holes are the keypad's default)
+  'keypad-window-top-lid': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'custom', custom: { ...KEYPAD, id: 'custom' }, on: 'ceiling', z: 0.3, keys: 'window', keyFit: 1, mount: { size: 'M3', hole: 'tap' } }],
+  }),  // K6a: the CardKB in its window, the Grove plug's slot; the MacroPad on the floor, the ceiling at its switch plate line
+  'cardkb-hung-top-lid': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0.3 }],
+  }),
+  'macropad-floor-holes': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'adafruit-macropad-rp2040', z: 12, mount: { size: 'M3', hole: 'insert' } }],
+  }),
+  // K3b: a hole per key for printed caps (the caps themselves are the main thread's meshes)
+  'cardkb-caps-top-lid': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0.3, keys: 'caps' }],
+  }),  // K5: rests under the BBQ20KBD's free corners, on the floor and hung from a top lid
+  'bbq20kbd-floor-rests': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'solderparty-bbq20kbd', z: 12.8, mount: { size: 'M2.5', hole: 'tap' } }],
+  }),
+  'bbq20kbd-hung-rests': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'solderparty-bbq20kbd', on: 'ceiling', z: 0.3, mount: { size: 'M2.5', hole: 'insert' } }],
+  }),  // K4: the KeebDeck's flange pressed by the plate, a hole per key; K6c: the FeatherWing's two windows
+  'keebdeck-hung-flange': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'solderparty-keebdeck-basic', on: 'ceiling', z: 0, mount: { size: 'M2.5', hole: 'insert' } }],
+  }),
+  'keyboard-featherwing-floor': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'solderparty-keyboard-featherwing', z: 11.69, mount: { size: 'M2.5', hole: 'tap' } }],
+  }),  // review: square caps with rounded corners, on the CardKB2
+  'cardkb2-square-caps': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'm5stack-cardkb2', on: 'ceiling', z: 0.3, keys: 'caps', capShape: 'square', capR: 0.6, mount: { size: 'M2', hole: 'tap' } }],
+  }),
+  // review: the CardKB held by clamp bars across its back instead of rails
+  'cardkb-clamp-top-lid': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0, hold: 'clamp', mount: { size: 'M2', hole: 'insert' } }],
+  }),
+  // review: the widest round caps the CardKB's neighbours leave room for
+  'cardkb-caps-widest': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0.3, keys: 'caps', capSize: 4.4 }],
+  }),
+  // review: sunk 1.3 mm under the lid on clamp bars, held between them and the pads
+  'cardkb2-clamp-pads-caps': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'm5stack-cardkb2', on: 'ceiling', z: 1.3, hold: 'clamp', keys: 'caps', mount: { size: 'M2', hole: 'insert' } }],
   }),
 };
 

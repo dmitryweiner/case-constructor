@@ -8,15 +8,16 @@
 // it up through the ceiling; a part on the underside, a column from just
 // below it down through the floor.
 
-import type { PortDef } from '../boards/schema';
-import { onFace } from '../boards/schema';
-import { portCut } from '../boards/placement';
+import type { PortDef, TopPort } from '../boards/schema';
+import { keyFields, keysOf, onFace } from '../boards/schema';
+import { CEILING_GAP, capStyle, frontHeight, keyFit, keysOpen, portCut } from '../boards/placement';
+import { CAP_HOLD, KEY_WEB, capCorner, capSizes } from './capSize';
 import type { CutterSpec, ExtraCut } from './cutters';
 import { VERTICAL_AXES, flareAt, horizontalAxes } from './cutters';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import type { CaseLayout, PlacedBoard } from './layout';
-import { edgeNormal, portBlock } from './layout';
+import { edgeNormal, opensKeys, portBlock } from './layout';
 import type { LidState } from './lidSpec';
 import type { Message, MessageSpot, SpotBox } from './message';
 import { boardParams, boxAround, boxSpot } from './message';
@@ -59,6 +60,18 @@ function sectionOf(port: PortDef): { shape: 'rect' | 'round'; w: number; h: numb
   return { shape: 'rect', w: port.w + 2 * c, h: openingH(port) + 2 * c, r: Math.min(1.5, c) };
 }
 
+/**
+ * How far behind its face an edge port's channel starts: just behind it;
+ * against a wall, at the board edge (its body sits in the wall); a plug that
+ * stays inside, behind the whole body — the plate must not lie on it.
+ */
+function channelBack(board: PlacedBoard, port: PortDef & { edge: 'front' | 'back' | 'left' | 'right' }): number {
+  if (port.reach !== undefined) return port.d + CHANNEL_BACK;
+  // a keyboard's connector taller than what the plate lies on (the KeebDeck's USB-C beside its keypad)
+  if ((board.hung || opensKeys(board)) && keyFields(board.def).length > 0 && port.z + port.h > frontHeight(board.def, board.placement) + 1e-6) return port.d + CHANNEL_BACK;
+  return board.walls.some((wall) => wall.edge === port.edge) ? Math.max(0, port.protrude) + CHANNEL_BACK : CHANNEL_BACK;
+}
+
 /** The connector face point and the outward direction of an edge port, case frame. */
 export function portAxis(board: PlacedBoard, port: PortDef & { edge: 'front' | 'back' | 'left' | 'right' }): { face: Vec3; dir: [number, number] } {
   const { w, d, t } = board.def.size;
@@ -73,6 +86,32 @@ export function portAxis(board: PlacedBoard, port: PortDef & { edge: 'front' | '
   return { face, dir: [dir[0], dir[1]] };
 }
 
+export { KEY_WEB } from './capSize';
+
+/**
+ * What a port opens: itself, or — a key field — its window or a hole per
+ * key, each grown by the placement's key fit. A window over keys is
+ * chamfered as a display's is; a key's hole is not (an MX switch clips into
+ * a straight one).
+ */
+function openingsOf(board: PlacedBoard, port: PortDef): { port: PortDef; window: boolean; corner?: number }[] {
+  if (port.type !== 'keys' || !onFace(port) || port.edge !== 'top') return [{ port, window: port.type === 'display' }];
+  const clearance = keyFit(board.def, board.placement, port);
+  const open = keysOpen(board.def, board.placement);
+  if (open === 'window' || !port.rows) return [{ port: { ...port, clearance }, window: true }];
+  // a printed cap's stem goes through its hole
+  if (open === 'caps') {
+    const style = capStyle(board.placement);
+    return capSizes(port, { size: board.placement.capSize, fit: clearance }).map((cap) => ({
+      port: { ...port, x: cap.x, y: cap.y, w: 2 * cap.stemR, d: 2 * cap.stemR, shape: style.shape === 'round' ? 'round' : 'rect', clearance },
+      window: false,
+      // a square stem's hole follows its rounded corners, grown by the fit
+      ...(style.shape === 'square' ? { corner: capCorner('square', style.r, cap.stemR) + clearance } : {}),
+    }));
+  }
+  return keysOf(port).map((key) => ({ port: { ...port, ...key, clearance }, window: false }));
+}
+
 export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[] {
   const { dims } = layout;
   const reach = Math.hypot(dims.w, dims.d) + 5;
@@ -83,12 +122,12 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
     const up = rotateVec(board.toCase, [0, 0, 1]);
     // a board on the console's slope: its openings follow its own axes
     const tilted = Math.abs(up[2] - 1) > 1e-9;
-    for (const port of board.def.ports) {
-      if (!portCut(board.placement, port.id, port.cut)) continue;
+    for (const opening of board.def.ports.flatMap((port) => (portCut(board.placement, port.id, port.cut) ? openingsOf(board, port) : []))) {
+      const { port, window } = opening;
       const source = { kind: 'port' as const, board: board.index, port: port.id };
-      const section = sectionOf(port);
+      const section = opening.corner === undefined ? sectionOf(port) : { ...sectionOf(port), r: opening.corner };
       if (tilted) {
-        out.push(tiltedCutter(board, port, section, shape, dims, reach, source));
+        out.push(tiltedCutter(board, port, window, section, shape, dims, reach, source));
         continue;
       }
       if (onFace(port)) {
@@ -102,14 +141,15 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
           : [-1, Math.max(board.z0 - port.h - COLUMN_GAP, shape.floor + 0.2)];
         // a hung display's window widens 45° outwards from the inside of the top
         // (or a carried display's, under a flat top)
-        const bevel = (board.hung || board.gap !== undefined) && port.type === 'display' && port.edge === 'top' && board.placement.bevel !== false;
+        const bevel = (board.hung || board.gap !== undefined) && window && port.edge === 'top' && board.placement.bevel !== false;
         const flare = bevel ? { flare: { from: ceiling(cx, cy), rate: WINDOW_FLARE } } : {};
         out.push({ origin: [cx, cy, 0], ...VERTICAL_AXES, s0, s1, ...section, w, h, ...flare, source });
       } else {
         const { face, dir } = portAxis(board, port);
         // against a wall the connector's body sits in the wall: the channel starts at the board edge
-        const back = board.walls.some((wall) => wall.edge === port.edge) ? Math.max(0, port.protrude) + CHANNEL_BACK : CHANNEL_BACK;
-        out.push({ origin: face, ...horizontalAxes(dir[0], dir[1]), s0: -back, s1: reach, ...section, source });
+        const back = channelBack(board, port);
+        // a plug that stays inside: a slot for it and its cable, not a way through the wall
+        out.push({ origin: face, ...horizontalAxes(dir[0], dir[1]), s0: -back, s1: port.reach ?? reach, ...section, source });
       }
     }
   }
@@ -123,7 +163,7 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
  * channel along its edge's normal, tilted with the board.
  */
 function tiltedCutter(
-  board: PlacedBoard, port: PortDef, section: ReturnType<typeof sectionOf>, shape: ShapeState, dims: Dims, reach: number,
+  board: PlacedBoard, port: PortDef, window: boolean, section: ReturnType<typeof sectionOf>, shape: ShapeState, dims: Dims, reach: number,
   source: CutterSpec['source'],
 ): CutterSpec {
   const plate = shape.floor;
@@ -143,7 +183,7 @@ function tiltedCutter(
     if (!frame) return { origin, ex: axis([1, 0, 0]), ey: axis([0, 1, 0]), ez: axis([0, 0, 1]), s0: port.h + COLUMN_GAP, s1: reach, ...section, w, h, source };
     // how far the plate's inside is above the PCB along the normal (the board is parallel to it)
     const inside = -plate - applyAffine(invertRigid(frame), origin)[2];
-    const bevel = port.type === 'display' && board.placement.bevel !== false ? { flare: { from: inside, rate: WINDOW_FLARE } } : {};
+    const bevel = window && board.placement.bevel !== false ? { flare: { from: inside, rate: WINDOW_FLARE } } : {};
     return {
       origin, ex: axis([1, 0, 0]), ey: axis([0, 1, 0]), ez: axis([0, 0, 1]),
       s0: Math.min(port.h + COLUMN_GAP, inside - 0.2), s1: inside + plate + 1, ...section, w, h, ...bevel, source,
@@ -154,11 +194,11 @@ function tiltedCutter(
   const ez = axis([nx, ny, 0]);
   const ey = axis([0, 0, 1]);
   const ex: Vec3 = [ey[1] * ez[2] - ey[2] * ez[1], ey[2] * ez[0] - ey[0] * ez[2], ey[0] * ez[1] - ey[1] * ez[0]];
-  const back = board.walls.some((wall) => wall.edge === port.edge) ? Math.max(0, port.protrude) + CHANNEL_BACK : CHANNEL_BACK;
+  const back = channelBack(board, port);
   // a channel tilted down must stop just past the wall it opens, not dive on under the floor
   const level = Math.hypot(ez[0], ez[1]);
   const out = level > 1e-6 ? (portToWall(shape, dims, face, [ez[0] / level, ez[1] / level]) + shape.wall + 1) / level : reach;
-  return { origin: face, ex, ey, ez, s0: -back, s1: Math.min(reach, out), ...section, source };
+  return { origin: face, ex, ey, ez, s0: -back, s1: Math.min(reach, out, port.reach ?? Infinity), ...section, source };
 }
 
 /** Distance from a port face to the inner wall along its direction. */
@@ -206,6 +246,12 @@ function cutterSpot(cutter: CutterSpec, dims: Dims): MessageSpot {
   return boxSpot(clipped, cutter.source.kind === 'port' ? { board: cutter.source.board } : 'body');
 }
 
+/** Whether an opening is a plug's slot that stays inside (an edge port with `reach`). */
+function slotOnly(layout: CaseLayout, source: { board: number; port: string }): boolean {
+  return layout.boards.some((board) => board.index === source.board
+    && board.def.ports.some((port) => port.id === source.port && !onFace(port) && port.reach !== undefined));
+}
+
 /** A port's opening in a message: the board (the one with this port under that number) and the port. */
 function sourceParams(layout: CaseLayout, source: { board: number; port: string }): Record<string, string | number> {
   const board = layout.boards.find((one) => one.index === source.board && one.def.ports.some((port) => port.id === source.port))
@@ -230,7 +276,8 @@ export function cutWarnings(
   const { dims } = layout;
   for (const board of layout.boards) {
     for (const port of board.def.ports) {
-      if (onFace(port) || !portCut(board.placement, port.id, port.cut)) continue;
+      // a plug that stays inside does not reach for the wall
+      if (onFace(port) || !portCut(board.placement, port.id, port.cut) || port.reach !== undefined) continue;
       const { face, dir } = portAxis(board, port);
       const gap = portToWall(shape, dims, face, dir);
       if (gap <= PORT_FAR_MM) continue;
@@ -254,6 +301,8 @@ export function cutWarnings(
     const split = lo < zp && hi > zp && !throughLid;
     const skirt = !split && !throughLid && hi > zp - lid.lip.h && lo < zp;
     if (!split && !skirt) continue;
+    // a plug's slot inside the case reaches no wall: nothing of the body is in its way
+    if (cutter.source.kind === 'port' && slotOnly(layout, cutter.source)) continue;
     const spot = cutterSpot(cutter, dims);
     if (cutter.source.kind === 'port') {
       const params = sourceParams(layout, cutter.source);
@@ -267,6 +316,7 @@ export function cutWarnings(
     const cutter = cutters.find((one) => one.source.kind === 'extra' && one.source.index === index);
     out.push({ code: 'warn.cutInCorner', params: { n: index + 1 }, ...(cutter ? { spot: cutterSpot(cutter, dims) } : {}) });
   }
+  out.push(...keyNotes(layout, shape), ...plugNotes(layout));
   // a hung display's window on the top, at its outer width
   for (const cutter of cutters) {
     if (!cutter.flare || cutter.source.kind !== 'port' || shape.kind !== 'box') continue;
@@ -275,6 +325,105 @@ export function cutWarnings(
     if (inCorner(shape, dims, window)) out.push({ code: 'warn.windowInCorner', params: sourceParams(layout, cutter.source), spot: cutterSpot(cutter, dims) });
   }
   return out;
+}
+
+/** The thinnest web between two neighbouring keys' holes, each grown by `fit` (negative: they run into each other), mm. */
+export function thinnestWeb(field: Pick<TopPort, 'rows'>, fit: number): number {
+  const keys = keysOf(field);
+  let thinnest = Infinity;
+  for (let i = 0; i < keys.length; i++) {
+    for (let j = i + 1; j < keys.length; j++) {
+      const [a, b] = [keys[i], keys[j]];
+      const gx = Math.abs(a.x - b.x) - (a.w + b.w) / 2 - 2 * fit;
+      const gy = Math.abs(a.y - b.y) - (a.d + b.d) / 2 - 2 * fit;
+      // side by side the web is the larger gap; diagonally both are open
+      thinnest = Math.min(thinnest, Math.max(gx, gy));
+    }
+  }
+  return thinnest;
+}
+
+/** The thinnest web between two caps' holes (their stems grown by `fit`), mm. */
+export function thinnestCapWeb(field: Pick<TopPort, 'rows'>, fit: number, size?: number): number {
+  const caps = capSizes(field, { size, fit });
+  let thinnest = Infinity;
+  caps.forEach((a, i) => caps.slice(i + 1).forEach((b) => {
+    thinnest = Math.min(thinnest, Math.hypot(a.x - b.x, a.y - b.y) - a.stemR - b.stemR - 2 * fit);
+  }));
+  return thinnest;
+}
+
+/**
+ * How far a key field's tops stand out of the plate over it (negative: under
+ * its face), along the board's normal, mm: in the plate's frame for a hung
+ * board, above the outer top for one on the floor.
+ */
+export function keysProud(board: PlacedBoard, port: { x: number; y: number; h: number }, shape: ShapeState, dims: Dims, frontH: number, backH: number): number {
+  const p = applyAffine(board.toCase, [port.x, port.y, board.def.size.t + port.h]);
+  if (board.frame) return applyAffine(invertRigid(board.frame), p)[2];
+  return p[2] - outerTopAt(shape, dims, frontH, backH)(p[0], p[1]);
+}
+
+/** How far each opened key field stands out of the lid: a word on it, a warning when holes leave the keys under the face. */
+export function keyNotes(layout: CaseLayout, shape: ShapeState): Message[] {
+  const out: Message[] = [];
+  for (const board of layout.boards) {
+    for (const field of keyFields(board.def)) {
+      if (!portCut(board.placement, field.id, field.cut)) continue;
+      const proud = keysProud(board, field, shape, layout.dims, layout.console.frontH, layout.console.backH);
+      const { t } = board.def.size;
+      const corners: Vec3[] = [];
+      for (const x of [field.x - field.w / 2, field.x + field.w / 2]) {
+        for (const y of [field.y - field.d / 2, field.y + field.d / 2]) for (const z of [t, t + field.h]) corners.push(applyAffine(board.toCase, [x, y, z]));
+      }
+      const spot = boxSpot(boxAround(corners), { board: board.index });
+      const params = { ...boardParams(board), port: field.id, portType: field.type, mm: Math.abs(proud).toFixed(1) };
+      const open = keysOpen(board.def, board.placement);
+      const fit = keyFit(board.def, board.placement, field);
+      if (open === 'caps') {
+        // the caps stand out by design: say where they are, and whether their flanges hold them in
+        const caps = capSizes(field, { size: board.placement.capSize, fit });
+        out.push({ code: 'info.keyCaps', params: { ...params, n: caps.length }, spot });
+        const hold = Math.min(...caps.map((cap) => cap.flangeR - cap.stemR - fit));
+        if (hold < CAP_HOLD - 1e-9) out.push({ code: 'warn.capFlangeSmall', params: { ...params, mm: Math.max(0, hold).toFixed(1) }, spot });
+      } else {
+        const code = proud >= -0.05 ? 'info.keysProud' : open === 'holes' ? 'warn.keysUnderFace' : 'info.keysSunk';
+        out.push({ code, params: proud >= -0.05 ? { ...params, mm: Math.max(0, proud).toFixed(1) } : params, spot });
+      }
+      // a floor keyboard under holes: the plate should lie its gap above the keys' base, not higher up the switches
+      if (!board.hung && open === 'holes' && field.base !== undefined) {
+        const p = applyAffine(board.toCase, [field.x, field.y, t + field.base]);
+        const high = ceilingAt(shape, layout.dims, layout.console.frontH, layout.console.backH)(p[0], p[1]) - p[2] - CEILING_GAP;
+        if (high > 0.2) out.push({ code: 'warn.keysPlateHigh', params: { ...params, mm: high.toFixed(1), z: (board.placement.z + high).toFixed(1) }, spot });
+      }
+      const web = open === 'holes' ? thinnestWeb(field, fit) : open === 'caps' ? thinnestCapWeb(field, fit, board.placement.capSize) : Infinity;
+      if (web < KEY_WEB - 1e-9) out.push({ code: 'warn.keyWebThin', params: { ...params, mm: Math.max(0, web).toFixed(1), min: KEY_WEB }, spot });
+    }
+  }
+  return out;
+}
+
+/**
+ * A plug's socket that stands up out of the lid through its slot (the
+ * CardKB's Grove beside its keys): how far, and the gap to the ceiling that
+ * sinks it under the face.
+ */
+export function plugNotes(layout: CaseLayout): Message[] {
+  return layout.boards.flatMap((board) => {
+    const frame = board.frame;
+    if (!board.hung || !frame) return [];
+    const toPlate = invertRigid(frame);
+    return board.def.ports.flatMap((port): Message[] => {
+      if (onFace(port) || port.reach === undefined || !portCut(board.placement, port.id, port.cut)) return [];
+      const { face } = portAxis(board, port);
+      const local = applyAffine(invertRigid(board.toCase), face);
+      const top = applyAffine(board.toCase, [local[0], local[1], board.def.size.t + port.z + port.h]);
+      const out = applyAffine(toPlate, top)[2];
+      if (out <= 0.05) return [];
+      const spot = boxSpot(boxAround([face, top]), { board: board.index });
+      return [{ code: 'info.plugProud', params: { ...boardParams(board), port: port.id, portType: port.type, mm: out.toFixed(1), gap: (Math.ceil((board.placement.z + out + 0.05) * 10) / 10).toFixed(1) }, spot }];
+    });
+  });
 }
 
 /** Whether a user cut reaches into a rounded corner zone of a flat face. */

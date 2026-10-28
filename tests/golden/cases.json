@@ -863,5 +863,303 @@
         11.2
       ]
     }
+  },
+  "keypad-hung-top-lid": {
+    "body": {
+      "triangles": 2048,
+      "volume": 28132.49,
+      "extents": [
+        80.6,
+        100.6,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 4076,
+      "volume": 12018.52,
+      "extents": [
+        80.6,
+        100.6,
+        7.3
+      ]
+    }
+  },
+  "keypad-console-slope": {
+    "body": {
+      "triangles": 4908,
+      "volume": 30855.54,
+      "extents": [
+        81.8,
+        100.6,
+        37.99
+      ]
+    },
+    "lid": {
+      "triangles": 1580,
+      "volume": 17371.64,
+      "extents": [
+        81.8,
+        100.6,
+        5
+      ]
+    }
+  },
+  "keypad-window-top-lid": {
+    "body": {
+      "triangles": 808,
+      "volume": 23081.13,
+      "extents": [
+        72,
+        92,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 2084,
+      "volume": 4724.05,
+      "extents": [
+        72,
+        92,
+        6.3
+      ]
+    }
+  },
+  "cardkb-hung-top-lid": {
+    "body": {
+      "triangles": 764,
+      "volume": 23897.05,
+      "extents": [
+        104,
+        65.3,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1476,
+      "volume": 6231.87,
+      "extents": [
+        104,
+        65.3,
+        5
+      ]
+    }
+  },
+  "macropad-floor-holes": {
+    "body": {
+      "triangles": 1956,
+      "volume": 28403.16,
+      "extents": [
+        68.75,
+        113.24,
+        18.59
+      ]
+    },
+    "lid": {
+      "triangles": 3230,
+      "volume": 9951.04,
+      "extents": [
+        68.75,
+        113.24,
+        5
+      ]
+    }
+  },
+  "cardkb-caps-top-lid": {
+    "body": {
+      "triangles": 764,
+      "volume": 23897.05,
+      "extents": [
+        104,
+        65.3,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 7800,
+      "volume": 14938.46,
+      "extents": [
+        104,
+        65.3,
+        7.05
+      ]
+    }
+  },
+  "bbq20kbd-floor-rests": {
+    "body": {
+      "triangles": 1296,
+      "volume": 19450.55,
+      "extents": [
+        82,
+        61.1,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1336,
+      "volume": 3965.61,
+      "extents": [
+        82,
+        61.1,
+        5
+      ]
+    }
+  },
+  "bbq20kbd-hung-rests": {
+    "body": {
+      "triangles": 1040,
+      "volume": 19078.93,
+      "extents": [
+        82.25,
+        61.35,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1790,
+      "volume": 3530.01,
+      "extents": [
+        82.25,
+        61.35,
+        5
+      ]
+    }
+  },
+  "keebdeck-hung-flange": {
+    "body": {
+      "triangles": 844,
+      "volume": 25047.1,
+      "extents": [
+        96.7,
+        75.6,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 12492,
+      "volume": 9499.95,
+      "extents": [
+        96.7,
+        75.6,
+        5
+      ]
+    }
+  },
+  "keyboard-featherwing-floor": {
+    "body": {
+      "triangles": 1572,
+      "volume": 28691.62,
+      "extents": [
+        76,
+        109.45,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1412,
+      "volume": 8724.26,
+      "extents": [
+        76,
+        109.45,
+        5
+      ]
+    }
+  },
+  "cardkb2-square-caps": {
+    "body": {
+      "triangles": 1060,
+      "volume": 23153.97,
+      "extents": [
+        104.65,
+        62.3,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 7918,
+      "volume": 12182.9,
+      "extents": [
+        104.65,
+        62.3,
+        7.2
+      ]
+    }
+  },
+  "cardkb-clamp-top-lid": {
+    "body": {
+      "triangles": 764,
+      "volume": 27432.52,
+      "extents": [
+        104,
+        78.3,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 2116,
+      "volume": 8315.86,
+      "extents": [
+        104,
+        78.3,
+        5
+      ]
+    },
+    "lidClamp": {
+      "triangles": 296,
+      "volume": 3316.7,
+      "extents": [
+        58.4,
+        70.2,
+        3
+      ]
+    }
+  },
+  "cardkb-caps-widest": {
+    "body": {
+      "triangles": 764,
+      "volume": 23897.05,
+      "extents": [
+        104,
+        65.3,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 7802,
+      "volume": 14375.85,
+      "extents": [
+        104,
+        65.3,
+        7.05
+      ]
+    }
+  },
+  "cardkb2-clamp-pads-caps": {
+    "body": {
+      "triangles": 1060,
+      "volume": 27526.13,
+      "extents": [
+        104.65,
+        78.3,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 7682,
+      "volume": 17179.77,
+      "extents": [
+        104.65,
+        78.3,
+        10.2
+      ]
+    },
+    "lidClamp": {
+      "triangles": 296,
+      "volume": 3316.7,
+      "extents": [
+        58.4,
+        70.2,
+        3
+      ]
+    }
   }
 }

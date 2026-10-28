@@ -1,0 +1,36 @@
+{
+  "id": "m5stack-cardkb2",
+  "name": "M5Stack Unit CardKB2",
+  "vendor": "M5Stack",
+  "kind": "keyboard",
+  "size": { "w": 84, "d": 54, "t": 1 },
+  "outline": [[81.5, 0], [82.457, 0.19], [83.268, 0.732], [83.81, 1.543], [84, 2.5], [84, 51.5], [83.81, 52.457], [83.268, 53.268], [82.457, 53.81], [81.5, 54], [2.5, 54], [1.543, 53.81], [0.732, 53.268], [0.19, 52.457], [0, 51.5], [0, 2.5], [0.19, 1.543], [0.732, 0.732], [1.543, 0.19], [2.5, 0]],
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 3, "y": 3, "d": 2.2 },
+      { "x": 81, "y": 3, "d": 2.2 },
+      { "x": 3, "y": 51, "d": 2.2 },
+      { "x": 81, "y": 51, "d": 2.2 }
+    ],
+    "screw": "M2"
+  },
+  "topHeight": 0.9,
+  "bottomHeight": 0.5,
+  "ports": [
+    { "id": "keys", "type": "keys", "edge": "top", "x": 48.3, "y": 32.05, "w": 71.2, "d": 33.2, "h": 4.1, "base": 2, "rows": [
+      { "y": 45.45, "x": 17.5, "n": 10, "pitch": 6.5, "w": 3.2, "shape": "round" },
+      { "y": 31.95, "x": 15.8, "n": 11, "pitch": 6.5, "w": 3.2, "shape": "round" },
+      { "y": 18.45, "x": 15.8, "n": 11, "pitch": 6.5, "w": 3.2, "shape": "round" }
+    ] },
+    { "id": "keys-row4", "type": "keys", "edge": "top", "x": 45.05, "y": 5, "w": 64.7, "d": 6.2, "h": 4.1, "base": 2, "rows": [
+      { "y": 5, "x": 15.8, "n": 10, "pitch": 6.5, "w": 3.2, "shape": "round" }
+    ] },
+    { "id": "grove", "type": "jst", "edge": "left", "along": 13.05, "z": 0, "w": 11.7, "h": 5.15, "d": 8.5, "protrude": 0.65, "cut": true, "reach": 12 },
+    { "id": "usb-c", "type": "usb-c", "edge": "left", "along": 26.95, "z": 0.2, "protrude": 0.7, "cut": false },
+    { "id": "reset", "type": "switch", "edge": "back", "along": 9, "w": 3.5, "h": 1.5, "d": 3.5, "protrude": 0.15 },
+    { "id": "boot", "type": "switch", "edge": "front", "along": 9, "w": 3.5, "h": 1.5, "d": 3.5, "protrude": 0.15 }
+  ],
+  "source": "https://m5stack-doc.oss-cn-shenzhen.aliyuncs.com/1225/U215-Unit_CardKB2_Dimension_Diagram.pdf",
+  "verified": false
+}

@@ -1,0 +1,25 @@
+{
+  "id": "m5stack-cardkb-v1.1",
+  "name": "M5Stack Unit CardKB v1.1",
+  "vendor": "M5Stack",
+  "kind": "keyboard",
+  "size": { "w": 84, "d": 54, "t": 1 },
+  "outline": [[79, 0], [80.913, 0.381], [82.536, 1.464], [83.619, 3.087], [84, 5], [84, 49], [83.619, 50.913], [82.536, 52.536], [80.913, 53.619], [79, 54], [5, 54], [3.087, 53.619], [1.464, 52.536], [0.381, 50.913], [0, 49], [0, 5], [0.381, 3.087], [1.464, 1.464], [3.087, 0.381], [5, 0]],
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
+  "topHeight": 0,
+  "bottomHeight": 0.5,
+  "ports": [
+    { "id": "keys", "type": "keys", "edge": "top", "x": 42, "y": 27, "w": 84, "d": 49, "h": 1.75, "base": 1, "rows": [
+      { "y": 43, "x": 15, "n": 12, "pitch": 6, "w": 2.1, "shape": "round" },
+      { "y": 31, "x": 15, "n": 12, "pitch": 6, "w": 2.1, "shape": "round" },
+      { "y": 19, "x": 21, "n": 11, "pitch": 6, "w": 2.1, "shape": "round" },
+      { "y": 7, "x": 21, "n": 11, "pitch": 6, "w": 2.1, "shape": "round" },
+      { "y": 15.5, "x": 9.15, "n": 1, "pitch": 6, "w": 2.1, "shape": "round" },
+      { "y": 11, "x": 3.5, "n": 2, "pitch": 11.3, "w": 2.1, "shape": "round" },
+      { "y": 6.5, "x": 9.15, "n": 1, "pitch": 6, "w": 2.1, "shape": "round" }
+    ] },
+    { "id": "grove", "type": "jst", "edge": "left", "along": 38.85, "z": 0, "w": 12.5, "h": 5.3, "d": 10, "cut": true, "reach": 12 }
+  ],
+  "source": "https://m5stack-doc.oss-cn-shenzhen.aliyuncs.com/806/cardkeyboard_v1_1.pdf",
+  "verified": false
+}

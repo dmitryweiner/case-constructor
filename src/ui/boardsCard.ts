@@ -11,10 +11,11 @@ import { t } from '../i18n';
 import type { BackPlacement, BoardPlacement } from '../boards/placement';
 import {
   BACK_STANDOFF_MAX, BACK_STANDOFF_MIN, CEILING_GAP, NEW_BOARD_GAP, backPortDefault, backStandoffMin, withBackCut, POSITION_MAX, ROTATIONS, SIDES, WALL_OFFSET_MAX, WALL_OFFSET_MIN, Z_MAX, boardOf, entryOf, floorZ, pinsDown, placementMinZ,
-  ownPortDefault, portCut, withPortCut, withSide, withTopCut,
+  ownPortDefault, portCut, withPortCut, withSide, withTopCut, KEY_FIT_MAX, capStyle, holdChoices, keyFit, keysOpen, pressedOn, sanitizePlacement,
 } from '../boards/placement';
 import type { BoardDef } from '../boards/schema';
-import { resolveVariant } from '../boards/schema';
+import { KEYS_OPEN, keyFields, resolveVariant } from '../boards/schema';
+import { CAP_FIT, CAP_R_MAX, CAP_R_MIN, CAP_SHAPES, capSizeRange, capSizes } from '../geo/capSize';
 import { CATALOG, catalogBoard } from '../boards/catalog';
 import { attachTurns } from '../geo/attach';
 import type { BatterySpec } from '../boards/battery';
@@ -119,6 +120,19 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       },
     },
     {
+      // a keyboard that hangs: its screws, rails, or clamp bars across its back
+      kind: 'segmented', key: 'hold', label: 'board.hold', hint: 'board.hold.hint',
+      when: () => holdChoices(entry).length > 1,
+      options: holdChoices(entry).map((kind) => ({ value: kind, label: `board.hold.${kind}` as const })),
+      get: (state) => boardOf(at(state)).mount.kind,
+      set: (state, value) => {
+        const next = sanitizePlacement({ ...at(state), hold: value });
+        // bars press the board against the plate; anything else hangs it the gap below
+        const placement = sanitizePlacement({ ...next, z: pressedOn(boardOf(next)) ? 0 : CEILING_GAP });
+        return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
+      },
+    },
+    {
       // a battery lies in cradles rather than on standoffs: the same height, its own words
       kind: 'range', key: 'z', label: entry.battery ? 'battery.z' : 'board.z', hint: entry.battery ? 'battery.z.hint' : 'board.z.hint',
       min: 0, max: Z_MAX, step: 0.5,
@@ -142,8 +156,67 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
     ...backControls(index, entry),
     ...topControls(index, entry),
     {
+      // a keyboard: one window over its keys or a hole per key (holes need the entry's rows)
+      kind: 'segmented', key: 'keys', label: 'board.keys', hint: 'board.keys.hint',
+      when: (state) => keyFields(boardOf(at(state))).length > 0,
+      options: KEYS_OPEN.map((open) => ({ value: open, label: `board.keys.${open}` as const })),
+      optionDisabled: (state, value) => value !== 'window' && !keyFields(boardOf(at(state))).some((field) => field.rows !== undefined),
+      get: (state) => keysOpen(boardOf(at(state)), at(state)),
+      set: (state, value) => {
+        const placement = sanitizePlacement({ ...at(state), keys: value });
+        return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
+      },
+    },
+    {
+      kind: 'range', key: 'keyFit', label: 'board.keyFit', hint: 'board.keyFit.hint', min: 0, max: KEY_FIT_MAX, step: 0.05,
+      when: (state) => keyFields(boardOf(at(state))).length > 0,
+      get: (state) => {
+        const field = keyFields(boardOf(at(state)))[0];
+        return field ? keyFit(boardOf(at(state)), at(state), field) : 0;
+      },
+      set: (state, value) => patchBoard(state, index, { keyFit: value }),
+    },
+    {
+      // printed caps: round, or square with rounded corners
+      kind: 'segmented', key: 'capShape', label: 'board.capShape', hint: 'board.capShape.hint',
+      when: (state) => keysOpen(boardOf(at(state)), at(state)) === 'caps',
+      options: CAP_SHAPES.map((shape) => ({ value: shape, label: `board.capShape.${shape}` as const })),
+      get: (state) => capStyle(at(state)).shape,
+      set: (state, value) => {
+        const placement: BoardPlacement = { ...at(state), capShape: 'square' };
+        if (value !== 'square') delete placement.capShape;
+        return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
+      },
+    },
+    {
+      // the caps' width: from covering the buttons to as wide as the neighbours leave room for
+      kind: 'range', key: 'capSize', label: 'board.capSize', hint: 'board.capSize.hint',
+      min: capRange(entry, CAP_FIT).min, max: capRange(entry, CAP_FIT).max, step: 0.1,
+      when: (state) => keysOpen(boardOf(at(state)), at(state)) === 'caps',
+      get: (state) => {
+        const def = boardOf(at(state));
+        const field = keyFields(def).find((one) => one.rows);
+        const [cap] = field ? capSizes(field, { size: at(state).capSize, fit: keyFit(def, at(state), field) }) : [];
+        return cap ? +(2 * cap.stemR).toFixed(2) : 0;
+      },
+      set: (state, value) => {
+        const def = boardOf(at(state));
+        const field = keyFields(def).find((one) => one.rows);
+        const range = capRange(def, field ? keyFit(def, at(state), field) : CAP_FIT);
+        return patchBoard(state, index, { capSize: Math.min(range.max, Math.max(range.min, value)) });
+      },
+    },
+    {
+      kind: 'range', key: 'capR', label: 'board.capR', hint: 'board.capR.hint', min: CAP_R_MIN, max: CAP_R_MAX, step: 0.1,
+      when: (state) => keysOpen(boardOf(at(state)), at(state)) === 'caps' && capStyle(at(state)).shape === 'square',
+      get: (state) => capStyle(at(state)).r,
+      set: (state, value) => patchBoard(state, index, { capR: Math.max(CAP_R_MIN, value) }),
+    },
+    {
       kind: 'check', key: 'bevel', label: 'board.bevel', hint: 'board.bevel.hint',
-      when: (state) => hung(state) && boardOf(at(state)).ports.some((port) => port.type === 'display' && port.edge === 'top'),
+      // a screen's window, or a keyboard's window over its keys
+      when: (state) => hung(state) && boardOf(at(state)).ports.some((port) => port.edge === 'top'
+        && (port.type === 'display' || (port.type === 'keys' && keysOpen(boardOf(at(state)), at(state)) === 'window'))),
       get: (state) => at(state).bevel !== false,
       set: (state, value) => {
         const placement: BoardPlacement = { ...at(state), bevel: false };
@@ -409,13 +482,21 @@ export interface BoardsCardHandle {
   sync(state: AppState): void;
 }
 
+/** The cap widths a keyboard's every field allows at a fit: the widest key at least, the tightest field's room at most. */
+function capRange(def: BoardDef, fit: number): { min: number; max: number } {
+  const ranges = keyFields(def).flatMap((field) => capSizeRange(field, fit) ?? []);
+  if (ranges.length === 0) return { min: 0, max: 0 };
+  const min = Math.max(...ranges.map((range) => range.min));
+  return { min, max: Math.max(min, Math.min(...ranges.map((range) => range.max))) };
+}
+
 /** What the card's layout depends on; a change rebuilds it (a value edit does not). */
 function signatureOf(state: AppState): string {
   // a variant brings its own ports, and so its own cut toggles
-  // a battery's kind decides its controls, its cell count its name
+  // a battery's kind decides its controls, its cell count its name; how a board is held, its note
   return state.boards.map((board) => (board.board === 'custom' ? `custom:${customSignature(boardOf(board))}`
     : board.battery ? `battery:${board.battery.kind}:${board.battery.count}`
-      : `${board.board}:${board.variant ?? ''}:${board.back?.board ?? ''}:${board.back?.variant ?? ''}:${board.top?.board ?? ''}`)).join('|');
+      : `${board.board}:${board.variant ?? ''}:${board.back?.board ?? ''}:${board.back?.variant ?? ''}:${board.top?.board ?? ''}:${board.hold ?? ''}`)).join('|');
 }
 
 export function renderBoardsCard(

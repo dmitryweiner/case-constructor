@@ -7,9 +7,9 @@
 
 import earcut from 'earcut';
 import type { BoardDef, Glass, PortDef } from '../boards/schema';
-import { onFace } from '../boards/schema';
+import { keyFields, keysOf, onFace } from '../boards/schema';
 import type { PlacedBoard } from './layout';
-import { PIN_SPACER, PIN_SPACER_W, pinEdges, portBlock } from './layout';
+import { KEY_SLAB, PIN_SPACER, PIN_SPACER_W, pinEdges, portBlock } from './layout';
 import type { Affine, SurfaceMesh, Vec3 } from './surface';
 import { applyAffine, composeAffine, mergeMeshes } from './surface';
 import type { BatterySpec } from '../boards/battery';
@@ -151,6 +151,14 @@ export function pinBlocks(board: PlacedBoard): [number, number, number, number, 
   });
 }
 
+/** The keys of a board's key fields as blocks on the field's base up to their tops, board frame. */
+export function keyBlocks(def: BoardDef): [number, number, number, number, number, number][] {
+  const { t } = def.size;
+  return keyFields(def).flatMap((field) => keysOf(field).map((key): [number, number, number, number, number, number] => [
+    key.x - key.w / 2, key.y - key.d / 2, t + (field.base ?? KEY_SLAB), key.x + key.w / 2, key.y + key.d / 2, t + field.h,
+  ]));
+}
+
 /** The outline of a glass in the board frame, counter-clockwise: a circle, or a rectangle with its rounded corners. */
 function glassOutline(glass: Glass): [number, number][] {
   if (glass.shape === 'round') return circle(glass.x, glass.y, glass.w / 2, false);
@@ -168,9 +176,12 @@ function glassOutline(glass: Glass): [number, number][] {
 /** The glass slabs of a board's display parts, case frame: `t` thick, their front at the part's height. */
 function glassGhost(board: PlacedBoard): SurfaceMesh | null {
   const { t } = board.def.size;
-  const slabs = board.def.ports.flatMap((port) => (onFace(port) && port.glass
-    ? [prismMesh(board, glassOutline(port.glass), [], t + port.h - port.glass.t, t + port.h)]
-    : []));
+  const slabs = board.def.ports.flatMap((port) => {
+    if (!onFace(port) || !port.glass) return [];
+    // a keypad's flange: its front at the field's base, the keys standing out of it
+    const front = t + (port.type === 'keys' ? port.base ?? port.h : port.h);
+    return [prismMesh(board, glassOutline(port.glass), [], front - port.glass.t, front)];
+  });
   return slabs.length > 0 ? mergeMeshes(slabs) : null;
 }
 
@@ -183,7 +194,7 @@ function glassGhost(board: PlacedBoard): SurfaceMesh | null {
 export function boardGhost(board: PlacedBoard): { pcb: SurfaceMesh; ports: SurfaceMesh | null; glass: SurfaceMesh | null } {
   if (board.def.battery) return { pcb: batteryGhost(board, board.def.battery), ports: null, glass: null };
   const { w, d, t } = board.def.size;
-  const blocks = [...board.def.ports.map((port) => portBlock(board, port)), ...pinBlocks(board)]
+  const blocks = [...board.def.ports.map((port) => portBlock(board, port)), ...keyBlocks(board.def), ...pinBlocks(board)]
     .map(([x0, y0, z0, x1, y1, z1]) => boxMesh(board.toCase, x0, y0, z0, x1, y1, z1));
   const holes = ghostHoles(board.def);
   // the real outline when the entry has one (chamfers, notches); layout and cavity keep the rectangle

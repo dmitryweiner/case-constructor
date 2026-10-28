@@ -1,0 +1,25 @@
+{
+  "id": "solderparty-bbq20kbd",
+  "name": "Solder Party BBQ20KBD",
+  "vendor": "Solder Party",
+  "kind": "keyboard",
+  "size": { "w": 74, "d": 53.1, "t": 2 },
+  "mount": {
+    "kind": "holes",
+    "holes": [
+      { "x": 11.4, "y": 3.8, "d": 2.7 },
+      { "x": 70.9, "y": 50, "d": 2.7 }
+    ],
+    "screw": "M2.5"
+  },
+  "topHeight": 0.9,
+  "bottomHeight": 3.4,
+  "ports": [
+    { "id": "keys", "type": "keys", "edge": "top", "x": 37.005, "y": 24.3, "w": 71.33, "d": 47.42, "h": 6.15, "base": 5 },
+    { "id": "usb-c", "type": "usb-c", "edge": "back", "along": 37, "z": -5.4, "h": 3.2, "protrude": -0.4 },
+    { "id": "stemma-qt", "type": "jst", "edge": "back", "along": 21.4, "z": -5, "w": 6, "h": 2.96, "protrude": -0.9 },
+    { "id": "pmod", "type": "generic", "edge": "back", "along": 52.6, "z": -4.6, "w": 15.24, "h": 2.6, "d": 10.36, "protrude": -0.53 }
+  ],
+  "source": "https://raw.githubusercontent.com/solderparty/bbq20kbd_hw/main/bbq20_keyboard.kicad_pcb",
+  "verified": true
+}

@@ -14,7 +14,8 @@ import { partingZ, skirtSolid, splitAtParting } from './parting';
 import { plateOf, shapeSpec } from './shape';
 import { outerSolid, shellSolid } from './shell';
 import type { Support } from './standoffs';
-import { fromCeiling, rails, standoffs, upsideDown } from './standoffs';
+import { SINK, cylinder, fromCeiling, rails, roundSegments, standoffs, upsideDown } from './standoffs';
+import { REST_R, caseRests } from './rests';
 import { batteryClamps, batterySupports } from './batterySolids';
 import { glassKeepOut, rimSolids } from './rimSolids';
 import { clampBars, clampPosts } from './clampSolids';
@@ -118,6 +119,11 @@ export function buildCase(
       ? (board.carried ? rimSolids(csg, scope, board, shape.floor, segments) : []) : board.def.battery
       ? batterySupports(csg, scope, board, board.def.battery, shape.floor, segments)
       : board.hung ? hung(board) : held(board)));
+    // rests under a keyboard's free corners grow from the floor, like a floor board's standoffs
+    for (const rest of caseRests(layout, shape.floor)) {
+      const material = cylinder(csg, scope, rest.cx, rest.cy, shape.floor - SINK, rest.top, REST_R, roundSegments(segments));
+      supports.push({ base: [rest.cx, rest.cy, shape.floor / 2], material, holes: null });
+    }
     // The owner is the part under the support's base; whatever of it reaches
     // into the other part's material (a deep side lid over a manually placed
     // board) is cut away, so the parts never overlap.

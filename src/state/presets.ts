@@ -117,6 +117,22 @@ export const PRESETS: Preset[] = [
     wallMount: { kind: 'keyholes', spacing: 80, screwD: 4 },
   })),
 
+  // A Meshtastic node with a keyboard: the Heltec V3 and an M5Stack CardKB
+  // hung side by side from the lid, its screen and the keys in their
+  // windows, the CardKB's Grove cable inside, the LoRa antenna through the
+  // back wall.
+  make('meshtastic-cardkb', 'Meshtastic node with CardKB', (base) => ({
+    shape: { ...base.shape, cornerR: 6 },
+    // deep enough that the Heltec's USB-C, right under the top, opens in the lid's wall, clear of its skirt
+    lid: { ...base.lid, depth: 9, fastening: 'screws', screw: { size: 'M3', hole: 'insert', head: 'counterbore' } },
+    boards: [
+      // its Grove plug's slot reaches 12 mm left of it: the Heltec's edge lines up with the slot's
+      { board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0.3, x: 12, y: 0 },
+      { board: 'heltec-wifi-lora-32-v3', on: 'ceiling', z: 0.3, x: 0, y: 60 },
+    ],
+    extraCuts: [{ face: 'back', shape: 'round', x: 70, y: 14, w: 6.6, h: 6.6, r: 0 }],
+  })),
+
   make('plain-box', 'Plain box', (base) => ({ boards: [], shape: { ...base.shape, auto: false, size: { w: 100, d: 70, h: 35 } } })),
 ];
 

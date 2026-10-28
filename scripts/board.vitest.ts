@@ -10,7 +10,7 @@ import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { CATALOG, RAW_BOARDS, catalogBoard } from '../src/boards/catalog';
 import { layersFor, writeReview } from './lib/review.mjs';
-import { OVERRIDE_NUMBERS, insidePolygon, isPortType, onFace, resolveVariant, sanitizeBoard } from '../src/boards/schema';
+import { OVERRIDE_NUMBERS, insidePolygon, isPortType, keyFields, keysOf, onFace, resolveVariant, sanitizeBoard } from '../src/boards/schema';
 import type { BoardDef, Glass } from '../src/boards/schema';
 
 interface Args { check?: string; svg?: string; out?: string; variant?: string; review?: string; only?: string }
@@ -51,6 +51,13 @@ function problems(raw: unknown): string[] {
     if (!isPortType(p.type)) out.push(`port ${String(p.id)}: unknown type ${String(p.type)}`);
     if (typeof p.id !== 'string' || ids.has(p.id)) out.push(`port id ${String(p.id)} missing or repeated`);
     ids.add(String(p.id));
+    const port = board.ports.find((one) => one.id === p.id);
+    // a key field's rows outside the field, or holes without rows, are dropped
+    if (port && Array.isArray(p.rows) && p.rows.length !== ('rows' in port ? port.rows?.length ?? 0 : 0)) out.push(`port ${String(p.id)}: a row of keys leaves the field`);
+    if (port && p.open !== undefined && p.open !== ('open' in port ? port.open : undefined)) out.push(`port ${String(p.id)}: open ${String(p.open)} dropped (holes need rows)`);
+    if (port && port.edge === 'top' && port.type !== 'keys' && board.kind === 'keyboard' && (port.base ?? port.h) > board.topHeight) {
+      out.push(`port ${String(p.id)}: stands above topHeight under the plate (give it a base, or raise topHeight)`);
+    }
   }
   // every variant is built as resolved: check its ports as the entry's
   const variants = Array.isArray(r.variants) ? r.variants : [];
@@ -107,6 +114,13 @@ function glassMarkup(glass: Glass, X: (x: number) => number, Y: (y: number) => n
   return `<rect x="${X(glass.x - glass.w / 2)}" y="${Math.min(Y(glass.y + glass.d / 2), Y(glass.y - glass.d / 2))}" width="${glass.w * scale}" height="${glass.d * scale}"${r > 0 ? ` rx="${r}"` : ''} ${attrs}/>`;
 }
 
+/** A board's keys as svg elements (a key field's rows), `X`/`Y` from the board frame. */
+function keysMarkup(def: BoardDef, X: (x: number) => number, Y: (y: number) => number, scale: number, attrs: string): string {
+  return keyFields(def).flatMap((field) => keysOf(field)).map((key) => (key.shape === 'round'
+    ? `<circle cx="${X(key.x)}" cy="${Y(key.y)}" r="${(key.w / 2) * scale}" ${attrs}><title>${key.x}, ${key.y}</title></circle>`
+    : `<rect x="${X(key.x - key.w / 2)}" y="${Math.min(Y(key.y + key.d / 2), Y(key.y - key.d / 2))}" width="${key.w * scale}" height="${key.d * scale}" ${attrs}><title>${key.x}, ${key.y}</title></rect>`)).join('');
+}
+
 /** Where a click on the scheme snaps when a drawing is aligned by hand: holes, outline corners, port corners and centres (display mm). */
 function snapPoints(def: BoardDef): [number, number][] {
   const out: [number, number][] = def.mount.holes.map((hole) => [hole.x, -hole.y]);
@@ -138,6 +152,7 @@ function schemeMarkup(def: BoardDef): string {
     parts.push(`<rect class="port ${port.edge}" x="${n(x0)}" y="${n(-y1)}" width="${n(x1 - x0)}" height="${n(y1 - y0)}"><title>${esc(port.id)} (${port.type}) ${where}</title></rect>`);
     parts.push(`<text class="label" x="${n((x0 + x1) / 2)}" y="${n(-(y0 + y1) / 2)}">${esc(port.id)}</text>`);
   }
+  parts.push(keysMarkup(def, n, (y) => n(-y), 1, 'class="port top"'));
   for (const hole of def.mount.holes) {
     parts.push(`<circle class="hole" cx="${n(hole.x)}" cy="${n(-hole.y)}" r="${n(hole.d / 2)}"><title>${hole.x}, ${hole.y} Ø${hole.d}</title></circle>`);
   }
@@ -178,6 +193,8 @@ function svg(def: BoardDef, variant?: string): string {
     const where = onFace(port) ? `${port.x}, ${port.y}${port.edge === 'bottom' ? ', under' : ''}` : `${port.edge} @${port.along}`;
     parts.push(`<text x="${X((x0 + x1) / 2)}" y="${Y((y0 + y1) / 2) + 3}" font-size="9" text-anchor="middle" fill="#000">${port.id} (${where})</text>`);
   }
+  // a key field's keys over it, outlined
+  parts.push(keysMarkup(def, X, Y, s, 'fill="#f3e2b0" fill-opacity="0.6" stroke="#333"'));
   parts.push(`<text x="${X(def.size.w / 2)}" y="${Y(def.size.d) - 6 - reach * s + 20}" font-size="12" text-anchor="middle" fill="#ddd">${def.name}${variant ? ` · ${variant}` : ''}: ${def.size.w} × ${def.size.d} × ${def.size.t} mm${def.verified ? '' : ' (unverified)'}</text>`);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="#15181c"/>${parts.join('')}</svg>\n`;
 }
