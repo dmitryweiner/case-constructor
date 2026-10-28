@@ -548,6 +548,10 @@ if ((await page.locator('#lid_face_top').getAttribute('class'))?.includes('activ
 await setRange('view_angle', 0);
 await page.click('#viewAssembled');
 await expectWatertight('hinged:closed');
+if (!(await page.locator('#viewCaption').textContent()).includes('open by 0°')) errors.push('[hinged] the caption does not say the angle');
+await page.click('#viewPrint');
+if (!(await page.locator('#viewCaption').textContent()).includes('upper half behind')) errors.push('[hinged] the print caption does not place the upper half');
+if (!(await page.locator('#view_angle').isDisabled())) errors.push('[hinged] the angle is live in the print layout');
 await page.click('#viewExploded');
 await exportStl('hinged');
 await page.click('#case_kind_box');

@@ -47,5 +47,9 @@ it.
 ## Export
 
 The three parts tabs mean the same for both halves: **Both** is every
-part, **Body** both bodies, **Lid** both lids. In the print layout and the
-STL the upper half's parts lie behind the lower half's.
+part, **Body** both bodies, **Lid** both lids — one STL each. In the print
+layout and the STL the upper half's parts lie behind the lower half's, each
+half laid out as a single case's (**Lid's place** and **Gap** apply to
+both). The caption over the view says which parts, how far the case is
+open, and in the print layout that the upper half is behind; **Open by**
+is greyed out there.

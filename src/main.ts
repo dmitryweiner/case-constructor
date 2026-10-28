@@ -191,6 +191,7 @@ function setHalfView(next: HalfView): void {
   angleRows.sync(halfView);
   if (switched) syncCards();
   else drawParts();
+  viewCaption.textContent = describeView(state);
 }
 
 /**
@@ -222,7 +223,7 @@ function renderPanel(): void {
   caseRows = renderControls(caseParams, caseControls(), () => state, (next) => applyState(next), 'case');
   hingeRows = renderControls(hingeParams, hingeControls(), () => state, (next) => applyState(next), 'hinge');
   halfRows = renderControls(halfParams, halfControls(), () => halfView, setHalfView, 'edit');
-  angleRows = renderControls(angleParams, angleControls(), () => halfView, setHalfView, 'view');
+  angleRows = renderControls(angleParams, angleControls(() => effectiveView(state.exportMode) === 'print'), () => halfView, setHalfView, 'view');
   boardRows = renderBoardsCard(boardCards, () => edited(), applyEdit,
     (text, name) => download(text, name, 'application/json'));
   cutRows = renderCutsCard(cutCards, () => edited(), applyEdit);
@@ -244,7 +245,6 @@ function syncPanel(): void {
   const hinged = isHinged(state);
   hingeCard.hidden = !hinged;
   halfBar.hidden = !hinged;
-  angleParams.hidden = !hinged;
   hingeRows.sync(state);
   halfRows.sync(halfView);
   angleRows.sync(halfView);
@@ -608,11 +608,15 @@ function printParts(built: AppState, one: BuiltCase, arrange: PrintArrange = bui
 /** Every case's parts on one bed: a hinged case's upper half behind the lower one. */
 function printAll(built: AppState, cases: BuiltCase[], arrange: PrintArrange = built.print): ScenePart[] {
   const out: ScenePart[] = [];
+  let place = lidPlaced;
   for (const one of cases) {
     const parts = printParts(one.half ? halfState(built, one.half) : built, one, arrange);
+    // the caption names where the first case's lid went
+    if (out.length === 0) place = lidPlaced;
     const behind = out.length > 0 ? Math.max(...out.map((part) => meshBounds(part.mesh).max[1])) + arrange.gap : 0;
     out.push(...(behind > 0 ? parts.map((part): ScenePart => ({ ...part, mesh: transformMesh(part.mesh, translation(0, behind, 0)) })) : parts));
   }
+  lidPlaced = place;
   return out;
 }
 
@@ -764,15 +768,18 @@ function effectiveView(parts: ExportMode): ViewMode {
 /** The caption over the view: which parts, how, and whether boards are in. */
 function describeView(state: AppState): string {
   const parts = state.exportMode;
-  const what = t(parts === 'both' ? 'caption.both' : parts === 'body' ? 'caption.body' : 'caption.lid');
+  const hinged = isHinged(state);
+  const what = t(hinged ? `caption.hinged.${parts}` : `caption.${parts}`);
   const view = effectiveView(parts);
   if (view === 'print') {
-    return `${what} · ${t('caption.print')}${parts === 'both' ? ` · ${t(lidPlaced === 'behind' ? 'caption.lidBehind' : 'caption.lidRight')}` : ''}`;
+    const lid = parts === 'both' ? ` · ${t(lidPlaced === 'behind' ? 'caption.lidBehind' : 'caption.lidRight')}` : '';
+    return `${what} · ${t('caption.print')}${lid}${hinged ? ` · ${t('caption.upperBehind')}` : ''}`;
   }
   const boards = viewBoards.checked && casesOf(state).some((one) => one.state.boards.length > 0) ? ` · ${t('caption.withBoards')}` : '';
+  const open = hinged ? ` · ${t('caption.openBy', { angle: halfView.angle })}` : '';
   // the body alone has nothing to explode
-  if (parts === 'body') return `${what}${boards}`;
-  return `${what} · ${t(view === 'exploded' ? 'view.exploded' : 'view.assembled')}${boards}`;
+  if (parts === 'body') return `${what}${open}${boards}`;
+  return `${what} · ${t(view === 'exploded' ? 'view.exploded' : 'view.assembled')}${open}${boards}`;
 }
 
 function syncView(): void {
@@ -791,6 +798,9 @@ function syncView(): void {
   // the parts are turned in the print layout: a place in the case is not a place there
   viewWarningsLabel.hidden = parts === 'lid';
   viewWarnings.disabled = view === 'print';
+  // a hinged case's angle: the bed has none, the lids alone are drawn as they print
+  angleParams.hidden = !isHinged(state) || parts === 'lid';
+  angleRows.sync(halfView);
   // the lid's place on the bed is seen only there
   printRows.sync(state);
   viewCaption.textContent = describeView(state);
@@ -811,9 +821,10 @@ function audit(meshes: SurfaceMesh[], ms: number): void {
 }
 
 function renderPartList(): void {
-  const rows: [Key, string][] = state.exportMode === 'both'
-    ? [['part.both', '']]
-    : [[state.exportMode === 'body' ? 'part.body' : 'part.lid', '']];
+  const rows: [Key, string][] = isHinged(state) ? [[`part.hinged.${state.exportMode}`, '']]
+    : state.exportMode === 'both'
+      ? [['part.both', '']]
+      : [[state.exportMode === 'body' ? 'part.body' : 'part.lid', '']];
   partList.replaceChildren(...rows.map(([key, note]) => {
     const item = make('li');
     item.append(make('span', 'part-name', t(key)));

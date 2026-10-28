@@ -220,3 +220,9 @@ stands alone.
   thread with `transformMesh`, which costs nothing at these sizes. New
   tool: `scripts/i18n.mjs` (keys into all four dictionaries).
 
+- **H2 (2026-10-28).** Done. The print layout was already there with H1:
+  each half laid out as a single case, the upper half behind
+  (`printAll`). H2 added the captions (*Both halves / Both bodies / Both
+  lids*, the angle, *the upper half behind*), the part list's lines, and
+  the angle greyed out in the print layout and hidden on the Lid tab.
+
