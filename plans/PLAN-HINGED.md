@@ -20,7 +20,7 @@ request when the first item lands; the user reviews and merges.
 ## Decisions (2026-10-28, with the user)
 
 - **Hinges** (Q1): integral knuckles on a pin or a screw (H3, H4), snap
-  knuckles — cones that click into sockets, no pin (H5), a separate printed
+  knuckles — split rings that click onto a bar, no pin (H5, Q5), a separate printed
   hinge screwed onto the walls (H7). No bought metal hinge
   (`docs/limitations.md`).
 - **The cable** (Q2): a slot in each half's hinge wall between knuckle
@@ -152,12 +152,11 @@ request when the first item lands; the user reviews and merges.
   head's seat in one end knuckle, a hex nut's pocket in the other (the
   board standoffs' nut slots and the lid's head seats, reused). Tightened,
   it holds the screen at any angle — the friction a laptop needs.
-- **H5. Snap knuckles** (Q1). No pin: B's knuckles carry a cone on each
-  end face, A's knuckles a conical socket facing it; the cones are short
-  (≈ 0.6 mm) and A's outer knuckle of a block springs out by that much on a
-  relief slot in its web when the halves are pushed together. PETG is
-  advised (PLA may crack); the cone's height and fit wait for a test print,
-  like the window's clearance.
+- **H5. Snap knuckles** (Q1, Q5). No pin: the lower half's knuckles are
+  joined by a printed bar on the axis, the upper half's knuckles are split
+  rings that click onto it (the cones first planned cannot work: see Q5).
+  PETG is advised; the ring's fit and grip wait for a test print, like the
+  window's clearance.
 - **H6. Cables** (Q2). Up to four, each: its x along the hinge, flat
   (width × thickness: an FFC, an IDC ribbon) or round (a diameter: a bundle,
   a USB cable), and the slot's own size when a plug has to pass through it.
@@ -201,6 +200,11 @@ request when the first item lands; the user reviews and merges.
 - **Q4. The parts tabs.** The same three widened, or tabs per half.
   Chosen: the same three.
 
+- **Q5. The snap's mechanism** (asked at H5). Cones into sockets need the
+  lower half's end knuckles to spread along the axis by the cone's height,
+  and a knuckle tied to its wall along its whole length does not. Chosen: a
+  split ring (C) on a printed bar, clicked on radially.
+
 ## Order
 
 H1 → H2 → H3 → H4 → H5 → H6 → H7 → H8 → H9. H1 and H2 give two cases
@@ -241,4 +245,11 @@ stands alone.
   head's seat is a counterbore in the block's first knuckle, the nut's
   pocket a hex prism with a corner up in its last; a note says the screws
   to buy (count, size, the block's length less the head's seat).
+
+- **H5 (2026-10-28).** Done, as a C-clip on a bar (Q5) instead of the
+  planned cones. The bar is the barrel's radius less the ring's 1.4 mm
+  wall and a 0.2 mm fit; the slit is 15 % narrower than the bar and opens
+  outwards from the upper half's wall — closed, that is backwards, so the
+  upper half goes on by being pushed back over the hinge, and its weight
+  presses the ring onto the bar at any angle it stands at.
 

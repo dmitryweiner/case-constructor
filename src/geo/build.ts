@@ -144,7 +144,10 @@ export function buildCase(
     if (hinge) {
       const range = bodyRange(dims.h, lid.face, plate, lid.depth);
       const knuckles = knuckleSolids(csg, scope, hinge, dims, effectiveRadii(spec.outer).edgeR, range, segments);
-      if (knuckles) body = scope.keep(scope.keep(body.add(scope.keep(knuckles.material.subtract(lidSolid)))).subtract(knuckles.holes));
+      if (knuckles) {
+        body = scope.keep(body.add(scope.keep(knuckles.material.subtract(lidSolid))));
+        if (knuckles.holes) body = scope.keep(body.subtract(knuckles.holes));
+      }
     }
 
     onStage(BUILD_STAGES[3]);

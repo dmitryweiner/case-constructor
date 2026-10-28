@@ -18,7 +18,7 @@ import type { Affine, Vec3 } from './surface';
 
 export function knuckleSolids(
   csg: CsgApi, scope: CsgScope, hinge: HalfHinge, dims: Dims, edgeR: number, body: readonly [number, number], segments: number,
-): { material: Manifold; holes: Manifold } | null {
+): { material: Manifold; holes: Manifold | null } | null {
   const { r, e, zAxis } = hinge;
   const strip = knuckleStrip({ h: dims.h, edgeR, zAxis, r, e, body });
   if (!strip || hinge.runs.length === 0) return null;
@@ -37,6 +37,9 @@ export function knuckleSolids(
     }
     return hullOf(csg, scope, points);
   });
+  // along the axis: a cylinder (or a hex prism) along z turned onto it (z → x)
+  const turn: Affine = [0, 0, 1, 0, 0, 1, 0, back ? dims.d + e : -e, -1, 0, 0, zAxis];
+  const along = (solid: Manifold): Manifold => transformSolid(scope, solid, turn);
   // beyond the strip the web keeps off the wall: there is the lid, or the fillet
   const x0 = Math.min(...hinge.runs.map((run) => run.x0)) - 1;
   const x1 = Math.max(...hinge.runs.map((run) => run.x1)) + 1;
@@ -47,11 +50,24 @@ export function knuckleSolids(
     return box(csg, scope, x0, ya, z0, x1, yb, z1);
   };
   const off = unionAll(csg, scope, [keepOff(zAxis - reach - 1, strip[0]), keepOff(strip[1], zAxis + reach + 1)]);
-  const material = scope.keep(unionAll(csg, scope, knuckles).subtract(off));
-  // the axle's holes along each block: cylinders and a hex prism along z turned onto the axis (z → x)
-  const turn: Affine = [0, 0, 1, 0, 0, 1, 0, back ? dims.d + e : -e, -1, 0, 0, zAxis];
-  const along = (solid: Manifold): Manifold => transformSolid(scope, solid, turn);
+  // a snap: the lower half's bar on the axis between its neighbouring knuckles
+  const { snap } = hinge.holes;
+  const bars = snap && back ? hinge.blocks.flatMap((block) => {
+    const own = hinge.runs.filter((run) => run.x0 >= block.x0 - 1e-6 && run.x1 <= block.x1 + 1e-6);
+    return own.slice(1).map((run, i) => along(cylinder(csg, scope, 0, 0, own[i].x1 - 1, run.x0 + 1, snap.barR, n)));
+  }) : [];
+  const material = scope.keep(unionAll(csg, scope, [...knuckles, ...bars]).subtract(off));
   const { holes: axle } = hinge;
+  // a snap: the upper half's knuckles are rings around the bar, split outwards from their wall
+  if (snap) {
+    if (back) return { material, holes: null };
+    const rings = hinge.runs.flatMap((run) => {
+      const ring = along(cylinder(csg, scope, 0, 0, run.x0 - 1, run.x1 + 1, snap.ringR, n));
+      const slit = box(csg, scope, run.x0 - 1, -e - r - 1, zAxis - snap.slit / 2, run.x1 + 1, -e, zAxis + snap.slit / 2);
+      return [ring, slit];
+    });
+    return { material, holes: unionAll(csg, scope, rings) };
+  }
   const holes = unionAll(csg, scope, hinge.blocks.flatMap((block) => {
     const through = along(cylinder(csg, scope, 0, 0, block.x0 - 1, block.x1 + 1, axle.r, n));
     if (!axle.screw) return [through];

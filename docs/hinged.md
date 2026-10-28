@@ -44,7 +44,7 @@ iron), a rod or a nail — or a screw (below).
 | Knuckle length | 4–40 mm | 10 | two blocks only; shorter when the edge is short |
 | Knuckle diameter | 5–16 mm | 8 | never less than the pin's hole plus 1.2 mm of wall on each side |
 | Knuckle clearance | 0.2–1 mm | 0.4 | between neighbouring knuckles, and between a barrel and the other half's wall |
-| Axle | pin, screw | pin | |
+| Axle | pin, screw, snap | pin | |
 | Pin diameter | 1–5 mm | 1.75 | a pin |
 | Pin hole clearance | 0–0.5 mm | 0.15 | a pin; added to the pin's radius |
 | Screw | M2, M2.5, M3 | M2.5 | a screw |
@@ -56,6 +56,13 @@ it squeezes the knuckles together and holds the upper half at any angle —
 the friction a screen needs. The knuckles grow to hold the head and the
 nut with a millimetre of wall around them. A note says which screws to
 buy: as long as the block less the head's seat, or the nearest shorter.
+
+**A snap.** Nothing to buy: the lower half's knuckles are joined by a
+printed bar on the axis, and the upper half's knuckles are split rings —
+the slit outwards, away from their wall — that click onto the bars. Lay the
+upper half closed, a little forward of its place, and push it back onto
+the hinge. The ring's wall is 1.4 mm, so it springs open; PETG springs
+better than PLA. The ring's fit and the slit's grip wait for a test print.
 
 The knuckles stay on the straight part of the hinge edge, clear of the
 corner radius. Their web holds on to the body's part of the hinge wall —

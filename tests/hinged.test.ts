@@ -283,6 +283,44 @@ describe('the knuckles', () => {
     expect(screws?.length).toBe(Math.floor(hinge.blocks[0].x1 - hinge.blocks[0].x0 - holes.screw.headDepth));
   });
 
+  it('a snap: the lower half\'s bar through the upper half\'s split rings, turning without touching', () => {
+    const base = hinged();
+    for (const lids of [['top', 'top'], ['bottom', 'top']] as const) {
+      const state = sanitizeState({
+        ...base, lid: { ...base.lid, face: lids[0] },
+        hinge: { ...base.hinge, axle: 'snap', b: { ...base.hinge.b, lid: { ...base.hinge.b.lid, face: lids[1] } } },
+      });
+      const holes = axleHoles(state.hinge);
+      if (!holes.snap) throw new Error('no snap');
+      expect(holes.snap.slit).toBeLessThan(2 * holes.snap.barR);
+      const { a, b } = build(state);
+      for (const mesh of [a.body, b.body]) expect(validateMesh(mesh).watertight).toBe(true);
+      const fold = foldOfState(state);
+      const lower = mergeMeshes([a.body, a.lid]);
+      const upper = mergeMeshes([b.body, b.lid]);
+      for (let angle = 0; angle <= 180; angle += 15) {
+        expect(shared(lower, transformMesh(upper, upperPose(fold, angle))), `${lids} ${angle}°`).toBeLessThan(1e-6);
+      }
+      // the bar is there: the lower body is a closed solid through the upper half's knuckles' x
+      const hinge = halfHinge(state, 'b');
+      if (!hinge) throw new Error('no hinge');
+      const run = hinge.runs[0];
+      const probe = (x: number): SurfaceMesh => {
+        const r = holes.snap ? holes.snap.barR - 0.1 : 0;
+        const points = [x - 0.5, x + 0.5].flatMap((at) => Array.from({ length: 12 }, (_, i): [number, number, number] => (
+          [at, fold.y + r * Math.cos((Math.PI * i) / 6), fold.z + r * Math.sin((Math.PI * i) / 6)])));
+        const scope = new CsgScope();
+        try {
+          return fromManifold(scope.keep(csg.Manifold.hull(points)));
+        } finally {
+          scope.dispose();
+        }
+      };
+      const middle = probe((run.x0 + run.x1) / 2);
+      expect(shared(middle, a.body)).toBeGreaterThan(0.9 * validateMesh(middle).volume);
+    }
+  });
+
   it('a barrel never thinner than its axle needs', () => {
     expect(sanitizeHingeSpec({ axle: 'screw', screw: 'M3', barrelD: 5 }).barrelD).toBeGreaterThanOrEqual(barrelMin({ ...defaultHingeSpec(), axle: 'screw', screw: 'M3' }));
     expect(sanitizeHingeSpec({ pinD: 4, pinFit: 0.5, barrelD: 5 }).barrelD).toBeGreaterThanOrEqual(4 + 1 + 2.4);

@@ -421,8 +421,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   `hingeSolids.ts` worker): `halfHinge(state, half)` goes to `buildCase`,
   which adds them to the body after the supports, minus the lid, and
   drills the axle's holes (`axleHoles`: a pin's, or a screw's with its head
-  seat and nut pocket in the block's end knuckles; `barrelMin` keeps a wall
-  around them) — before the openings, so a port through the hinge
+  seat and nut pocket in the block's end knuckles; a snap's bar added to
+  the lower half between its knuckles and the upper half's split rings;
+  `barrelMin` keeps a wall around them) — before the openings, so a port through the hinge
   wall cuts them (and `knuckleCutWarnings` says so). A knuckle is the hull
   of its barrel and a strip of its wall; past the strip it keeps
   `KNUCKLE_LID_GAP` off the wall (the lid lifts past it). A half with its
@@ -522,7 +523,7 @@ Case card: `#case_kind_box|cylinder|console|hinged`, `#case_cornerR`, `#case_edg
 `#case_d`, `#case_h`, `#case_hA|_hB` (hinged), `#case_frontH`, `#case_backH`.
 Hinged: the card `#hingeCard` (`#hinge_gap`, `#hinge_layout_ends|full`,
 `#hinge_knuckles_3|5|7`, `#hinge_length` (two blocks), `#hinge_barrelD`,
-`#hinge_clearance`, `#hinge_axle_pin|screw`, `#hinge_pinD`, `#hinge_pinFit` (a pin),
+`#hinge_clearance`, `#hinge_axle_pin|screw|snap`, `#hinge_pinD`, `#hinge_pinFit` (a pin),
 `#hinge_screw_M2|M2.5|M3` (a screw)), the half switch `#halfBar`
 (`#edit_half_a|b`), the view's angle `#view_angle` (in the View and export
 card).

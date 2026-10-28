@@ -24,10 +24,12 @@ export const HINGE_KINDS = ['knuckles'] as const;
 export type HingeKind = (typeof HINGE_KINDS)[number];
 /**
  * What the knuckles turn on: a pin through them (a filament, a rod, a nail),
- * or a screw with its head and its nut sunk in the block's end knuckles —
- * tightened, it holds the angle.
+ * a screw with its head and its nut sunk in the block's end knuckles —
+ * tightened, it holds the angle — or nothing bought: a snap, the lower
+ * half's knuckles joined by a printed bar on the axis and the upper half's
+ * knuckles split rings that click onto it.
  */
-export const AXLES = ['pin', 'screw'] as const;
+export const AXLES = ['pin', 'screw', 'snap'] as const;
 export type Axle = (typeof AXLES)[number];
 export const HINGE_SCREWS = ['M2', 'M2.5', 'M3'] as const;
 export type HingeScrew = (typeof HINGE_SCREWS)[number];
@@ -80,6 +82,14 @@ export const BARREL_WALL = 1.2;
 export const SCREW_BARREL_WALL = 1;
 /** A screw's head seat: its diameter plus this, and its depth plus this, mm. */
 export const HEAD_SEAT_FIT = 0.4;
+/** A snap: the split ring's wall, mm — thin enough to spring open over the bar. */
+export const SNAP_RING = 1.4;
+/** A snap: between the bar and its ring, mm. */
+export const SNAP_FIT = 0.2;
+/** A snap: how much narrower than the bar the ring's slit is, a share of the bar's diameter. */
+export const SNAP_GRIP = 0.15;
+/** A snap: the thinnest bar, radius, mm. */
+export const SNAP_BAR_MIN = 1.2;
 
 export function defaultHingeSpec(): HingeSpec {
   return { kind: 'knuckles', axle: 'pin', layout: 'ends', barrelD: 8, knuckles: 3, length: 10, clearance: 0.4, pinD: 1.75, pinFit: 0.15, screw: 'M2.5' };
@@ -95,10 +105,19 @@ export interface AxleHoles {
   r: number;
   /** a screw's head seat in the block's first knuckle, and its nut's pocket (across flats) in the last */
   screw: { headR: number; headDepth: number; nutAF: number; nutDepth: number } | null;
+  /**
+   * a snap: the lower half's bar on the axis between its knuckles, the upper
+   * half's ring around it, and the ring's slit, outwards from its wall
+   */
+  snap: { barR: number; ringR: number; slit: number } | null;
 }
 
-export function axleHoles(spec: Pick<HingeSpec, 'axle' | 'pinD' | 'pinFit' | 'screw'>): AxleHoles {
-  if (spec.axle === 'pin') return { r: spec.pinD / 2 + spec.pinFit, screw: null };
+export function axleHoles(spec: Pick<HingeSpec, 'axle' | 'pinD' | 'pinFit' | 'screw' | 'barrelD'>): AxleHoles {
+  if (spec.axle === 'pin') return { r: spec.pinD / 2 + spec.pinFit, screw: null, snap: null };
+  if (spec.axle === 'snap') {
+    const barR = Math.max(SNAP_BAR_MIN, spec.barrelD / 2 - SNAP_RING - SNAP_FIT);
+    return { r: 0, screw: null, snap: { barR, ringR: barR + SNAP_FIT, slit: 2 * barR * (1 - SNAP_GRIP) } };
+  }
   const dims = SCREWS[spec.screw];
   return {
     r: (dims.d + THROUGH_CLEARANCE) / 2,
@@ -108,12 +127,14 @@ export function axleHoles(spec: Pick<HingeSpec, 'axle' | 'pinD' | 'pinFit' | 'sc
       nutAF: dims.nutAF + NUT_CLEARANCE,
       nutDepth: dims.nutH + NUT_CLEARANCE,
     },
+    snap: null,
   };
 }
 
 /** The thinnest barrel that holds the axle's holes with a wall around them. */
 export function barrelMin(spec: Pick<HingeSpec, 'axle' | 'pinD' | 'pinFit' | 'screw'>): number {
-  const holes = axleHoles(spec);
+  if (spec.axle === 'snap') return 2 * (SNAP_BAR_MIN + SNAP_FIT + SNAP_RING);
+  const holes = axleHoles({ ...spec, barrelD: 0 });
   if (!holes.screw) return 2 * holes.r + 2 * BARREL_WALL;
   // a hex nut's corners are its flats over cos 30°
   return Math.max(2 * holes.screw.headR, holes.screw.nutAF / Math.cos(Math.PI / 6)) + 2 * SCREW_BARREL_WALL;

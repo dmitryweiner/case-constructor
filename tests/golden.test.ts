@@ -316,6 +316,12 @@ const STATES: Record<string, AppState> = {
     shape: { ...defaultState().shape, kind: 'hinged' },
     hinge: { axle: 'screw', screw: 'M3', knuckles: 5, length: 7, b: { boards: [] } },
   }),
+  // H5: a snap — the lower half's bars on the axis, the upper half's split rings
+  'hinged-snap': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    hinge: { axle: 'snap', barrelD: 9, b: { boards: [] } },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

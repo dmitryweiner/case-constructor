@@ -20,6 +20,7 @@ export type MessageCode =
   | 'warn.cutHitsKnuckle'
   | 'warn.extraHitsKnuckle'
   | 'info.hingeScrews'
+  | 'info.hingeSnap'
   // layout checks (layout)
   | 'warn.boardsOverlap'
   | 'warn.standoffHitsBoard'

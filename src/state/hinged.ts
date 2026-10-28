@@ -186,6 +186,7 @@ export function hingeNotes(state: AppState): Message[] {
   const hinge = halfHinge(state, 'a');
   const screws = hinge ? hingeScrews(state.hinge, hinge.blocks) : null;
   if (screws) out.push({ code: 'info.hingeScrews', params: { n: screws.count, size: state.hinge.screw, len: screws.length } });
+  if (state.hinge.axle === 'snap') out.push({ code: 'info.hingeSnap' });
   return out;
 }
 

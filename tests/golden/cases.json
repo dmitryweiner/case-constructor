@@ -1281,5 +1281,45 @@
         5
       ]
     }
+  },
+  "hinged-snap:a": {
+    "body": {
+      "triangles": 2744,
+      "volume": 30520.54,
+      "extents": [
+        97.9,
+        75.9,
+        33.4
+      ]
+    },
+    "lid": {
+      "triangles": 1916,
+      "volume": 12915.81,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-snap:b": {
+    "body": {
+      "triangles": 972,
+      "volume": 24070.58,
+      "extents": [
+        97.9,
+        75.061,
+        25
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 14144.45,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
   }
 }
