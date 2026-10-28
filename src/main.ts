@@ -158,18 +158,22 @@ let caseRows: ControlsHandle<AppState>;
 let lidRows: ControlsHandle<AppState>;
 let printRows: ControlsHandle<AppState>;
 
-/** Where the lid lies next to the body in the Both STL — the only parts tab with two parts on the bed. */
+/**
+ * Where the lid lies next to the body in the Both STL — the only parts tab
+ * with two parts on the bed. Set where it is seen: in the print layout.
+ */
 function printControls(): Control<AppState>[] {
   const both = (s: AppState): boolean => s.exportMode === 'both';
+  const notPrint = (s: AppState): boolean => effectiveView(s.exportMode) !== 'print';
   return [
     {
-      kind: 'segmented', key: 'lid', label: 'print.lid', hint: 'print.lid.hint', when: both,
+      kind: 'segmented', key: 'lid', label: 'print.lid', hint: 'print.lid.hint', when: both, disabled: notPrint,
       options: LID_PLACES.map((place) => ({ value: place, label: `print.lid.${place}` as const })),
       get: (s) => s.print.lid,
       set: (s, value) => ({ ...s, print: { ...s.print, lid: LID_PLACES.find((place): place is LidPlace => place === value) ?? s.print.lid } }),
     },
     {
-      kind: 'range', key: 'gap', label: 'print.gap', hint: 'print.gap.hint', when: both, min: PRINT_GAP_MIN, max: PRINT_GAP_MAX, step: 1,
+      kind: 'range', key: 'gap', label: 'print.gap', hint: 'print.gap.hint', when: both, disabled: notPrint, min: PRINT_GAP_MIN, max: PRINT_GAP_MAX, step: 1,
       get: (s) => s.print.gap,
       set: (s, value) => ({ ...s, print: { ...s.print, gap: value } }),
     },
@@ -640,6 +644,8 @@ function syncView(): void {
   // the parts are turned in the print layout: a place in the case is not a place there
   viewWarningsLabel.hidden = parts === 'lid';
   viewWarnings.disabled = view === 'print';
+  // the lid's place on the bed is seen only there
+  printRows.sync(state);
   viewCaption.textContent = describeView(state);
 }
 

@@ -776,6 +776,7 @@ await exportStl('both:right');
 await page.click('#print_lid_auto');
 await setRange('print_gap', 10);
 await page.click('#viewExploded');
+if (!(await page.locator('#print_lid_auto').isDisabled()) || !(await page.locator('#print_gap').isDisabled())) errors.push('[view:print-lid] the lid\'s place is offered outside the print layout');
 await page.click('#tabLid');
 if (await page.locator('#print_lid_auto').isVisible()) errors.push('[view:print-lid] the Lid tab offers the lid\'s place');
 await expectWatertight('view:lid');

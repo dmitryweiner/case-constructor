@@ -241,6 +241,10 @@ export function renderControls<T>(
       };
       show(read());
       syncers.push(show);
+      setDisabled = (off) => {
+        const state = read();
+        for (const button of buttons) button.disabled = off || (control.optionDisabled?.(state, button.dataset.value ?? '') ?? false);
+      };
     } else {
       const slider = make('input');
       slider.type = 'range';
