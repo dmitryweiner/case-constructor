@@ -57,7 +57,7 @@ import type { LidPlace, PrintArrange } from './geo/print';
 import {
   LID_PLACES, PRINT_GAP_MAX, PRINT_GAP_MIN, bodyForPrint, bothForPrint, hingeForPrint, lidWithScrews, screwsInCase, sideCheeksForPrint, stackBehind, withClamps, withRails,
 } from './geo/print';
-import { capsInCase, keyCaps, withCaps } from './geo/caps';
+import { capsInCase, capsWithLid, keyCaps, withCaps } from './geo/caps';
 import { restWarnings } from './geo/rests';
 import type { Affine, SurfaceMesh } from './geo/surface';
 import { IDENTITY, applyAffine, composeAffine, meshBounds, mergeMeshes, rotateVec, transformMesh, translation } from './geo/surface';
@@ -630,8 +630,9 @@ function printParts(built: AppState, one: BuiltCase, arrange: PrintArrange = bui
   const count = screw ? lidPosts(built).spots.length : 0;
   const roles = (meshes: SurfaceMesh[], names: ScenePart['role'][]): ScenePart[] =>
     meshes.map((mesh, i): ScenePart => ({ role: names[i] ?? 'screw', mesh }));
-  // printed key caps print with the lid, after everything else on its bed
-  const caps = built.exportMode === 'body' ? [] : keyCaps(layout, { ...built.shape, console: layout.console });
+  // printed caps print with the part that has the top (the lid, when it is the top), after everything else on its bed
+  const withLid = capsWithLid(face);
+  const caps = built.exportMode === 'both' || (built.exportMode === 'lid') === withLid ? keyCaps(layout, { ...built.shape, console: layout.console }) : [];
   const capped = (parts: ScenePart[]): ScenePart[] => {
     const placed = withCaps(parts.map((part) => part.mesh), caps, arrange.gap);
     return placed.length > parts.length ? [...parts, { role: 'cap', mesh: placed[placed.length - 1] }] : parts;
@@ -769,6 +770,11 @@ function drawParts(): void {
       if (one.hinge) local.push({ role: 'hinge', mesh: one.hinge });
       // rails on screws, on the body's posts, round the board they hold
       if (one.rails) local.push({ role: 'clamp', mesh: one.rails });
+      // printed caps in the body's top (the lid is not the top)
+      if (!capsWithLid(own.lid.face)) {
+        const caps = capsInCase(keyCaps(layout, { ...own.shape, console: layout.console }));
+        if (caps) local.push({ role: 'cap', mesh: caps });
+      }
     }
     if (showLid && showBody) {
       local.push({ role: 'lid', mesh: one.lid, offset: lifted(true) });
@@ -780,8 +786,8 @@ function drawParts(): void {
       const posts = one.screw ? lidPosts(own).spots.map((spot) => spot.centre) : [];
       const screws = one.screw ? screwsInCase(one.screw, posts, own.lid.face, dims, 2 * lidLift) : null;
       if (screws) local.push({ role: 'screw', mesh: screws });
-      // printed key caps in their holes; exploded, over the lifted lid
-      const caps = capsInCase(keyCaps(layout, { ...own.shape, console: layout.console }), n, 2 * lidLift);
+      // printed caps in the lid's holes; exploded, over the lifted lid
+      const caps = capsWithLid(own.lid.face) ? capsInCase(keyCaps(layout, { ...own.shape, console: layout.console }), n, 2 * lidLift) : null;
       if (caps) local.push({ role: 'cap', mesh: caps });
     }
     parts.push(...local.map(posed));

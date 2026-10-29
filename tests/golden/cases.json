@@ -1675,5 +1675,25 @@
         8.4
       ]
     }
+  },
+  "heltec-v4-button-caps": {
+    "body": {
+      "triangles": 856,
+      "volume": 11041.69,
+      "extents": [
+        60.99,
+        36.7,
+        16.09
+      ]
+    },
+    "lid": {
+      "triangles": 1424,
+      "volume": 4466,
+      "extents": [
+        60.99,
+        36.7,
+        5
+      ]
+    }
   }
 }

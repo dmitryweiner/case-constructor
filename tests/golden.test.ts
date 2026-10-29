@@ -378,6 +378,11 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     boards: [{ board: 'heltec-wifi-lora-32-v4', railScrews: true, railEars: 'along', on: 'ceiling', mount: { size: 'M2', hole: 'nut', head: 'none' } }],
   }),
+  // N3: printed caps over a board's buttons (the lid's holes; the caps are not the worker's)
+  'heltec-v4-button-caps': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'heltec-wifi-lora-32-v4', on: 'floor', z: 4, buttons: 'caps', capShape: 'square', capR: 0.8 }],
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

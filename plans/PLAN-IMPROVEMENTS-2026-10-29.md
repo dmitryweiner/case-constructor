@@ -1,6 +1,6 @@
 # Case Constructor — improvements after a Heltec LoRa 32 V4 case (2026-10-29)
 
-**Status: agreed with the user (2026-10-29), in progress.**
+**Status: done (2026-10-29).**
 
 Written on 2026-10-29 from the user's attempt to make a case for the Heltec
 WiFi LoRa 32 V4. Items N1…N4; the order is at the end.
@@ -213,3 +213,17 @@ added), N2, N3.
   top, beyond the board; the top margin keeps 3 by default, so only a
   margin set under it reaches the lid) and a post in an opening. Left for
   when a case shows it.
+- **N3.** Caps go with the part that has the top (`capsWithLid`: the lid
+  on top, else the body), the keyboards' caps too: before, they always
+  went with the lid, a bottom lid's included.
+- **N3.** `warn.capOffPlate` (a flange beyond the plate's flat zone) is
+  not done: the flange lies on its button, under the plate, never against
+  its skirt or edge. Over a taller part next to the button:
+  `warn.capOverPart`.
+- **N3.** The caps' sizes take a list of keys as well as a key field
+  (`CapKeys`): a board's buttons are one such list.
+- **Found, not done.** A Heltec V3 or V4 hung under a top lid (the
+  picker's default for a board with a display) has its USB-C opening in the
+  lid's skirt band: `warn.cutUnderSkirt`, on `main` too, before N4. A
+  separate item if the user wants it (the auto height could keep edge
+  openings below the skirt).

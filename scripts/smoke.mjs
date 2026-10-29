@@ -139,6 +139,19 @@ await exportStl('rails:body');
 await page.click('#tabBoth');
 await page.uncheck('#board0_railScrews');
 
+// N3: printed caps over the Heltec's buttons — square ones too; the Lid export carries them
+label('button-caps');
+await page.click('#board0_buttons_caps');
+await expectWatertight('button-caps');
+if (!(await drawn()).split(',').includes('cap')) errors.push(`[button-caps] no caps drawn: ${await drawn()}`);
+await page.click('#board0_capShape_square');
+await expectWatertight('button-caps:square');
+await page.click('#tabLid');
+if (!(await drawn()).split(',').includes('cap')) errors.push(`[button-caps] the Lid tab has no caps: ${await drawn()}`);
+await exportStl('button-caps:lid');
+await page.click('#tabBoth');
+await page.click('#board0_buttons_hole');
+
 // boards: every catalog board from the picker, hole kinds, rotation, removal
 label('boards');
 const catalog = await page.evaluate(async () => {

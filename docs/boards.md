@@ -148,6 +148,24 @@ the floor, the lid for one it holds — and print top down, ears on the bed,
 right of the rest (in the Both, Body or Lid STL as that part). The ear's top
 is 0.05 mm under the rail's top, inside the first layer.
 
+## Printed caps over buttons
+
+A board's buttons on its top get a hole each in the plate over them. With
+**Buttons: Printed caps** each hole takes a printed cap instead — the
+keyboards' cap: a flange lying on the button under the plate, wider than
+the hole so the cap cannot fall out, and a stem up through the hole,
+standing 1 mm out of the case. A button deep under the lid (the Heltec's
+PRG sits 1.5 mm over its PCB, the display beside it 5.5) is reached with a
+finger. The caps' controls are the keyboards': **Caps** (round or square,
+with its **Corner radius**), **Cap size** (from the widest button to as wide
+as the board's buttons leave room for) and **Key fit** (the room round the
+stem, 0.25 mm by default).
+
+A cap's flange that runs into a taller part next to its button (a
+connector, the display) is a warning: make the caps narrower, or switch
+that button's opening off. The caps print with the part that has the top —
+the lid when it is on top, the body otherwise — flange down next to it.
+
 ## Catalog
 
 "Checked" means the outline, holes and connectors were transcribed from the

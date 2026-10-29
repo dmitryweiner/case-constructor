@@ -59,7 +59,8 @@ freely; a temporary script that turns out useful becomes a permanent one.
 
 - `scripts/smoke.mjs` — browser smoke: every shape, slider extremes, a 10 mm
   case (and an auto Heltec under 20), the Heltec's rails on screws (every
-  hole kind, both ears, hung and on the floor, Lid and Body exports), every
+  hole kind, both ears, hung and on the floor, Lid and Body exports) and
+  printed caps over its buttons (square ones, the Lid export), every
   catalog board from the picker (with nut/insert holes, a rotation and its
   pins toggled), soldered pins raising the board, a family's model, port
   toggles, user openings, the custom board editor and its catalog JSON,
@@ -279,10 +280,14 @@ freely; a temporary script that turns out useful becomes a permanent one.
   standoff height filling the least case (`floorZ`). Printed caps
   (`capSize.ts` sizes, `caps.ts` meshes, pure, no CSG) are built and placed
   by the main thread like printed screws: in their holes in the view, flange
-  down next to the lid in the Lid and Both STLs (part role `cap`); round
+  down next to the part that has the top (`capsWithLid`: the lid on top,
+  else the body) in its STL and in Both (part role `cap`); round
   or square with rounded corners (`capShape`, `capR` ≥ `CAP_R_MIN`), their
   width `capSize` kept within `capSizeRange` (the flanges hold and never
-  meet). A keyboard that hangs may be held another way than its entry's
+  meet). Any board's top buttons may have them too (`placement.buttons:
+  'caps'`, `capButtons`: the buttons are one set of keys for `capSizes`;
+  the same cap fields; `buttonCapNotes` warns of a flange over a taller
+  part). A keyboard that hangs may be held another way than its entry's
   (`placement.hold`, `holdChoices`: screws, rails, clamp bars); `boardOf`
   applies it (`withHold`), so everything downstream sees the board as held.
   A clamped board without a glass rim gets pads from the plate opposite
@@ -537,7 +542,7 @@ per board
 `#board<i>_x|_y|_z`, `#board<i>_on_floor|ceiling` (not a battery; on a console the ceiling is the slope), `#board<i>_gap` (hung; instead of `_z`), `#board<i>_bevel` (a hung display), `#board<i>_clampPress` (a clamped panel), `#board<i>_back` (select; a display with a back pattern), `#board<i>_back_rot_0|90|180|270`, `#board<i>_back_standoff`, `#board<i>_back_cut_<port>`, `#board<i>_top` (select; a floor board with holes), `#board<i>_top_rot_0|90|180|270`, `#board<i>_top_standoff`, `#board<i>_top_cut_<port>`, alignment (two boards or more) `#board<i>_align`
 (details), `#board<i>_alignRef`,
 `#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_wall_front|back|left|right` (toggles; not on a cylinder), `#board<i>_wallOffset`, `#board<i>_screw`,
-`#board<i>_hole_tap|insert|nut` (also rails on screws), `#board<i>_railScrews` (boards held by rails), `#board<i>_railEars_out|along`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles
+`#board<i>_hole_tap|insert|nut` (also rails on screws), `#board<i>_railScrews` (boards held by rails), `#board<i>_railEars_out|along`, `#board<i>_buttons_hole|caps` (boards with top buttons; the cap controls below then show), `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles
 `#board<i>_cut_<portId>`.
 Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHeight|_bottomHeight`,
 `#board<i>_keys_window|holes|caps`, `#board<i>_keyFit`, `#board<i>_capShape_round|square`, `#board<i>_capR`, `#board<i>_capSize`, `#board<i>_hold_holes|rails|clamp` (keyboards),
