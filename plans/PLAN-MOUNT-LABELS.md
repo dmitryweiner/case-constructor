@@ -241,3 +241,10 @@ L2, L3, L4.
 - **After the review (the user).** The vents' faces are a row of buttons
   like the wall mount's (the `toggles` control, any number pressed), not six
   checkboxes; the ids `#vents_face_<face>` stay.
+- **After the review (the user).** No checkbox on the Ventilation and Fan
+  seat cards: the vents are on while a face is pressed, the fan while it has
+  a face (a row *none* / the six faces, as the wall mount's, instead of a
+  select). The state keeps `on` (old files and goldens do not move): the
+  controls set it. The cards fold by a click on their head, unfold when
+  turned on from outside (a preset, a file) and never fold by themselves.
+  Their other settings show only while they are on.

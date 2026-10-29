@@ -780,15 +780,22 @@ await setRange('case_edgeR', 0);
 
 // extras: vents of every pattern, a fan, both wall mounts on their faces, labels in a real font
 label('extras');
-await page.check('#on_vents');
+// no checkbox: the vents are on while a face is pressed, the fan while it has a face
+if (await page.locator('#on_vents, #on_fan').count()) errors.push('[vents] a checkbox on the vents or the fan card');
+await page.click('#card_vents .fcard-head');
+if (await page.locator('#vents_pattern').isVisible()) errors.push('[vents] the pattern shows with no face pressed');
+await page.click('#vents_face_left');
+await page.click('#vents_face_right');
+if (!(await page.evaluate(() => window.__case.state().vents.on))) errors.push('[vents] a face pressed, the vents still off');
 for (const pattern of ['slots', 'hex', 'round']) {
   await page.click(`#vents_pattern_${pattern}`);
   await expectWatertight(`vents:${pattern}`);
 }
 await page.click('#vents_face_bottom');
 if ((await page.locator('#vents_face_bottom').getAttribute('aria-pressed')) !== 'true') errors.push('[vents] the bottom face not pressed');
-await page.check('#on_fan');
-await page.selectOption('#fan_face', 'top');
+await page.click('#card_fan .fcard-head');
+if (await page.locator('#fan_size').isVisible()) errors.push('[fan] the size shows with no face');
+await page.click('#fan_face_top');
 await page.click('#fan_size_30');
 await expectWatertight('fan');
 await page.click('#mount_kind_keyholes');
@@ -865,8 +872,9 @@ await expectWatertight('label:removed');
 const left = await page.evaluate(() => window.__case.state().labels);
 if (left.length !== 1 || left[0].text !== 'Front') errors.push(`[label:remove] the wrong label went: ${JSON.stringify(left)}`);
 await page.click('#label0_remove');
-await page.uncheck('#on_vents');
-await page.uncheck('#on_fan');
+for (const face of ['left', 'right', 'bottom']) await page.click(`#vents_face_${face}`);
+if (await page.evaluate(() => window.__case.state().vents.on)) errors.push('[vents] every face off, the vents still on');
+await page.click('#fan_face_none');
 await page.click('#mount_kind_none');
 
 // each export mode with a real download

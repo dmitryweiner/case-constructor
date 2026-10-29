@@ -2,7 +2,10 @@
 
 ## Ventilation
 
-Turn on **Ventilation** in the Openings card and press the faces to vent in the *Faces* row (top, bottom, front, back, left, right — any number; press again to take one off).
+Open **Ventilation** in the Openings card and press the faces to vent in
+the *Faces* row (top, bottom, front, back, left, right — any number; press
+again to take one off). The vents are on while a face is pressed; the rest
+of the settings show then.
 
 | Control | Range | Default | Notes |
 |---|---|---|---|
@@ -20,9 +23,9 @@ directions.
 
 ## Fan seat
 
-**Fan seat**: a round opening of the fan's size − 2 mm and four screw holes
-on the standard square (25 → 20, 30 → 24, 40 → 32, 50 → 40, 60 → 50 mm), on
-any face, shifted from the face's centre by X / Y. Screw holes default to
+**Fan seat**: pick its face in the *Face* row (*none* — no fan). A round
+opening of the fan's size − 2 mm and four screw holes on the standard
+square (25 → 20, 30 → 24, 40 → 32, 50 → 40, 60 → 50 mm), shifted from the face's centre by X / Y. Screw holes default to
 3.2 mm. The panel warns when the fan does not fit the flat part of the face.
 
 ## Wall mount

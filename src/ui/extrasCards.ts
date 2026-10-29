@@ -1,6 +1,6 @@
 // Cards of the extras: vents and the fan seat (in Openings), the wall mount
-// (its own card). Vents and fan are toggled cards; the wall mount is a
-// choice with "none".
+// (its own card). Each says whether it is on by its own controls: vents by
+// the faces pressed, the fan and the wall mount by a choice with "none".
 
 import type { CardHandle } from './card';
 import { createCard } from './card';
@@ -18,37 +18,44 @@ const vents = (state: AppState, patch: Partial<VentState>): AppState => ({ ...st
 const fan = (state: AppState, patch: Partial<FanState>): AppState => ({ ...state, fan: { ...state.fan, ...patch } });
 const mount = (state: AppState, patch: Partial<WallMountState>): AppState => ({ ...state, wallMount: { ...state.wallMount, ...patch } });
 
+const ventsOn = (state: AppState): boolean => state.vents.on;
+const fanOn = (state: AppState): boolean => state.fan.on;
+
 function ventControls(): Control<AppState>[] {
   return [
     {
       // a row of faces like the wall mount's, any number pressed
+      // vents are on while a face is pressed
       kind: 'toggles', key: 'face', label: 'vents.faces', hint: 'vents.faces.hint',
       options: FACES.map((value) => ({ value, label: `face.${value}` as const })),
-      get: (state) => state.vents.faces,
-      set: (state, values) => vents(state, { faces: FACES.filter((face) => values.includes(face)) }),
+      get: (state) => (state.vents.on ? state.vents.faces : []),
+      set: (state, values) => {
+        const faces = FACES.filter((face) => values.includes(face));
+        return vents(state, { on: faces.length > 0, faces });
+      },
     },
     {
-      kind: 'segmented', key: 'pattern', label: 'vents.pattern',
+      kind: 'segmented', key: 'pattern', label: 'vents.pattern', when: ventsOn,
       options: VENT_PATTERNS.map((value) => ({ value, label: `vents.${value}` as const })),
       get: (state) => state.vents.pattern,
       set: (state, value) => vents(state, { pattern: VENT_PATTERNS.find((p) => p === value) ?? state.vents.pattern }),
     },
     {
-      kind: 'segmented', key: 'along', label: 'vents.along', when: (state) => state.vents.pattern === 'slots',
+      kind: 'segmented', key: 'along', label: 'vents.along', when: (state) => ventsOn(state) && state.vents.pattern === 'slots',
       options: [{ value: 'x', label: 'vents.horizontal' }, { value: 'y', label: 'vents.vertical' }],
       get: (state) => state.vents.along,
       set: (state, value) => vents(state, { along: value === 'x' ? 'x' : 'y' }),
     },
     {
-      kind: 'range', key: 'size', label: 'vents.size', hint: 'vents.size.hint', min: 1, max: 10, step: 0.5,
+      kind: 'range', key: 'size', label: 'vents.size', hint: 'vents.size.hint', min: 1, max: 10, step: 0.5, when: ventsOn,
       get: (state) => state.vents.size, set: (state, value) => vents(state, { size: value }),
     },
     {
-      kind: 'range', key: 'pitch', label: 'vents.pitch', hint: 'vents.pitch.hint', min: 2, max: 30, step: 0.5,
+      kind: 'range', key: 'pitch', label: 'vents.pitch', hint: 'vents.pitch.hint', min: 2, max: 30, step: 0.5, when: ventsOn,
       get: (state) => state.vents.pitch, set: (state, value) => vents(state, { pitch: value }),
     },
     {
-      kind: 'range', key: 'margin', label: 'vents.margin', hint: 'vents.margin.hint', min: 1, max: 40, step: 0.5,
+      kind: 'range', key: 'margin', label: 'vents.margin', hint: 'vents.margin.hint', min: 1, max: 40, step: 0.5, when: ventsOn,
       get: (state) => state.vents.margin, set: (state, value) => vents(state, { margin: value }),
     },
   ];
@@ -57,27 +64,31 @@ function ventControls(): Control<AppState>[] {
 function fanControls(): Control<AppState>[] {
   return [
     {
-      kind: 'select', key: 'face', label: 'cut.face',
-      options: FACES.map((value) => ({ value, label: `face.${value}` as const })),
-      get: (state) => state.fan.face,
-      set: (state, value) => fan(state, { face: FACES.find((f) => f === value) ?? state.fan.face }),
+      // the fan is on while a face is chosen
+      kind: 'segmented', key: 'face', label: 'cut.face',
+      options: [{ value: 'none', label: 'fan.none' }, ...FACES.map((value) => ({ value, label: `face.${value}` as const }))],
+      get: (state) => (state.fan.on ? state.fan.face : 'none'),
+      set: (state, value) => {
+        const face = FACES.find((f) => f === value);
+        return fan(state, face ? { on: true, face } : { on: false });
+      },
     },
     {
-      kind: 'segmented', key: 'size', label: 'fan.size',
+      kind: 'segmented', key: 'size', label: 'fan.size', when: fanOn,
       options: FAN_SIZES.map((size) => ({ value: String(size), text: `${size}` })),
       get: (state) => String(state.fan.size),
       set: (state, value) => fan(state, { size: FAN_SIZES.find((size) => String(size) === value) ?? state.fan.size }),
     },
     {
-      kind: 'range', key: 'x', label: 'fan.x', hint: 'fan.xy.hint', min: -100, max: 100, step: 0.5,
+      kind: 'range', key: 'x', label: 'fan.x', hint: 'fan.xy.hint', min: -100, max: 100, step: 0.5, when: fanOn,
       get: (state) => state.fan.x, set: (state, value) => fan(state, { x: value }),
     },
     {
-      kind: 'range', key: 'y', label: 'fan.y', hint: 'fan.xy.hint', min: -100, max: 100, step: 0.5,
+      kind: 'range', key: 'y', label: 'fan.y', hint: 'fan.xy.hint', min: -100, max: 100, step: 0.5, when: fanOn,
       get: (state) => state.fan.y, set: (state, value) => fan(state, { y: value }),
     },
     {
-      kind: 'range', key: 'screwD', label: 'fan.screwD', min: 2, max: 5, step: 0.1,
+      kind: 'range', key: 'screwD', label: 'fan.screwD', min: 2, max: 5, step: 0.1, when: fanOn,
       get: (state) => state.fan.screwD, set: (state, value) => fan(state, { screwD: value }),
     },
   ];
@@ -169,15 +180,14 @@ export function renderExtras(
   openings.replaceChildren();
   mounting.replaceChildren();
   const cards: { card: CardHandle; on: (state: AppState) => boolean; rows: ControlsHandle<AppState> }[] = [];
-  const toggled = (
-    container: HTMLElement, id: string, title: 'panel.vents' | 'panel.fan',
-    on: (state: AppState) => boolean, set: (state: AppState, value: boolean) => AppState, controls: Control<AppState>[],
+  const folding = (
+    container: HTMLElement, id: string, title: 'panel.vents' | 'panel.fan', on: (state: AppState) => boolean, controls: Control<AppState>[],
   ): void => {
-    const card = createCard(container, { id, title, enabled: on(read()), onToggle: (value) => onChange(set(read(), value)) });
+    const card = createCard(container, { id, title, enabled: on(read()) });
     cards.push({ card, on, rows: renderControls(card.body, controls, read, onChange, id) });
   };
-  toggled(openings, 'vents', 'panel.vents', (s) => s.vents.on, (s, v) => vents(s, { on: v }), ventControls());
-  toggled(openings, 'fan', 'panel.fan', (s) => s.fan.on, (s, v) => fan(s, { on: v }), fanControls());
+  folding(openings, 'vents', 'panel.vents', (s) => s.vents.on, ventControls());
+  folding(openings, 'fan', 'panel.fan', (s) => s.fan.on, fanControls());
   const mountBox = make('div');
   mounting.append(mountBox);
   const mountRows = renderControls(mountBox, mountControls(), read, onChange, 'mount');

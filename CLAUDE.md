@@ -567,9 +567,9 @@ Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHei
 `_hole_add`, ports `_port<p>_type|_edge` (selects), `_port<p>_<field>`, `_port<p>_remove`,
 `_port_add`, `_save`. The card rebuilds only when a custom board's structure changes
 (`customSignature`), so a number input keeps its focus while typing.
-Extras: toggled cards `#on_vents`, `#on_fan`; vents
+Extras: folding cards `#card_vents`, `#card_fan` (no checkbox: on while a face is pressed); vents
 `#vents_face_<face>` (toggle buttons, any number pressed), `#vents_pattern_slots|hex|round`,
-`#vents_along_x|y`, `#vents_size|_pitch|_margin`; fan `#fan_face` (select),
+`#vents_along_x|y`, `#vents_size|_pitch|_margin`; fan `#fan_face_none|<face>`,
 `#fan_size_25…60`, `#fan_x|_y|_screwD`; wall mount
 `#mount_kind_none|keyholes|ears`, `#mount_face_<face>` (the face against the wall), `#mount_keyhole_through|closed`, ears
 `#mount_earCount_1…4`, `#mount_earWalls_leftRight|frontBack|topBottom|one` (the pairs next to the face against the wall),
