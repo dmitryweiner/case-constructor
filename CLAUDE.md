@@ -57,7 +57,8 @@ every cycle that is tokens thrown away. Reusable plumbing lives in
 3D helpers from the sibling project ClayForm (`../clayform`) may be borrowed
 freely; a temporary script that turns out useful becomes a permanent one.
 
-- `scripts/smoke.mjs` — browser smoke: every shape, slider extremes, every
+- `scripts/smoke.mjs` — browser smoke: every shape, slider extremes, a 10 mm
+  case (and an auto Heltec under 20), every
   catalog board from the picker (with nut/insert holes, a rotation and its
   pins toggled), soldered pins raising the board, a family's model, port
   toggles, user openings, the custom board editor and its catalog JSON,

@@ -5,7 +5,7 @@
 
 import type { Control } from './controls';
 import { caseDims } from '../geo/layout';
-import { SHAPE_KINDS, SIZE_MAX, SIZE_MIN, WALL_MAX, WALL_MIN, CORNER_MAX, EDGE_MAX } from '../geo/shape';
+import { H_MIN, HINGED_H_MIN, SHAPE_KINDS, SIZE_MAX, SIZE_MIN, WALL_MAX, WALL_MIN, CORNER_MAX, EDGE_MAX } from '../geo/shape';
 import type { ShapeState } from '../geo/shape';
 import type { Dims } from '../geo/face';
 import type { AppState } from '../state/schema';
@@ -27,7 +27,7 @@ function shapeOf(state: AppState, patch: Partial<ShapeState>): AppState {
 function sizeControl(key: string, dim: Dim, label: 'param.sizeW' | 'param.sizeD' | 'param.sizeH' | 'param.diameter' | 'param.sizeHA',
   when: (state: AppState) => boolean): Control<AppState> {
   return {
-    kind: 'range', key, label, min: SIZE_MIN, max: SIZE_MAX, step: 1, when,
+    kind: 'range', key, label, min: key === 'hA' ? HINGED_H_MIN : dim === 'h' ? H_MIN : SIZE_MIN, max: SIZE_MAX, step: 1, when,
     disabled: (state) => state.shape.auto,
     get: (state) => Math.round(builtDims(state)[dim]),
     set: (state, value) => shapeOf(state, { size: { ...state.shape.size, [dim]: value } }),
@@ -83,7 +83,7 @@ export function caseControls(): Control<AppState>[] {
     sizeControl('h', 'h', 'param.sizeH', (state) => kind(state) !== 'console' && kind(state) !== 'hinged'),
     sizeControl('hA', 'h', 'param.sizeHA', (state) => kind(state) === 'hinged'),
     {
-      kind: 'range', key: 'hB', label: 'param.sizeHB', min: SIZE_MIN, max: SIZE_MAX, step: 1,
+      kind: 'range', key: 'hB', label: 'param.sizeHB', min: HINGED_H_MIN, max: SIZE_MAX, step: 1,
       when: (state) => kind(state) === 'hinged',
       disabled: (state) => state.shape.auto,
       get: (state) => Math.round(builtDims(state, 'b').h),

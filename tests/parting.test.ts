@@ -11,6 +11,7 @@ import { applyAffine, meshBounds } from '../src/geo/surface';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import type { ShapeKind } from '../src/geo/shape';
+import { validateMesh } from '../src/geo/validate';
 
 let csg: CsgApi;
 beforeAll(async () => {
@@ -22,9 +23,10 @@ function stateFor(kind: ShapeKind, face: string, depth: number, edgeR = 3): AppS
   return sanitizeState({ ...base, shape: { ...base.shape, kind, edgeR, cornerR: 6 }, lid: { ...base.lid, face, depth } });
 }
 
-/** The same without boards: for measuring the lid alone. */
+/** The same without boards: for measuring the lid alone (20 mm a side, the auto size of an empty case before the height went down to 10). */
 function emptyFor(kind: ShapeKind, face: string, depth: number): AppState {
-  return { ...stateFor(kind, face, depth), boards: [] };
+  const state = stateFor(kind, face, depth);
+  return { ...state, boards: [], shape: { ...state.shape, auto: false, size: { w: 20, d: 20, h: 20 } } };
 }
 
 const CASES: [ShapeKind, string, number][] = [];
@@ -94,5 +96,46 @@ describe('parting', () => {
     const built = buildCase(csg, state, 8);
     const body = meshBounds(built.body);
     expect(body.max[2] - body.min[2]).toBeCloseTo(state.shape.floor + state.lid.lip.h + 1, 3);
+  });
+});
+
+// N4 (plans/PLAN-IMPROVEMENTS-2026-10-29.md): a case down to 10 mm high
+const LOW: [ShapeKind, string, string, number][] = [];
+for (const kind of ['box', 'cylinder'] as const) {
+  for (const face of lidFaces(kind)) {
+    for (const fastening of ['snaps', 'screws', 'magnets', 'printed']) for (const h of [10, 12]) LOW.push([kind, face, fastening, h]);
+  }
+}
+
+describe('a low case', () => {
+  it('the height goes down to 10, width and depth stay at 20', () => {
+    const base = defaultState();
+    const state = sanitizeState({ ...base, shape: { ...base.shape, auto: false, size: { w: 5, d: 5, h: 5 } } });
+    expect(state.shape.size).toEqual({ w: 20, d: 20, h: 10 });
+  });
+
+  it.each(LOW)('%s, lid %s, %s, %d mm high: closed, no slivers, no membrane, no overlap', (kind, face, fastening, h) => {
+    const base = defaultState();
+    const state = sanitizeState({
+      ...base, boards: [],
+      shape: { ...base.shape, kind, edgeR: 3, cornerR: 6, auto: false, size: { w: 60, d: 40, h } },
+      lid: { ...base.lid, face, fastening },
+    });
+    expect(caseDims(state).h).toBe(h);
+    const built = buildCase(csg, state, 8);
+    const frame = faceFrame(state.lid.face, caseDims(state));
+    for (const [name, mesh] of [['body', built.body], ['lid', built.lid]] as const) {
+      const report = validateMesh(mesh);
+      expect(report.watertight, name).toBe(true);
+      expect(report.degenerateTriangles, name).toBe(0);
+      expect(membranes(mesh, frame.toFace), name).toEqual([]);
+    }
+    const body = toManifold(csg, built.body);
+    const lid = toManifold(csg, built.lid);
+    const overlap = body.intersect(lid);
+    expect(overlap.volume()).toBeLessThan(1e-3);
+    overlap.delete();
+    body.delete();
+    lid.delete();
   });
 });

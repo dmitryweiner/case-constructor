@@ -181,4 +181,17 @@ added), N2, N3.
 
 ## Deviations
 
-(none yet)
+- **N4.** The manual height grew to the least cavity (`INNER_MIN.h`, 10
+  inside), so a case could not go under 14: `INNER_MIN.h` is 6 now (what
+  10 leaves inside 2 mm plates; a thicker plate grows the case).
+- **N4.** A hinged half keeps 20 (`HINGED_H_MIN`, `heightMin(kind)`): an
+  empty upper half sized from its boards came out 10 high, and a printed
+  hinge's leaves and the side pivots did not fit its wall.
+- **N4.** A sliver found on the way: in a 12–13 mm case with magnets, a lid
+  post's 45° taper reached through the floor and met the outer bottom
+  fillet (clipped by the outer shell, a zero-area triangle there). Posts and
+  their tapers now stop in the middle of the far plate (`lip.ts`).
+- **N4.** Tests that leaned on the old least case pin a 20 mm one by hand:
+  `parting.test.ts`'s empty case, two keyboard tests (`keys.test.ts`).
+  Goldens moved: the 17 auto cases that sat on the old 20 (each checked:
+  only the body's height and volume moved; the hinged halves did not).

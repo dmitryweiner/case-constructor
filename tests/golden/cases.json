@@ -462,11 +462,11 @@
   "heltec-v4-m1.6": {
     "body": {
       "triangles": 856,
-      "volume": 11733.7,
+      "volume": 11041.69,
       "extents": [
         60.99,
         36.7,
-        17.99
+        16.09
       ]
     },
     "lid": {
@@ -482,11 +482,11 @@
   "cyd-bottom-parts": {
     "body": {
       "triangles": 1148,
-      "volume": 15038.69,
+      "volume": 13630.71,
       "extents": [
         95,
         58.3,
-        17.99
+        15.59
       ]
     },
     "lid": {
@@ -502,16 +502,16 @@
   "feather-reverse-tft": {
     "body": {
       "triangles": 2066,
-      "volume": 8141.42,
+      "volume": 7333.83,
       "extents": [
         59.9,
         30.86,
-        17.99
+        15.59
       ]
     },
     "lid": {
-      "triangles": 1392,
-      "volume": 4211.22,
+      "triangles": 1408,
+      "volume": 4211.21,
       "extents": [
         59.9,
         30.86,
@@ -700,11 +700,11 @@
   "msp1281-cylinder": {
     "body": {
       "triangles": 700,
-      "volume": 13759.84,
+      "volume": 13380.7,
       "extents": [
         68.012,
         68.012,
-        17.99
+        17.07
       ]
     },
     "lid": {
@@ -740,11 +740,11 @@
   "td2-7-top-lid-clamped": {
     "body": {
       "triangles": 1900,
-      "volume": 88371.4,
+      "volume": 87543.34,
       "extents": [
         154.74,
         208.82,
-        17.99
+        17.41
       ]
     },
     "lid": {
@@ -769,11 +769,11 @@
   "epaper-7.5-bottom-lid-pressed": {
     "body": {
       "triangles": 2104,
-      "volume": 38087.32,
+      "volume": 28222.72,
       "extents": [
         181.1,
         140.9,
-        17.99
+        10.17
       ]
     },
     "lid": {
@@ -866,12 +866,12 @@
   },
   "keypad-hung-top-lid": {
     "body": {
-      "triangles": 2048,
-      "volume": 28132.49,
+      "triangles": 1952,
+      "volume": 25253.67,
       "extents": [
         80.6,
         100.6,
-        17.99
+        13.89
       ]
     },
     "lid": {
@@ -907,11 +907,11 @@
   "keypad-window-top-lid": {
     "body": {
       "triangles": 808,
-      "volume": 23081.13,
+      "volume": 19870.9,
       "extents": [
         72,
         92,
-        17.99
+        12.89
       ]
     },
     "lid": {
@@ -927,11 +927,11 @@
   "cardkb-hung-top-lid": {
     "body": {
       "triangles": 764,
-      "volume": 23897.05,
+      "volume": 17390.47,
       "extents": [
         104,
         65.3,
-        17.99
+        7.99
       ]
     },
     "lid": {
@@ -967,11 +967,11 @@
   "cardkb-caps-top-lid": {
     "body": {
       "triangles": 764,
-      "volume": 23897.05,
+      "volume": 18268.86,
       "extents": [
         104,
         65.3,
-        17.99
+        9.34
       ]
     },
     "lid": {
@@ -1007,11 +1007,11 @@
   "bbq20kbd-hung-rests": {
     "body": {
       "triangles": 1040,
-      "volume": 19078.93,
+      "volume": 15327.72,
       "extents": [
         82.25,
         61.35,
-        17.99
+        11.59
       ]
     },
     "lid": {
@@ -1027,11 +1027,11 @@
   "keebdeck-hung-flange": {
     "body": {
       "triangles": 844,
-      "volume": 25047.1,
+      "volume": 20474.76,
       "extents": [
         96.7,
         75.6,
-        17.99
+        11.09
       ]
     },
     "lid": {
@@ -1067,11 +1067,11 @@
   "cardkb2-square-caps": {
     "body": {
       "triangles": 1060,
-      "volume": 23153.97,
+      "volume": 19114.04,
       "extents": [
         104.65,
         62.3,
-        17.99
+        11.69
       ]
     },
     "lid": {
@@ -1087,11 +1087,11 @@
   "cardkb-clamp-top-lid": {
     "body": {
       "triangles": 764,
-      "volume": 27432.52,
+      "volume": 21811.27,
       "extents": [
         104,
         78.3,
-        17.99
+        9.99
       ]
     },
     "lid": {
@@ -1116,11 +1116,11 @@
   "cardkb-caps-widest": {
     "body": {
       "triangles": 764,
-      "volume": 23897.05,
+      "volume": 18268.86,
       "extents": [
         104,
         65.3,
-        17.99
+        9.34
       ]
     },
     "lid": {
@@ -1136,11 +1136,11 @@
   "cardkb2-clamp-pads-caps": {
     "body": {
       "triangles": 1060,
-      "volume": 27526.13,
+      "volume": 26256.66,
       "extents": [
         104.65,
         78.3,
-        17.99
+        16.19
       ]
     },
     "lid": {
@@ -1601,16 +1601,16 @@
   "feather-m1.6": {
     "body": {
       "triangles": 1304,
-      "volume": 9116.69,
+      "volume": 8309.09,
       "extents": [
         59.9,
         30.86,
-        17.99
+        15.59
       ]
     },
     "lid": {
-      "triangles": 1540,
-      "volume": 4168.54,
+      "triangles": 1556,
+      "volume": 4168.53,
       "extents": [
         59.9,
         30.86,

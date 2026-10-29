@@ -15,7 +15,8 @@
 | Edge fillet | 0–20 mm | 0 | top and bottom edges; box and cylinder; never more than the corner radius or half the height |
 | Wall | 1.2–6 mm | 2 | side walls |
 | Floor and ceiling | 1.2–6 mm | 2 | floor and the lid plate |
-| Width, Depth, Height | 20–400 mm | 100 × 70 × 35 | the **outer** size |
+| Width, Depth | 20–400 mm | 100 × 70 | the **outer** size |
+| Height | 10–400 mm | 35 | the **outer** height; a manual one grows to 6 mm of cavity inside the plates (10 with 2 mm ones) |
 | Front / back height | 10–400 mm | 20 / 40 | console only |
 
 **Size from boards** (on by default) — the smallest case that fits every

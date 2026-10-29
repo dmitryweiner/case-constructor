@@ -153,13 +153,15 @@ describe('a keyboard hung from the lid (K2)', () => {
   };
 
   it('under holes the plate lies on the keys’ base, the gap above it; over a window on topHeight', () => {
-    const s = state();
+    // one ceiling for both: the least case as it was before the height went down to 10
+    const least = { shape: { ...defaultState().shape, auto: false, size: { w: 20, d: 20, h: 20 } } };
+    const s = state({}, least);
     const layout = caseLayout(s);
     const [board] = layout.boards;
     expect(board.hung).toBe(true);
     const ceiling = layout.dims.h - s.shape.floor;
     expect(board.z0).toBeCloseTo(ceiling - CEILING_GAP - 5 - 1.6, 6);
-    const window = caseLayout(state({ keys: 'window' })).boards[0];
+    const window = caseLayout(state({ keys: 'window' }, least)).boards[0];
     expect(window.z0 - board.z0).toBeCloseTo(1, 6);
   });
 
@@ -309,13 +311,15 @@ describe('the catalog keyboards (K6a)', () => {
       const layout = caseLayout(s);
       return keyNotes(layout, { ...s.shape, console: layout.console });
     };
-    // added, it stands just high enough; lowered to the least its standoffs allow, too low
-    expect(codes(add('adafruit-macropad-rp2040')).map((note) => note.code)).not.toContain('warn.keysPlateHigh');
-    const low = codes(add('adafruit-macropad-rp2040', {}, { z: 7 }));
+    // a case 20 high (an auto case now comes down to the keys): added, it
+    // stands just high enough; lowered to the least its standoffs allow, too low
+    const least = { shape: { ...defaultState().shape, auto: false, size: { w: 20, d: 20, h: 20 } } };
+    expect(codes(add('adafruit-macropad-rp2040', least)).map((note) => note.code)).not.toContain('warn.keysPlateHigh');
+    const low = codes(add('adafruit-macropad-rp2040', least, { z: 7 }));
     const high = low.find((note) => note.code === 'warn.keysPlateHigh');
     expect(high).toBeDefined();
     const z = Number(high?.params?.z);
-    expect(codes(add('adafruit-macropad-rp2040', {}, { z })).map((note) => note.code)).not.toContain('warn.keysPlateHigh');
+    expect(codes(add('adafruit-macropad-rp2040', least, { z })).map((note) => note.code)).not.toContain('warn.keysPlateHigh');
   });
 
   it.each(['m5stack-cardkb-v1.1', 'adafruit-macropad-rp2040'])('%s builds closed and sliver-free, no layout warnings', (board) => {

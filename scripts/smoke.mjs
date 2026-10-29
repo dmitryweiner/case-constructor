@@ -101,6 +101,22 @@ for (const id of ranges) {
 }
 await expectWatertight('slider-extremes');
 
+// N4: a case down to 10 mm high (manual size, nothing inside to grow it)
+label('low-case');
+if (await page.locator('#case_h').getAttribute('min') !== '10') errors.push('[low-case] the height slider does not start at 10');
+// the plain box (manual size, no boards) with the extremes above undone
+await page.click('#presetBtn');
+await page.click('#presetList [data-preset="b:plain-box"]');
+await setRange('case_h', 10);
+await expectWatertight('low-case');
+if (await page.locator('#case_h').inputValue() !== '10') errors.push(`[low-case] built ${await page.locator('#case_h').inputValue()} high, not 10`);
+await page.check('#case_auto');
+// the auto size of a bare Heltec V4 on its rails: lower than the old least 20
+await page.click('#boardAdd');
+await page.click('#boardList [data-board="heltec-wifi-lora-32-v4"]');
+await expectWatertight('low-case:heltec');
+if (Number(await page.locator('#case_h').inputValue()) >= 20) errors.push(`[low-case] the auto Heltec case is ${await page.locator('#case_h').inputValue()} high`);
+
 // boards: every catalog board from the picker, hole kinds, rotation, removal
 label('boards');
 const catalog = await page.evaluate(async () => {

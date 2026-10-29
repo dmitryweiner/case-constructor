@@ -16,7 +16,7 @@ import type { LidState } from '../geo/lidSpec';
 import { defaultLid, sanitizeLid } from '../geo/lidSpec';
 import { caseDims, caseLayout, effectiveLid, minimumDims } from '../geo/layout';
 import { topProtrusion } from '../geo/ports';
-import { SIZE_MAX, SIZE_MIN, clampNum, plateOf, shapeSpec } from '../geo/shape';
+import { HINGED_H_MIN, SIZE_MAX, clampNum, plateOf, shapeSpec } from '../geo/shape';
 import type { CableSlot, CableThrough, Fold, HalfHinge, HingeSpec } from '../geo/hinge';
 import {
   CABLE_KEEP, CABLE_TOP_GAP, GAP_DEFAULT, gapFor, magnetBosses, upperPose, axisOffset, axisSplit, axleHoles, bodyRange, cableSlot, defaultHingeSpec, foldOf, hingeScrews, knuckleRuns,
@@ -67,7 +67,7 @@ function sanitizeHalf(raw: unknown): HalfContent {
   const d = defaultHalf();
   const r = typeof raw === 'object' && raw !== null ? raw : {};
   return {
-    h: clampNum(Reflect.get(r, 'h'), SIZE_MIN, SIZE_MAX, d.h),
+    h: clampNum(Reflect.get(r, 'h'), HINGED_H_MIN, SIZE_MAX, d.h),
     boards: sanitizePlacements(Reflect.get(r, 'boards')),
     lid: sanitizeLid(Reflect.get(r, 'lid'), 'hinged'),
     extraCuts: sanitizeExtraCuts(Reflect.get(r, 'extraCuts'), 'hinged'),

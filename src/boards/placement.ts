@@ -12,7 +12,7 @@ import type { BatterySpec } from './battery';
 import { PRESS_MAX, PRESS_MIN, batteryDef, defaultBattery, sanitizeBattery } from './battery';
 import { defaultPress } from '../geo/clamp';
 import { attachTurns } from '../geo/attach';
-import { SIZE_MIN, defaultShape } from '../geo/shape';
+import { defaultShape } from '../geo/shape';
 import type { CapShape } from '../geo/capSize';
 import { CAP_FIT, CAP_FLANGE_T, CAP_R_DEFAULT, CAP_R_MAX, CAP_R_MIN } from '../geo/capSize';
 
@@ -233,12 +233,15 @@ export function frontHeight(def: BoardDef, placement: Pick<BoardPlacement, 'keys
  * key its holes then hold the switches at their plate line; over a window
  * its keys come up into it).
  */
+/** The least case a keyboard's default standoff fills, mm (the least height was 20 when it was set; it stays). */
+const KEYBOARD_CASE_H = 20;
+
 export function floorZ(def: BoardDef, pins: boolean): number {
   if (def.battery) return minBoardZ(def, pins);
   const lowest = Math.max(4, minBoardZ(def, pins));
   if (keyFields(def).length === 0) return lowest;
   const { floor } = defaultShape();
-  return Math.max(lowest, +(SIZE_MIN - 2 * floor - CEILING_GAP - def.size.t - frontHeight(def, {})).toFixed(2));
+  return Math.max(lowest, +(KEYBOARD_CASE_H - 2 * floor - CEILING_GAP - def.size.t - frontHeight(def, {})).toFixed(2));
 }
 
 export function defaultPlacement(entry: BoardDef, x = 0, y = 0): BoardPlacement {

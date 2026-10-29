@@ -17,8 +17,10 @@ instead: a post from the lid would run into the keys (the MacroPad's holes
 are at its switches' edges; one of the BBQ20KBD's holes is under its
 keyboard). On the floor the case's ceiling comes down to it — the gap
 (0.3 mm) above what the plate lies on — rather than the top margin, so the
-keys reach through the lid. Added, it stands just high enough for the least
-case (20 mm); lower, the panel says how far the lid lies above its switches.
+keys reach through the lid. Added, it stands just high enough for a 20 mm
+case; lower, a case sized from the boards comes down with it, and in a
+taller case set by hand the panel says how far the lid lies above its
+switches.
 
 ## Screws, rails or clamp bars
 

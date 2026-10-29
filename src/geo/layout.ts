@@ -25,13 +25,17 @@ import { postDiameter } from './lidSpec';
 import type { Message, SpotBox } from './message';
 import { boardParams, boxAround, spotOf } from './message';
 import type { ShapeState } from './shape';
-import { SIZE_MIN, SIZE_MAX, WALL_MIN, plateOf, shapeSpec } from './shape';
+import { SIZE_MIN, SIZE_MAX, WALL_MIN, heightMin, plateOf, shapeSpec } from './shape';
 import { effectiveRadii } from './loft';
 import type { Affine, Vec3 } from './surface';
 import { applyAffine, composeAffine, invertRigid, rotateVec } from './surface';
 
-/** Smallest cavity the case keeps when there is nothing inside to size it by. */
-export const INNER_MIN: Dims = { w: 16, d: 16, h: 10 };
+/**
+ * Smallest cavity the case keeps when there is nothing inside to size it by:
+ * its height is what `H_MIN` leaves inside 2 mm plates (a thicker plate grows
+ * the case instead of closing the cavity).
+ */
+export const INNER_MIN: Dims = { w: 16, d: 16, h: 6 };
 /** Rails: how far the groove grips the board edge, the rail thickness, the clearance in the groove. */
 export const RAIL_GRIP = 1.5;
 export const RAIL_THICK = 3;
@@ -525,11 +529,11 @@ export function minimumDims(input: LayoutInput): Dims {
     innerW = Math.max(innerW, innerD, diameter);
     innerD = innerW;
   }
-  const clamp = (value: number): number => Math.min(SIZE_MAX, Math.max(SIZE_MIN, value));
+  const clamp = (value: number, least = SIZE_MIN): number => Math.min(SIZE_MAX, Math.max(least, value));
   return {
     w: clamp(innerW + 2 * shape.wall),
     d: clamp(innerD + 2 * shape.wall),
-    h: clamp(innerH + 2 * shape.floor),
+    h: clamp(innerH + 2 * shape.floor, heightMin(shape.kind)),
   };
 }
 

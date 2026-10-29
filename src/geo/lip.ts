@@ -4,7 +4,7 @@
 
 import type { CrossSection, Manifold } from 'manifold-3d';
 import type { CsgApi, CsgScope } from './csg';
-import { extrude, hullOf, transformSolid, unionAll } from './csg';
+import { extrude, hullOf, transformSolid, trimByPlane, unionAll } from './csg';
 import { cutterSolid } from './cut';
 import type { CutterSpec } from './cutters';
 import type { FaceFrame } from './face';
@@ -106,7 +106,12 @@ export function postSolids(
     // 45° taper down to the corner, so the post prints without support
     const taperPoints: Vec3[] = [...outline.map((p): Vec3 => [p[0], p[1], bottom + EPS]), [spot.anchor[0], spot.anchor[1], bottom - reach]];
     const parts: Manifold[] = [post, hullOf(csg, scope, taperPoints)];
-    posts.push(unionAll(csg, scope, parts));
+    // In a low case the post and its taper reach the far plate: they stop in
+    // its middle. Clipped by the outer shell instead, they met the outer
+    // surface and left zero-area triangles on its fillet.
+    const far = -frame.depth + plate / 2;
+    const whole = unionAll(csg, scope, parts);
+    posts.push(bottom - reach < far ? trimByPlane(scope, whole, [0, 0, 1], far) : whole);
     clearance.push(extrude(csg, scope, grow(footprint, lid.fit), zp - lid.lip.h - 1, zp + 2));
 
     // the hole the screw goes into, down from the post's top
