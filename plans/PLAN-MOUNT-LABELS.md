@@ -210,3 +210,22 @@ L2, L3, L4.
   built otherwise — the panel says to choose other walls.
 - **W2.** The wall select (`#mount_earWall`) disables the walls the face
   has not as neighbours: the select control got `optionDisabled`.
+- **W3.** The docs went with W1 and W2 (`docs/extras.md`), as every item's
+  do; nothing was left for W3.
+- **L1–L3.** One commit: the state's `labels` could not land without the
+  card, the rasters and the build that read it.
+- **L1.** An old `label` is read only when the file has no `labels` list: a
+  preset is laid over the default state, which has one, so the two presets
+  with a label (`pi4-desktop`, `esp32-sensor-box`) moved to `labels` in
+  their files.
+- **L2.** No golden for labels: the goldens build without rasters (fonts
+  live in the browser), as before; `tests/extras.test.ts` builds labels from
+  a raster of blocks on every face of every shape, and one across the
+  parting.
+- **L2.** `caseNotices` passed the whole state to `extrasWarnings`, not the
+  case it was about: the upper half of a hinged case had its fan checked as
+  the lower half's. It passes the case now.
+- **Found.** `esp32-sensor-box` (the lid on the bottom, ears, a raised
+  label on the lid) now says that the mount is on the lid held by snaps,
+  and that the raised label is on the face the lid prints on. Both were so
+  before; the user changes the presets.

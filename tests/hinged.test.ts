@@ -183,7 +183,7 @@ describe('the knuckles', () => {
   }
 
   function build(state: AppState): { a: CaseBuild; b: CaseBuild } {
-    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, null, halfHinge(state, half)));
+    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, [], halfHinge(state, half)));
     return { a, b };
   }
 
@@ -365,8 +365,8 @@ describe('cables', () => {
     const cable = { ...defaultCable(49), plugH: 4 };
     const state = sanitizeState({ ...base, hinge: { ...base.hinge, cables: [cable] } });
     const slot = cableSlot(state.hinge.cables[0]);
-    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, null, halfHinge(state, half)));
-    const plainA = buildCase(csg, halfState(state, 'a'), 8, () => {}, null, halfHinge(sanitizeState({ ...state, hinge: { ...state.hinge, cables: [] } }), 'a'));
+    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, [], halfHinge(state, half)));
+    const plainA = buildCase(csg, halfState(state, 'a'), 8, () => {}, [], halfHinge(sanitizeState({ ...state, hinge: { ...state.hinge, cables: [] } }), 'a'));
     // the slot takes wall away (a little less than its full prism: the knuckles moved too)
     expect(validateMesh(a.body).volume).toBeLessThan(validateMesh(plainA.body).volume);
     for (const [half, built] of [['a', a], ['b', b]] as const) {
@@ -397,7 +397,7 @@ describe('cables', () => {
     const state = sanitizeState({ ...base, hinge: { ...base.hinge, cables: [{ ...defaultCable(49), through: 'face' }] } });
     const slot = cableSlot(state.hinge.cables[0]);
     const fold = foldOfState(state);
-    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, null, halfHinge(state, half)));
+    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, [], halfHinge(state, half)));
     for (const [half, built] of [['a', a], ['b', b]] as const) {
       const hinge = halfHinge(state, half);
       if (!hinge) throw new Error('no hinge');
@@ -471,7 +471,7 @@ describe('a printed hinge', () => {
       });
       // both lids on the bottom are fine: the hinge prints on its own
       expect(hingeNotes(state).some((note) => note.code === 'warn.hingeUnprintable')).toBe(false);
-      const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, null, halfHinge(state, half)));
+      const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, [], halfHinge(state, half)));
       if (!a.hinge || !b.hinge) throw new Error('no leaves');
       for (const built of [a, b]) {
         for (const mesh of [built.body, built.lid, built.hinge]) if (mesh) expect(validateMesh(mesh).watertight).toBe(true);
@@ -517,8 +517,8 @@ describe('the gap and the magnets', () => {
     const tight = sanitizeState({ ...caps, hinge: { ...caps.hinge, gapAuto: false, gap: 0.3 } });
     expect(gapOf(tight)).toBe(0.3);
     expect(hingeNotes(tight).some((note) => note.code === 'warn.gapSmall')).toBe(true);
-    // a raised label on a lid on top stands out too
-    const label = sanitizeState({ ...base, boards: [], label: { ...base.label, on: true, raised: true, depth: 0.8 } });
+    // a raised label on the inner face stands out too
+    const label = sanitizeState({ ...base, boards: [], labels: [{ face: 'top', text: 'x', raised: true, depth: 0.8 }] });
     expect(innerProtrusion(label, 'a')).toBeCloseTo(0.8, 9);
   });
 
@@ -528,7 +528,7 @@ describe('the gap and the magnets', () => {
       ...base, hinge: { ...base.hinge, magnets: true, magnet: '6x3', b: { ...base.hinge.b, lid: { ...base.hinge.b.lid, face: 'bottom' } } },
     });
     const fold = foldOfState(state);
-    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, null, halfHinge(state, half)));
+    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, [], halfHinge(state, half)));
     const ma = halfHinge(state, 'a')?.magnets;
     const mb = halfHinge(state, 'b')?.magnets;
     if (!ma || !mb) throw new Error('no magnets');
@@ -602,7 +602,7 @@ describe('side pivots', () => {
         expect(hinge?.runs).toEqual([]);
         expect(hinge?.pivot).not.toBeNull();
       }
-      const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, null, halfHinge(state, half)));
+      const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, [], halfHinge(state, half)));
       const dims = caseDims(halfState(state, 'a'));
       for (const built of [a, b]) {
         for (const mesh of [built.body, built.lid, built.hinge]) if (mesh) expect(validateMesh(mesh).watertight).toBe(true);
@@ -632,7 +632,7 @@ describe('side pivots', () => {
   it('a printed hinge\'s side cheeks print one by one, each on a flat face', () => {
     const base = hinged();
     const state = sanitizeState({ ...base, hinge: { ...base.hinge, place: 'sides', kind: 'leaves' } });
-    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, null, halfHinge(state, half)));
+    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, [], halfHinge(state, half)));
     const pieces = sideCheeksForPrint(a.hinge, b.hinge, caseDims(halfState(state, 'a')).w, 0, 0, 5);
     expect(pieces).toHaveLength(4);
     for (const piece of pieces) {

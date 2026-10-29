@@ -80,6 +80,10 @@ export type MessageCode =
   | 'warn.earsOnParting'
   | 'warn.labelTooBig'
   | 'warn.labelOverScrew'
+  | 'warn.labelOnParting'
+  | 'warn.labelOverOpening'
+  | 'warn.labelOnBed'
+  | 'warn.labelsOverlap'
   // worker job stages
   | 'progress.loading'
   | 'progress.shell'

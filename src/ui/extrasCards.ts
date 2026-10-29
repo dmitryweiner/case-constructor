@@ -1,6 +1,6 @@
 // Cards of the extras: vents and the fan seat (in Openings), the wall mount
-// and the label (in Mounting and label). Vents, fan and label are toggled
-// cards; the wall mount is a choice with "none".
+// (in Mounting and labels; the labels have a card of their own). Vents and
+// fan are toggled cards; the wall mount is a choice with "none".
 
 import type { CardHandle } from './card';
 import { createCard } from './card';
@@ -8,18 +8,15 @@ import type { Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { make } from './dom';
 import { FACES } from '../geo/face';
-import type { FanState, LabelAnchor, LabelState, VentState, WallMountState } from '../geo/extras';
+import type { FanState, VentState, WallMountState } from '../geo/extras';
 import {
-  EAR_ALONG, EAR_COUNT_MAX, EAR_SIDES, EAR_WALLS, FAN_SIZES, KEYHOLE_STYLES, LABEL_ANCHORS, LABEL_FONTS, LABEL_MARGIN_MAX, LABEL_MAX_CHARS,
-  MOUNT_KINDS, VENT_PATTERNS, earChoice, earSideFaces, earWallChoices, earWalls, mountFace, mountFaces,
+  EAR_ALONG, EAR_COUNT_MAX, EAR_SIDES, EAR_WALLS, FAN_SIZES, KEYHOLE_STYLES, MOUNT_KINDS, VENT_PATTERNS, earChoice, earSideFaces, earWallChoices, earWalls, mountFace, mountFaces,
 } from '../geo/extras';
-import { LABEL_FONT_FILES } from './fonts';
 import type { AppState } from '../state/schema';
 
 const vents = (state: AppState, patch: Partial<VentState>): AppState => ({ ...state, vents: { ...state.vents, ...patch } });
 const fan = (state: AppState, patch: Partial<FanState>): AppState => ({ ...state, fan: { ...state.fan, ...patch } });
 const mount = (state: AppState, patch: Partial<WallMountState>): AppState => ({ ...state, wallMount: { ...state.wallMount, ...patch } });
-const label = (state: AppState, patch: Partial<LabelState>): AppState => ({ ...state, label: { ...state.label, ...patch } });
 
 function ventControls(): Control<AppState>[] {
   return [
@@ -160,70 +157,6 @@ function mountControls(): Control<AppState>[] {
   ];
 }
 
-/** The anchors as a 3 × 3 grid of arrows, in LABEL_ANCHORS order. */
-const ANCHOR_ARROWS: Readonly<Record<LabelAnchor, string>> = {
-  topLeft: '↖', top: '↑', topRight: '↗', left: '←', centre: '•', right: '→', bottomLeft: '↙', bottom: '↓', bottomRight: '↘',
-};
-const QUARTER_TURNS = [0, 90, 180, 270] as const;
-
-function labelControls(): Control<AppState>[] {
-  return [
-    {
-      kind: 'text', key: 'text', label: 'label.text', placeholder: 'label.text.placeholder', maxLength: LABEL_MAX_CHARS,
-      get: (state) => state.label.text, set: (state, value) => label(state, { text: value }),
-    },
-    {
-      kind: 'select', key: 'font', label: 'label.font',
-      options: LABEL_FONTS.map((font) => ({ value: font, text: LABEL_FONT_FILES[font].label })),
-      get: (state) => state.label.font,
-      set: (state, value) => label(state, { font: LABEL_FONTS.find((f) => f === value) ?? state.label.font }),
-    },
-    {
-      kind: 'range', key: 'size', label: 'label.size', hint: 'label.size.hint', min: 3, max: 30, step: 0.5,
-      get: (state) => state.label.sizeMm, set: (state, value) => label(state, { sizeMm: value }),
-    },
-    {
-      kind: 'check', key: 'raised', label: 'label.raised', hint: 'label.raised.hint',
-      get: (state) => state.label.raised, set: (state, value) => label(state, { raised: value }),
-    },
-    {
-      kind: 'range', key: 'depth', label: 'label.depth', min: 0.4, max: 1.5, step: 0.1,
-      get: (state) => state.label.depth, set: (state, value) => label(state, { depth: value }),
-    },
-    {
-      kind: 'segmented', key: 'anchor', label: 'label.anchor', hint: 'label.anchor.hint',
-      options: LABEL_ANCHORS.map((value) => ({ value, text: ANCHOR_ARROWS[value] })),
-      get: (state) => state.label.anchor,
-      // a new anchor starts without the old fine offset
-      set: (state, value) => label(state, { anchor: LABEL_ANCHORS.find((a) => a === value) ?? state.label.anchor, x: 0, y: 0 }),
-    },
-    {
-      kind: 'range', key: 'margin', label: 'label.margin', hint: 'label.margin.hint', min: 0, max: LABEL_MARGIN_MAX, step: 0.5,
-      when: (state) => state.label.anchor !== 'centre',
-      get: (state) => state.label.margin, set: (state, value) => label(state, { margin: value }),
-    },
-    {
-      kind: 'range', key: 'x', label: 'fan.x', hint: 'label.xy.hint', min: -100, max: 100, step: 0.5,
-      get: (state) => state.label.x, set: (state, value) => label(state, { x: value }),
-    },
-    {
-      kind: 'range', key: 'y', label: 'fan.y', hint: 'label.xy.hint', min: -100, max: 100, step: 0.5,
-      get: (state) => state.label.y, set: (state, value) => label(state, { y: value }),
-    },
-    {
-      kind: 'segmented', key: 'turn', label: 'label.turn',
-      options: QUARTER_TURNS.map((value) => ({ value: String(value), text: `${value}°` })),
-      get: (state) => String((((Math.round(state.label.angle) % 360) + 360) % 360)),
-      // 270° is −90° on the slider's −180…180
-      set: (state, value) => label(state, { angle: Number(value) > 180 ? Number(value) - 360 : Number(value) }),
-    },
-    {
-      kind: 'range', key: 'angle', label: 'label.angle', min: -180, max: 180, step: 1,
-      get: (state) => state.label.angle, set: (state, value) => label(state, { angle: value }),
-    },
-  ];
-}
-
 export interface ExtrasHandle {
   sync(state: AppState): void;
 }
@@ -235,7 +168,7 @@ export function renderExtras(
   mounting.replaceChildren();
   const cards: { card: CardHandle; on: (state: AppState) => boolean; rows: ControlsHandle<AppState> }[] = [];
   const toggled = (
-    container: HTMLElement, id: string, title: 'panel.vents' | 'panel.fan' | 'panel.label',
+    container: HTMLElement, id: string, title: 'panel.vents' | 'panel.fan',
     on: (state: AppState) => boolean, set: (state: AppState, value: boolean) => AppState, controls: Control<AppState>[],
   ): void => {
     const card = createCard(container, { id, title, enabled: on(read()), onToggle: (value) => onChange(set(read(), value)) });
@@ -246,7 +179,6 @@ export function renderExtras(
   const mountBox = make('div');
   mounting.append(mountBox);
   const mountRows = renderControls(mountBox, mountControls(), read, onChange, 'mount');
-  toggled(mounting, 'label', 'panel.label', (s) => s.label.on, (s, v) => label(s, { on: v }), labelControls());
   return {
     sync(state: AppState): void {
       for (const { card, on, rows } of cards) {

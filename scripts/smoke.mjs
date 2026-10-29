@@ -777,7 +777,7 @@ await expectWatertight('fastening:snaps:fillet');
 if (!(await page.locator('#warnings').textContent()).includes('rounded corners end')) errors.push('[fastening] no note about the raised lid depth');
 await setRange('case_edgeR', 0);
 
-// extras: vents of every pattern, a fan, both wall mounts, a label in a real font
+// extras: vents of every pattern, a fan, both wall mounts on their faces, labels in a real font
 label('extras');
 await page.check('#on_vents');
 for (const pattern of ['slots', 'hex', 'round']) {
@@ -826,24 +826,41 @@ if (!(await page.locator('#warnings').textContent()).includes('under the bed')) 
 await page.click('#mount_earWalls_leftRight');
 await page.click('#mount_face_bottom');
 const trianglesBefore = await page.evaluate(() => window.__case.parts()?.lid.indices.length ?? 0);
-await page.check('#on_label');
-await page.fill('#label_text', 'Hello שלום Привет');
+await page.click('#labelAdd');
+await page.fill('#label0_text', 'Hello שלום Привет');
 await page.waitForTimeout(1500);
 await expectWatertight('label');
 const trianglesAfter = await page.evaluate(() => window.__case.parts()?.lid.indices.length ?? 0);
 if (!flags.has('preview') && trianglesAfter <= trianglesBefore) errors.push('[label] the lid did not change');
-await page.check('#label_raised');
+await page.check('#label0_raised');
 await expectWatertight('label:raised');
 // a quick place: a corner and a quarter turn; the margin row shows only off the centre
-if (await page.locator('#label_margin').isVisible()) errors.push('[label] the margin shows for the centre');
-await page.click('#label_anchor_bottomRight');
-await page.click('#label_turn_270');
+if (await page.locator('#label0_margin').isVisible()) errors.push('[label] the margin shows for the centre');
+await page.click('#label0_anchor_bottomRight');
+await page.click('#label0_turn_270');
 await expectWatertight('label:corner');
-const placed = await page.evaluate(() => window.__case.state().label);
+const placed = await page.evaluate(() => window.__case.state().labels[0]);
 if (placed.anchor !== 'bottomRight' || placed.angle !== -90) errors.push(`[label] anchor/turn not applied: ${JSON.stringify(placed)}`);
-if (!(await page.locator('#label_margin').isVisible())) errors.push('[label] no margin for a corner');
-await page.click('#label_anchor_centre');
-await page.uncheck('#on_label');
+if (!(await page.locator('#label0_margin').isVisible())) errors.push('[label] no margin for a corner');
+await page.click('#label0_anchor_centre');
+// a second label, on the front wall of the body, raised; then two on one face over each other
+const bodyBefore = await page.evaluate(() => window.__case.parts()?.body.indices.length ?? 0);
+await page.click('#labelAdd');
+await page.selectOption('#label1_face', 'front');
+await page.fill('#label1_text', 'Front');
+await page.check('#label1_raised');
+await page.waitForTimeout(500);
+await expectWatertight('label:front');
+const bodyAfter = await page.evaluate(() => window.__case.parts()?.body.indices.length ?? 0);
+if (bodyAfter <= bodyBefore) errors.push('[label:front] the body did not change');
+await page.selectOption('#label1_face', 'top');
+await expectWatertight('label:overlap');
+if (!(await page.locator('#warnings').textContent()).includes('Labels 1 and 2 overlap')) errors.push('[label:overlap] no overlap warning');
+await page.click('#label0_remove');
+await expectWatertight('label:removed');
+const left = await page.evaluate(() => window.__case.state().labels);
+if (left.length !== 1 || left[0].text !== 'Front') errors.push(`[label:remove] the wrong label went: ${JSON.stringify(left)}`);
+await page.click('#label0_remove');
 await page.uncheck('#on_vents');
 await page.uncheck('#on_fan');
 await page.click('#mount_kind_none');

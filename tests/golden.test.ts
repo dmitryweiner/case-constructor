@@ -427,7 +427,7 @@ describe('golden cases', () => {
     for (const [name, whole] of Object.entries(STATES)) {
       // a hinged case: an entry per half, `<name>:a` and `<name>:b`
       for (const { half, state } of casesOf(whole)) {
-        const built = buildCase(csg, state, SEGMENTS, () => {}, null, half ? halfHinge(whole, half) : null);
+        const built = buildCase(csg, state, SEGMENTS, () => {}, [], half ? halfHinge(whole, half) : null);
         actual[half ? `${name}:${half}` : name] = {
           body: part(built.body), lid: part(built.lid),
           ...(built.clamps ? { clamp: part(built.clamps) } : {}), ...(built.lidClamps ? { lidClamp: part(built.lidClamps) } : {}),

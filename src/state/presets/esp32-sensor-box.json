@@ -108,19 +108,21 @@
       "spacing": 30,
       "screwD": 3.5
     },
-    "label": {
-      "on": true,
-      "text": "SENSOR",
-      "font": "oswald",
-      "sizeMm": 5,
-      "depth": 0.6,
-      "raised": true,
-      "anchor": "centre",
-      "margin": 3,
-      "x": 0,
-      "y": 0,
-      "angle": 0
-    },
+    "labels": [
+      {
+        "face": "bottom",
+        "text": "SENSOR",
+        "font": "oswald",
+        "sizeMm": 5,
+        "depth": 0.6,
+        "raised": true,
+        "anchor": "centre",
+        "margin": 3,
+        "x": 0,
+        "y": 0,
+        "angle": 0
+      }
+    ],
     "exportMode": "both",
     "print": {
       "lid": "auto",
@@ -197,19 +199,7 @@
           "y": 0,
           "screwD": 3.2
         },
-        "label": {
-          "on": false,
-          "text": "",
-          "font": "rubik",
-          "sizeMm": 6,
-          "depth": 0.6,
-          "raised": false,
-          "anchor": "centre",
-          "margin": 3,
-          "x": 0,
-          "y": 0,
-          "angle": 0
-        }
+        "labels": []
       },
       "gap": 1
     }

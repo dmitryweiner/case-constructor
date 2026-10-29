@@ -97,7 +97,8 @@ export const LABEL_ANCHORS = ['topLeft', 'top', 'topRight', 'left', 'centre', 'r
 export type LabelAnchor = (typeof LABEL_ANCHORS)[number];
 
 export interface LabelState {
-  on: boolean;
+  /** the face it is on, as the user chose it (`labelFace`: the one built) */
+  face: Face;
   text: string;
   font: LabelFont;
   /** height of a capital letter, mm */
@@ -115,6 +116,7 @@ export interface LabelState {
 }
 
 export const LABEL_MAX_CHARS = 40;
+export const LABELS_MAX = 8;
 export const LABEL_MARGIN_MAX = 30;
 
 export function defaultVents(): VentState {
@@ -129,8 +131,9 @@ export function defaultWallMount(): WallMountState {
   return { kind: 'none', face: 'bottom', keyhole: 'through', ears: { count: 2, walls: 'leftRight', wall: 'back', along: 'centre' }, spacing: 40, screwD: 4 };
 }
 
-export function defaultLabel(): LabelState {
-  return { on: false, text: '', font: 'rubik', sizeMm: 6, depth: 0.6, raised: false, anchor: 'centre', margin: 3, x: 0, y: 0, angle: 0 };
+/** A new label: on the face given (the lid's, when the user adds one). */
+export function defaultLabel(face: Face = 'top'): LabelState {
+  return { face, text: '', font: 'rubik', sizeMm: 6, depth: 0.6, raised: false, anchor: 'centre', margin: 3, x: 0, y: 0, angle: 0 };
 }
 
 function rec(x: unknown): Record<string, unknown> {
@@ -195,15 +198,16 @@ function sanitizeEars(raw: unknown, d: EarsState): EarsState {
   };
 }
 
-export function sanitizeLabel(raw: unknown): LabelState {
-  const d = defaultLabel();
+/** One label; a label with no face (a file from before the list) is on the lid's face. */
+export function sanitizeLabel(raw: unknown, lidFace: Face = 'top'): LabelState {
+  const d = defaultLabel(lidFace);
   const r = rec(raw);
   // one line, no control characters, at most LABEL_MAX_CHARS characters (not UTF-16 units)
   const text = typeof r.text === 'string'
     ? [...r.text].filter((ch) => ch.charCodeAt(0) >= 32).slice(0, LABEL_MAX_CHARS).join('')
     : d.text;
   return {
-    on: bool(r.on, d.on),
+    face: isFace(r.face) ? r.face : d.face,
     text,
     font: LABEL_FONTS.find((f) => f === r.font) ?? d.font,
     sizeMm: clampNum(r.sizeMm, 3, 30, d.sizeMm),
@@ -216,6 +220,25 @@ export function sanitizeLabel(raw: unknown): LabelState {
     y: clampNum(r.y, -200, 200, d.y),
     angle: clampNum(r.angle, -180, 180, d.angle),
   };
+}
+
+/**
+ * The labels: the list, at most LABELS_MAX; a file from before the list had
+ * one label (`old`), on the lid, kept when it was on.
+ */
+export function sanitizeLabels(raw: unknown, old: unknown, lidFace: Face): LabelState[] {
+  if (Array.isArray(raw)) return raw.slice(0, LABELS_MAX).map((one) => sanitizeLabel(one, lidFace));
+  return rec(old).on === true ? [sanitizeLabel(old, lidFace)] : [];
+}
+
+/** Faces a label may go on: every flat face (the console's top is its slope); a cylinder's top and bottom. */
+export function labelFaces(kind: ShapeKind): readonly Face[] {
+  return kind === 'cylinder' ? ['top', 'bottom'] : FACES;
+}
+
+/** The face a label is built on: the one chosen, or the top when the shape has no such flat face. */
+export function labelFace(label: LabelState, kind: ShapeKind): Face {
+  return labelFaces(kind).includes(label.face) ? label.face : 'top';
 }
 
 /** The part of a face clear of rounded edges and the margin, in face (u, v). */

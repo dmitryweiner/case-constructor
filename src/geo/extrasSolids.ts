@@ -1,5 +1,5 @@
 // The additive extras, built by the worker: ear tabs for wall mounting, the
-// pads and feet of closed keyholes, and the label's relief on the lid.
+// pads and feet of closed keyholes, and the labels' reliefs.
 // Worker only.
 
 import type { CrossSection, Manifold } from 'manifold-3d';
@@ -10,6 +10,7 @@ import type { ClosedKeyholes, EarSpec, LabelState } from './extras';
 import { PAD_R } from './extras';
 import type { FaceFrame } from './face';
 import type { LabelRaster } from './label';
+import type { Affine } from './surface';
 import { rasterRuns } from './label';
 
 /**
@@ -60,12 +61,12 @@ export function keyholePadSolids(
 }
 
 /**
- * The label's relief on the lid's outer face, case frame: raised from just
- * inside the plate to `depth` above it, or engraved from `depth` below the
- * surface to above it. The ink is the union of the raster's row runs.
+ * A label's relief on its face, case frame: raised from just inside the
+ * plate to `depth` above it, or engraved from `depth` below the surface to
+ * above it. The ink is the union of the raster's row runs.
  */
 export function labelSolid(
-  csg: CsgApi, scope: CsgScope, label: LabelState, raster: LabelRaster, frame: FaceFrame,
+  csg: CsgApi, scope: CsgScope, label: LabelState, raster: LabelRaster, fromFace: Affine,
   centre: { u: number; v: number }, depth: number,
 ): Manifold | null {
   const runs = rasterRuns(raster);
@@ -74,5 +75,5 @@ export function labelSolid(
   ink = scope.keep(ink.simplify(raster.mmPerPx / 4));
   ink = scope.keep(scope.keep(ink.rotate(label.angle)).translate([centre.u, centre.v]));
   const relief = label.raised ? extrude(csg, scope, ink, -0.05, depth) : extrude(csg, scope, ink, -depth, 1);
-  return transformSolid(scope, relief, frame.fromFace);
+  return transformSolid(scope, relief, fromFace);
 }

@@ -9,12 +9,13 @@ import { portCutters, outerTopAt } from '../src/geo/ports';
 import {
   EAR_LENGTH, EAR_WIDTH, FAN_SCREWS, closedKeyholes, earSpecs, extrasCutters, extrasWarnings, fanCuts, flatRegion, keyholeCuts, mountFace, mountFaces,
   earChoice, earSideFaces, earWallChoices, earWalls,
-  sanitizeLabel, sanitizeVents, sanitizeWallMount, ventCuts,
+  LABELS_MAX, labelFaces, sanitizeLabel, sanitizeLabels, sanitizeVents, sanitizeWallMount, ventCuts,
 } from '../src/geo/extras';
 import { faceFrame } from '../src/geo/face';
 import { applyAffine } from '../src/geo/surface';
 import type { LabelRaster } from '../src/geo/label';
-import { labelPlacement, rasterRuns, sanitizeLabelRaster } from '../src/geo/label';
+import { labelPlacement, labelSurface, labelWarnings, rasterRuns, sanitizeLabelRaster } from '../src/geo/label';
+import { extraCutters } from '../src/geo/cutters';
 import { validateMesh } from '../src/geo/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
@@ -552,7 +553,7 @@ describe('label', () => {
     const shape = { ...defaultState().shape, edgeR: 0, cornerR: 0 };
     const dims = { w: 100, d: 60, h: 30 };
     const raster = { w: 200, h: 60, pixels: new Uint8Array(200 * 60), mmPerPx: 0.1 };
-    const place = (patch: object) => labelPlacement(sanitizeLabel({ on: true, text: 'x', ...patch }), raster, 'top', dims, shape);
+    const place = (patch: object) => labelPlacement(sanitizeLabel({ text: 'x', ...patch }), raster, labelSurface('top', shape, dims));
 
     it('the centre with an offset, as before (old files keep their place)', () => {
       expect(sanitizeLabel({ x: 5, y: -2 }).anchor).toBe('centre');
@@ -572,7 +573,7 @@ describe('label', () => {
     });
 
     it('the edge fillet is not flat: the margin counts from where it ends', () => {
-      const p = labelPlacement(sanitizeLabel({ on: true, anchor: 'left', margin: 2 }), raster, 'top', dims, { ...shape, edgeR: 4 });
+      const p = labelPlacement(sanitizeLabel({ anchor: 'left', margin: 2 }), raster, labelSurface('top', { ...shape, edgeR: 4 }, dims));
       expect(p.u).toBeCloseTo(16);
     });
 
@@ -598,20 +599,111 @@ describe('label', () => {
   });
 
   it('engraved takes material from the lid, raised adds it; both stay closed', () => {
-    const base = sanitizeState({ ...defaultState(), label: { on: true, text: 'x' } });
+    const base = sanitizeState({ ...defaultState(), labels: [{ text: 'x' }] });
     const plain = validateMesh(buildCase(csg, base, 8).lid).volume;
-    const engraved = buildCase(csg, base, 8, () => {}, blocks()).lid;
-    const raised = buildCase(csg, sanitizeState({ ...base, label: { ...base.label, raised: true } }), 8, () => {}, blocks()).lid;
+    const engraved = buildCase(csg, base, 8, () => {}, [blocks()]).lid;
+    const raised = buildCase(csg, sanitizeState({ ...base, labels: [{ ...base.labels[0], raised: true }] }), 8, () => {}, [blocks()]).lid;
     const e = validateMesh(engraved);
     const r = validateMesh(raised);
     expect(e.watertight && r.watertight).toBe(true);
     const inkArea = 12 * 6 * 0.25;
-    expect(plain - e.volume).toBeCloseTo(inkArea * base.label.depth, 0);
-    expect(r.volume - plain).toBeCloseTo(inkArea * base.label.depth, 0);
+    expect(plain - e.volume).toBeCloseTo(inkArea * base.labels[0].depth, 0);
+    expect(r.volume - plain).toBeCloseTo(inkArea * base.labels[0].depth, 0);
     // the engraving is on the lid's outer face, not through it
     const lid = toManifold(csg, engraved);
     expect(lid.genus()).toBeGreaterThanOrEqual(0);
     lid.delete();
+  });
+
+  it('an old file\'s one label becomes a list of one on its lid; an off one, none', () => {
+    const lid = { ...defaultState().lid, face: 'left' };
+    // a file from before the list: no `labels`
+    const before = Object.fromEntries(Object.entries(defaultState()).filter(([key]) => key !== 'labels'));
+    const old = sanitizeState({ ...before, lid, label: { on: true, text: 'Hi', raised: true } });
+    expect(old.labels).toHaveLength(1);
+    expect(old.labels[0]).toMatchObject({ face: 'left', text: 'Hi', raised: true });
+    expect(sanitizeState(old)).toEqual(old);
+    expect(sanitizeState({ ...before, label: { on: false, text: 'Hi' } }).labels).toEqual([]);
+    // the list wins over an old label, and holds at most LABELS_MAX
+    expect(sanitizeState({ ...defaultState(), labels: [], label: { on: true, text: 'Hi' } }).labels).toEqual([]);
+    expect(sanitizeState({ ...defaultState(), labels: Array.from({ length: 12 }, () => ({ text: 'x' })) }).labels).toHaveLength(LABELS_MAX);
+    expect(sanitizeLabels('garbage', 5, 'top')).toEqual([]);
+    expect(sanitizeLabel({ face: 'roof' }, 'back').face).toBe('back');
+  });
+
+  it('labels on every face of every shape: placed on that face\'s flat part, built clean on both parts', () => {
+    for (const kind of ['box', 'console', 'cylinder'] as const) {
+      const base = sanitizeState({
+        ...defaultState(), boards: [],
+        shape: { ...defaultState().shape, kind, edgeR: kind === 'console' ? 0 : 2, auto: false, size: { w: 110, d: 80, h: 50 } },
+        lid: { ...defaultState().lid, face: 'bottom' },
+      });
+      const faces = labelFaces(kind);
+      const state = sanitizeState({ ...base, labels: faces.map((face, i) => ({ face, text: 'x', raised: i % 2 === 0 })) });
+      const { layout, shape, lid } = context(state);
+      const rasters = faces.map(() => blocks());
+      for (const label of state.labels) {
+        const surface = labelSurface(label.face, shape, layout.dims);
+        const p = labelPlacement(label, blocks(), surface);
+        const flat = surface.flat(0);
+        expect(p.u, `${kind}/${label.face}`).toBeGreaterThan(flat.u0);
+        expect(p.u, `${kind}/${label.face}`).toBeLessThan(flat.u1);
+        expect(p.v, `${kind}/${label.face}`).toBeGreaterThan(flat.v0);
+        expect(p.v, `${kind}/${label.face}`).toBeLessThan(flat.v1);
+        // the face's centre is on the case's outer surface
+        const centre = applyAffine(surface.fromFace, [surface.extent.w / 2, surface.extent.h / 2, 0]);
+        const inside = [centre[0] / layout.dims.w, centre[1] / layout.dims.d, centre[2] / layout.dims.h];
+        expect(inside.every((x) => x > -1e-6 && x < 1 + 1e-6), `${kind}/${label.face}`).toBe(true);
+      }
+      const built = buildCase(csg, state, 8, () => {}, rasters);
+      for (const mesh of [built.body, built.lid]) {
+        const report = validateMesh(mesh);
+        expect(report.watertight, kind).toBe(true);
+        expect(report.degenerateTriangles, kind).toBe(0);
+      }
+      const plain = buildCase(csg, state, 8);
+      expect(validateMesh(built.body).volume, kind).not.toBeCloseTo(validateMesh(plain.body).volume, 1);
+      // nothing but the labels' own warnings about the lid's bed
+      const codes = labelWarnings(state.labels, rasters, shape, layout.dims, lid, [], []).map((m) => m.code);
+      expect(codes.filter((code) => code !== 'warn.labelOnBed'), kind).toEqual([]);
+    }
+  });
+
+  it('a raised label across the parting: each part takes its piece, apart, and the panel says so', () => {
+    // a 10 mm deep top lid: the front wall's top 12 mm are the lid's
+    const state = sanitizeState({
+      ...defaultState(), boards: [], shape: { ...defaultState().shape, auto: false, size: { w: 100, d: 70, h: 40 } },
+      lid: { ...defaultState().lid, depth: 10 },
+      labels: [{ face: 'front', text: 'x', raised: true, anchor: 'top', margin: 9 }],
+    });
+    const raster: LabelRaster = { w: 40, h: 40, pixels: new Uint8Array(40 * 40).fill(255), mmPerPx: 0.25 };
+    const built = buildCase(csg, state, 8, () => {}, [raster]);
+    const plain = buildCase(csg, state, 8);
+    const grown = (part: 'body' | 'lid'): number => validateMesh(built[part]).volume - validateMesh(plain[part]).volume;
+    expect(grown('body')).toBeGreaterThan(1);
+    expect(grown('lid')).toBeGreaterThan(1);
+    for (const mesh of [built.body, built.lid]) expect(validateMesh(mesh).degenerateTriangles).toBe(0);
+    const { layout, shape, lid } = context(state);
+    expect(labelWarnings(state.labels, [raster], shape, layout.dims, lid, [], []).map((m) => m.code)).toEqual(['warn.labelOnParting']);
+  });
+
+  it('the labels\' warnings: too big, over an opening, raised on the bed, two over each other', () => {
+    const state = sanitizeState({
+      ...defaultState(), boards: [], shape: { ...defaultState().shape, auto: false, size: { w: 100, d: 70, h: 40 } },
+      labels: [{ face: 'top', text: 'a', raised: true }, { face: 'top', text: 'b', x: 2 }, { face: 'bottom', text: 'c', raised: true }, { face: 'left', text: 'd', sizeMm: 30 }],
+    });
+    const { layout, shape, lid } = context(state);
+    const huge: LabelRaster = { w: 1200, h: 100, pixels: new Uint8Array(1200 * 100).fill(255), mmPerPx: 0.1 };
+    const rasters = [blocks(), blocks(), blocks(), huge];
+    const vent = extraCutters([{ face: 'top', shape: 'round', x: 50, y: 35, w: 4, h: 4, r: 0 }], shape, layout.dims, () => layout.dims.h);
+    const messages = labelWarnings(state.labels, rasters, shape, layout.dims, lid, vent, []);
+    const of = (n: number): string[] => messages.filter((m) => m.params?.n === n).map((m) => m.code);
+    // the lid prints on its top: a raised label there is the first layer; the body on its bottom, the same
+    expect(of(1)).toEqual(['warn.labelOverOpening', 'warn.labelOnBed']);
+    expect(of(2)).toEqual(['warn.labelOverOpening']);
+    expect(of(3)).toEqual(['warn.labelOnBed']);
+    expect(of(4)).toEqual(['warn.labelTooBig']);
+    expect(messages.filter((m) => m.code === 'warn.labelsOverlap').map((m) => m.params)).toEqual([{ a: 1, b: 2 }]);
   });
 
   it('the sanitizer keeps one line of at most 40 characters', () => {
