@@ -13,7 +13,7 @@ import type { ExtraCut } from '../geo/cutters';
 import { sanitizeExtraCuts } from '../geo/cutters';
 import type { FanState, LabelState, VentState, WallMountState } from '../geo/extras';
 import {
-  defaultFan, defaultLabel, defaultVents, defaultWallMount, sanitizeFan, sanitizeLabel, sanitizeVents, sanitizeWallMount,
+  defaultFan, defaultVents, defaultWallMount, sanitizeFan, sanitizeLabels, sanitizeVents, sanitizeWallMount,
 } from '../geo/extras';
 import type { LidState } from '../geo/lidSpec';
 import { defaultLid, lidForKind, sanitizeLid } from '../geo/lidSpec';
@@ -38,7 +38,8 @@ export interface AppState {
   vents: VentState;
   fan: FanState;
   wallMount: WallMountState;
-  label: LabelState;
+  /** text on the faces, each on its own */
+  labels: LabelState[];
   exportMode: ExportMode;
   /** where the lid goes next to the body in the Both STL */
   print: PrintArrange;
@@ -60,7 +61,7 @@ export function defaultState(): AppState {
     vents: defaultVents(),
     fan: defaultFan(),
     wallMount: defaultWallMount(),
-    label: defaultLabel(),
+    labels: [],
     exportMode: 'both',
     print: defaultPrint(),
     resolution: 24,
@@ -77,22 +78,34 @@ export function withShapeKind(state: AppState, kind: ShapeKind): AppState {
   return { ...state, shape: { ...state.shape, kind }, lid: lidForKind(state.lid, kind) };
 }
 
+/**
+ * The wall mount; a file from before the mount had a face hung by its
+ * floor, or by its back wall when the floor was the lid, and builds so.
+ */
+function sanitizeMount(raw: unknown, lid: unknown): WallMountState {
+  const mount = sanitizeWallMount(raw);
+  const old = typeof raw === 'object' && raw !== null && Reflect.get(raw, 'face') === undefined;
+  const onFloor = typeof lid === 'object' && lid !== null && Reflect.get(lid, 'face') === 'bottom';
+  return old && onFloor ? { ...mount, face: 'back' } : mount;
+}
+
 export function sanitizeState(raw: unknown): AppState {
   const d = defaultState();
   const r = typeof raw === 'object' && raw !== null ? raw : {};
   const shape = sanitizeShape(Reflect.get(r, 'shape'));
   const exportMode: unknown = Reflect.get(r, 'exportMode');
   const resolution: unknown = Reflect.get(r, 'resolution');
+  const lid = sanitizeLid(Reflect.get(r, 'lid'), shape.kind);
   return {
     version: STATE_VERSION,
     shape,
     boards: sanitizePlacements(Reflect.get(r, 'boards')),
-    lid: sanitizeLid(Reflect.get(r, 'lid'), shape.kind),
+    lid,
     extraCuts: sanitizeExtraCuts(Reflect.get(r, 'extraCuts'), shape.kind),
     vents: sanitizeVents(Reflect.get(r, 'vents')),
     fan: sanitizeFan(Reflect.get(r, 'fan')),
-    wallMount: sanitizeWallMount(Reflect.get(r, 'wallMount')),
-    label: sanitizeLabel(Reflect.get(r, 'label')),
+    wallMount: sanitizeMount(Reflect.get(r, 'wallMount'), Reflect.get(r, 'lid')),
+    labels: sanitizeLabels(Reflect.get(r, 'labels'), Reflect.get(r, 'label'), lid.face),
     exportMode: isExportMode(exportMode) ? exportMode : d.exportMode,
     print: sanitizePrint(Reflect.get(r, 'print')),
     resolution: typeof resolution === 'number' && RESOLUTIONS.includes(resolution) ? resolution : d.resolution,

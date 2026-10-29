@@ -19,13 +19,14 @@ export type CsgJob = (
   | { kind: 'export'; state: AppState }
 ) & {
   /**
-   * The label's text as a raster: fonts live in the main thread, so it draws
-   * the text; the raster is derived from the state, not part of it, and the
-   * worker checks only its shape (`sanitizeLabelRaster`).
+   * The labels' texts as rasters, one per label in `state.labels`: fonts
+   * live in the main thread, so it draws the texts; a raster is derived from
+   * the state, not part of it, and the worker checks only its shape
+   * (`sanitizeLabelRasters`).
    */
-  label?: LabelRaster | null;
-  /** a hinged case: the upper half's label (`label` is the lower half's) */
-  labelB?: LabelRaster | null;
+  labels?: (LabelRaster | null)[];
+  /** a hinged case: the upper half's labels (`labels` are the lower half's) */
+  labelsB?: (LabelRaster | null)[];
 };
 
 /**

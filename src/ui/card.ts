@@ -1,6 +1,8 @@
-// A collapsible card with a toggle: the checkbox in the header turns the
-// feature on, a click on the header folds the body. A card turned off folds
-// itself — the panel does not swell with unused parameters.
+// A collapsible card: a click on the header folds the body. Whether its
+// feature is on is said by the controls inside (the vents' faces pressed, a
+// face for the fan), not by a checkbox; a card off starts folded, and one
+// turned on from outside (a preset, a file) unfolds — the panel does not
+// swell with unused parameters, and nothing folds under the user's hand.
 
 import { make } from './dom';
 import type { Key } from '../i18n';
@@ -13,7 +15,6 @@ export interface CardOptions {
   tag?: Key;
   desc?: Key;
   enabled: boolean;
-  onToggle(on: boolean): void;
 }
 
 export interface CardHandle {
@@ -31,13 +32,9 @@ export function createCard(container: HTMLElement, options: CardOptions): CardHa
   card.id = `card_${options.id}`;
 
   const head = make('div', 'fcard-head');
-  const toggle = make('input');
-  toggle.type = 'checkbox';
-  toggle.checked = options.enabled;
-  toggle.id = `on_${options.id}`;
   const title = make('span', 'fcard-title', t(options.title));
   const caret = make('span', 'fcard-caret', options.enabled ? '▾' : '▸');
-  head.append(toggle, title);
+  head.append(title);
   if (options.tag) head.append(make('span', 'fcard-tag', t(options.tag)));
   head.append(caret);
 
@@ -46,17 +43,8 @@ export function createCard(container: HTMLElement, options: CardOptions): CardHa
   const controls = make('div');
   body.append(controls);
 
-  function setCollapsed(collapsed: boolean): void {
-    showCollapsed(card, collapsed);
-  }
-  setCollapsed(!options.enabled);
-
-  toggle.addEventListener('click', (event) => {
-    event.stopPropagation(); // a click on the checkbox must not also fold the card
-    setCollapsed(!toggle.checked);
-    options.onToggle(toggle.checked);
-  });
-  head.addEventListener('click', () => setCollapsed(!card.classList.contains('collapsed')));
+  showCollapsed(card, !options.enabled);
+  head.addEventListener('click', () => showCollapsed(card, !card.classList.contains('collapsed')));
 
   card.append(head, body);
   container.append(card);
@@ -65,13 +53,10 @@ export function createCard(container: HTMLElement, options: CardOptions): CardHa
   return {
     body: controls,
     setEnabled(on: boolean): void {
-      toggle.checked = on;
-      // Fold only when the toggle changes. Otherwise a card unfolded by hand
-      // while off would collapse on every slider move inside it.
-      if (on !== lastEnabled) {
-        setCollapsed(!on);
-        lastEnabled = on;
-      }
+      card.classList.toggle('on', on);
+      // unfold when it turns on; never fold: turning it off happens inside the open card
+      if (on && !lastEnabled) showCollapsed(card, false);
+      lastEnabled = on;
     },
   };
 }
@@ -83,9 +68,8 @@ function showCollapsed(card: Element, collapsed: boolean): void {
 }
 
 /**
- * Which cards are folded — kept across a panel re-render (language switch).
- * Folding follows the toggle by default, and a re-render would otherwise
- * collapse a card unfolded by hand.
+ * Which cards are folded — kept across a panel re-render (language switch):
+ * a re-render would otherwise collapse a card unfolded by hand.
  */
 export function snapshotCards(root: ParentNode): Map<string, boolean> {
   const collapsed = new Map<string, boolean>();

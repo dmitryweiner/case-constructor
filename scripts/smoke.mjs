@@ -593,7 +593,8 @@ await expectWatertight('hinged');
 if (!(await page.locator('#hingeCard').isVisible()) || !(await page.locator('#halfBar').isVisible())) errors.push('[hinged] no hinge card or half switch');
 if (!(await page.locator('#halfGroup').evaluate((group) => group.contains(document.getElementById('lidParams'))))) errors.push('[hinged] the lid is not under the half switch');
 if (!(await page.locator('#lid_face_front').isDisabled())) errors.push('[hinged] a half allows a side lid');
-if (await page.locator('#mount_kind').isVisible()) errors.push('[hinged] a hinged case offers a wall mount');
+if (await page.locator('#mountCard').isVisible()) errors.push('[hinged] a hinged case offers a wall mount');
+if (!(await page.locator('#halfGroup').evaluate((group) => group.contains(document.getElementById('labelCards'))))) errors.push('[hinged] the labels are not under the half switch');
 await page.click('#edit_half_b');
 await page.click('#boardAdd');
 await page.click('#boardList [data-board="esp32-devkitc-v4"]');
@@ -777,16 +778,24 @@ await expectWatertight('fastening:snaps:fillet');
 if (!(await page.locator('#warnings').textContent()).includes('rounded corners end')) errors.push('[fastening] no note about the raised lid depth');
 await setRange('case_edgeR', 0);
 
-// extras: vents of every pattern, a fan, both wall mounts, a label in a real font
+// extras: vents of every pattern, a fan, both wall mounts on their faces, labels in a real font
 label('extras');
-await page.check('#on_vents');
+// no checkbox: the vents are on while a face is pressed, the fan while it has a face
+if (await page.locator('#on_vents, #on_fan').count()) errors.push('[vents] a checkbox on the vents or the fan card');
+await page.click('#card_vents .fcard-head');
+if (await page.locator('#vents_pattern').isVisible()) errors.push('[vents] the pattern shows with no face pressed');
+await page.click('#vents_face_left');
+await page.click('#vents_face_right');
+if (!(await page.evaluate(() => window.__case.state().vents.on))) errors.push('[vents] a face pressed, the vents still off');
 for (const pattern of ['slots', 'hex', 'round']) {
   await page.click(`#vents_pattern_${pattern}`);
   await expectWatertight(`vents:${pattern}`);
 }
-await page.check('#vents_face_bottom');
-await page.check('#on_fan');
-await page.selectOption('#fan_face', 'top');
+await page.click('#vents_face_bottom');
+if ((await page.locator('#vents_face_bottom').getAttribute('aria-pressed')) !== 'true') errors.push('[vents] the bottom face not pressed');
+await page.click('#card_fan .fcard-head');
+if (await page.locator('#fan_size').isVisible()) errors.push('[fan] the size shows with no face');
+await page.click('#fan_face_top');
 await page.click('#fan_size_30');
 await expectWatertight('fan');
 await page.click('#mount_kind_keyholes');
@@ -794,6 +803,13 @@ await expectWatertight('keyholes');
 await page.click('#mount_keyhole_closed');
 await expectWatertight('keyholes:closed');
 if (!(await page.locator('#warnings').textContent()).includes('supports')) errors.push('[keyholes:closed] no warning about the pads on the bed');
+await page.click('#mount_face_back');
+await expectWatertight('keyholes:closed:back');
+// the lid's face: allowed, with a warning (the lid holds the weight)
+await page.click('#mount_face_top');
+await expectWatertight('keyholes:closed:lid');
+if (!(await page.locator('#warnings').textContent()).includes('on the lid')) errors.push('[keyholes:lid] no warning about the mount on the lid');
+await page.click('#mount_face_bottom');
 await page.click('#mount_keyhole_through');
 await page.click('#mount_kind_ears');
 await expectWatertight('ears');
@@ -809,27 +825,56 @@ await page.click('#mount_earCount_1');
 await expectWatertight('ears:1:left');
 await page.click('#mount_earWalls_leftRight');
 await page.click('#mount_earCount_2');
+// the back against the wall: ears flush with it, on the side walls, then on the top and bottom
+await page.click('#mount_face_back');
+if (!(await page.locator('#mount_earWalls_frontBack').isDisabled())) errors.push('[ears:back] front and back offered for ears on the back');
+await expectWatertight('ears:back');
+await page.click('#mount_earWalls_topBottom');
+await expectWatertight('ears:back:topBottom');
+if (!(await page.locator('#warnings').textContent()).includes('under the bed')) errors.push('[ears:back:topBottom] no warning about the ear under the bed');
+await page.click('#mount_earWalls_leftRight');
+await page.click('#mount_face_bottom');
 const trianglesBefore = await page.evaluate(() => window.__case.parts()?.lid.indices.length ?? 0);
-await page.check('#on_label');
-await page.fill('#label_text', 'Hello שלום Привет');
+await page.click('#labelAdd');
+// the plain box has no board to name (a board's name: tests/extras.test.ts)
+if ((await page.inputValue('#label0_text')) !== '') errors.push(`[label] a new label in a box with no boards says: ${await page.inputValue('#label0_text')}`);
+await page.fill('#label0_text', 'Hello שלום Привет');
 await page.waitForTimeout(1500);
 await expectWatertight('label');
 const trianglesAfter = await page.evaluate(() => window.__case.parts()?.lid.indices.length ?? 0);
 if (!flags.has('preview') && trianglesAfter <= trianglesBefore) errors.push('[label] the lid did not change');
-await page.check('#label_raised');
+await page.check('#label0_raised');
 await expectWatertight('label:raised');
 // a quick place: a corner and a quarter turn; the margin row shows only off the centre
-if (await page.locator('#label_margin').isVisible()) errors.push('[label] the margin shows for the centre');
-await page.click('#label_anchor_bottomRight');
-await page.click('#label_turn_270');
+if (await page.locator('#label0_margin').isVisible()) errors.push('[label] the margin shows for the centre');
+await page.click('#label0_anchor_bottomRight');
+await page.click('#label0_turn_270');
 await expectWatertight('label:corner');
-const placed = await page.evaluate(() => window.__case.state().label);
+const placed = await page.evaluate(() => window.__case.state().labels[0]);
 if (placed.anchor !== 'bottomRight' || placed.angle !== -90) errors.push(`[label] anchor/turn not applied: ${JSON.stringify(placed)}`);
-if (!(await page.locator('#label_margin').isVisible())) errors.push('[label] no margin for a corner');
-await page.click('#label_anchor_centre');
-await page.uncheck('#on_label');
-await page.uncheck('#on_vents');
-await page.uncheck('#on_fan');
+if (!(await page.locator('#label0_margin').isVisible())) errors.push('[label] no margin for a corner');
+await page.click('#label0_anchor_centre');
+// a second label, on the front wall of the body, raised; then two on one face over each other
+const bodyBefore = await page.evaluate(() => window.__case.parts()?.body.indices.length ?? 0);
+await page.click('#labelAdd');
+await page.selectOption('#label1_face', 'front');
+await page.fill('#label1_text', 'Front');
+await page.check('#label1_raised');
+await page.waitForTimeout(500);
+await expectWatertight('label:front');
+const bodyAfter = await page.evaluate(() => window.__case.parts()?.body.indices.length ?? 0);
+if (bodyAfter <= bodyBefore) errors.push('[label:front] the body did not change');
+await page.selectOption('#label1_face', 'top');
+await expectWatertight('label:overlap');
+if (!(await page.locator('#warnings').textContent()).includes('Labels 1 and 2 overlap')) errors.push('[label:overlap] no overlap warning');
+await page.click('#label0_remove');
+await expectWatertight('label:removed');
+const left = await page.evaluate(() => window.__case.state().labels);
+if (left.length !== 1 || left[0].text !== 'Front') errors.push(`[label:remove] the wrong label went: ${JSON.stringify(left)}`);
+await page.click('#label0_remove');
+for (const face of ['left', 'right', 'bottom']) await page.click(`#vents_face_${face}`);
+if (await page.evaluate(() => window.__case.state().vents.on)) errors.push('[vents] every face off, the vents still on');
+await page.click('#fan_face_none');
 await page.click('#mount_kind_none');
 
 // each export mode with a real download

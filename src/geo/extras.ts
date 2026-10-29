@@ -59,13 +59,13 @@ export type WallMountKind = (typeof MOUNT_KINDS)[number];
 export const KEYHOLE_STYLES = ['through', 'closed'] as const;
 export type KeyholeStyle = (typeof KEYHOLE_STYLES)[number];
 
-/** Ears: on the left and right walls, the front and back ones, or all on one wall. */
-export const EAR_WALLS = ['leftRight', 'frontBack', 'one'] as const;
+/** Ears: on a pair of opposite walls next to the face against the wall, or all on one wall. */
+export const EAR_WALLS = ['leftRight', 'frontBack', 'topBottom', 'one'] as const;
 export type EarWalls = (typeof EAR_WALLS)[number];
 /** Along a wall: centred, `spacing` apart — or spread from one end of its flat part to the other. */
 export const EAR_ALONG = ['centre', 'ends'] as const;
 export type EarAlong = (typeof EAR_ALONG)[number];
-export const EAR_SIDES = ['front', 'back', 'left', 'right'] as const;
+export const EAR_SIDES = ['front', 'back', 'left', 'right', 'top', 'bottom'] as const;
 export type EarSide = (typeof EAR_SIDES)[number];
 export const EAR_COUNT_MAX = 4;
 
@@ -79,6 +79,8 @@ export interface EarsState {
 
 export interface WallMountState {
   kind: WallMountKind;
+  /** the face against the wall, as the user chose it (`mountFace`: the one built) */
+  face: Face;
   keyhole: KeyholeStyle;
   ears: EarsState;
   /** keyholes, and ears centred on a wall: distance between them, mm */
@@ -95,7 +97,8 @@ export const LABEL_ANCHORS = ['topLeft', 'top', 'topRight', 'left', 'centre', 'r
 export type LabelAnchor = (typeof LABEL_ANCHORS)[number];
 
 export interface LabelState {
-  on: boolean;
+  /** the face it is on, as the user chose it (`labelFace`: the one built) */
+  face: Face;
   text: string;
   font: LabelFont;
   /** height of a capital letter, mm */
@@ -113,6 +116,7 @@ export interface LabelState {
 }
 
 export const LABEL_MAX_CHARS = 40;
+export const LABELS_MAX = 8;
 export const LABEL_MARGIN_MAX = 30;
 
 export function defaultVents(): VentState {
@@ -124,11 +128,12 @@ export function defaultFan(): FanState {
 }
 
 export function defaultWallMount(): WallMountState {
-  return { kind: 'none', keyhole: 'through', ears: { count: 2, walls: 'leftRight', wall: 'back', along: 'centre' }, spacing: 40, screwD: 4 };
+  return { kind: 'none', face: 'bottom', keyhole: 'through', ears: { count: 2, walls: 'leftRight', wall: 'back', along: 'centre' }, spacing: 40, screwD: 4 };
 }
 
-export function defaultLabel(): LabelState {
-  return { on: false, text: '', font: 'rubik', sizeMm: 6, depth: 0.6, raised: false, anchor: 'centre', margin: 3, x: 0, y: 0, angle: 0 };
+/** A new label: on the face given (the lid's, when the user adds one). */
+export function defaultLabel(face: Face = 'top'): LabelState {
+  return { face, text: '', font: 'rubik', sizeMm: 6, depth: 0.6, raised: false, anchor: 'centre', margin: 3, x: 0, y: 0, angle: 0 };
 }
 
 function rec(x: unknown): Record<string, unknown> {
@@ -175,6 +180,7 @@ export function sanitizeWallMount(raw: unknown): WallMountState {
   const r = rec(raw);
   return {
     kind: MOUNT_KINDS.find((k) => k === r.kind) ?? d.kind,
+    face: isFace(r.face) ? r.face : d.face,
     keyhole: KEYHOLE_STYLES.find((k) => k === r.keyhole) ?? d.keyhole,
     ears: sanitizeEars(r.ears, d.ears),
     spacing: clampNum(r.spacing, 10, 300, d.spacing),
@@ -192,15 +198,16 @@ function sanitizeEars(raw: unknown, d: EarsState): EarsState {
   };
 }
 
-export function sanitizeLabel(raw: unknown): LabelState {
-  const d = defaultLabel();
+/** One label; a label with no face (a file from before the list) is on the lid's face. */
+export function sanitizeLabel(raw: unknown, lidFace: Face = 'top'): LabelState {
+  const d = defaultLabel(lidFace);
   const r = rec(raw);
   // one line, no control characters, at most LABEL_MAX_CHARS characters (not UTF-16 units)
   const text = typeof r.text === 'string'
     ? [...r.text].filter((ch) => ch.charCodeAt(0) >= 32).slice(0, LABEL_MAX_CHARS).join('')
     : d.text;
   return {
-    on: bool(r.on, d.on),
+    face: isFace(r.face) ? r.face : d.face,
     text,
     font: LABEL_FONTS.find((f) => f === r.font) ?? d.font,
     sizeMm: clampNum(r.sizeMm, 3, 30, d.sizeMm),
@@ -213,6 +220,25 @@ export function sanitizeLabel(raw: unknown): LabelState {
     y: clampNum(r.y, -200, 200, d.y),
     angle: clampNum(r.angle, -180, 180, d.angle),
   };
+}
+
+/**
+ * The labels: the list, at most LABELS_MAX; a file from before the list had
+ * one label (`old`), on the lid, kept when it was on.
+ */
+export function sanitizeLabels(raw: unknown, old: unknown, lidFace: Face): LabelState[] {
+  if (Array.isArray(raw)) return raw.slice(0, LABELS_MAX).map((one) => sanitizeLabel(one, lidFace));
+  return rec(old).on === true ? [sanitizeLabel(old, lidFace)] : [];
+}
+
+/** Faces a label may go on: every flat face (the console's top is its slope); a cylinder's top and bottom. */
+export function labelFaces(kind: ShapeKind): readonly Face[] {
+  return kind === 'cylinder' ? ['top', 'bottom'] : FACES;
+}
+
+/** The face a label is built on: the one chosen, or the top when the shape has no such flat face. */
+export function labelFace(label: LabelState, kind: ShapeKind): Face {
+  return labelFaces(kind).includes(label.face) ? label.face : 'top';
 }
 
 /** The part of a face clear of rounded edges and the margin, in face (u, v). */
@@ -305,9 +331,23 @@ export function fanCuts(fan: FanState, dims: Dims): ExtraCut[] {
   ];
 }
 
-/** The face wall-mount keyholes go on: the floor, or the back wall when the floor is the lid. */
-export function keyholeFace(lid: LidState): Face {
-  return lid.face === 'bottom' ? 'back' : 'bottom';
+/** The face across the case from each face. */
+const OPPOSITE: Readonly<Record<Face, Face>> = { top: 'bottom', bottom: 'top', front: 'back', back: 'front', left: 'right', right: 'left' };
+
+/**
+ * Faces a case may hang by: every face but the console's slope. A
+ * cylinder's round wall takes keyholes (through only), not ears: those go
+ * around its top or bottom.
+ */
+export function mountFaces(kind: ShapeKind, mountKind: WallMountKind = 'keyholes'): readonly Face[] {
+  if (kind === 'console') return FACES.filter((face) => face !== 'top');
+  if (kind === 'cylinder' && mountKind === 'ears') return ['top', 'bottom'];
+  return FACES;
+}
+
+/** The face the mount is built on: the one chosen, or the bottom when the shape has no such face. */
+export function mountFace(mount: WallMountState, kind: ShapeKind): Face {
+  return mountFaces(kind, mount.kind).includes(mount.face) ? mount.face : 'bottom';
 }
 
 /** How far the shank slides from the head hole to the end of the slot, mm. */
@@ -320,12 +360,12 @@ function keyholeSizes(screwD: number): { head: number; slot: number; pocket: num
 }
 
 /**
- * Two keyholes `spacing` apart through the floor (or the back wall): a hole
+ * Two keyholes `spacing` apart through the face against the wall: a hole
  * for the screw head, then a slot the shank slides along.
  */
-export function keyholeCuts(mount: WallMountState, dims: Dims, lid: LidState): ExtraCut[] {
+export function keyholeCuts(mount: WallMountState, shape: ShapeState, dims: Dims): ExtraCut[] {
   if (mount.kind !== 'keyholes') return [];
-  const face = keyholeFace(lid);
+  const face = mountFace(mount, shape.kind);
   const extent = faceFrame(face, dims).extent;
   const { head, slot } = keyholeSizes(mount.screwD);
   const length = KEYHOLE_SLIDE;
@@ -334,7 +374,7 @@ export function keyholeCuts(mount: WallMountState, dims: Dims, lid: LidState): E
     const x = extent.w / 2 + (sign * mount.spacing) / 2;
     const y = extent.h / 2 - length / 2;
     cuts.push({ face, shape: 'round', x, y, w: head, h: head, r: 0 });
-    // the slot runs up from the head hole (for the back wall: up when hanging)
+    // the slot runs up from the head hole (on a wall: up when hanging)
     cuts.push({ face, shape: 'rect', x, y: y + length / 2, w: slot, h: length, r: slot / 2 });
   }
   return cuts;
@@ -375,14 +415,14 @@ export interface ClosedKeyholes {
  * `KEYHOLE_SKIN` of the plate left towards the cavity. On the bottom the
  * pads go to its far end and two feet of the same height to the near end,
  * mirrored, so the case stands level; where they would meet they make one
- * strip. On the back wall (the floor is the lid) there are no feet. A
- * cylinder's round wall has no flat place for a pad: null, and the keyholes
- * go through (the panel says so).
+ * strip. On any other face there are no feet. A cylinder's round wall has
+ * no flat place for a pad: null, and the keyholes go through (the panel
+ * says so).
  */
-export function closedKeyholes(mount: WallMountState, shape: ShapeState, dims: Dims, lid: LidState): ClosedKeyholes | null {
+export function closedKeyholes(mount: WallMountState, shape: ShapeState, dims: Dims): ClosedKeyholes | null {
   if (mount.kind !== 'keyholes' || mount.keyhole !== 'closed') return null;
-  const face = keyholeFace(lid);
-  if (shape.kind === 'cylinder' && face !== 'bottom') return null;
+  const face = mountFace(mount, shape.kind);
+  if (shape.kind === 'cylinder' && face !== 'bottom' && face !== 'top') return null;
   const frame = faceFrame(face, dims);
   const { extent } = frame;
   const { head, slot, pocket } = keyholeSizes(mount.screwD);
@@ -425,74 +465,198 @@ export function closedKeyholes(mount: WallMountState, shape: ShapeState, dims: D
 }
 
 export interface EarSpec {
-  /** the tab in the case xy: a rectangle from inside the wall outwards, counter-clockwise */
+  /** the face against the wall: the tab lies in its plate, flush with it */
+  face: Face;
+  /** the tab on that face, (u, v) as seen from outside, counter-clockwise: from inside its wall outwards */
   outline: [number, number][];
-  /** a hole through it */
-  hx: number;
-  hy: number;
+  /** the screw hole's centre on the face (u, v) and its diameter */
+  hu: number;
+  hv: number;
   d: number;
+  /** the hole's centre on the face, case frame */
+  hole: Vec3;
+  /** the tab is the lid's: its root is in the lid's part */
+  onLid: boolean;
+  /** it stands out of the face its part prints on, below the bed */
+  onBed: boolean;
+  /** the body's part of its wall is shorter than the ear: it reaches into the lid's */
+  crowded: boolean;
 }
 
 export const EAR_LENGTH = 8;
 export const EAR_WIDTH = 10;
 
-/** Outward direction of a side wall in the case xy. */
-const SIDE_DIRECTION: Readonly<Record<EarSide, [number, number]>> = { left: [-1, 0], right: [1, 0], front: [0, -1], back: [0, 1] };
+const PAIRS: Readonly<Record<Exclude<EarWalls, 'one'>, [EarSide, EarSide]>> = {
+  leftRight: ['left', 'right'], frontBack: ['front', 'back'], topBottom: ['top', 'bottom'],
+};
 
-/** A tab standing out of the wall at `origin` along `out`: from 2 mm inside the wall to EAR_LENGTH out. */
-function earAt(origin: [number, number], out: [number, number], d: number): EarSpec {
-  const side: [number, number] = [-out[1], out[0]];
-  const at = (z: number, s: number): [number, number] => [origin[0] + out[0] * z + side[0] * s, origin[1] + out[1] * z + side[1] * s];
-  const w = EAR_WIDTH / 2;
-  // inside the wall first, then out: counter-clockwise for any direction
-  const outline = [at(-2, -w), at(EAR_LENGTH, -w), at(EAR_LENGTH, w), at(-2, w)];
-  const [hx, hy] = at(EAR_LENGTH / 2, 0);
-  return { outline, hx, hy, d };
+/** The walls next to a face that ears may stand out of: its four neighbours, not the console's slope. */
+export function earSideFaces(face: Face, kind: ShapeKind): EarSide[] {
+  return EAR_SIDES.filter((side) => side !== face && side !== OPPOSITE[face] && !(kind === 'console' && side === 'top'));
 }
 
-/** Positions of k ears along a wall `length` long, clear of its rounded corners. */
-function alongWall(k: number, length: number, corner: number, mount: WallMountState): number[] {
-  const lo = Math.min(length / 2, corner + 1 + EAR_WIDTH / 2);
-  const hi = Math.max(length / 2, length - corner - 1 - EAR_WIDTH / 2);
-  if (k === 1) return [length / 2];
+/** The wall choices for ears on this face: the pairs of opposite neighbours, and one wall. */
+export function earWallChoices(face: Face, kind: ShapeKind): EarWalls[] {
+  const sides = earSideFaces(face, kind);
+  return EAR_WALLS.filter((walls) => walls === 'one' || PAIRS[walls].every((side) => sides.includes(side)));
+}
+
+/** The wall choice the ears are built with: the user's when the face against the wall allows it, else the first pair offered. */
+export function earChoice(mount: WallMountState, kind: ShapeKind): EarWalls {
+  const choices = earWallChoices(mountFace(mount, kind), kind);
+  return choices.includes(mount.ears.walls) ? mount.ears.walls : choices[0];
+}
+
+/** The walls the ears stand on (the one wall: the user's when it is next to the face, else the first neighbour). */
+export function earWalls(mount: WallMountState, kind: ShapeKind): EarSide[] {
+  const sides = earSideFaces(mountFace(mount, kind), kind);
+  const choice = earChoice(mount, kind);
+  if (choice === 'one') return [sides.includes(mount.ears.wall) ? mount.ears.wall : sides[0]];
+  return [...PAIRS[choice]];
+}
+
+const dot = (a: readonly number[], b: readonly number[]): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const along = (p: Vec3, dir: readonly number[], k: number): Vec3 => [p[0] + dir[0] * k, p[1] + dir[1] * k, p[2] + dir[2] * k];
+
+/** Where the plane of a face is along its axis. */
+function planeOf(face: Face, dims: Dims): number {
+  return face === 'right' ? dims.w : face === 'back' ? dims.d : face === 'top' ? dims.h : 0;
+}
+
+/** The radius of the case's edge between two faces: the corners between walls, the edges at the top and bottom. */
+function edgeRadius(a: Face, b: Face, shape: ShapeState, dims: Dims): number {
+  const level = (face: Face): boolean => face === 'top' || face === 'bottom';
+  if (level(a) || level(b)) return shape.kind === 'console' ? 0 : Math.min(shape.edgeR, dims.h / 2);
+  return Math.min(shape.cornerR, dims.w / 2, dims.d / 2);
+}
+
+/** Centres of k ears between lo and hi: one in the middle, spread to the ends, or centred `step` apart. */
+function alongRange(k: number, lo: number, hi: number, step: number, mount: WallMountState): number[] {
+  const mid = (lo + hi) / 2;
+  if (k === 1 || hi <= lo) return Array.from({ length: k }, () => mid);
   if (mount.ears.along === 'ends') return Array.from({ length: k }, (_, i) => lo + ((hi - lo) * i) / (k - 1));
-  // centred, `spacing` apart (never closer than a tab), squeezed into the flat part
-  const step = Math.min(Math.max(mount.spacing, EAR_WIDTH + 2), (hi - lo) / (k - 1));
-  return Array.from({ length: k }, (_, i) => length / 2 + (i - (k - 1) / 2) * step);
+  const gap = Math.min(Math.max(mount.spacing, step), (hi - lo) / (k - 1));
+  return Array.from({ length: k }, (_, i) => mid + (i - (k - 1) / 2) * gap);
+}
+
+/** Which way is down for a part in its print pose, case frame: the body on the face opposite the lid (a console with a bottom lid on its slope), the lid on its outer face. */
+function printDown(onLid: boolean, shape: ShapeState, dims: Dims, lid: LidState): Vec3 {
+  const n = faceFrame(lid.face, dims).n;
+  if (onLid) return [n[0], n[1], n[2]];
+  if (shape.kind === 'console' && lid.face === 'bottom') {
+    const k = (shape.console.backH - shape.console.frontH) / dims.d;
+    const len = Math.hypot(k, 1);
+    return [0, -k / len, 1 / len];
+  }
+  return [-n[0], -n[1], -n[2]];
 }
 
 /**
- * Tabs at floor level with a screw hole each: 1…4, on the left and right
- * walls, the front and back ones (3 = two on the first wall and one on the
- * second) or all on one wall; along a wall centred `spacing` apart or spread
- * between the ends of its flat part. A cylinder has no walls to choose: its
- * ears go evenly around, the first towards the first wall asked for.
+ * Tabs with a screw hole each, flush with the face against the wall (at
+ * floor level when the bottom is): 1…4, on a pair of opposite walls next to
+ * that face (an odd ear goes to the first wall: 3 = 2 + 1) or all on one;
+ * along a wall centred `spacing` apart or spread between the ends of its
+ * flat part. A tab whose underside would hang in its part's print pose gets
+ * a 45° gusset back to its wall on that side. On a wall the lid's part
+ * crosses, the ears stay on the body's part. A cylinder has no walls to
+ * choose: its ears go evenly around its top or bottom, the first towards the
+ * first wall asked for.
  */
-export function earSpecs(mount: WallMountState, shape: ShapeState, dims: Dims): EarSpec[] {
+export function earSpecs(mount: WallMountState, shape: ShapeState, dims: Dims, lid: LidState): EarSpec[] {
   if (mount.kind !== 'ears') return [];
   const d = mount.screwD + 0.4;
-  const { count, walls, wall } = mount.ears;
-  const sides: EarSide[] = walls === 'leftRight' ? ['left', 'right'] : walls === 'frontBack' ? ['front', 'back'] : [wall];
+  const face = mountFace(mount, shape.kind);
+  const frame = faceFrame(face, dims);
+  const m = frame.n;
+  const plate = plateOf(shape, face);
+  const lidFrame = faceFrame(lid.face, dims);
+  const zp = -(plateOf(shape, lid.face) + lid.depth);
+  const lidZ = (p: Vec3): number => applyAffine(lidFrame.toFace, p)[2];
+  const half = EAR_WIDTH / 2;
+  const { count } = mount.ears;
+  const sides = earWalls(mount, shape.kind);
+
+  /** The tab from `root` inside its wall to EAR_LENGTH out, `lo`…`hi` along `dir` (gusset widening included) at `base`. */
+  const ear = (base: Vec3, out: readonly number[], dir: readonly number[], root: number, lo: number, hi: number, onLid: boolean, crowded: boolean): EarSpec => {
+    const at = (z: number, s: number): [number, number] => {
+      const p = applyAffine(frame.toFace, along(along(base, out, z), dir, s));
+      return [p[0], p[1]];
+    };
+    const outline: [number, number][] = [at(-root, -half - lo)];
+    if (lo > 0) outline.push(at(0, -half - lo));
+    outline.push(at(EAR_LENGTH, -half), at(EAR_LENGTH, half));
+    if (hi > 0) outline.push(at(0, half + hi));
+    outline.push(at(-root, half + hi));
+    let area = 0;
+    for (let i = 0; i < outline.length; i++) {
+      const [a, b] = [outline[i], outline[(i + 1) % outline.length]];
+      area += a[0] * b[1] - b[0] * a[1];
+    }
+    if (area < 0) outline.reverse();
+    const hole = along(base, out, EAR_LENGTH / 2);
+    const [hu, hv] = applyAffine(frame.toFace, hole);
+    const onBed = dot(printDown(onLid, shape, dims, lid), out) > 0.7;
+    return { face, outline, hu, hv, d, hole, onLid, onBed, crowded };
+  };
+
   if (shape.kind === 'cylinder') {
     const radius = dims.w / 2;
-    const [fx, fy] = SIDE_DIRECTION[sides[0]];
+    const [fx, fy] = faceFrame(sides[0], dims).n;
     const start = Math.atan2(fy, fx);
+    const level = planeOf(face, dims);
     return Array.from({ length: count }, (_, i) => {
       const a = start + (2 * Math.PI * i) / count;
-      const out: [number, number] = [Math.cos(a), Math.sin(a)];
-      return earAt([dims.w / 2 + out[0] * radius, dims.d / 2 + out[1] * radius], out, d);
+      const out: Vec3 = [Math.cos(a), Math.sin(a), 0];
+      const base: Vec3 = [dims.w / 2 + out[0] * radius, dims.d / 2 + out[1] * radius, level];
+      const onLid = lidZ(along(along(base, out, -1), m, -plate / 2)) > zp;
+      return ear(base, out, [-out[1], out[0], 0], 2, 0, 0, onLid, false);
     });
   }
+
   // ears per wall: the first wall takes the odd one
   const perWall = sides.length === 1 ? [count] : [Math.ceil(count / 2), Math.floor(count / 2)];
-  const corner = Math.min(shape.cornerR, dims.w / 2, dims.d / 2);
-  return sides.flatMap((side, index) => {
-    const [ox, oy] = SIDE_DIRECTION[side];
-    const length = ox !== 0 ? dims.d : dims.w;
-    return alongWall(perWall[index], length, corner, mount).map((t) => {
-      const origin: [number, number] = ox !== 0 ? [ox < 0 ? 0 : dims.w, t] : [t, oy < 0 ? 0 : dims.d];
-      return earAt(origin, [ox, oy], d);
-    });
+  const nLid = lidFrame.n;
+  return sides.flatMap((side, index): EarSpec[] => {
+    const out = faceFrame(side, dims).n;
+    // the edge between the face and the wall runs along the third axis
+    const axis = [0, 1, 2].find((k) => Math.abs(m[k]) < 0.5 && Math.abs(out[k]) < 0.5) ?? 0;
+    const dir: Vec3 = [axis === 0 ? 1 : 0, axis === 1 ? 1 : 0, axis === 2 ? 1 : 0];
+    const base: Vec3 = [0, 0, 0];
+    for (const f of [face, side]) {
+      const k = [0, 1, 2].find((j) => Math.abs(faceFrame(f, dims).n[j]) > 0.5) ?? 0;
+      base[k] = planeOf(f, dims);
+    }
+    const length = axis === 0 ? dims.w : axis === 1 ? dims.d
+      : shape.kind === 'console' ? shape.console.frontH + ((shape.console.backH - shape.console.frontH) * base[1]) / dims.d : dims.h;
+    const ends: Face[] = axis === 0 ? ['left', 'right'] : axis === 1 ? ['front', 'back'] : ['bottom', 'top'];
+    const corner = Math.max(...ends.flatMap((end) => [edgeRadius(face, end, shape, dims), edgeRadius(side, end, shape, dims)]));
+    const root = 2 + edgeRadius(face, side, shape, dims);
+    // a wall the parting crosses: the ears on the body's part of it; else they go with the part their root is in
+    const crossing = Math.abs(dot(dir, nLid)) > 0.99;
+    const onLid = !crossing && lidZ(along(along(along(base, dir, length / 2), out, -root / 2), m, -plate / 2)) > zp;
+    // a gusset on the side that faces down in print
+    const fall = dot(printDown(onLid, shape, dims, lid), dir);
+    const gLo = fall < -0.7 ? EAR_LENGTH : 0;
+    const gHi = fall > 0.7 ? EAR_LENGTH : 0;
+    let lo = corner + 1 + half + gLo;
+    let hi = length - corner - 1 - half - gHi;
+    if (lo > hi) [lo, hi] = [(lo + hi) / 2, (lo + hi) / 2];
+    let crowded = false;
+    if (crossing) {
+      // along the wall the lid's z changes by ±1 per mm: keep 1 mm off the parting
+      const z0 = lidZ(base);
+      const rate = dot(dir, nLid);
+      const limit = rate > 0 ? (zp - 1 - z0) / rate : (z0 - zp + 1);
+      if (rate > 0 && limit - half - gHi < hi) hi = limit - half - gHi;
+      if (rate < 0 && limit + half + gLo > lo) lo = limit + half + gLo;
+      if (hi < lo) {
+        crowded = true;
+        [lo, hi] = [(lo + hi) / 2, (lo + hi) / 2];
+      }
+    }
+    const step = EAR_WIDTH + gLo + gHi + 2;
+    return alongRange(perWall[index], lo, hi, step, mount)
+      .map((t) => ear(along(base, dir, t), out, dir, root, gLo, gHi, onLid, crowded));
   });
 }
 
@@ -534,11 +698,11 @@ export function extrasCutters(
     return !portCutters.some((port) => cutterContains(port, centre, reach));
   });
   // no vent under a pad or a foot of closed keyholes: it would open into the pad
-  const closed = closedKeyholes(state.wallMount, shape, dims, lid);
+  const closed = closedKeyholes(state.wallMount, shape, dims);
   const free = closed ? kept.filter((cutter) => !underPad(cutter, closed, dims)) : kept;
   const fan = extraCutters(fanCuts(state.fan, dims), shape, dims, slopeTop);
   // closed keyholes are cut by the worker after their pads are added
-  const keyholes = closed ? [] : extraCutters(keyholeCuts(state.wallMount, dims, lid), shape, dims, slopeTop);
+  const keyholes = closed ? [] : extraCutters(keyholeCuts(state.wallMount, shape, dims), shape, dims, slopeTop);
   return [...free, ...fan, ...keyholes];
 }
 
@@ -562,10 +726,12 @@ export function faceSpot(face: Face, dims: Dims, shape: ShapeState, lid: LidStat
 }
 
 /**
- * Warnings: a fan that does not fit its face, keyholes next to a standoff
- * (its hole reaches into the floor: through a keyhole, or into a closed
- * pocket), pads off the flat part of the face, pads under a floor that
- * prints on the bed, closed keyholes asked for on a round wall.
+ * Warnings: a fan that does not fit its face, a mount on the lid (the lid's
+ * fastening holds the weight), an ear below the bed in its part's print
+ * pose, ears with no room on the body's part of their wall, keyholes next to a standoff (its hole reaches
+ * into the plate: through a keyhole, or into a closed pocket), pads off the
+ * flat part of the face, pads on the face the body prints on, closed
+ * keyholes asked for on a round wall.
  */
 export function extrasWarnings(
   state: { fan: FanState; wallMount: WallMountState }, shape: ShapeState, layout: CaseLayout, lid: LidState,
@@ -583,11 +749,29 @@ export function extrasWarnings(
       out.push({ code: 'warn.fanTooBig', params: { size: state.fan.size }, spot });
     }
   }
-  if (state.wallMount.kind === 'keyholes') {
-    const closed = closedKeyholes(state.wallMount, shape, dims, lid);
-    if (state.wallMount.keyhole === 'closed' && !closed) out.push({ code: 'warn.keyholeClosedRound' });
-    const cutters = closed ? closed.cutters : extraCutters(keyholeCuts(state.wallMount, dims, lid), shape, dims, () => dims.h);
-    const supports = layout.boards.flatMap((board) => standoffColumns(board));
+  const mount = state.wallMount;
+  const ears = earSpecs(mount, shape, dims, lid);
+  if ((mount.kind === 'keyholes' && mountFace(mount, shape.kind) === lid.face) || ears.some((ear) => ear.onLid)) {
+    out.push({ code: lid.fastening === 'snaps' ? 'warn.mountOnSnaps' : 'warn.mountOnLid' });
+  }
+  const earSpot = (ear: EarSpec): MessageSpot => {
+    const us = ear.outline.map((p) => p[0]);
+    const vs = ear.outline.map((p) => p[1]);
+    return faceSpot(ear.face, dims, shape, lid, Math.min(...us), Math.min(...vs), Math.max(...us), Math.max(...vs));
+  };
+  const under = ears.find((ear) => ear.onBed);
+  if (under) out.push({ code: 'warn.earOnBed', spot: earSpot(under) });
+  const crowded = ears.find((ear) => ear.crowded);
+  if (crowded) out.push({ code: 'warn.earsOnParting', spot: earSpot(crowded) });
+  if (mount.kind === 'keyholes') {
+    const face = mountFace(mount, shape.kind);
+    const closed = closedKeyholes(mount, shape, dims);
+    if (mount.keyhole === 'closed' && !closed) out.push({ code: 'warn.keyholeClosedRound' });
+    // the supports standing on this face's plate: floor boards' on the bottom, hung ones' under a flat top
+    const onPlate = face === 'bottom' ? layout.boards.filter((board) => !board.hung)
+      : face === 'top' && shape.kind !== 'console' ? layout.boards.filter((board) => board.hung) : [];
+    const cutters = closed ? closed.cutters : extraCutters(keyholeCuts(mount, shape, dims), shape, dims, () => dims.h);
+    const supports = onPlate.flatMap((board) => standoffColumns(board));
     // how far a standoff's centre is from a cutter's section, across the cutter
     const gap = (cutter: CutterSpec, x: number, y: number): number => {
       const d = [x - cutter.origin[0], y - cutter.origin[1], 0];
@@ -596,11 +780,11 @@ export function extrasWarnings(
       return Math.hypot(Math.max(0, Math.abs(a) - cutter.w / 2), Math.max(0, Math.abs(b) - cutter.h / 2));
     };
     const near = cutters.find((cutter) => supports.some((c) => gap(cutter, c.x, c.y) < c.r + 1));
-    if (near) out.push({ code: 'warn.keyholeNearStandoff', spot: boxSpot(boxAround(cutterCorners(near)), 'body') });
+    if (near) out.push({ code: 'warn.keyholeNearStandoff', spot: boxSpot(boxAround(cutterCorners(near)), face === lid.face ? 'lid' : 'body') });
     if (closed) {
-      // the body prints standing on the face opposite the lid: with the lid
-      // on top the pads are under the floor, and the floor between them hangs
-      if (closed.face === 'bottom' && lid.face === 'top') out.push({ code: 'warn.keyholePadsOnBed' });
+      // the body prints standing on the face opposite the lid: pads there
+      // stand on the bed, and the plate between them hangs
+      if (closed.face === OPPOSITE[lid.face]) out.push({ code: 'warn.keyholePadsOnBed' });
       const flat = flatRegion(shape, dims, closed.face, 0);
       const eps = 1e-6;
       if (closed.pads.some((pad) => pad.u0 < flat.u0 - eps || pad.u1 > flat.u1 + eps || pad.v0 < flat.v0 - eps || pad.v1 > flat.v1 + eps)) {

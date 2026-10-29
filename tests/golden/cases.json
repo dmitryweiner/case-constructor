@@ -321,7 +321,7 @@
   },
   "ears-four-ends": {
     "body": {
-      "triangles": 3320,
+      "triangles": 3328,
       "volume": 26671.29,
       "extents": [
         97.9,
@@ -341,7 +341,7 @@
   },
   "ears-three-cylinder": {
     "body": {
-      "triangles": 3082,
+      "triangles": 3084,
       "volume": 36272.7,
       "extents": [
         116.464,
@@ -1693,6 +1693,106 @@
         60.99,
         36.7,
         5
+      ]
+    }
+  },
+  "keyholes-left-wall": {
+    "body": {
+      "triangles": 2744,
+      "volume": 26115.89,
+      "extents": [
+        97.9,
+        66.5,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 1916,
+      "volume": 12915.81,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "closed-keyholes-back-top-lid": {
+    "body": {
+      "triangles": 3424,
+      "volume": 28032.85,
+      "extents": [
+        97.9,
+        71,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 1916,
+      "volume": 12915.81,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "keyholes-in-bottom-lid": {
+    "body": {
+      "triangles": 3776,
+      "volume": 30576.71,
+      "extents": [
+        106.5,
+        75.1,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 2532,
+      "volume": 16883.77,
+      "extents": [
+        106.5,
+        75.1,
+        6
+      ]
+    }
+  },
+  "ears-back-gussets": {
+    "body": {
+      "triangles": 3452,
+      "volume": 39738.71,
+      "extents": [
+        116,
+        70,
+        42.99
+      ]
+    },
+    "lid": {
+      "triangles": 1824,
+      "volume": 13977.46,
+      "extents": [
+        100,
+        70,
+        5
+      ]
+    }
+  },
+  "ears-left-top-bottom": {
+    "body": {
+      "triangles": 4486,
+      "volume": 50627.89,
+      "extents": [
+        100,
+        80.6,
+        61
+      ]
+    },
+    "lid": {
+      "triangles": 2816,
+      "volume": 9717.24,
+      "extents": [
+        100,
+        7,
+        45
       ]
     }
   }

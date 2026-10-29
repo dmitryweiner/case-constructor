@@ -8,7 +8,7 @@
 - [Batteries](batteries.md)
 - [Lid](lid.md)
 - [Openings: ports and your own](openings.md)
-- [Ventilation, fan, wall mounting, label](extras.md)
+- [Ventilation, fan, wall mounting, labels](extras.md)
 - [Export and printing](export.md)
 - [Presets and project files](presets.md)
 - [What is not in v1](limitations.md)

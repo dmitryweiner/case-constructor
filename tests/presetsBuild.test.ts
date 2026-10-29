@@ -22,7 +22,7 @@ describe('built-in presets', () => {
     for (const { half, state } of casesOf(whole)) {
       // notes (`info.`) only describe: a connector recessed in a thick wall still has its opening
       expect(collisions(caseLayout(state)).filter((note) => note.code.startsWith('warn.'))).toEqual([]);
-      const built = buildCase(csg, state, 8, () => {}, null, half ? halfHinge(whole, half) : null);
+      const built = buildCase(csg, state, 8, () => {}, [], half ? halfHinge(whole, half) : null);
       for (const mesh of [built.body, built.lid, ...(built.hinge ? [built.hinge] : [])]) {
         const report = validateMesh(mesh);
         expect(report.watertight).toBe(true);

@@ -25,6 +25,9 @@ keypad's flange, the Tier A + B keyboards of `plans/PERSPECTIVE-KEYBOARDS.md`.
 case with its own lid, knuckles on a pin, a screw or snapping cones, a
 printed hinge on screws, cable slots, magnets inside (the branch
 `hinged-2026-10-28`).
+`plans/PLAN-MOUNT-LABELS.md` — the wall mount on the face the user chooses
+(keyholes through it, ears flush with it), several labels on any flat face
+(W1…W3, L1…L4; the branch `mount-labels`): done.
 
 ## Node
 
@@ -392,13 +395,22 @@ freely; a temporary script that turns out useful becomes a permanent one.
   and keyholes are ExtraCuts on faces and go through `extraCutters` (curved
   walls and the console's slope come for free); vents are thinned out of the
   skirt band, away from floor supports and port openings. Ears and the label
-  are additive. Closed keyholes (`closedKeyholes`) are additive pads and
+  are additive. The wall mount is on the face the user chose
+  (`wallMount.face`, built on `mountFace`; a file without it hangs by its
+  back when the floor is the lid, as it did): keyholes through it, ears
+  (`earSpecs`, in that face's frame) flush with it out of the walls next to
+  it, each with the part its root is in, a 45° gusset on the side that
+  hangs in its part's print pose (`printDown`). Closed keyholes (`closedKeyholes`) are additive pads and
   feet whose pockets are cut by the worker after the pads are added (in the
   common cutter pass the pads would fill them back); vents are thinned out
-  under them. The label is rasterised in the main thread
-  (`ui/labelRaster.ts`, fonts in `public/fonts`, loaded lazily) and sent with
-  each job (`CsgJob.label`); the worker unions the raster's row runs into a
-  CrossSection and extrudes it on the lid face.
+  under them. Labels (`state.labels`, up to 8; an old file's one `label`
+  becomes a list of one on its lid's face) are rasterised in the main
+  thread (`ui/labelRaster.ts`, fonts in `public/fonts`, loaded lazily) and
+  sent with each job (`CsgJob.labels`, one raster per label); the worker
+  unions each raster's row runs into a CrossSection and extrudes it on its
+  face (`labelSurface`: the face's frame, the console's slope for its top).
+  Engraved ones cut both parts; a raised one is split at the parting, each
+  piece `LABEL_SEAM` short of it. Warnings: `labelWarnings` (`label.ts`).
 - View and export live in one card: the parts tab decides what is shown and
   exported (Both — default and first; Body with its boards; the Lid alone,
   in its print layout), the view row decides how (exploded — default,
@@ -555,15 +567,15 @@ Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHei
 `_hole_add`, ports `_port<p>_type|_edge` (selects), `_port<p>_<field>`, `_port<p>_remove`,
 `_port_add`, `_save`. The card rebuilds only when a custom board's structure changes
 (`customSignature`), so a number input keeps its focus while typing.
-Extras: toggled cards `#on_vents`, `#on_fan`, `#on_label`; vents
-`#vents_face_<face>` (checkboxes), `#vents_pattern_slots|hex|round`,
-`#vents_along_x|y`, `#vents_size|_pitch|_margin`; fan `#fan_face` (select),
+Extras: folding cards `#card_vents`, `#card_fan` (no checkbox: on while a face is pressed); vents
+`#vents_face_<face>` (toggle buttons, any number pressed), `#vents_pattern_slots|hex|round`,
+`#vents_along_x|y`, `#vents_size|_pitch|_margin`; fan `#fan_face_none|<face>`,
 `#fan_size_25…60`, `#fan_x|_y|_screwD`; wall mount
-`#mount_kind_none|keyholes|ears`, `#mount_keyhole_through|closed`, ears
-`#mount_earCount_1…4`, `#mount_earWalls_leftRight|frontBack|one`,
-`#mount_earWall` (select), `#mount_earAlong_centre|ends`, `#mount_spacing`, `#mount_screwD`; label
-`#label_text`, `#label_font`, `#label_size`, `#label_raised`, `#label_depth`,
-`#label_anchor_<anchor>` (a 3 × 3 grid: topLeft … bottomRight), `#label_margin` (off the centre), `#label_x|_y`, `#label_turn_0|90|180|270`, `#label_angle`.
+`#mount_kind_none|keyholes|ears`, `#mount_face_<face>` (the face against the wall), `#mount_keyhole_through|closed`, ears
+`#mount_earCount_1…4`, `#mount_earWalls_leftRight|frontBack|topBottom|one` (the pairs next to the face against the wall),
+`#mount_earWall` (select), `#mount_earAlong_centre|ends`, `#mount_spacing`, `#mount_screwD`; labels
+`#labelAdd` (up to 8), per label `#label<i>_face` (select), `#label<i>_text`, `#label<i>_font`, `#label<i>_size`, `#label<i>_raised`, `#label<i>_depth`,
+`#label<i>_anchor_<anchor>` (a 3 × 3 grid: topLeft … bottomRight), `#label<i>_margin` (off the centre), `#label<i>_x|_y`, `#label<i>_turn_0|90|180|270`, `#label<i>_angle`, `#label<i>_remove`.
 Openings: `#cutAdd`; per cut `#cut<i>_face` (select), `#cut<i>_shape_rect|round`,
 `#cut<i>_x|_y|_w|_d|_h|_r` (`_d` is the diameter of a round cut), `#cut<i>_remove`.
 Case card: `#case_kind_box|cylinder|console|hinged`, `#case_cornerR`, `#case_edgeR`,
@@ -576,7 +588,7 @@ Hinged: the card `#hingeCard` (`#hinge_gapAuto`, `#hinge_gap`, `#hinge_magnets`,
 `#hinge_axle_cones` (leaves only), `#hinge_leafScrew_M2|M2.5|M3`, `#hinge_leafHole_tap|insert|nut` (leaves)), cables `#cableAdd`, per cable
 `#cable<i>_kind_flat|round`, `#cable<i>_through_wall|face`, `#cable<i>_x|_w|_t|_d|_plugW|_plugH|_remove`, the half switch `#halfBar`
 heading the frame `#halfGroup` (class `on` when hinged) round the Boards, Lid,
-Openings and Mounting cards (`#edit_half_a|b`), the view's angle `#view_angle` (in the View and export
+Openings and Labels cards (`#edit_half_a|b`; the wall mount's card `#mountCard`, the whole case's, stands after it and hides when hinged), the view's angle `#view_angle` (in the View and export
 card).
 Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets|printed`,
 `#lid_screw` (select), `#lid_hole_tap|insert|nut`, `#lid_magnet` (select),

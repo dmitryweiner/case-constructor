@@ -46,6 +46,8 @@ export type SelectOption = { value: string; label: Key } | { value: string; text
 export interface SelectControl<T> extends Common<T> {
   kind: 'select';
   options: readonly SelectOption[];
+  /** an option that cannot be chosen in this state */
+  optionDisabled?: (state: T, value: string) => boolean;
   get(state: T): string;
   set(state: T, value: string): T;
 }
@@ -173,17 +175,20 @@ export function renderControls<T>(
     } else if (control.kind === 'select') {
       const select = make('select');
       select.id = id;
-      for (const option of control.options) {
+      const nodes = control.options.map((option) => {
         const node = make('option', undefined, optionText(option));
         node.value = option.value;
         select.append(node);
-      }
-      select.value = control.get(read());
+        return node;
+      });
+      const show = (state: T): void => {
+        for (const node of nodes) node.disabled = control.optionDisabled?.(state, node.value) ?? false;
+        select.value = control.get(state);
+      };
+      show(read());
       select.addEventListener('change', () => onChange(control.set(read(), select.value)));
       row.append(select);
-      syncers.push((state) => {
-        select.value = control.get(state);
-      });
+      syncers.push(show);
       setDisabled = (off) => {
         select.disabled = off;
       };

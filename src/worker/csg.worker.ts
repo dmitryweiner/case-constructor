@@ -17,7 +17,7 @@ import type { SurfaceMesh } from '../geo/surface';
 import { meshBounds } from '../geo/surface';
 import { assessExport, validateMesh } from '../geo/validate';
 import { sanitizeState } from '../state/schema';
-import { sanitizeLabelRaster } from '../geo/label';
+import { sanitizeLabelRasters } from '../geo/label';
 import type { CsgJob, JobPart, PartId, WorkerIn, WorkerOut } from './protocol';
 
 /**
@@ -63,8 +63,8 @@ function run(csg: CsgApi, jobId: number, job: CsgJob): JobPart[] {
     send({ type: 'progress', jobId, step: step++, total, label });
   };
   const builds = cases.map(({ half, state: one }) => {
-    const label = sanitizeLabelRaster(half === 'b' ? job.labelB : job.label);
-    return { half, built: half ? cachedBuild(csg, half, one, halfHinge(state, half), segments, stage, label) : buildCase(csg, one, segments, stage, label) };
+    const labels = sanitizeLabelRasters(half === 'b' ? job.labelsB : job.labels);
+    return { half, built: half ? cachedBuild(csg, half, one, halfHinge(state, half), segments, stage, labels) : buildCase(csg, one, segments, stage, labels) };
   });
   if (exporting) stage({ code: 'progress.check' });
   return builds.flatMap(({ half, built }) => {
@@ -92,15 +92,15 @@ function run(csg: CsgApi, jobId: number, job: CsgJob): JobPart[] {
 const lastHalves = new Map<Half, { key: string; built: CaseBuild }>();
 
 function cachedBuild(
-  csg: CsgApi, half: Half, state: AppState, hinge: HalfHinge | null, segments: number, stage: (label: Message) => void, label: LabelRaster | null,
+  csg: CsgApi, half: Half, state: AppState, hinge: HalfHinge | null, segments: number, stage: (label: Message) => void, labels: readonly (LabelRaster | null)[],
 ): CaseBuild {
-  const key = `${segments}|${rasterKey(label)}|${JSON.stringify(hinge)}|${JSON.stringify(state)}`;
+  const key = `${segments}|${labels.map(rasterKey).join(',')}|${JSON.stringify(hinge)}|${JSON.stringify(state)}`;
   const last = lastHalves.get(half);
   if (last?.key === key) {
     for (const one of BUILD_STAGES) stage(one);
     return copyBuild(last.built);
   }
-  const built = buildCase(csg, state, segments, stage, label, hinge);
+  const built = buildCase(csg, state, segments, stage, labels, hinge);
   // the buffers sent are transferred away: the cache keeps copies
   lastHalves.set(half, { key, built: copyBuild(built) });
   return built;

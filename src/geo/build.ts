@@ -4,13 +4,13 @@
 
 import type { CsgApi } from './csg';
 import type { Manifold } from 'manifold-3d';
-import { CsgScope, fromManifold, transformSolid, unionAll } from './csg';
+import { CsgScope, fromManifold, splitByPlane, transformSolid, unionAll } from './csg';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import type { PlacedBoard } from './layout';
 import { caseLayout, effectiveLid, flatFrame, heldByLid } from './layout';
 import type { Message } from './message';
-import { partingZ, skirtSolid, splitAtParting } from './parting';
+import { SPLIT_OFFSET, partingZ, skirtSolid, splitAtParting } from './parting';
 import { plateOf, shapeSpec } from './shape';
 import { outerSolid, shellSolid } from './shell';
 import type { Support } from './standoffs';
@@ -30,7 +30,7 @@ import { openingPolygon } from './opening';
 import { loftSlice } from './section';
 import { extraCutters } from './cutters';
 import { outerTopAt, portCutters } from './ports';
-import { closedKeyholes, earSpecs, extrasCutters } from './extras';
+import { closedKeyholes, earSpecs, extrasCutters, labelFace, mountFace } from './extras';
 import { earSolids, keyholePadSolids, labelSolid } from './extrasSolids';
 import { screwSolid } from './screwSolids';
 import type { HalfHinge } from './hinge';
@@ -39,7 +39,7 @@ import { knuckleSolids, leafSolids, pivotSolids } from './hingeSolids';
 import { effectiveRadii } from './loft';
 import { screwShape, threadPoints } from './thread';
 import type { LabelRaster } from './label';
-import { labelPlacement } from './label';
+import { labelPlacement, labelSurface } from './label';
 import { applyAffine, composeAffine, invertRigid } from './surface';
 import type { SurfaceMesh } from './surface';
 import type { AppState } from '../state/schema';
@@ -65,6 +65,9 @@ export interface CaseBuild {
 }
 
 /** Stages reported to the progress bar, in order. */
+/** A raised label crossing the parting stops this far short of it on each part, so neither meets the other's face, mm. */
+const LABEL_SEAM = 0.2;
+
 export const BUILD_STAGES: readonly Message[] = [
   { code: 'progress.shell' },
   { code: 'progress.split' },
@@ -77,7 +80,7 @@ export const BUILD_STAGES: readonly Message[] = [
 
 /** `hinge`: a half of a hinged case gets its knuckles (`state/hinged.ts`, `halfHinge`). */
 export function buildCase(
-  csg: CsgApi, state: AppState, segments: number, onStage: (stage: Message) => void = () => {}, label: LabelRaster | null = null,
+  csg: CsgApi, state: AppState, segments: number, onStage: (stage: Message) => void = () => {}, labels: readonly (LabelRaster | null)[] = [],
   hinge: HalfHinge | null = null,
 ): CaseBuild {
   const scope = new CsgScope();
@@ -253,18 +256,18 @@ export function buildCase(
       lidSolid = scope.keep(lidSolid.subtract(holes));
     }
 
-    // Additive extras: ears on the part that owns the floor, the label on the lid.
+    // Additive extras: ears on the part their root is in, the labels on their faces.
     onStage(BUILD_STAGES[6]);
-    const ears = earSolids(csg, scope, earSpecs(state.wallMount, shape, dims), shape.floor, segments);
-    if (ears) {
-      const floorOnLid = applyAffine(frame.toFace, [dims.w / 2, dims.d / 2, shape.floor / 2])[2] > zp;
-      const material = scope.keep(ears.material.subtract(floorOnLid ? body : lidSolid));
-      if (floorOnLid) lidSolid = scope.keep(scope.keep(lidSolid.add(material)).subtract(ears.holes));
+    const earSpecsBuilt = earSpecs(state.wallMount, shape, dims, lid);
+    const mountFrame = faceFrame(mountFace(state.wallMount, shape.kind), dims);
+    for (const ears of earSolids(csg, scope, earSpecsBuilt, mountFrame, plateOf(shape, mountFrame.face), segments)) {
+      const material = scope.keep(ears.material.subtract(ears.onLid ? body : lidSolid));
+      if (ears.onLid) lidSolid = scope.keep(scope.keep(lidSolid.add(material)).subtract(ears.holes));
       else body = scope.keep(scope.keep(body.add(material)).subtract(ears.holes));
     }
     // closed keyholes: pads and feet on the part that owns their face, then
     // the pockets — after the pads, or the pads would fill them back
-    const closed = closedKeyholes(state.wallMount, shape, dims, lid);
+    const closed = closedKeyholes(state.wallMount, shape, dims);
     if (closed) {
       const pads = keyholePadSolids(csg, scope, closed, faceFrame(closed.face, dims), segments);
       const keyFrame = faceFrame(closed.face, dims);
@@ -276,13 +279,35 @@ export function buildCase(
       if (padsOnLid) lidSolid = owner;
       else body = owner;
     }
-    if (state.label.on && label) {
-      const place = labelPlacement(state.label, label, lid.face, dims, shape);
+    // labels: engraved ones cut both parts; a raised one is split at the
+    // parting, each part taking its piece, LABEL_SEAM apart from the plane
+    const engraved: Manifold[] = [];
+    const raised: Record<'body' | 'lid', Manifold[]> = { body: [], lid: [] };
+    state.labels.forEach((label, index) => {
+      const raster = labels[index];
+      if (!raster) return;
+      const surface = labelSurface(labelFace(label, shape.kind), shape, dims);
+      const place = labelPlacement(label, raster, surface);
       // an engraving never goes through the plate
-      const depth = state.label.raised ? state.label.depth : Math.min(state.label.depth, plate - 0.6);
-      const relief = labelSolid(csg, scope, state.label, label, frame, place, depth);
-      if (relief) lidSolid = scope.keep(state.label.raised ? lidSolid.add(relief) : lidSolid.subtract(relief));
+      const depth = label.raised ? label.depth : Math.min(label.depth, plateOf(shape, surface.face) - 0.6);
+      const relief = labelSolid(csg, scope, label, raster, surface.fromFace, place, depth);
+      if (!relief) return;
+      if (!label.raised) {
+        engraved.push(relief);
+        return;
+      }
+      const [onLid] = splitByPlane(scope, relief, frame.n, zp + LABEL_SEAM - frame.toFace[11]);
+      const [, onBody] = splitByPlane(scope, relief, frame.n, zp - SPLIT_OFFSET - LABEL_SEAM - frame.toFace[11]);
+      if (!onLid.isEmpty()) raised.lid.push(onLid);
+      if (!onBody.isEmpty()) raised.body.push(onBody);
+    });
+    if (engraved.length > 0) {
+      const cut = unionAll(csg, scope, engraved);
+      body = scope.keep(body.subtract(cut));
+      lidSolid = scope.keep(lidSolid.subtract(cut));
     }
+    if (raised.body.length > 0) body = scope.keep(body.add(unionAll(csg, scope, raised.body)));
+    if (raised.lid.length > 0) lidSolid = scope.keep(lidSolid.add(unionAll(csg, scope, raised.lid)));
 
     const screw = lid.fastening === 'printed'
       ? fromManifold(screwSolid(csg, scope, screwShape(lid.thread.size, plate, lid.fit), threadPoints(segments)))

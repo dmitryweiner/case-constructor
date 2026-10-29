@@ -383,6 +383,32 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     boards: [{ board: 'heltec-wifi-lora-32-v4', on: 'floor', z: 4, buttons: 'caps', capShape: 'square', capR: 0.8 }],
   }),
+  // W1: the face against the wall (plans/PLAN-MOUNT-LABELS.md)
+  'keyholes-left-wall': sanitizeState({
+    ...defaultState(),
+    wallMount: { kind: 'keyholes', face: 'left', spacing: 30 },
+  }),
+  'closed-keyholes-back-top-lid': sanitizeState({
+    ...defaultState(),
+    wallMount: { kind: 'keyholes', keyhole: 'closed', face: 'back', spacing: 50, screwD: 4 },
+  }),
+  'keyholes-in-bottom-lid': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, face: 'bottom', fastening: 'screws' },
+    wallMount: { kind: 'keyholes', face: 'bottom', spacing: 58 },
+  }),
+  // W2: ears flush with the face against the wall
+  'ears-back-gussets': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, auto: false, size: { w: 100, d: 70, h: 45 } },
+    wallMount: { kind: 'ears', face: 'back', ears: { count: 4, walls: 'leftRight', along: 'ends' } },
+  }),
+  'ears-left-top-bottom': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, edgeR: 2, auto: false, size: { w: 100, d: 70, h: 45 } },
+    lid: { ...defaultState().lid, face: 'front', fastening: 'screws' },
+    wallMount: { kind: 'ears', face: 'left', ears: { count: 2, walls: 'topBottom' } },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {
@@ -401,7 +427,7 @@ describe('golden cases', () => {
     for (const [name, whole] of Object.entries(STATES)) {
       // a hinged case: an entry per half, `<name>:a` and `<name>:b`
       for (const { half, state } of casesOf(whole)) {
-        const built = buildCase(csg, state, SEGMENTS, () => {}, null, half ? halfHinge(whole, half) : null);
+        const built = buildCase(csg, state, SEGMENTS, () => {}, [], half ? halfHinge(whole, half) : null);
         actual[half ? `${name}:${half}` : name] = {
           body: part(built.body), lid: part(built.lid),
           ...(built.clamps ? { clamp: part(built.clamps) } : {}), ...(built.lidClamps ? { lidClamp: part(built.lidClamps) } : {}),

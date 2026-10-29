@@ -8,8 +8,8 @@ handheld). **Case → Shape → Hinged.**
 
 The **lower half** is the base, the **upper half** the cover, as the case
 lies closed. Each is a box of its own with its own boards, lid, openings,
-vents, fan and label. The cards that edit one half — Boards, Lid,
-Openings, Mounting and label — stand in one frame headed by **Editing**:
+vents, fan and labels. The cards that edit one half — Boards, Lid,
+Openings, Labels — stand in one frame headed by **Editing**:
 *lower* or *upper* (it stays in sight while they scroll) picks the half
 they all show. A board added goes to the half being edited.
 
@@ -163,7 +163,7 @@ that runs into the rounded corner, or into another slot, is warned about.
 **Gap from what stands out** (on by default): the gap between the closed
 halves takes whatever stands out of both inner faces — key tops, printed
 caps, a knob's shaft, a socket standing up out of its slot, a raised label
-on a lid on top — added up (closed, they may face each other) and half a
+on the inner face — added up (closed, they may face each other) and half a
 millimetre more; with nothing standing out it is 1 mm. A note says the gap
 when it is more than that. Off, the gap is yours; less than what stands
 out is warned about: the case will not close.

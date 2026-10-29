@@ -1,44 +1,51 @@
-// The label's raster: the text in a <canvas>, one line. The worker turns it
-// into a relief on the lid (geo/extrasSolids.ts). Hebrew runs right to left
+// The labels' rasters: each text in a <canvas>, one line. The worker turns
+// them into reliefs on their faces (geo/extrasSolids.ts). Hebrew runs right to left
 // by the canvas's own bidi; the layout of the line stays as typed.
 
 import type { LabelState } from '../geo/extras';
 import type { LabelRaster } from '../geo/label';
 import { LABEL_FONT_FILES, fontReady, loadFont } from './fonts';
 
-/** Pixels per millimetre on the lid: a 0.8 mm stroke is eight pixels. */
+/** Pixels per millimetre on the face: a 0.8 mm stroke is eight pixels. */
 const PX_PER_MM = 10;
 /** Margin around the line, px. */
 const PAD_PX = 2;
 
-let cache: { key: string; raster: LabelRaster | null } | null = null;
+/** The rasters drawn for the last call, by font, size and text: the next call reuses them. */
+let cache = new Map<string, LabelRaster | null>();
 const waiting = new Set<string>();
 
 /**
- * The raster of the current label, or null: no text, the label is off, or
+ * The rasters of the labels, one per label, null where there is no text or
  * the font is still loading — then `onReady` is called when it is in, to
  * rebuild with the letters. Never drawn in a stand-in font: the preview would
  * jump when the real one arrives.
  */
-export function labelRaster(label: LabelState, onReady: () => void): LabelRaster | null {
-  const text = label.on ? label.text.trim() : '';
-  if (!text) return null;
-  if (!fontReady(label.font)) {
-    if (!waiting.has(label.font)) {
-      waiting.add(label.font);
-      const done = (): void => {
-        waiting.delete(label.font);
-      };
-      void loadFont(label.font).then(() => {
-        done();
-        onReady();
-      }, done);
+export function labelRasters(labels: readonly LabelState[], onReady: () => void): (LabelRaster | null)[] {
+  const next = new Map<string, LabelRaster | null>();
+  const out = labels.map((label) => {
+    const text = label.text.trim();
+    if (!text) return null;
+    if (!fontReady(label.font)) {
+      if (!waiting.has(label.font)) {
+        waiting.add(label.font);
+        const done = (): void => {
+          waiting.delete(label.font);
+        };
+        void loadFont(label.font).then(() => {
+          done();
+          onReady();
+        }, done);
+      }
+      return null;
     }
-    return null;
-  }
-  const key = `${label.font}|${label.sizeMm}|${text}`;
-  if (cache?.key !== key) cache = { key, raster: render(text, label) };
-  return cache.raster;
+    const key = `${label.font}|${label.sizeMm}|${text}`;
+    const raster = next.get(key) ?? cache.get(key) ?? render(text, label);
+    next.set(key, raster);
+    return raster;
+  });
+  cache = next;
+  return out;
 }
 
 function render(text: string, label: LabelState): LabelRaster | null {

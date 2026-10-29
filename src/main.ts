@@ -23,13 +23,15 @@ import { defaultCustomBoard } from './ui/customBoard';
 import { addCut, renderCutsCard } from './ui/cutsCard';
 import { renderExtras } from './ui/extrasCards';
 import type { ExtrasHandle } from './ui/extrasCards';
-import { labelRaster } from './ui/labelRaster';
+import { labelRasters } from './ui/labelRaster';
 import type { LabelRaster } from './geo/label';
-import { labelBox, labelPlacement } from './geo/label';
+import { labelWarnings } from './geo/label';
 import { SCREWS } from './geo/fasteners';
 import { screwShape } from './geo/thread';
-import { extrasWarnings, faceSpot, flatRegion } from './geo/extras';
+import { LABELS_MAX, extrasCutters, extrasWarnings } from './geo/extras';
 import type { CutsCardHandle } from './ui/cutsCard';
+import type { LabelsCardHandle } from './ui/labelsCard';
+import { addLabel, renderLabelsCard } from './ui/labelsCard';
 import { cutWarnings, knuckleCutWarnings, leafPadWarnings, magnetWarnings, outerTopAt, portCutters } from './geo/ports';
 import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
 import { effectiveLid } from './geo/layout';
@@ -104,11 +106,14 @@ const boardSearch = el('boardSearch', HTMLInputElement);
 const boardList = el('boardList', HTMLDivElement);
 const viewBoards = el('viewBoards', HTMLInputElement);
 const cutCards = el('cutCards', HTMLDivElement);
+const labelCards = el('labelCards', HTMLDivElement);
 const extraOpenings = el('extraOpenings', HTMLDivElement);
 const extraMounting = el('extraMounting', HTMLDivElement);
 const cutAdd = el('cutAdd', HTMLButtonElement);
+const labelAdd = el('labelAdd', HTMLButtonElement);
 const lidParams = el('lidParams', HTMLDivElement);
 const hingeCard = el('hingeCard', HTMLElement);
+const mountCard = el('mountCard', HTMLElement);
 const hingeParams = el('hingeParams', HTMLDivElement);
 /** A hinged case: the cards that edit one half, framed under one switch (`#edit_half_*`). */
 const halfGroup = el('halfGroup', HTMLDivElement);
@@ -226,6 +231,7 @@ function printControls(): Control<AppState>[] {
 }
 let boardRows: BoardsCardHandle;
 let cutRows: CutsCardHandle;
+let labelRows: LabelsCardHandle;
 let extraRows: ExtrasHandle;
 
 function renderPanel(): void {
@@ -237,6 +243,7 @@ function renderPanel(): void {
   boardRows = renderBoardsCard(boardCards, () => edited(), applyEdit,
     (text, name) => download(text, name, 'application/json'));
   cutRows = renderCutsCard(cutCards, () => edited(), applyEdit);
+  labelRows = renderLabelsCard(labelCards, () => edited(), applyEdit);
   extraRows = renderExtras(extraOpenings, extraMounting, () => edited(), applyEdit);
   lidRows = renderControls(lidParams, lidControls(), () => edited(), applyEdit, 'lid');
   printRows = renderControls(printParams, printControls(), () => state, (next) => applyState(next), 'print');
@@ -254,6 +261,8 @@ function syncPanel(): void {
   caseRows.sync(state);
   const hinged = isHinged(state);
   hingeCard.hidden = !hinged;
+  // the wall mount is the whole case's: a hinged one hangs on no wall
+  mountCard.hidden = hinged;
   halfBar.hidden = !hinged;
   halfGroup.classList.toggle('on', hinged);
   hingeRows.sync(state);
@@ -280,6 +289,8 @@ function syncCards(): void {
   cutRows.sync(one);
   extraRows.sync(one);
   cutAdd.disabled = one.extraCuts.length >= MAX_EXTRA_CUTS;
+  labelRows.sync(one);
+  labelAdd.disabled = one.labels.length >= LABELS_MAX;
 }
 
 let historyTimer: ReturnType<typeof setTimeout> | null = null;
@@ -322,8 +333,8 @@ interface BuiltCase {
 }
 /** The last preview from the worker, kept so view toggles redraw without a rebuild. */
 let lastParts: { state: AppState; cases: BuiltCase[] } | null = null;
-/** The labels' rasters for the current state (a single case's is the lower half's) — the worker gets them with every job. */
-let currentLabels: Record<Half, LabelRaster | null> = { a: null, b: null };
+/** The labels' rasters for the current state (a single case's are the lower half's) — the worker gets them with every job. */
+let currentLabels: Record<Half, (LabelRaster | null)[]> = { a: [], b: [] };
 /** Board ghosts and their port captions per case — drawn at once, the case follows from the worker. */
 let ghostGroups: GhostGroup[] = [];
 /** A line of the warnings list: its text, and whether it only informs (grey, ℹ, not counted). */
@@ -356,7 +367,7 @@ function hingeOf(half: Half): { hinge: HalfHinge; strip: [number, number] | null
 }
 
 /** What the panel says about one case (the state's, or a half of a hinged one) before the worker answers. */
-function caseNotices(one: AppState, label: LabelRaster | null, hinged: ReturnType<typeof hingeOf> = null): Notice[] {
+function caseNotices(one: AppState, labels: readonly (LabelRaster | null)[], hinged: ReturnType<typeof hingeOf> = null): Notice[] {
   const out: Notice[] = [];
   const layout = caseLayout(one);
   const { dims } = layout;
@@ -400,26 +411,13 @@ function caseNotices(one: AppState, label: LabelRaster | null, hinged: ReturnTyp
     out.push(...postsInOpenings(spots, frame, zp, plate, lidBuilt, cutters).map(notice));
   }
   out.push(...printedScrewWarnings(lidBuilt).map(notice));
-  out.push(...extrasWarnings(state, shapeBuilt, layout, lidBuilt).map(notice));
-  if (label) {
-    const place = labelPlacement(one.label, label, lidBuilt.face, dims, shapeBuilt);
-    const region = flatRegion(shapeBuilt, dims, lidBuilt.face, 0);
-    const { hw, hh } = labelBox(place.w, place.h, one.label.angle);
-    const labelSpot = faceSpot(lidBuilt.face, dims, shapeBuilt, lidBuilt, place.u - hw, place.v - hh, place.u + hw, place.v + hh);
-    if (place.u - hw < region.u0 || place.u + hw > region.u1 || place.v - hh < region.v0 || place.v + hh > region.v1) {
-      out.push(notice({ code: 'warn.labelTooBig', spot: labelSpot }));
-    }
-    // a screw head on the lid: the label must keep clear of it
-    const head = lidBuilt.fastening === 'screws' ? (lidBuilt.screw.head === 'none' ? SCREWS[lidBuilt.screw.size].headD : headSeat(lidBuilt).d) / 2 + 0.5
-      : lidBuilt.fastening === 'printed' ? screwShape(lidBuilt.thread.size, 0, 0).headD / 2 + 0.5 : 0;
-    if (head > 0 && lidPosts(one).spots.some((spot) => {
-      const du = Math.max(0, Math.abs(spot.centre[0] - place.u) - hw);
-      const dv = Math.max(0, Math.abs(spot.centre[1] - place.v) - hh);
-      return Math.hypot(du, dv) < head;
-    })) {
-      out.push(notice({ code: 'warn.labelOverScrew', spot: labelSpot }));
-    }
-  }
+  out.push(...extrasWarnings(one, shapeBuilt, layout, lidBuilt).map(notice));
+  // a screw head on the lid: a label there keeps clear of it
+  const head = lidBuilt.fastening === 'screws' ? (lidBuilt.screw.head === 'none' ? SCREWS[lidBuilt.screw.size].headD : headSeat(lidBuilt).d) / 2 + 0.5
+    : lidBuilt.fastening === 'printed' ? screwShape(lidBuilt.thread.size, 0, 0).headD / 2 + 0.5 : 0;
+  const heads = head > 0 ? lidPosts(one).spots.map((spot) => ({ u: spot.centre[0], v: spot.centre[1], r: head })) : [];
+  const openings = [...cutters, ...extrasCutters(one, shapeBuilt, layout, lidBuilt, top, cutters)];
+  out.push(...labelWarnings(one.labels, labels, shapeBuilt, dims, lidBuilt, openings, heads).map(notice));
   return out;
 }
 
@@ -474,12 +472,12 @@ function refresh(): void {
     : t('status.size', { w: Math.round(dims[0].w), d: Math.round(dims[0].d), h: Math.round(dims[0].h) });
 
   baseWarnings = [];
-  currentLabels = { a: null, b: null };
+  currentLabels = { a: [], b: [] };
   baseWarnings.push(...hingeNotes(state).map(notice));
   for (const { half, state: one } of cases) {
-    const label = labelRaster(one.label, () => refresh());
-    currentLabels[half ?? 'a'] = label;
-    const notices = caseNotices(one, label, half ? hingeOf(half) : null);
+    const labels = labelRasters(one.labels, () => refresh());
+    currentLabels[half ?? 'a'] = labels;
+    const notices = caseNotices(one, labels, half ? hingeOf(half) : null);
     baseWarnings.push(...(half ? notices.map((line) => inHalf(line, half)) : notices));
   }
   showWarnings([]);
@@ -568,7 +566,7 @@ async function showPreview(stamp: number): Promise<void> {
   try {
     const result = await progress.track(
       (onProgress) => csg.run({
-        kind: 'preview', state: requested, segments: PREVIEW_SEGMENTS, label: currentLabels.a, labelB: currentLabels.b,
+        kind: 'preview', state: requested, segments: PREVIEW_SEGMENTS, labels: currentLabels.a, labelsB: currentLabels.b,
       }, onProgress),
       { label: 'progress.preview' },
     );
@@ -972,6 +970,7 @@ boardCustom.addEventListener('click', () => {
   applyEdit({ ...one, boards: [...one.boards, { ...defaultPlacement(custom, Math.round(x), 0), board: 'custom', custom }] });
 });
 cutAdd.addEventListener('click', () => applyEdit(addCut(edited())));
+labelAdd.addEventListener('click', () => applyEdit(addLabel(edited())));
 cableAdd.addEventListener('click', () => applyState(addCable(state, caseLayout(halfState(state, 'a')).dims.w)));
 boardPickerClose.addEventListener('click', closePicker);
 boardPicker.addEventListener('click', (event) => {
@@ -1014,7 +1013,7 @@ async function runExport(): Promise<void> {
   exportBtn.textContent = t('export.busy');
   try {
     const result = await progress.track(
-      (onProgress) => csg.run({ kind: 'export', state: requested, label: currentLabels.a, labelB: currentLabels.b }, onProgress),
+      (onProgress) => csg.run({ kind: 'export', state: requested, labels: currentLabels.a, labelsB: currentLabels.b }, onProgress),
       { label: 'progress.export', delayMs: 0 },
     );
     if (!result) return;

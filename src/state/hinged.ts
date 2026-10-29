@@ -11,7 +11,7 @@ import { sanitizePlacements } from '../boards/placement';
 import type { ExtraCut } from '../geo/cutters';
 import { sanitizeExtraCuts } from '../geo/cutters';
 import type { FanState, LabelState, VentState } from '../geo/extras';
-import { defaultFan, defaultLabel, defaultVents, sanitizeFan, sanitizeLabel, sanitizeVents } from '../geo/extras';
+import { defaultFan, defaultVents, labelFace, sanitizeFan, sanitizeLabels, sanitizeVents } from '../geo/extras';
 import type { LidState } from '../geo/lidSpec';
 import { defaultLid, sanitizeLid } from '../geo/lidSpec';
 import { caseDims, caseLayout, effectiveLid, minimumDims } from '../geo/layout';
@@ -43,7 +43,7 @@ export interface HalfContent {
   extraCuts: ExtraCut[];
   vents: VentState;
   fan: FanState;
-  label: LabelState;
+  labels: LabelState[];
 }
 
 export interface HingeState extends HingeSpec {
@@ -56,7 +56,7 @@ export interface HingeState extends HingeSpec {
 export const GAP_MAX = 10;
 
 export function defaultHalf(): HalfContent {
-  return { h: 25, boards: [], lid: defaultLid(), extraCuts: [], vents: defaultVents(), fan: defaultFan(), label: defaultLabel() };
+  return { h: 25, boards: [], lid: defaultLid(), extraCuts: [], vents: defaultVents(), fan: defaultFan(), labels: [] };
 }
 
 export function defaultHinge(): HingeState {
@@ -66,14 +66,15 @@ export function defaultHinge(): HingeState {
 function sanitizeHalf(raw: unknown): HalfContent {
   const d = defaultHalf();
   const r = typeof raw === 'object' && raw !== null ? raw : {};
+  const lid = sanitizeLid(Reflect.get(r, 'lid'), 'hinged');
   return {
     h: clampNum(Reflect.get(r, 'h'), HINGED_H_MIN, SIZE_MAX, d.h),
     boards: sanitizePlacements(Reflect.get(r, 'boards')),
-    lid: sanitizeLid(Reflect.get(r, 'lid'), 'hinged'),
+    lid,
     extraCuts: sanitizeExtraCuts(Reflect.get(r, 'extraCuts'), 'hinged'),
     vents: sanitizeVents(Reflect.get(r, 'vents')),
     fan: sanitizeFan(Reflect.get(r, 'fan')),
-    label: sanitizeLabel(Reflect.get(r, 'label')),
+    labels: sanitizeLabels(Reflect.get(r, 'labels'), Reflect.get(r, 'label'), lid.face),
   };
 }
 
@@ -93,13 +94,13 @@ export function isHinged(state: Pick<AppState, 'shape'>): boolean {
 
 export function contentOf(state: AppState, half: Half): HalfContent {
   if (half === 'b') return state.hinge.b;
-  const { boards, lid, extraCuts, vents, fan, label } = state;
-  return { h: state.shape.size.h, boards, lid, extraCuts, vents, fan, label };
+  const { boards, lid, extraCuts, vents, fan, labels } = state;
+  return { h: state.shape.size.h, boards, lid, extraCuts, vents, fan, labels };
 }
 
 function withContent(state: AppState, content: HalfContent): AppState {
-  const { boards, lid, extraCuts, vents, fan, label } = content;
-  return { ...state, boards, lid, extraCuts, vents, fan, label, shape: { ...state.shape, size: { ...state.shape.size, h: content.h } } };
+  const { boards, lid, extraCuts, vents, fan, labels } = content;
+  return { ...state, boards, lid, extraCuts, vents, fan, labels, shape: { ...state.shape, size: { ...state.shape.size, h: content.h } } };
 }
 
 /**
@@ -139,12 +140,12 @@ export function casesOf(state: AppState): { half: Half | null; state: AppState }
 
 /**
  * How far anything stands out of a half's inner face: what goes through its
- * plate, plugs in their slots, a raised label on a lid on top.
+ * plate, plugs in their slots, a raised label on it.
  */
 export function innerProtrusion(state: AppState, half: Half): number {
   const one = halfState(state, half);
   const layout = caseLayout(one);
-  const label = one.label.on && one.label.raised && one.lid.face === 'top' ? one.label.depth : 0;
+  const label = Math.max(0, ...one.labels.filter((each) => each.raised && each.text.trim() !== '' && labelFace(each, one.shape.kind) === 'top').map((each) => each.depth));
   return Math.max(topProtrusion(layout, { ...one.shape, console: layout.console }), label);
 }
 
