@@ -2,6 +2,15 @@ import { decodePresetFile, encodePresetFile, presetFileName } from '../src/state
 import { nextPresetNumber, parseUserPresets } from '../src/state/userPresets';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import { PRESETS, presetById } from '../src/state/presets';
+import { readFileSync, readdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+/** Every key path in `value` (list items by index), dotted. */
+function keyPaths(value: unknown, prefix = ''): string[] {
+  if (typeof value !== 'object' || value === null) return [];
+  return Object.entries(value).flatMap(([key, item]) => [`${prefix}${key}`, ...keyPaths(item, `${prefix}${key}.`)]);
+}
 
 describe('project file', () => {
   it('round-trips the state and the name', () => {
@@ -55,6 +64,19 @@ describe('built-in presets', () => {
       const state = preset.build();
       expect(sanitizeState(state)).toEqual(state);
       expect(presetById(preset.id)).toBe(preset);
+    }
+  });
+
+  it('every file in src/state/presets is a preset, named after its id, with no stray keys', () => {
+    const dir = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'state', 'presets');
+    const files = readdirSync(dir).filter((name) => name.endsWith('.json')).sort();
+    expect(files).toEqual(PRESETS.map((preset) => `${preset.id}.json`).sort());
+    for (const name of files) {
+      const file: unknown = JSON.parse(readFileSync(join(dir, name), 'utf8'));
+      const state: unknown = typeof file === 'object' && file !== null ? Reflect.get(file, 'state') : null;
+      // the sanitizer drops a key it does not know: a typo in a hand-edited file would vanish silently
+      const built = new Set(keyPaths(presetById(name.replace(/\.json$/, ''))?.build()));
+      expect(keyPaths(state).filter((path) => !built.has(path)), name).toEqual([]);
     }
   });
 });

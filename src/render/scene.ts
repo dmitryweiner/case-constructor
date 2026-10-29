@@ -81,6 +81,15 @@ const CREASE_ANGLE = (35 * Math.PI) / 180;
 const CAPTION_GAP = 2;
 const CAPTION_LIFT = 4;
 
+/** With no mouse, touch or key for this long, the view starts turning on its own, ms. */
+const IDLE_MS = 30_000;
+/** One turn of the idle rotation, s: slow enough to read as a showcase, not a spin. */
+const IDLE_TURN_S = 120;
+/** The idle rotation gathers speed over this long, ms (it stops at once). */
+const IDLE_EASE_MS = 3000;
+/** Anything a person does that ends the idle rotation. */
+const ACTIVITY_EVENTS = ['pointermove', 'pointerdown', 'wheel', 'keydown', 'touchstart', 'input'] as const;
+
 export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement): SceneHandle {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -142,6 +151,23 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
+
+  // the idle rotation: a person's last move, and none for people who asked for less motion
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let lastActivity = performance.now();
+  const onActivity = (): void => {
+    lastActivity = performance.now();
+    controls.autoRotate = false;
+  };
+  for (const type of ACTIVITY_EVENTS) window.addEventListener(type, onActivity, { capture: true, passive: true });
+
+  /** Turns the view when nobody has touched anything for IDLE_MS, easing in. */
+  function stepIdle(now: number): void {
+    const idle = now - lastActivity - IDLE_MS;
+    controls.autoRotate = idle > 0 && !reducedMotion.matches;
+    // OrbitControls: autoRotateSpeed 1 is a turn per 60 s
+    if (controls.autoRotate) controls.autoRotateSpeed = (60 / IDLE_TURN_S) * Math.min(1, idle / IDLE_EASE_MS);
+  }
 
   const objects: THREE.Mesh[] = [];
   let disposed = false;
@@ -225,11 +251,15 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
     }
   }
 
+  let lastFrame = performance.now();
   function frame(now: number): void {
     if (disposed) return;
     resize();
     stepInset(now);
-    controls.update();
+    stepIdle(now);
+    // a long gap (a hidden tab) must not jump the rotation
+    controls.update(Math.min(0.1, (now - lastFrame) / 1000));
+    lastFrame = now;
     renderer.render(scene, camera);
     placeCaptions();
     requestAnimationFrame(frame);
@@ -378,6 +408,7 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
 
     dispose(): void {
       disposed = true;
+      for (const type of ACTIVITY_EVENTS) window.removeEventListener(type, onActivity, { capture: true });
       controls.dispose();
       clearObjects();
       for (const obj of spotObjects) obj.geometry.dispose();

@@ -1,0 +1,22 @@
+{
+  "id": "klipperscreen-console",
+  "name": "KlipperScreen console",
+  "about": "A KlipperScreen console: the BTT Pi TFT50 on the slope on clamp tabs, a Pi 4 on its back with its edge ports closed (they are far from every wall), the lid underneath on screws. The cables (power, the printer's USB) leave through one hole in the back. Sparse vent slots at the back: a big case's dense vents would take the preview past its budget.",
+  "state": {
+    "shape": { "kind": "console", "cornerR": 4, "console": { "frontH": 25, "backH": 55 } },
+    "lid": { "face": "bottom", "chosen": "bottom", "fastening": "screws", "screw": { "size": "M3", "hole": "insert", "head": "counterbore" } },
+    "boards": [
+      {
+        "board": "btt-pi-tft50-v2", "on": "ceiling", "z": 0, "mount": { "size": "M3", "hole": "insert" },
+        "back": {
+          "board": "raspberry-pi-4b",
+          "cuts": { "usb-c": false, "hdmi-0": false, "hdmi-1": false, "audio": false, "usb-2": false, "usb-3": false, "ethernet": false, "microsd": false }
+        }
+      }
+    ],
+    "extraCuts": [
+      { "face": "back", "shape": "round", "x": 30, "y": 22, "w": 12, "h": 12, "r": 0 }
+    ],
+    "vents": { "on": true, "faces": ["back"], "pattern": "slots", "size": 3, "pitch": 10, "margin": 10, "along": "x" }
+  }
+}

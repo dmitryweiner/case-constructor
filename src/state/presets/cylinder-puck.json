@@ -1,0 +1,13 @@
+{
+  "id": "cylinder-puck",
+  "name": "Cylinder sensor puck",
+  "about": "A round puck for a LoRa node: the display shows through the lid, round vents on the bottom, ears for screwing it down.",
+  "state": {
+    "shape": { "kind": "cylinder", "edgeR": 3, "margin": { "side": 3, "top": 2 } },
+    "boards": [
+      { "board": "heltec-wifi-lora-32-v3", "z": 4 }
+    ],
+    "vents": { "on": true, "faces": ["bottom"], "pattern": "round", "size": 3, "pitch": 6, "margin": 3, "along": "y" },
+    "wallMount": { "kind": "ears", "spacing": 40, "screwD": 3.5 }
+  }
+}

@@ -91,7 +91,7 @@ freely; a temporary script that turns out useful becomes a permanent one.
   sheet), `--view`, `--clip x,y,w,h`, `--camera
   iso|under|top|bottom|front|back|left|right` (dev builds; use it instead of
   guessing `--orbit` values), `--orbit dx,dy`, `--url <path>`, `--wait <ms>`, `--width/--height`, `--preview`,
-  `--eval '<js>'` (prints a page expression; dev builds expose
+  `--eval '<js>'` (prints a page expression, a promise awaited; dev builds expose
   `window.__case.state() / parts() / ghosts() / drawn() / drawnParts()` — the meshes and
   the roles actually drawn; `built()` — the worker has answered for the
   current state). On the dev server it waits for the first build and for the
@@ -521,11 +521,16 @@ Add a state when a feature lands, never edit an old one.
 
 ## Presets
 
-Built-in presets (`src/state/presets.ts`): `pi4-desktop`, `pi-zero-gpio`,
+Built-in presets: one JSON file each in `src/state/presets/<id>.json`
+(`{ id, name, about, state }`; `state` is laid over the default — objects
+merge, lists and values replace — and sanitized), imported in the menu's
+order by `src/state/presets.ts`. `tests/presetFile.test.ts` fails on a file
+that is not imported, not named after its id, or has a key the sanitizer
+would drop (a typo). `pi4-desktop`, `pi-zero-gpio`,
 `esp32-sensor-box`, `esp32-18650-box`, `arduino-uno-box`, `cylinder-puck`,
 `klipperscreen-console`, `ha-wall-panel`, `meshtastic-cardkb`, `meshtastic-clamshell`, `plain-box`. Each is
 built by `tests/presetsBuild.test.ts` (closed, no slivers, no overlap, no
-layout warnings; a hinged one per half, with no hinge warnings). A preset's name is one English string in `presets.ts`
+layout warnings; a hinged one per half, with no hinge warnings). A preset's name is one English string in its file
 (not translated: the review asked for one name); its note is the
 dictionary key `preset.<id>.note`.
 
@@ -598,6 +603,10 @@ frame keeps the canvas's angle per pixel (its own aspect, a wider fov).
 With the canvas's aspect the picture was stretched and round holes came
 out as ellipses; the smoke measures the case on screen in both states
 (`window.__case.project`).
+Idle rotation (`scene.ts`): after `IDLE_MS` (30 s) with no pointer, wheel,
+key, touch or input event the view turns around the case (a turn per
+`IDLE_TURN_S`, easing in), and stops at the next one; none with
+`prefers-reduced-motion`.
 The canvas stays live under the open sheet (no backdrop): drags turn the
 case, pinches zoom it, and a tap (one pointer, short, still) on the canvas
 closes the sheet (`main.ts`, `TAP_MOVE_PX` / `TAP_MS`).

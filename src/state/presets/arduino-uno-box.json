@@ -1,0 +1,12 @@
+{
+  "id": "arduino-uno-box",
+  "name": "Arduino Uno box",
+  "about": "An Arduino Uno box with the headers open for jumper wires.",
+  "state": {
+    "shape": { "cornerR": 5 },
+    "boards": [
+      { "board": "arduino-uno", "z": 5, "mount": { "size": "M3", "hole": "tap" } }
+    ],
+    "lid": { "fastening": "screws", "screw": { "size": "M3", "hole": "tap", "head": "counterbore" } }
+  }
+}

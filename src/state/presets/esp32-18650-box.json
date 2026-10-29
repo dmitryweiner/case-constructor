@@ -1,0 +1,13 @@
+{
+  "id": "esp32-18650-box",
+  "name": "ESP32 on 18650 cells",
+  "about": "A battery-powered ESP32: two 18650 cells in cradles behind the board, held by printed clamps on M3 screws.",
+  "state": {
+    "shape": { "cornerR": 4 },
+    "boards": [
+      { "board": "esp32-devkitc-v4" },
+      { "board": "battery", "battery": { "kind": "18650", "count": 2, "press": 0.3 }, "x": 0, "y": 43, "z": 1, "mount": { "size": "M3", "hole": "tap" } }
+    ],
+    "lid": { "fastening": "screws", "screw": { "size": "M3", "hole": "tap", "head": "countersunk" } }
+  }
+}

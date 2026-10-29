@@ -26,7 +26,7 @@
 //   --width / --height    window size
 //   --preview             production build instead of the dev server
 //   --url <path>          shoot any server path (the icon, an asset)
-//   --eval <js>           evaluate an expression in the page after the shot and print it
+//   --eval <js>           evaluate an expression in the page after the shot and print it (a promise is awaited)
 //                         (dev builds expose window.__case: state(), parts(), ghosts(),
 //                         drawn(), drawnParts(), project([[x, y, z], …]), built())
 //
@@ -235,9 +235,9 @@ if (clip) {
 }
 
 const evalExpr = flags.get('eval');
-const evalResult = evalExpr ? await page.evaluate((expr) => {
+const evalResult = evalExpr ? await page.evaluate(async (expr) => {
   // eslint-disable-next-line no-eval
-  const value = (0, eval)(expr);
+  const value = await (0, eval)(expr);
   return JSON.stringify(value, null, 1);
 }, evalExpr) : null;
 const status = await page.locator('#status').textContent();

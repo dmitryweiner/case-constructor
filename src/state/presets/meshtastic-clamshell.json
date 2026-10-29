@@ -1,0 +1,28 @@
+{
+  "id": "meshtastic-clamshell",
+  "name": "Meshtastic clamshell",
+  "about": "The Meshtastic pair folding like a laptop (plans/PLAN-HINGED.md): the CardKB under the lower half's top, the Heltec V3's screen in the upper half's, the Grove cable between them through a slot in each hinge wall, the LoRa antenna out of the screen half's far edge. Both lids underneath, so the hinge is a printed one on screws — screw axles that hold the screen at an angle — and magnets keep it closed. Deep enough that the magnets at the front edge clear the CardKB. The Heltec is against the left wall: its USB-C opens there, sunk in the wall's thickness (it ends at the board's edge).",
+  "state": {
+    "shape": { "kind": "hinged", "cornerR": 6, "auto": false, "size": { "w": 115, "d": 86, "h": 20 } },
+    "lid": { "face": "bottom", "fastening": "screws", "screw": { "size": "M3", "hole": "insert", "head": "counterbore" } },
+    "boards": [
+      { "board": "m5stack-cardkb-v1.1", "on": "ceiling", "z": 0.3 }
+    ],
+    "hinge": {
+      "kind": "leaves", "axle": "screw", "screw": "M2.5", "magnets": true, "magnet": "6x2",
+      "cables": [
+        { "x": 45, "kind": "round", "w": 4, "plugW": 9, "plugH": 5 }
+      ],
+      "b": {
+        "boards": [
+          { "board": "heltec-wifi-lora-32-v3", "on": "ceiling", "z": 0.3, "walls": ["left"], "wallOffset": -1.5 }
+        ],
+        "h": 20,
+        "extraCuts": [
+          { "face": "back", "shape": "round", "x": 57, "y": 10, "w": 6.6, "h": 6.6, "r": 0 }
+        ],
+        "lid": { "face": "bottom", "fastening": "screws", "screw": { "size": "M3", "hole": "insert", "head": "counterbore" } }
+      }
+    }
+  }
+}

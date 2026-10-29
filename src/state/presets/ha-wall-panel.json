@@ -1,0 +1,23 @@
+{
+  "id": "ha-wall-panel",
+  "name": "Home Assistant wall panel",
+  "about": "A Home Assistant wall panel: Touch Display 2 7-inch held by the lid, a Pi 5 on its back with its edge ports closed, vents on the sides, keyholes on the back for the wall. The power cable comes out of the wall straight into the back of the case.",
+  "state": {
+    "shape": { "cornerR": 8 },
+    "lid": { "fastening": "screws", "screw": { "size": "M3", "hole": "insert", "head": "countersunk" } },
+    "boards": [
+      {
+        "board": "raspberry-pi-touch-display-2-7", "on": "ceiling", "z": 0, "mount": { "size": "M3", "hole": "insert" },
+        "back": {
+          "board": "raspberry-pi-5",
+          "cuts": { "usb-c": false, "hdmi-0": false, "hdmi-1": false, "ethernet": false, "usb-2": false, "usb-3": false, "microsd": false }
+        }
+      }
+    ],
+    "extraCuts": [
+      { "face": "bottom", "shape": "round", "x": 60, "y": 140, "w": 14, "h": 14, "r": 0 }
+    ],
+    "vents": { "on": true, "faces": ["left", "right"], "pattern": "slots", "size": 2, "pitch": 8, "margin": 10, "along": "y" },
+    "wallMount": { "kind": "keyholes", "spacing": 80, "screwD": 4 }
+  }
+}

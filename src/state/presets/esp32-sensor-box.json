@@ -1,0 +1,14 @@
+{
+  "id": "esp32-sensor-box",
+  "name": "ESP32 sensor box",
+  "about": "A small box for an ESP32 sensor: hex vents front and back, keyholes for the wall, the board slid into rails.",
+  "state": {
+    "shape": { "cornerR": 4, "margin": { "side": 3, "top": 6 } },
+    "boards": [
+      { "board": "esp32-devkitc-v4" }
+    ],
+    "vents": { "on": true, "faces": ["front", "back"], "pattern": "hex", "size": 3, "pitch": 5, "margin": 3, "along": "y" },
+    "wallMount": { "kind": "keyholes", "spacing": 30, "screwD": 3.5 },
+    "label": { "on": true, "text": "SENSOR", "font": "oswald", "sizeMm": 5, "depth": 0.6, "raised": true }
+  }
+}
