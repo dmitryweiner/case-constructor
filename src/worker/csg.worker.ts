@@ -75,6 +75,11 @@ function run(csg: CsgApi, jobId: number, job: CsgJob): JobPart[] {
       ...(built.clamps ? [part('clamp', built.clamps, exporting)] : []),
       ...(built.lidClamps ? [part('lidClamp', built.lidClamps, exporting)] : []),
       ...(built.hinge ? [part('hinge', built.hinge, exporting)] : []),
+      // the rails print as their print pose; screwed down they are only shown
+      ...(built.rails ? [part('rail', built.rails, false)] : []),
+      ...(built.lidRails ? [part('lidRail', built.lidRails, false)] : []),
+      ...(built.railsPrint ? [part('railPrint', built.railsPrint, exporting)] : []),
+      ...(built.lidRailsPrint ? [part('lidRailPrint', built.lidRailsPrint, exporting)] : []),
     ];
     return half ? parts.map((one): JobPart => ({ ...one, half })) : parts;
   });

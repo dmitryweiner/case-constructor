@@ -58,7 +58,8 @@ every cycle that is tokens thrown away. Reusable plumbing lives in
 freely; a temporary script that turns out useful becomes a permanent one.
 
 - `scripts/smoke.mjs` — browser smoke: every shape, slider extremes, a 10 mm
-  case (and an auto Heltec under 20), every
+  case (and an auto Heltec under 20), the Heltec's rails on screws (every
+  hole kind, both ears, hung and on the floor, Lid and Body exports), every
   catalog board from the picker (with nut/insert holes, a rotation and its
   pins toggled), soldered pins raising the board, a family's model, port
   toggles, user openings, the custom board editor and its catalog JSON,
@@ -294,6 +295,15 @@ freely; a temporary script that turns out useful becomes a permanent one.
   supports in `build.ts`) stand under the free corners of a keyboard held at
   one or two holes. Key notes and warnings: `keyNotes` (`ports.ts`), rest
   warnings `restWarnings` (main thread, next to the collisions).
+- Rails on screws (`placement.railScrews`, `rails.ts` pure, `railSolids.ts`
+  worker): the rail is the printed-in one's (`railLocal`, its foot
+  `RAIL_SEAT` off the plate) with an ear at each end, outwards or along the
+  edge (`placement.railEars`); its posts are a support like standoffs, the
+  rail rides along in `Support.loose` (screwed down and in its own frame),
+  so a hung board's rail turns with its posts. The build returns the
+  rails per owner, screwed down (`rails`, `lidRails`: the view) and top
+  down from the origin (`railsPrint`, `lidRailsPrint`: the print layout and
+  the STL); the ears widen the footprint (`earReach`).
 - Supports (`geo/standoffs.ts`) go to the part that owns the floor under
   them (the lid when the floor is the lid), minus whatever of them would
   enter the other part; holes are drilled after the union. A deep side lid
@@ -527,7 +537,7 @@ per board
 `#board<i>_x|_y|_z`, `#board<i>_on_floor|ceiling` (not a battery; on a console the ceiling is the slope), `#board<i>_gap` (hung; instead of `_z`), `#board<i>_bevel` (a hung display), `#board<i>_clampPress` (a clamped panel), `#board<i>_back` (select; a display with a back pattern), `#board<i>_back_rot_0|90|180|270`, `#board<i>_back_standoff`, `#board<i>_back_cut_<port>`, `#board<i>_top` (select; a floor board with holes), `#board<i>_top_rot_0|90|180|270`, `#board<i>_top_standoff`, `#board<i>_top_cut_<port>`, alignment (two boards or more) `#board<i>_align`
 (details), `#board<i>_alignRef`,
 `#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_wall_front|back|left|right` (toggles; not on a cylinder), `#board<i>_wallOffset`, `#board<i>_screw`,
-`#board<i>_hole_tap|insert|nut`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles
+`#board<i>_hole_tap|insert|nut` (also rails on screws), `#board<i>_railScrews` (boards held by rails), `#board<i>_railEars_out|along`, `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles
 `#board<i>_cut_<portId>`.
 Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHeight|_bottomHeight`,
 `#board<i>_keys_window|holes|caps`, `#board<i>_keyFit`, `#board<i>_capShape_round|square`, `#board<i>_capR`, `#board<i>_capSize`, `#board<i>_hold_holes|rails|clamp` (keyboards),

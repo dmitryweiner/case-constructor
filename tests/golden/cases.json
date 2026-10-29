@@ -1617,5 +1617,63 @@
         5
       ]
     }
+  },
+  "heltec-v4-rails-screwed": {
+    "body": {
+      "triangles": 1424,
+      "volume": 14108.84,
+      "extents": [
+        60.99,
+        47.1,
+        21.59
+      ]
+    },
+    "lid": {
+      "triangles": 1560,
+      "volume": 5849.28,
+      "extents": [
+        60.99,
+        47.1,
+        5
+      ]
+    },
+    "rails": {
+      "triangles": 536,
+      "volume": 3346.22,
+      "extents": [
+        47.69,
+        23.84,
+        12.1
+      ]
+    }
+  },
+  "heltec-v4-rails-along-hung": {
+    "body": {
+      "triangles": 732,
+      "volume": 10539.17,
+      "extents": [
+        75.49,
+        36.7,
+        14.39
+      ]
+    },
+    "lid": {
+      "triangles": 2536,
+      "volume": 6293.07,
+      "extents": [
+        75.49,
+        36.7,
+        8.35
+      ]
+    },
+    "lidRails": {
+      "triangles": 536,
+      "volume": 2528.27,
+      "extents": [
+        67.49,
+        19.4,
+        8.4
+      ]
+    }
   }
 }

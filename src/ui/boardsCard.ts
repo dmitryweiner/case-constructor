@@ -29,6 +29,7 @@ import { tDynamic } from '../i18n';
 import type { CustomEditorHandle } from './customBoard';
 import { customSignature, renderCustomEditor } from './customBoard';
 import { HOLE_KINDS, SCREW_SIZES } from '../geo/fasteners';
+import { RAIL_EARS, railScrewSpec, railsScrewed } from '../geo/rails';
 import type { AppState } from '../state/schema';
 
 /** Whether the board could stand against this wall of the case (the layout would keep it). */
@@ -46,7 +47,10 @@ function patchBoard(state: AppState, index: number, patch: Partial<BoardPlacemen
 function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
   const at = (state: AppState): BoardPlacement => state.boards[index];
   // the screw and hole kind of the standoffs, or of a clamped panel's posts
-  const holes = (state: AppState): boolean => boardOf(at(state)).mount.kind !== 'rails';
+  // (rails take them too when they are screwed down)
+  const screwedRails = (state: AppState): boolean => railsScrewed(boardOf(at(state)), at(state));
+  const holes = (state: AppState): boolean => boardOf(at(state)).mount.kind !== 'rails' || screwedRails(state);
+  const railed = (state: AppState): boolean => boardOf(at(state)).mount.kind === 'rails' && battery(state) === undefined;
   const clamped = (state: AppState): boolean => boardOf(at(state)).mount.kind === 'clamp';
   const battery = (state: AppState): BatterySpec | undefined => at(state).battery;
   const hung = (state: AppState): boolean => hangs(at(state));
@@ -266,9 +270,21 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       set: (state, value) => patchBoard(state, index, { wallOffset: value }),
     },
     {
+      kind: 'check', key: 'railScrews', label: 'board.railScrews', hint: 'board.railScrews.hint', when: railed,
+      get: (state) => at(state).railScrews === true,
+      set: (state, value) => patchBoard(state, index, { railScrews: value ? true : undefined, railEars: value ? at(state).railEars : undefined }),
+    },
+    {
+      kind: 'segmented', key: 'railEars', label: 'board.railEars', hint: 'board.railEars.hint', when: screwedRails,
+      options: RAIL_EARS.map((value) => ({ value, label: `board.railEars.${value}` as const })),
+      get: (state) => at(state).railEars ?? 'out',
+      set: (state, value) => patchBoard(state, index, { railEars: value === 'along' ? 'along' : undefined }),
+    },
+    {
       kind: 'select', key: 'screw', label: 'board.screw', when: holes,
-      options: SCREW_SIZES.map((size) => ({ value: size, text: size })),
-      get: (state) => at(state).mount.size,
+      // an M1.6 holds no rail
+      options: SCREW_SIZES.filter((size) => entry.mount.kind !== 'rails' || size !== 'M1.6').map((size) => ({ value: size, text: size })),
+      get: (state) => (screwedRails(state) ? railScrewSpec(at(state).mount) : at(state).mount).size,
       set: (state, value) => patchBoard(state, index, {
         mount: { ...at(state).mount, size: SCREW_SIZES.find((size) => size === value) ?? at(state).mount.size },
       }),
@@ -496,7 +512,7 @@ function signatureOf(state: AppState): string {
   // a battery's kind decides its controls, its cell count its name; how a board is held, its note
   return state.boards.map((board) => (board.board === 'custom' ? `custom:${customSignature(boardOf(board))}`
     : board.battery ? `battery:${board.battery.kind}:${board.battery.count}`
-      : `${board.board}:${board.variant ?? ''}:${board.back?.board ?? ''}:${board.back?.variant ?? ''}:${board.top?.board ?? ''}:${board.hold ?? ''}`)).join('|');
+      : `${board.board}:${board.variant ?? ''}:${board.back?.board ?? ''}:${board.back?.variant ?? ''}:${board.top?.board ?? ''}:${board.hold ?? ''}:${board.railScrews ?? ''}`)).join('|');
 }
 
 export function renderBoardsCard(
@@ -590,7 +606,7 @@ export function renderBoardsCard(
       });
       head.append(remove);
       box.append(head);
-      if (def.mount.kind === 'rails') box.append(make('p', 'board-note', t('board.rails')));
+      if (def.mount.kind === 'rails') box.append(make('p', 'board-note', t(railsScrewed(def, placement) ? 'board.rails.screwed' : 'board.rails')));
       if (def.battery) box.append(make('p', 'board-note', t('battery.note')));
       const controls = make('div');
       box.append(controls);

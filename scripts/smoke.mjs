@@ -117,6 +117,28 @@ await page.click('#boardList [data-board="heltec-wifi-lora-32-v4"]');
 await expectWatertight('low-case:heltec');
 if (Number(await page.locator('#case_h').inputValue()) >= 20) errors.push(`[low-case] the auto Heltec case is ${await page.locator('#case_h').inputValue()} high`);
 
+// N2: rails on screws — every hole kind, both kinds of ears; hung (the lid's rails) and on the floor (the body's)
+label('rails-screwed');
+await page.check('#board0_railScrews');
+await expectWatertight('rails-screwed');
+for (const hole of ['insert', 'nut', 'tap']) {
+  await page.click(`#board0_hole_${hole}`);
+  await expectWatertight(`rails-screwed:${hole}`);
+}
+await page.click('#board0_railEars_along');
+await expectWatertight('rails-screwed:along');
+if (!(await drawn()).split(',').includes('clamp')) errors.push(`[rails-screwed] the rails are not drawn: ${await drawn()}`);
+await page.click('#tabLid');
+await exportStl('rails:lid');
+await page.click('#tabBoth');
+await page.click('#board0_on_floor');
+await page.click('#board0_railEars_out');
+await expectWatertight('rails-screwed:floor');
+await page.click('#tabBody');
+await exportStl('rails:body');
+await page.click('#tabBoth');
+await page.uncheck('#board0_railScrews');
+
 // boards: every catalog board from the picker, hole kinds, rotation, removal
 label('boards');
 const catalog = await page.evaluate(async () => {

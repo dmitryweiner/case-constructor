@@ -195,3 +195,21 @@ added), N2, N3.
   `parting.test.ts`'s empty case, two keyboard tests (`keys.test.ts`).
   Goldens moved: the 17 auto cases that sat on the old 20 (each checked:
   only the body's height and volume moved; the hinged halves did not).
+- **N2.** The rails are not a part of the clamp bars' kind: the bars are
+  flipped as one mesh for print, and a hung board's rail flipped so would
+  stand on its ears' wrong side. The worker sends each owner's rails twice:
+  screwed down (`rail`, `lidRail`, drawn as clamps) and as they print
+  (`railPrint`, `lidRailPrint`, each rail top down; a hung rail is the same
+  solid turned, so one print pose serves both).
+- **N2.** The ear's top is `EAR_DROP` (0.05) under the rail's top: on one
+  plane, the pin bed's top and the ears' left zero-area triangles in the
+  union.
+- **N2.** Ears along the edge leave the board no wall on the other two
+  edges (they would stand in it); outwards, the rail edges had none already.
+- **N2.** The rails' screw select leaves out M1.6 for a catalog board on
+  rails; a keyboard held by rails shows it, and the rails take an M2
+  (`railScrewSpec`).
+- **N2.** Not done: `warn.railHead` (the screw's head 2.45 mm over the PCB
+  top, beyond the board; the top margin keeps 3 by default, so only a
+  margin set under it reaches the lid) and a post in an opening. Left for
+  when a case shows it.

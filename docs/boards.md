@@ -128,6 +128,26 @@ a shelf 2.5 mm below the PCB, the pins go into a slot along the row, and
 the upper lip still clicks over the edge. Without pins the rail is the plain
 one, gripping the edge from both sides.
 
+### Rails on screws
+
+With **Rails on screws** on, the rails are printed apart and screwed onto
+posts of the case: the board goes in straight, the rails are pushed onto
+its edges, then screwed down — no clicking in at an angle, and a broken
+lip costs a rail, not the case. Each rail has an ear at each end, (almost)
+flush with its top, with a through hole; under each ear a post rises from
+the floor (from the ceiling for a hung board) with the **Screw** and
+**Hole** chosen below (M2 and up: an M1.6 holds no rail).
+
+| Control | Values | Default | Notes |
+|---|---|---|---|
+| Rails on screws | on / off | off | boards held by rails (catalog, custom, a keyboard held by rails) |
+| Ears | Outwards / Along the edge | Outwards | outwards: off each rail's outer side at its ends, the board takes a post's width more across its rails; along the edge: past the rails' ends, the board takes that much more along them, and it cannot stand against a wall on those sides |
+
+The rails go with the part their posts are on — the body for a board on
+the floor, the lid for one it holds — and print top down, ears on the bed,
+right of the rest (in the Both, Body or Lid STL as that part). The ear's top
+is 0.05 mm under the rail's top, inside the first layer.
+
 ## Catalog
 
 "Checked" means the outline, holes and connectors were transcribed from the

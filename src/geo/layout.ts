@@ -27,6 +27,7 @@ import { boardParams, boxAround, spotOf } from './message';
 import type { ShapeState } from './shape';
 import { SIZE_MIN, SIZE_MAX, WALL_MIN, heightMin, plateOf, shapeSpec } from './shape';
 import { effectiveRadii } from './loft';
+import { earReach, railsScrewed } from './rails';
 import type { Affine, Vec3 } from './surface';
 import { applyAffine, composeAffine, invertRigid, rotateVec } from './surface';
 
@@ -237,6 +238,11 @@ function edgeReach(def: BoardDef, placement: BoardPlacement, hung: boolean): Rec
   }
   if (def.mount.kind === 'rails') {
     for (const edge of railEdges(def)) reach[edge] = Math.max(reach[edge], RAIL_THICK - RAIL_GRIP + RAIL_GAP);
+    // rails on screws: their ears and the posts under them
+    for (const [edge, ear] of Object.entries(earReach(def, placement))) {
+      const side = EDGES.find((one) => one === edge);
+      if (side && ear !== undefined) reach[side] = Math.max(reach[side], ear);
+    }
   }
   // a battery's clamp stands on posts in front of it and behind it
   if (def.battery) {
@@ -255,6 +261,8 @@ function wallOf(input: LayoutInput, def: BoardDef, placement: BoardPlacement, to
     return Math.abs(n[0] - wx) < 1e-9 && Math.abs(n[1] - wy) < 1e-9;
   });
   if (!edge || (def.mount.kind === 'rails' && railEdges(def).includes(edge))) return null;
+  // ears along the rails reach past the other two edges: no wall there either
+  if (railsScrewed(def, placement) && placement.railEars === 'along') return null;
   const onEdge = def.ports.filter((port) => port.edge === edge);
   const protrude = Math.max(0, ...onEdge.map((port) => (onFace(port) ? 0 : port.protrude)));
   // the inner wall goes beyond the board edge by what the connectors stick out, less the wall and the offset

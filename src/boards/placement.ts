@@ -68,6 +68,10 @@ export interface BoardPlacement {
   capSize?: number;
   /** a keyboard that hangs: held another way than its entry's (`holdChoices`) — rails, or clamp bars across its back */
   hold?: MountKind;
+  /** a board held by rails only: the rails are printed apart and screwed down (`mount` is their screw) */
+  railScrews?: true;
+  /** rails on screws only: their ears past the rails' ends along the edge (missing: outwards) */
+  railEars?: 'along';
 }
 
 /**
@@ -346,7 +350,14 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
     ...carried,
     ...withKeys(def, r),
     ...(hold ? { hold } : {}),
+    ...withRailScrews(def, r),
   };
+}
+
+/** Rails on screws and where their ears are, kept only for a board held by rails. */
+function withRailScrews(def: BoardDef, r: object): Pick<BoardPlacement, 'railScrews' | 'railEars'> {
+  if (def.mount.kind !== 'rails' || def.battery || Reflect.get(r, 'railScrews') !== true) return {};
+  return { railScrews: true, ...(Reflect.get(r, 'railEars') === 'along' ? { railEars: 'along' as const } : {}) };
 }
 
 /** A keyboard's opening choice and fit, kept only when they differ from the entry's. */

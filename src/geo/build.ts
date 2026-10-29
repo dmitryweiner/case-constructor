@@ -15,6 +15,8 @@ import { plateOf, shapeSpec } from './shape';
 import { outerSolid, shellSolid } from './shell';
 import type { Support } from './standoffs';
 import { SINK, cylinder, fromCeiling, rails, roundSegments, standoffs, upsideDown } from './standoffs';
+import { railsForPrint, screwedRails } from './railSolids';
+import { railsScrewed } from './rails';
 import { REST_R, caseRests } from './rests';
 import { batteryClamps, batterySupports } from './batterySolids';
 import { glassKeepOut, rimSolids } from './rimSolids';
@@ -53,6 +55,12 @@ export interface CaseBuild {
   lidClamps: SurfaceMesh | null;
   /** a hinged half with a printed hinge: its leaf and knuckles, in the half's frame; null without */
   hinge: SurfaceMesh | null;
+  /** rails on screws (N2), as screwed down, case frame: those on the body's posts and those on the lid's; null without */
+  rails: SurfaceMesh | null;
+  lidRails: SurfaceMesh | null;
+  /** the same rails as they print: top down, one behind the other from the origin */
+  railsPrint: SurfaceMesh | null;
+  lidRailsPrint: SurfaceMesh | null;
   dims: Dims;
 }
 
@@ -103,7 +111,9 @@ export function buildCase(
       ? standoffs(csg, scope, board, shape.floor, segments)
       : board.def.mount.kind === 'clamp'
         ? clampPosts(csg, scope, board, shape.floor, segments)
-        : rails(csg, scope, board, shape.floor));
+        : railsScrewed(board.def, board.placement)
+          ? screwedRails(csg, scope, board, shape.floor, segments)
+          : rails(csg, scope, board, shape.floor));
     // and step aside for its glass, which a rim around it locates
     // built in its plate's frame (the top, or the console's slope), then turned into the case
     const hung = (board: PlacedBoard): Support[] => {
@@ -117,6 +127,7 @@ export function buildCase(
             base: applyAffine(frame, support.base),
             material: keepOut ? scope.keep(material.subtract(keepOut)) : material,
             holes: support.holes ? transformSolid(scope, support.holes, frame) : null,
+            ...(support.loose ? { loose: { ...support.loose, solid: transformSolid(scope, support.loose.solid, frame) } } : {}),
           };
         });
       return [...own, ...rimSolids(csg, scope, board, shape.floor, segments)];
@@ -152,6 +163,16 @@ export function buildCase(
     const rawBody = body;
     body = attach(csg, scope, body, forBody, lidSolid);
     lidSolid = attach(csg, scope, lidSolid, forLid, rawBody);
+    // rails on screws go with the part their posts are on
+    const loose = (own: Support[]): { solid: Manifold; local: Manifold }[] => own.flatMap((support) => (support.loose ? [support.loose] : []));
+    const railParts = (own: Support[]): { assembled: SurfaceMesh | null; print: SurfaceMesh | null } => {
+      const pieces = loose(own);
+      if (pieces.length === 0) return { assembled: null, print: null };
+      const print = railsForPrint(csg, scope, pieces.map((piece) => piece.local));
+      return { assembled: fromManifold(unionAll(csg, scope, pieces.map((piece) => piece.solid))), print: print ? fromManifold(print) : null };
+    };
+    const bodyRails = railParts(forBody);
+    const lidRails = railParts(forLid);
     // a hinged half's knuckles hold on to its body's part of the hinge wall;
     // before the openings, so a port through that wall cuts them too (and is warned about).
     // A printed hinge is a part of its own: the half gets the pads and holes for its screws.
@@ -276,7 +297,8 @@ export function buildCase(
       return solids.length > 0 ? fromManifold(unionAll(csg, scope, solids)) : null;
     };
     return {
-      body: fromManifold(body), lid: fromManifold(lidSolid), screw, clamps: merged(false), lidClamps: merged(true), hinge: leaf ? fromManifold(leaf) : null, dims,
+      body: fromManifold(body), lid: fromManifold(lidSolid), screw, clamps: merged(false), lidClamps: merged(true), hinge: leaf ? fromManifold(leaf) : null,
+      rails: bodyRails.assembled, lidRails: lidRails.assembled, railsPrint: bodyRails.print, lidRailsPrint: lidRails.print, dims,
     };
   } finally {
     scope.dispose();

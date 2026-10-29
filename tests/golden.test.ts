@@ -27,7 +27,7 @@ interface PartEntry {
   extents: number[];
 }
 
-type Entry = Record<'body' | 'lid', PartEntry> & { clamp?: PartEntry; lidClamp?: PartEntry; hinge?: PartEntry };
+type Entry = Record<'body' | 'lid', PartEntry> & { clamp?: PartEntry; lidClamp?: PartEntry; hinge?: PartEntry; rails?: PartEntry; lidRails?: PartEntry };
 
 /** The M0 base: no boards, the manual 100 × 70 × 35 size. */
 function base(): AppState {
@@ -369,6 +369,15 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     boards: [{ board: 'adafruit-feather-esp32-s3', mount: { size: 'M1.6', hole: 'tap', head: 'none' } }],
   }),
+  // N2: rails on screws — ears outwards on the floor, along the edge on a hung board with nut pockets
+  'heltec-v4-rails-screwed': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'heltec-wifi-lora-32-v4', railScrews: true, pins: true }],
+  }),
+  'heltec-v4-rails-along-hung': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'heltec-wifi-lora-32-v4', railScrews: true, railEars: 'along', on: 'ceiling', mount: { size: 'M2', hole: 'nut', head: 'none' } }],
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {
@@ -392,6 +401,7 @@ describe('golden cases', () => {
           body: part(built.body), lid: part(built.lid),
           ...(built.clamps ? { clamp: part(built.clamps) } : {}), ...(built.lidClamps ? { lidClamp: part(built.lidClamps) } : {}),
           ...(built.hinge ? { hinge: part(built.hinge) } : {}),
+          ...(built.railsPrint ? { rails: part(built.railsPrint) } : {}), ...(built.lidRailsPrint ? { lidRails: part(built.lidRailsPrint) } : {}),
         };
       }
     }

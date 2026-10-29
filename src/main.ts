@@ -55,7 +55,7 @@ import { resolveVariant } from './boards/schema';
 import { catalogBoard } from './boards/catalog';
 import type { LidPlace, PrintArrange } from './geo/print';
 import {
-  LID_PLACES, PRINT_GAP_MAX, PRINT_GAP_MIN, bodyForPrint, bothForPrint, hingeForPrint, lidWithScrews, screwsInCase, sideCheeksForPrint, withClamps,
+  LID_PLACES, PRINT_GAP_MAX, PRINT_GAP_MIN, bodyForPrint, bothForPrint, hingeForPrint, lidWithScrews, screwsInCase, sideCheeksForPrint, stackBehind, withClamps, withRails,
 } from './geo/print';
 import { capsInCase, keyCaps, withCaps } from './geo/caps';
 import { restWarnings } from './geo/rests';
@@ -314,6 +314,11 @@ interface BuiltCase {
   lidClamps: SurfaceMesh | null;
   /** a printed hinge's leaf of this half */
   hinge: SurfaceMesh | null;
+  /** rails on screws: screwed down on the body's posts and on the lid's, and the same as they print */
+  rails: SurfaceMesh | null;
+  lidRails: SurfaceMesh | null;
+  railsPrint: SurfaceMesh | null;
+  lidRailsPrint: SurfaceMesh | null;
 }
 /** The last preview from the worker, kept so view toggles redraw without a rebuild. */
 let lastParts: { state: AppState; cases: BuiltCase[] } | null = null;
@@ -595,12 +600,16 @@ function builtCases(parts: JobPart[]): BuiltCase[] {
       clamps: optionalPart(own, 'clamp'),
       lidClamps: optionalPart(own, 'lidClamp'),
       hinge: optionalPart(own, 'hinge'),
+      rails: optionalPart(own, 'rail'),
+      lidRails: optionalPart(own, 'lidRail'),
+      railsPrint: optionalPart(own, 'railPrint'),
+      lidRailsPrint: optionalPart(own, 'lidRailPrint'),
     };
   });
 }
 
 function caseMeshes(one: BuiltCase): SurfaceMesh[] {
-  return [one.body, one.lid, ...[one.screw, one.clamps, one.lidClamps, one.hinge].flatMap((mesh) => (mesh ? [mesh] : []))];
+  return [one.body, one.lid, ...[one.screw, one.clamps, one.lidClamps, one.hinge, one.railsPrint, one.lidRailsPrint].flatMap((mesh) => (mesh ? [mesh] : []))];
 }
 
 /** Where the last print layout of Both put the lid: the caption names it (auto decides by the meshes). */
@@ -613,7 +622,7 @@ let lidPlaced: 'right' | 'behind' = 'right';
  * body holds); Lid is the lid, its screws and the bars of a panel it holds.
  */
 function printParts(built: AppState, one: BuiltCase, arrange: PrintArrange = built.print): ScenePart[] {
-  const { body, lid, screw, clamps, lidClamps } = one;
+  const { body, lid, screw, clamps, lidClamps, railsPrint, lidRailsPrint } = one;
   const layout = caseLayout(built);
   const { dims } = layout;
   const shape = { kind: built.shape.kind, console: layout.console };
@@ -627,9 +636,14 @@ function printParts(built: AppState, one: BuiltCase, arrange: PrintArrange = bui
     const placed = withCaps(parts.map((part) => part.mesh), caps, arrange.gap);
     return placed.length > parts.length ? [...parts, { role: 'cap', mesh: placed[placed.length - 1] }] : parts;
   };
+  // rails on screws, top down, right of the rest (the lid's go with the lid)
+  const railed = (parts: ScenePart[], rails: SurfaceMesh | null): ScenePart[] => {
+    const placed = withRails(parts.map((part) => part.mesh), rails, arrange.gap);
+    return placed.length > parts.length ? [...parts, { role: 'clamp', mesh: placed[placed.length - 1] }] : parts;
+  };
   if (built.exportMode === 'lid') {
     const lidParts = lidWithScrews(lid, screw, count, face, dims);
-    return capped(roles(withClamps(lidParts, lidClamps), [...(['lid', 'screw'] as const).slice(0, lidParts.length), 'clamp']));
+    return capped(railed(roles(withClamps(lidParts, lidClamps), [...(['lid', 'screw'] as const).slice(0, lidParts.length), 'clamp']), lidRailsPrint));
   }
   const both = built.exportMode === 'both' ? bothForPrint(body, lid, screw, count, face, dims, shape, arrange) : null;
   if (both) lidPlaced = both.place;
@@ -637,7 +651,8 @@ function printParts(built: AppState, one: BuiltCase, arrange: PrintArrange = bui
   const names: ScenePart['role'][] = built.exportMode === 'both' ? ['body', 'lid', 'screw'] : ['body'];
   const bars = built.exportMode === 'both' && lidClamps ? (clamps ? mergeMeshes([clamps, lidClamps]) : lidClamps) : clamps;
   const withClampBars = withClamps(placed, bars);
-  return capped(roles(withClampBars, [...names.slice(0, placed.length), 'clamp']));
+  const rails = built.exportMode === 'both' && lidRailsPrint ? (railsPrint ? stackBehind(railsPrint, lidRailsPrint) : lidRailsPrint) : railsPrint;
+  return capped(railed(roles(withClampBars, [...names.slice(0, placed.length), 'clamp']), rails));
 }
 
 /**
@@ -752,11 +767,15 @@ function drawParts(): void {
       if (one.clamps) local.push({ role: 'clamp', mesh: one.clamps, offset: [0, 0, liftedBars ? LIFT_MM / 2 : 0] });
       // a printed hinge's leaf stays on its wall
       if (one.hinge) local.push({ role: 'hinge', mesh: one.hinge });
+      // rails on screws, on the body's posts, round the board they hold
+      if (one.rails) local.push({ role: 'clamp', mesh: one.rails });
     }
     if (showLid && showBody) {
       local.push({ role: 'lid', mesh: one.lid, offset: lifted(true) });
       // a panel's clamp bars belong to the lid that holds it; exploded, halfway out, under the panel
       if (one.lidClamps) local.push({ role: 'clamp', mesh: one.lidClamps, offset: lifted(true, 0.5) });
+      // rails on the lid's posts go with the lid and the board they hold
+      if (one.lidRails) local.push({ role: 'clamp', mesh: one.lidRails, offset: lifted(true) });
       // printed screws in their holes; exploded, they hover over the lifted lid
       const posts = one.screw ? lidPosts(own).spots.map((spot) => spot.centre) : [];
       const screws = one.screw ? screwsInCase(one.screw, posts, own.lid.face, dims, 2 * lidLift) : null;
