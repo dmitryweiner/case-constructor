@@ -94,6 +94,8 @@ export const ru: Record<Key, string> = {
   'half.edit.hint': 'Карточки ниже — платы, крышка, отверстия, дополнения — относятся к этой половинке',
   'half.a': 'Нижняя половинка',
   'half.b': 'Верхняя половинка',
+  'half.a.short': 'низ',
+  'half.b.short': 'верх',
   'half.line': '{half}: {text}',
   'panel.lid': 'Крышка',
   'panel.export': "Показ и экспорт",

@@ -139,7 +139,8 @@ export function halfControls(): Control<HalfView>[] {
   return [
     {
       kind: 'segmented', key: 'half', label: 'half.edit', hint: 'half.edit.hint',
-      options: HALVES.map((value) => ({ value, label: `half.${value}` as const })),
+      // short, so both fit in one row beside the label
+      options: HALVES.map((value) => ({ value, label: `half.${value}.short` as const })),
       get: (view) => view.half,
       set: (view, value) => ({ ...view, half: HALVES.find((half) => half === value) ?? view.half }),
     },

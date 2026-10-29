@@ -94,6 +94,8 @@ export const uk: Record<Key, string> = {
   'half.edit.hint': 'Картки нижче — плати, кришка, отвори, доповнення — стосуються цієї половинки',
   'half.a': 'Нижня половинка',
   'half.b': 'Верхня половинка',
+  'half.a.short': 'низ',
+  'half.b.short': 'верх',
   'half.line': '{half}: {text}',
   'panel.lid': 'Кришка',
   'panel.export': "Показ і експорт",

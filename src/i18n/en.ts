@@ -96,6 +96,8 @@ export const en = {
   'half.edit.hint': 'The cards below — boards, lid, openings, extras — belong to this half',
   'half.a': 'Lower half',
   'half.b': 'Upper half',
+  'half.a.short': 'lower',
+  'half.b.short': 'upper',
   'half.line': '{half}: {text}',
   'panel.lid': 'Lid',
   'panel.export': "View and export",

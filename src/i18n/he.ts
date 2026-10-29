@@ -95,6 +95,8 @@ export const he: Record<Key, string> = {
   'half.edit.hint': 'הכרטיסים למטה — לוחות, מכסה, פתחים, תוספות — שייכים לחצי הזה',
   'half.a': 'החצי התחתון',
   'half.b': 'החצי העליון',
+  'half.a.short': 'תחתון',
+  'half.b.short': 'עליון',
   'half.line': '{half}: {text}',
   'panel.lid': 'מכסה',
   'panel.export': "תצוגה וייצוא",

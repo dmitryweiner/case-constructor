@@ -332,3 +332,7 @@ stands alone.
   note gives one length, the shortest of the cheeks'. Openings through the
   side walls under a cheek are not warned about yet.
 
+- **H10, the review (2026-10-29).** The switch reads *Editing: lower /
+  upper* on one row (`half.a.short`, `half.b.short`); the warnings keep
+  the full *Lower half: / Upper half:*.
+
