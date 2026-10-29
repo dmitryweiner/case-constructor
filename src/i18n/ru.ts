@@ -472,7 +472,8 @@ export const ru: Record<Key, string> = {
   // --- extras ---
   'panel.vents': 'Вентиляция',
   'panel.fan': 'Посадка вентилятора',
-  'panel.mounting': 'Крепление и надписи',
+  'panel.mounting': 'Крепление на стену',
+  'panel.labels': 'Надписи',
   'vents.pattern': 'Узор',
   'vents.slots': 'прорези',
   'vents.hex': 'соты',
@@ -491,7 +492,7 @@ export const ru: Record<Key, string> = {
   'fan.y': 'Сдвиг Y',
   'fan.xy.hint': 'от центра грани, если смотреть снаружи, мм',
   'fan.screwD': 'Отверстия винтов',
-  'mount.kind': 'На стену',
+  'mount.kind': 'Тип',
   'mount.none': 'нет',
   'mount.face': 'К стене',
   'mount.face.hint': 'грань, которой корпус прилегает к стене: скважины проходят через неё, прорезями вверх; ушки стоят вровень с ней на соседних стенках',

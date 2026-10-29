@@ -113,6 +113,7 @@ const cutAdd = el('cutAdd', HTMLButtonElement);
 const labelAdd = el('labelAdd', HTMLButtonElement);
 const lidParams = el('lidParams', HTMLDivElement);
 const hingeCard = el('hingeCard', HTMLElement);
+const mountCard = el('mountCard', HTMLElement);
 const hingeParams = el('hingeParams', HTMLDivElement);
 /** A hinged case: the cards that edit one half, framed under one switch (`#edit_half_*`). */
 const halfGroup = el('halfGroup', HTMLDivElement);
@@ -260,6 +261,8 @@ function syncPanel(): void {
   caseRows.sync(state);
   const hinged = isHinged(state);
   hingeCard.hidden = !hinged;
+  // the wall mount is the whole case's: a hinged one hangs on no wall
+  mountCard.hidden = hinged;
   halfBar.hidden = !hinged;
   halfGroup.classList.toggle('on', hinged);
   hingeRows.sync(state);

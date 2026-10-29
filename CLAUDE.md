@@ -588,7 +588,7 @@ Hinged: the card `#hingeCard` (`#hinge_gapAuto`, `#hinge_gap`, `#hinge_magnets`,
 `#hinge_axle_cones` (leaves only), `#hinge_leafScrew_M2|M2.5|M3`, `#hinge_leafHole_tap|insert|nut` (leaves)), cables `#cableAdd`, per cable
 `#cable<i>_kind_flat|round`, `#cable<i>_through_wall|face`, `#cable<i>_x|_w|_t|_d|_plugW|_plugH|_remove`, the half switch `#halfBar`
 heading the frame `#halfGroup` (class `on` when hinged) round the Boards, Lid,
-Openings and Mounting cards (`#edit_half_a|b`), the view's angle `#view_angle` (in the View and export
+Openings and Labels cards (`#edit_half_a|b`; the wall mount's card `#mountCard`, the whole case's, stands after it and hides when hinged), the view's angle `#view_angle` (in the View and export
 card).
 Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets|printed`,
 `#lid_screw` (select), `#lid_hole_tap|insert|nut`, `#lid_magnet` (select),

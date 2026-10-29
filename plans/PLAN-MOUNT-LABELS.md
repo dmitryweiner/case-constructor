@@ -229,3 +229,9 @@ L2, L3, L4.
   label on the lid) now says that the mount is on the lid held by snaps,
   and that the raised label is on the face the lid prints on. Both were so
   before; the user changes the presets.
+- **After the review (the user).** The wall mount and the labels were one
+  card, "Mounting and labels", and nothing tied them together. Now two: the
+  Labels card in the half frame (each half has its own), the Wall mount
+  card (`#mountCard`) after it — the whole case's, hidden on a hinged case,
+  which hangs on no wall. Its first row, "Wall mount" under the card of the
+  same name, is "Kind".

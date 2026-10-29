@@ -1,6 +1,6 @@
 // Cards of the extras: vents and the fan seat (in Openings), the wall mount
-// (in Mounting and labels; the labels have a card of their own). Vents and
-// fan are toggled cards; the wall mount is a choice with "none".
+// (its own card). Vents and fan are toggled cards; the wall mount is a
+// choice with "none".
 
 import type { CardHandle } from './card';
 import { createCard } from './card';

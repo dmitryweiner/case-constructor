@@ -481,7 +481,8 @@ export const en = {
   // --- extras ---
   'panel.vents': 'Ventilation',
   'panel.fan': 'Fan seat',
-  'panel.mounting': 'Mounting and labels',
+  'panel.mounting': 'Wall mount',
+  'panel.labels': 'Labels',
   'vents.pattern': 'Pattern',
   'vents.slots': 'slots',
   'vents.hex': 'hexagons',
@@ -500,7 +501,7 @@ export const en = {
   'fan.y': 'Shift Y',
   'fan.xy.hint': 'from the centre of the face as seen from outside, mm',
   'fan.screwD': 'Screw holes',
-  'mount.kind': 'Wall mount',
+  'mount.kind': 'Kind',
   'mount.none': 'none',
   'mount.face': 'Against the wall',
   'mount.face.hint': 'the face that rests on the wall: keyholes go through it, their slots pointing up; ears stand flush with it out of the walls next to it',

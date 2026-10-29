@@ -473,7 +473,8 @@ export const he: Record<Key, string> = {
   // --- extras ---
   'panel.vents': 'אוורור',
   'panel.fan': 'מושב למאוורר',
-  'panel.mounting': 'תלייה וכיתובים',
+  'panel.mounting': 'תלייה על קיר',
+  'panel.labels': 'כיתובים',
   'vents.pattern': 'דגם',
   'vents.slots': 'חריצים',
   'vents.hex': 'משושים',
@@ -492,7 +493,7 @@ export const he: Record<Key, string> = {
   'fan.y': 'הזזה Y',
   'fan.xy.hint': 'ממרכז הצד כשמסתכלים מבחוץ, מ״מ',
   'fan.screwD': 'חורי ברגים',
-  'mount.kind': 'תלייה על קיר',
+  'mount.kind': 'סוג',
   'mount.none': 'ללא',
   'mount.face': 'צמוד לקיר',
   'mount.face.hint': 'הדופן שנצמדת לקיר: חורי התלייה עוברים דרכה, החריצים כלפי מעלה; האוזניים בולטות מהדפנות הסמוכות, במישור אחד איתה',
