@@ -31,6 +31,10 @@ import { outerTopAt, portCutters } from './ports';
 import { closedKeyholes, earSpecs, extrasCutters } from './extras';
 import { earSolids, keyholePadSolids, labelSolid } from './extrasSolids';
 import { screwSolid } from './screwSolids';
+import type { HalfHinge } from './hinge';
+import { bodyRange, cableCutters } from './hinge';
+import { knuckleSolids, leafSolids, pivotSolids } from './hingeSolids';
+import { effectiveRadii } from './loft';
 import { screwShape, threadPoints } from './thread';
 import type { LabelRaster } from './label';
 import { labelPlacement } from './label';
@@ -47,6 +51,8 @@ export interface CaseBuild {
   clamps: SurfaceMesh | null;
   /** the clamp bars of panels the lid holds, case frame, as screwed down; null without */
   lidClamps: SurfaceMesh | null;
+  /** a hinged half with a printed hinge: its leaf and knuckles, in the half's frame; null without */
+  hinge: SurfaceMesh | null;
   dims: Dims;
 }
 
@@ -61,8 +67,10 @@ export const BUILD_STAGES: readonly Message[] = [
   { code: 'progress.extras' },
 ];
 
+/** `hinge`: a half of a hinged case gets its knuckles (`state/hinged.ts`, `halfHinge`). */
 export function buildCase(
   csg: CsgApi, state: AppState, segments: number, onStage: (stage: Message) => void = () => {}, label: LabelRaster | null = null,
+  hinge: HalfHinge | null = null,
 ): CaseBuild {
   const scope = new CsgScope();
   try {
@@ -119,6 +127,17 @@ export function buildCase(
       ? (board.carried ? rimSolids(csg, scope, board, shape.floor, segments) : []) : board.def.battery
       ? batterySupports(csg, scope, board, board.def.battery, shape.floor, segments)
       : board.hung ? hung(board) : held(board)));
+    // a hinged half's magnets: a boss under the inner face's plate, its pocket open into the cavity —
+    // a support of that plate, so it goes with the lid when the lid is on top
+    if (hinge?.magnets) {
+      const m = hinge.magnets;
+      const n = roundSegments(segments);
+      for (const spot of m.spots) {
+        const material = cylinder(csg, scope, spot.x, spot.y, m.bottom - 1, dims.h - shape.floor + SINK, m.bossR, n);
+        const pocket = cylinder(csg, scope, spot.x, spot.y, m.bottom - 2, m.top, m.pocketR, n);
+        supports.push({ base: [spot.x, spot.y, dims.h - shape.floor / 2], material, holes: pocket });
+      }
+    }
     // rests under a keyboard's free corners grow from the floor, like a floor board's standoffs
     for (const rest of caseRests(layout, shape.floor)) {
       const material = cylinder(csg, scope, rest.cx, rest.cy, shape.floor - SINK, rest.top, REST_R, roundSegments(segments));
@@ -133,6 +152,33 @@ export function buildCase(
     const rawBody = body;
     body = attach(csg, scope, body, forBody, lidSolid);
     lidSolid = attach(csg, scope, lidSolid, forLid, rawBody);
+    // a hinged half's knuckles hold on to its body's part of the hinge wall;
+    // before the openings, so a port through that wall cuts them too (and is warned about).
+    // A printed hinge is a part of its own: the half gets the pads and holes for its screws.
+    let leaf: Manifold | null = null;
+    if (hinge?.place === 'sides') {
+      // side pivots: integral cheeks on the side walls, or a printed hinge's cheeks screwed onto them
+      const solids = pivotSolids(csg, scope, hinge, dims, shape.wall, segments);
+      if (solids) {
+        leaf = solids.leaf;
+        const material = solids.material ?? solids.pads;
+        if (material) body = scope.keep(body.add(scope.keep(material.subtract(lidSolid))));
+        if (solids.holes) body = scope.keep(body.subtract(solids.holes));
+      }
+    } else if (hinge?.kind === 'leaves') {
+      const solids = leafSolids(csg, scope, hinge, dims, shape.wall, segments);
+      if (solids) {
+        leaf = solids.leaf;
+        body = scope.keep(scope.keep(body.add(scope.keep(solids.pads.subtract(lidSolid)))).subtract(solids.holes));
+      }
+    } else if (hinge) {
+      const range = bodyRange(dims.h, lid.face, plate, lid.depth);
+      const knuckles = knuckleSolids(csg, scope, hinge, dims, effectiveRadii(spec.outer).edgeR, range, segments);
+      if (knuckles) {
+        body = scope.keep(body.add(scope.keep(knuckles.material.subtract(lidSolid))));
+        if (knuckles.holes) body = scope.keep(body.subtract(knuckles.holes));
+      }
+    }
 
     onStage(BUILD_STAGES[3]);
     const outer = outerSolid(csg, scope, spec, segments);
@@ -142,6 +188,8 @@ export function buildCase(
       ...ports,
       ...extraCutters(state.extraCuts, shape, dims, top),
       ...extrasCutters(state, shape, layout, lid, top, ports),
+      // a hinged half: the cables' slots through its hinge wall
+      ...(hinge ? cableCutters(hinge, shape, dims, top) : []),
     ];
     let skirt = skirtSolid(csg, scope, spec, outer, frame, zp, lid, shape, segments);
     const opening = openingPolygon(spec, frame, zp, lid.lip.h, segments);
@@ -227,7 +275,9 @@ export function buildCase(
       const solids = bars.filter((bar) => bar.onLid === onLid).map((bar) => bar.solid);
       return solids.length > 0 ? fromManifold(unionAll(csg, scope, solids)) : null;
     };
-    return { body: fromManifold(body), lid: fromManifold(lidSolid), screw, clamps: merged(false), lidClamps: merged(true), dims };
+    return {
+      body: fromManifold(body), lid: fromManifold(lidSolid), screw, clamps: merged(false), lidClamps: merged(true), hinge: leaf ? fromManifold(leaf) : null, dims,
+    };
   } finally {
     scope.dispose();
   }

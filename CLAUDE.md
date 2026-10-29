@@ -21,6 +21,10 @@ on the model, the lid's place in the Both STL, the editor's hints: done
 `plans/PLAN-KEYBOARDS.md` — keyboards (K1…K8, K3b): the key field through
 the lid (a window, a hole per key, printed caps), floor keyboards, rests, a
 keypad's flange, the Tier A + B keyboards of `plans/PERSPECTIVE-KEYBOARDS.md`.
+`plans/PLAN-HINGED.md` — a hinged case (H1…H9): two halves, each its own
+case with its own lid, knuckles on a pin, a screw or snapping cones, a
+printed hinge on screws, cable slots, magnets inside (the branch
+`hinged-2026-10-28`).
 
 ## Node
 
@@ -64,7 +68,8 @@ freely; a temporary script that turns out useful becomes a permanent one.
   clamp bars sunk under the lid until its Grove socket's note goes, the
   MacroPad on the floor, the BBQ20KBD's rests, the KeebDeck pressed on its
   flange), arranging and aligning two boards (and
-  undo), every lid face, cylinder/console lid restrictions, snaps and screws
+  undo), every lid face, cylinder/console lid restrictions, a hinged case
+  (the half switch, a board and a lid in the upper half, closed, export), snaps and screws
   with every hole and head kind, magnets, printed screws (P4 with its
   warning, the Lid tab with the screws, a lid export), vents, fan, through
   and closed keyholes, ears by count and walls, a label in a real font,
@@ -165,6 +170,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   "which tool for which drawing"), also for the catalog review: drawings a
   person downloads, the review page's captions, the user's OK/BAD report. No new dependencies without the user's
   explicit approval, subagents included.
+- `scripts/i18n.mjs --file keys.json` — adds keys to all four dictionaries,
+  each after an anchor key (`[{ after, key, en, ru, uk, he }]`); a key
+  already there is replaced in place.
 - `scripts/lib/harness.mjs` — flags, a vite server on ports 5273 / 4273
   (not ClayForm's), console error collection, CPU throttle, browser locale.
   `CASE_BROWSER` overrides the chromium executable.
@@ -394,6 +402,61 @@ freely; a temporary script that turns out useful becomes a permanent one.
   `lidForKind`) puts it back when the new shape allows it (box → console →
   box leaves a top lid on top). The sanitizer only checks the face against
   the shape: it cannot tell a stale choice from one to restore.
+- A hinged case (`shape.kind: 'hinged'`, `state/hinged.ts`): the lower
+  half's contents are where a single case keeps them, the upper half's in
+  `state.hinge.b`. `halfState(state, half)` is either half as an ordinary
+  case (the shared footprint as a fixed size, its own height, no wall
+  mount; its kind stays `hinged`, which everything reads as a box, and its
+  lid faces are top and bottom); `withHalf` writes a card's result back
+  (contents only). The panel's cards edit `halfState(state, edited half)`
+  through `edited()` / `applyEdit` in `main.ts`; the half and the view's
+  angle are view settings (`HalfView`), not in the project. `casesOf`
+  gives the cases to build, warn about and draw: one, or the two halves.
+  The worker builds each half (parts carry `half`) and keeps the last build
+  of each, keyed by its state. The upper half is posed by `upperPose`
+  (`geo/hinge.ts`): the hinge along x on the lower half's back and the upper
+  half's front, the axis behind them in the closing gap. Its port captions'
+  keys start with `u`; a warning's `half` poses its spot.
+  Knuckles (`hinge.ts` pure: `knuckleRuns`, `axisSplit`, `knuckleStrip`;
+  `hingeSolids.ts` worker): `halfHinge(state, half)` goes to `buildCase`,
+  which adds them to the body after the supports, minus the lid, and
+  drills the axle's holes (`axleHoles`: a pin's, or a screw's with its head
+  seat and nut pocket in the block's end knuckles; a snap's bar added to
+  the lower half between its knuckles and the upper half's split rings;
+  `barrelMin` keeps a wall around them) — before the openings, so a port through the hinge
+  wall cuts them (and `knuckleCutWarnings` says so). A knuckle is the hull
+  of its barrel and a strip of its wall; past the strip it keeps
+  `KNUCKLE_LID_GAP` off the wall (the lid lifts past it). A half with its
+  lid on the bottom prints on its inner face: `axisSplit` keeps its barrels
+  under that face; both lids on the bottom cannot print (a warning).
+  `tests/hinged.test.ts` turns the upper half from closed to open flat and
+  demands zero shared volume at every 15°. Golden entries of a hinged state
+  are per half (`<name>:a`, `<name>:b`); `inspect.mjs` reports each half.
+  Cables (`hinge.cables`): a slot per cable through each half's hinge wall
+  (`HalfHinge.slots`, cut by `cableCutters` in the common cutter pass,
+  source `cable`); `knuckleRuns` keeps the knuckles off them; `hingeNotes`
+  gives the slot-to-slot length over the opening and the corner/overlap
+  warnings.
+  A printed hinge (`hinge.kind: 'leaves'`, `HalfHinge.leaf`, `leafLayout`):
+  each half's leaf (plate on its wall, knuckles on pedestals up to the axis —
+  past it, turning, they would enter the other wall) is the part `hinge`
+  of that half's build, in its frame; the half gets pads (clear of the
+  skirt, `padZ`) and the screws' holes. The view draws each leaf with its
+  half; the print layout poses the upper leaf closed (`upperPose(fold, 0)`)
+  and lays both on their wall faces behind everything (`hingeForPrint`).
+  Cones (`axle: 'cones'`, leaves only) print in place. The axle's solids are
+  shared by both kinds (`axleSolids`).
+  Side pivots (`hinge.place: 'sides'`, `pivotLayout`, `pivotSolids`): no
+  knuckles on the back (`runs` empty, the axis `clearance` behind the
+  walls); per side the lower half's cheek on its wall, the upper half's one
+  layer out on a spacer that stands past the lower cheek's strip; the axle
+  across both discs. A printed hinge's side cheeks are split by x and laid
+  flat one by one (`sideCheeksForPrint`). No cones there (`axlesFor`).
+  The gap (`gapOf`): automatic from `innerProtrusion` of both halves
+  (`topProtrusion` in `ports.ts` plus a raised label on a top lid), or the
+  user's. Magnets (`magnetBosses`): two bosses under each inner face's
+  plate, built as supports of that plate in `buildCase` (so the owner and
+  the pocket follow the support rules).
 - Visible text comes only from `src/i18n/` dictionaries; `en.ts` is the
   reference and gives `Key`. The core and the worker speak in message codes
   (`geo/message.ts`). A test fails on any Cyrillic or Hebrew in a string
@@ -425,6 +488,8 @@ browser is within ~10 % of it):
 | CardKB with printed caps — preview | 12 | 135 ms | 12.5k + 9.6k of caps |
 | CardKB with printed caps — finest export | 64 | 0.75 s | 64k + the caps |
 | KeebDeck Basic, a hole per key — preview | 12 | 260 ms | 19k |
+| `meshtastic-clamshell` (two halves, a printed hinge) — preview | 12 | 160 + 125 ms (a half's build is reused while the other is edited) | 9k + 10k + 2k of leaves |
+| `meshtastic-clamshell` — finest export | 64 | 0.8 + 0.7 s | 43k + 44k + 10k of leaves |
 
 Decided at M1 and confirmed at M8: the preview is the exact case (the same
 pipeline as the export, 12 segments per quarter arc), rebuilt 120 ms after
@@ -442,9 +507,9 @@ Add a state when a feature lands, never edit an old one.
 
 Built-in presets (`src/state/presets.ts`): `pi4-desktop`, `pi-zero-gpio`,
 `esp32-sensor-box`, `esp32-18650-box`, `arduino-uno-box`, `cylinder-puck`,
-`klipperscreen-console`, `ha-wall-panel`, `meshtastic-cardkb`, `plain-box`. Each is
+`klipperscreen-console`, `ha-wall-panel`, `meshtastic-cardkb`, `meshtastic-clamshell`, `plain-box`. Each is
 built by `tests/presetsBuild.test.ts` (closed, no slivers, no overlap, no
-layout warnings). A preset's name is one English string in `presets.ts`
+layout warnings; a hinged one per half, with no hinge warnings). A preset's name is one English string in `presets.ts`
 (not translated: the review asked for one name); its note is the
 dictionary key `preset.<id>.note`.
 
@@ -480,9 +545,18 @@ Extras: toggled cards `#on_vents`, `#on_fan`, `#on_label`; vents
 `#label_anchor_<anchor>` (a 3 × 3 grid: topLeft … bottomRight), `#label_margin` (off the centre), `#label_x|_y`, `#label_turn_0|90|180|270`, `#label_angle`.
 Openings: `#cutAdd`; per cut `#cut<i>_face` (select), `#cut<i>_shape_rect|round`,
 `#cut<i>_x|_y|_w|_d|_h|_r` (`_d` is the diameter of a round cut), `#cut<i>_remove`.
-Case card: `#case_kind_box|cylinder|console`, `#case_cornerR`, `#case_edgeR`,
+Case card: `#case_kind_box|cylinder|console|hinged`, `#case_cornerR`, `#case_edgeR`,
 `#case_wall`, `#case_floor`, `#case_auto`, `#case_w`, `#case_diameter`,
-`#case_d`, `#case_h`, `#case_frontH`, `#case_backH`.
+`#case_d`, `#case_h`, `#case_hA|_hB` (hinged), `#case_frontH`, `#case_backH`.
+Hinged: the card `#hingeCard` (`#hinge_gapAuto`, `#hinge_gap`, `#hinge_magnets`, `#hinge_magnet`, `#hinge_layout_ends|full`,
+`#hinge_knuckles_3|5|7`, `#hinge_length` (two blocks), `#hinge_barrelD`,
+`#hinge_clearance`, `#hinge_axle_pin|screw|snap|cones`, `#hinge_pinD`, `#hinge_pinFit` (a pin),
+`#hinge_screw_M2|M2.5|M3` (a screw), `#hinge_kind_knuckles|leaves`, `#hinge_place_back|sides`,
+`#hinge_axle_cones` (leaves only), `#hinge_leafScrew_M2|M2.5|M3`, `#hinge_leafHole_tap|insert|nut` (leaves)), cables `#cableAdd`, per cable
+`#cable<i>_kind_flat|round`, `#cable<i>_through_wall|face`, `#cable<i>_x|_w|_t|_d|_plugW|_plugH|_remove`, the half switch `#halfBar`
+heading the frame `#halfGroup` (class `on` when hinged) round the Boards, Lid,
+Openings and Mounting cards (`#edit_half_a|b`), the view's angle `#view_angle` (in the View and export
+card).
 Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets|printed`,
 `#lid_screw` (select), `#lid_hole_tap|insert|nut`, `#lid_magnet` (select),
 `#lid_magnetFit` (magnets only), `#lid_thread` (select), `#lid_threadFit`

@@ -4,7 +4,7 @@ Decided on purpose, so nobody wonders:
 
 - A lid on the sloped top of the console.
 - An edge fillet on the console; fillets on cutout edges and post tops.
-- Cantilever snap hooks, hinges, sliding side panels — snaps are half-round
+- Cantilever snap hooks, sliding side panels — snaps are half-round
   bumps in grooves.
 - HATs sharing standoffs with the board below: each board has its own
   standoffs; place a HAT as a second board at its height.

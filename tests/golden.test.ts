@@ -16,6 +16,7 @@ import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import type { SurfaceMesh } from '../src/geo/surface';
 import { KEYPAD } from './helpers';
+import { casesOf, halfHinge } from '../src/state/hinged';
 
 const GOLDEN_PATH = join(dirname(fileURLToPath(import.meta.url)), 'golden', 'cases.json');
 const SEGMENTS = 8;
@@ -26,7 +27,7 @@ interface PartEntry {
   extents: number[];
 }
 
-type Entry = Record<'body' | 'lid', PartEntry> & { clamp?: PartEntry; lidClamp?: PartEntry };
+type Entry = Record<'body' | 'lid', PartEntry> & { clamp?: PartEntry; lidClamp?: PartEntry; hinge?: PartEntry };
 
 /** The M0 base: no boards, the manual 100 × 70 × 35 size. */
 function base(): AppState {
@@ -296,6 +297,73 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     boards: [{ board: 'm5stack-cardkb2', on: 'ceiling', z: 1.3, hold: 'clamp', keys: 'caps', mount: { size: 'M2', hole: 'insert' } }],
   }),
+  // H3: a hinged case, knuckles on a pin — both lids on top (the axis in the gap's middle)
+  'hinged-knuckles': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged', edgeR: 2 },
+    hinge: { b: { boards: [{ board: 'esp32-devkitc-v4' }] } },
+  }),
+  // H3: the lower half prints on its inner face, its knuckles under it; one block of five
+  'hinged-knuckles-bottom-full': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    lid: { ...defaultState().lid, face: 'bottom', depth: 4 },
+    hinge: { layout: 'full', knuckles: 5, barrelD: 7, b: { boards: [] } },
+  }),
+  // H4: a screw axle, its head and its nut sunk in each block's end knuckles
+  'hinged-screw-m3': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    hinge: { axle: 'screw', screw: 'M3', knuckles: 5, length: 7, b: { boards: [] } },
+  }),
+  // H5: a snap — the lower half's bars on the axis, the upper half's split rings
+  'hinged-snap': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    hinge: { axle: 'snap', barrelD: 9, b: { boards: [] } },
+  }),
+  // H6: two cables — a flat one in the middle with its plug, a round one near an end; one block per stretch
+  'hinged-cables': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    hinge: {
+      layout: 'full',
+      cables: [{ x: 50, kind: 'flat', w: 16, t: 0.3, plugW: 0, plugH: 4 }, { x: 20, kind: 'round', w: 5 }],
+      b: { boards: [] },
+    },
+  }),
+  // H7: a printed hinge on screws into nuts, cones printed in place, both lids on the bottom
+  'hinged-leaves-cones': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    lid: { ...defaultState().lid, face: 'bottom' },
+    hinge: { kind: 'leaves', axle: 'cones', leafHole: 'nut', b: { boards: [], lid: { face: 'bottom' } } },
+  }),
+  // H8: magnets inside at the front edge (on the lower half's top lid, in the upper half's body), the gap from printed caps
+  'hinged-magnets-caps': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0.3, keys: 'caps' }],
+    hinge: { magnets: true, magnet: '8x2', b: { boards: [], lid: { face: 'bottom' } } },
+  }),
+  // H12: a cable through the inner faces, next to the hinge edge
+  'hinged-cable-face': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    hinge: { cables: [{ x: 50, kind: 'flat', through: 'face', w: 20, t: 0.3 }], b: { boards: [], lid: { face: 'bottom' } } },
+  }),
+  // H11: pivots on the side walls, printed with the halves, on a screw; and a printed hinge's cheeks there, on a snap
+  'hinged-sides-screw': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    hinge: { place: 'sides', axle: 'screw', b: { boards: [] } },
+  }),
+  'hinged-sides-leaves-snap': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    lid: { ...defaultState().lid, face: 'bottom' },
+    hinge: { place: 'sides', kind: 'leaves', axle: 'snap', leafHole: 'nut', b: { boards: [], lid: { face: 'bottom' } } },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {
@@ -311,12 +379,16 @@ describe('golden cases', () => {
   it('match the pinned geometry', async () => {
     const csg = await initCSG();
     const actual: Record<string, Entry> = {};
-    for (const [name, state] of Object.entries(STATES)) {
-      const built = buildCase(csg, state, SEGMENTS);
-      actual[name] = {
-        body: part(built.body), lid: part(built.lid),
-        ...(built.clamps ? { clamp: part(built.clamps) } : {}), ...(built.lidClamps ? { lidClamp: part(built.lidClamps) } : {}),
-      };
+    for (const [name, whole] of Object.entries(STATES)) {
+      // a hinged case: an entry per half, `<name>:a` and `<name>:b`
+      for (const { half, state } of casesOf(whole)) {
+        const built = buildCase(csg, state, SEGMENTS, () => {}, null, half ? halfHinge(whole, half) : null);
+        actual[half ? `${name}:${half}` : name] = {
+          body: part(built.body), lid: part(built.lid),
+          ...(built.clamps ? { clamp: part(built.clamps) } : {}), ...(built.lidClamps ? { lidClamp: part(built.lidClamps) } : {}),
+          ...(built.hinge ? { hinge: part(built.hinge) } : {}),
+        };
+      }
     }
     if (process.env.UPDATE_GOLDEN || !existsSync(GOLDEN_PATH)) {
       // say what moved, so a regeneration is a decision and not a blind overwrite

@@ -8,6 +8,7 @@
 import type { AppState } from '../state/schema';
 import type { Message } from '../geo/message';
 import type { LabelRaster } from '../geo/label';
+import type { Half } from '../state/hinged';
 
 /**
  * A job. A preview builds the exact case at preview resolution; an export
@@ -23,15 +24,17 @@ export type CsgJob = (
    * worker checks only its shape (`sanitizeLabelRaster`).
    */
   label?: LabelRaster | null;
+  /** a hinged case: the upper half's label (`label` is the lower half's) */
+  labelB?: LabelRaster | null;
 };
 
 /**
  * 'screw': one printed screw in its own frame, when the lid holds on printed
  * screws; 'clamp': the clamp bars that go with the body (batteries', a
  * panel's the body holds), 'lidClamp': those of panels the lid holds — case
- * frame, screwed down
+ * frame, screwed down; 'hinge': a hinged half's leaf of a printed hinge, in the half's frame
  */
-export type PartId = 'body' | 'lid' | 'screw' | 'clamp' | 'lidClamp';
+export type PartId = 'body' | 'lid' | 'screw' | 'clamp' | 'lidClamp' | 'hinge';
 
 /** A finished part: the mesh plus what the panel shows about it. */
 export interface JobPart {
@@ -43,6 +46,8 @@ export interface JobPart {
   normals: Float32Array;
   /** what keeps the part out of the STL; always empty for a preview */
   blocking: Message[];
+  /** a hinged case: the half the part belongs to, in that half's own frame */
+  half?: Half;
 }
 
 /**

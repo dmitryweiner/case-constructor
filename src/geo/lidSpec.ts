@@ -53,9 +53,10 @@ export function defaultLid(): LidState {
   };
 }
 
-/** Faces a lid may sit on for this shape (the cylinder's side and the console's slope cannot). */
+/** Faces a lid may sit on for this shape (the cylinder's side, the console's slope and a hinged half's walls cannot). */
 export function lidFaces(kind: ShapeKind): readonly Face[] {
-  if (kind === 'cylinder') return ['top', 'bottom'];
+  // a hinged half's lid is on its inner face or its outer one: the hinge takes a wall
+  if (kind === 'cylinder' || kind === 'hinged') return ['top', 'bottom'];
   if (kind === 'console') return ['bottom', 'front', 'back', 'left', 'right'];
   return ['top', 'bottom', 'front', 'back', 'left', 'right'];
 }

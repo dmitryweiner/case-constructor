@@ -32,31 +32,45 @@
             <div id="caseParams"></div>
           </section>
 
-          <section class="card">
-            <h2 data-i18n="panel.boards">Boards</h2>
-            <div id="boardCards"></div>
-            <div class="button-row">
-              <button id="boardAdd" class="tb-btn" type="button" data-i18n="boards.add">+ Add board</button>
-              <button id="boardCustom" class="tb-btn" type="button" data-i18n="boards.custom">+ Custom board</button>
+          <section class="card" id="hingeCard" hidden>
+            <h2 data-i18n="panel.hinge">Hinge</h2>
+            <div id="hingeParams"></div>
+            <div id="cableCards"></div>
+            <button id="cableAdd" class="tb-btn wide" type="button" data-i18n="cable.add">+ Add cable</button>
+          </section>
+
+
+          <!-- a hinged case: the cards that edit one half, under one switch -->
+          <div class="half-group" id="halfGroup">
+            <div class="half-bar" id="halfBar" hidden>
+              <div id="halfParams"></div>
             </div>
-          </section>
+            <section class="card">
+              <h2 data-i18n="panel.boards">Boards</h2>
+              <div id="boardCards"></div>
+              <div class="button-row">
+                <button id="boardAdd" class="tb-btn" type="button" data-i18n="boards.add">+ Add board</button>
+                <button id="boardCustom" class="tb-btn" type="button" data-i18n="boards.custom">+ Custom board</button>
+              </div>
+            </section>
 
-          <section class="card">
-            <h2 data-i18n="panel.lid">Lid</h2>
-            <div id="lidParams"></div>
-          </section>
+            <section class="card">
+              <h2 data-i18n="panel.lid">Lid</h2>
+              <div id="lidParams"></div>
+            </section>
 
-          <section class="card">
-            <h2 data-i18n="panel.openings">Openings</h2>
-            <div id="extraOpenings"></div>
-            <div id="cutCards"></div>
-            <button id="cutAdd" class="tb-btn wide" type="button" data-i18n="cuts.add">+ Add opening</button>
-          </section>
+            <section class="card">
+              <h2 data-i18n="panel.openings">Openings</h2>
+              <div id="extraOpenings"></div>
+              <div id="cutCards"></div>
+              <button id="cutAdd" class="tb-btn wide" type="button" data-i18n="cuts.add">+ Add opening</button>
+            </section>
 
-          <section class="card">
-            <h2 data-i18n="panel.mounting">Mounting and label</h2>
-            <div id="extraMounting"></div>
-          </section>
+            <section class="card">
+              <h2 data-i18n="panel.mounting">Mounting and label</h2>
+              <div id="extraMounting"></div>
+            </section>
+          </div>
 
           <section class="card" id="exportCard">
             <h2 data-i18n="panel.export">View and export</h2>
@@ -74,6 +88,7 @@
               <button class="tab" id="viewPrint" role="radio" aria-checked="false" data-i18n="view.print" data-i18n-title="view.print.title">print layout</button>
             </div>
             </div>
+            <div id="angleParams" hidden></div>
             <div id="printParams"></div>
             <div class="view-checks">
               <label class="check-inline" id="viewBoardsLabel" data-i18n-title="view.boards.title"><input type="checkbox" id="viewBoards" checked /> <span data-i18n="view.boards">Boards</span></label>

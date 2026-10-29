@@ -239,6 +239,26 @@ body {
   margin-bottom: 8px;
 }
 
+/* a hinged case: the cards that edit one half, framed under the switch that picks it */
+.half-group.on {
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 0 6px 6px;
+  margin-bottom: 8px;
+}
+
+/* the switch heads the frame and stays in sight while its cards scroll */
+.half-bar {
+  position: sticky;
+  top: -12px;
+  z-index: 2;
+  margin: 0 -6px 8px;
+  padding: 6px 12px;
+  border-radius: 10px 10px 0 0;
+  background: var(--panel);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 25%);
+}
+
 .card h2 {
   margin: 0 0 8px;
   font-size: 13px;

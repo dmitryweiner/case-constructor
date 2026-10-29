@@ -1161,5 +1161,441 @@
         3
       ]
     }
+  },
+  "hinged-knuckles:a": {
+    "body": {
+      "triangles": 3456,
+      "volume": 28809.74,
+      "extents": [
+        97.9,
+        74.9,
+        32.9
+      ]
+    },
+    "lid": {
+      "triangles": 2492,
+      "volume": 12635.6,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-knuckles:b": {
+    "body": {
+      "triangles": 1832,
+      "volume": 28001.26,
+      "extents": [
+        97.9,
+        74.9,
+        26.1
+      ]
+    },
+    "lid": {
+      "triangles": 2176,
+      "volume": 13773.28,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-knuckles-bottom-full:a": {
+    "body": {
+      "triangles": 2620,
+      "volume": 25360.47,
+      "extents": [
+        97.9,
+        73.9,
+        22.39
+      ]
+    },
+    "lid": {
+      "triangles": 2466,
+      "volume": 16925.21,
+      "extents": [
+        97.9,
+        66.5,
+        9
+      ]
+    }
+  },
+  "hinged-knuckles-bottom-full:b": {
+    "body": {
+      "triangles": 1020,
+      "volume": 24746.87,
+      "extents": [
+        97.9,
+        73.9,
+        28
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 14144.45,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-screw-m3:a": {
+    "body": {
+      "triangles": 3304,
+      "volume": 29566.77,
+      "extents": [
+        97.9,
+        75.9,
+        33.4
+      ]
+    },
+    "lid": {
+      "triangles": 1916,
+      "volume": 12915.81,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-screw-m3:b": {
+    "body": {
+      "triangles": 1260,
+      "volume": 25275.3,
+      "extents": [
+        97.9,
+        75.9,
+        25
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 14144.45,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-snap:a": {
+    "body": {
+      "triangles": 2744,
+      "volume": 30520.54,
+      "extents": [
+        97.9,
+        75.9,
+        33.4
+      ]
+    },
+    "lid": {
+      "triangles": 1916,
+      "volume": 12915.81,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-snap:b": {
+    "body": {
+      "triangles": 972,
+      "volume": 24070.58,
+      "extents": [
+        97.9,
+        75.061,
+        25
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 14144.45,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-cables:a": {
+    "body": {
+      "triangles": 3340,
+      "volume": 28814.44,
+      "extents": [
+        97.9,
+        74.9,
+        32.9
+      ]
+    },
+    "lid": {
+      "triangles": 1988,
+      "volume": 12894.27,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-cables:b": {
+    "body": {
+      "triangles": 1348,
+      "volume": 24129.77,
+      "extents": [
+        97.9,
+        74.9,
+        24.5
+      ]
+    },
+    "lid": {
+      "triangles": 1188,
+      "volume": 14122.94,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-leaves-cones:a": {
+    "body": {
+      "triangles": 3778,
+      "volume": 26118.19,
+      "extents": [
+        97.9,
+        66.5,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 1710,
+      "volume": 14399.76,
+      "extents": [
+        97.9,
+        66.5,
+        6
+      ]
+    },
+    "hinge": {
+      "triangles": 776,
+      "volume": 3339.78,
+      "extents": [
+        87.9,
+        8.4,
+        16.4
+      ]
+    }
+  },
+  "hinged-leaves-cones:b": {
+    "body": {
+      "triangles": 1788,
+      "volume": 24317.46,
+      "extents": [
+        97.9,
+        66.5,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 14144.45,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    },
+    "hinge": {
+      "triangles": 672,
+      "volume": 2358.9,
+      "extents": [
+        87.9,
+        8.4,
+        16.4
+      ]
+    }
+  },
+  "hinged-magnets-caps:a": {
+    "body": {
+      "triangles": 1276,
+      "volume": 26545.29,
+      "extents": [
+        104,
+        73.7,
+        29.5
+      ]
+    },
+    "lid": {
+      "triangles": 8120,
+      "volume": 14899.24,
+      "extents": [
+        104,
+        65.3,
+        7.05
+      ]
+    }
+  },
+  "hinged-magnets-caps:b": {
+    "body": {
+      "triangles": 1244,
+      "volume": 25372.53,
+      "extents": [
+        104,
+        73.7,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 14741.63,
+      "extents": [
+        104,
+        65.3,
+        5
+      ]
+    }
+  },
+  "hinged-cable-face:a": {
+    "body": {
+      "triangles": 2896,
+      "volume": 29044.06,
+      "extents": [
+        97.9,
+        74.9,
+        37.4
+      ]
+    },
+    "lid": {
+      "triangles": 1980,
+      "volume": 12895.17,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-cable-face:b": {
+    "body": {
+      "triangles": 1128,
+      "volume": 24414.76,
+      "extents": [
+        97.9,
+        74.9,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 14144.45,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-sides-screw:a": {
+    "body": {
+      "triangles": 2702,
+      "volume": 28349.23,
+      "extents": [
+        105.3,
+        71.15,
+        33.15
+      ]
+    },
+    "lid": {
+      "triangles": 1916,
+      "volume": 12915.81,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-sides-screw:b": {
+    "body": {
+      "triangles": 1152,
+      "volume": 25974.26,
+      "extents": [
+        113.1,
+        71.15,
+        24.75
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 14144.45,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "hinged-sides-leaves-snap:a": {
+    "body": {
+      "triangles": 3464,
+      "volume": 25890.54,
+      "extents": [
+        97.9,
+        66.5,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 1710,
+      "volume": 14399.76,
+      "extents": [
+        97.9,
+        66.5,
+        6
+      ]
+    },
+    "hinge": {
+      "triangles": 472,
+      "volume": 2159.89,
+      "extents": [
+        112.7,
+        14.4,
+        30.4
+      ]
+    }
+  },
+  "hinged-sides-leaves-snap:b": {
+    "body": {
+      "triangles": 1228,
+      "volume": 23684.55,
+      "extents": [
+        97.9,
+        66.5,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1116,
+      "volume": 14144.45,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    },
+    "hinge": {
+      "triangles": 354,
+      "volume": 3661.05,
+      "extents": [
+        112.7,
+        28.255,
+        22
+      ]
+    }
   }
 }

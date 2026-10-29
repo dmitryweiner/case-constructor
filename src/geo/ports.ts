@@ -11,14 +11,17 @@
 import type { PortDef, TopPort } from '../boards/schema';
 import { keyFields, keysOf, onFace } from '../boards/schema';
 import { CEILING_GAP, capStyle, frontHeight, keyFit, keysOpen, portCut } from '../boards/placement';
-import { CAP_HOLD, KEY_WEB, capCorner, capSizes } from './capSize';
+import { CAP_HOLD, CAP_PROUD, KEY_WEB, capCorner, capSizes } from './capSize';
 import type { CutterSpec, ExtraCut } from './cutters';
 import { VERTICAL_AXES, flareAt, horizontalAxes } from './cutters';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import type { CaseLayout, PlacedBoard } from './layout';
-import { edgeNormal, opensKeys, portBlock } from './layout';
+import { dedupe, edgeNormal, opensKeys, portBlock } from './layout';
 import type { LidState } from './lidSpec';
+import type { HalfHinge } from './hinge';
+import { KNUCKLE_SINK, padLength } from './hinge';
+import { bossDiameter } from './fasteners';
 import type { Message, MessageSpot, SpotBox } from './message';
 import { boardParams, boxAround, boxSpot } from './message';
 import type { ShapeState } from './shape';
@@ -319,7 +322,7 @@ export function cutWarnings(
   out.push(...keyNotes(layout, shape), ...plugNotes(layout));
   // a hung display's window on the top, at its outer width
   for (const cutter of cutters) {
-    if (!cutter.flare || cutter.source.kind !== 'port' || shape.kind !== 'box') continue;
+    if (!cutter.flare || cutter.source.kind !== 'port' || shape.kind === 'cylinder' || shape.kind === 'console') continue;
     const g = flareAt(cutter, cutter.s1);
     const window: ExtraCut = { face: 'top', shape: 'rect', x: cutter.origin[0], y: cutter.origin[1], w: cutter.w + 2 * g, h: cutter.h + 2 * g, r: 0 };
     if (inCorner(shape, dims, window)) out.push({ code: 'warn.windowInCorner', params: sourceParams(layout, cutter.source), spot: cutterSpot(cutter, dims) });
@@ -447,3 +450,99 @@ function inCorner(shape: ShapeState, dims: Dims, cut: ExtraCut): boolean {
   }
   return u0 < corner || u1 > extent.w - corner || v0 < edge || v1 > extent.h - edge;
 }
+
+/**
+ * Openings through a hinged half's hinge wall where its knuckles stand behind
+ * it (plans/PLAN-HINGED.md, P8): a block's x range, from the web's low end
+ * `strip0` up to the barrels' tops. The opening cuts the knuckle, and a plug
+ * has no way out there.
+ */
+export function knuckleCutWarnings(layout: CaseLayout, hinge: HalfHinge, strip0: number, cutters: readonly CutterSpec[]): Message[] {
+  const { dims } = layout;
+  const wallY = hinge.wall === 'back' ? dims.d : 0;
+  const reach = hinge.e + hinge.r;
+  const [y0, y1] = hinge.wall === 'back' ? [dims.d - KNUCKLE_SINK, dims.d + reach] : [-reach, KNUCKLE_SINK];
+  const z0 = strip0;
+  const z1 = hinge.zAxis + hinge.r;
+  const out: Message[] = [];
+  for (const cutter of cutters) {
+    const { min, max } = boxAround(cutterCorners(cutter));
+    // through the hinge wall, beside a block of knuckles
+    if (min[1] > wallY || max[1] < wallY || max[1] < y0 || min[1] > y1) continue;
+    if (min[2] >= z1 || max[2] <= z0) continue;
+    if (!hinge.blocks.some((block) => min[0] < block.x1 && max[0] > block.x0)) continue;
+    const spot = cutterSpot(cutter, dims);
+    out.push(cutter.source.kind === 'port'
+      ? { code: 'warn.cutHitsKnuckle', params: sourceParams(layout, cutter.source), spot }
+      : { code: 'warn.extraHitsKnuckle', params: { n: cutter.source.index + 1 }, spot });
+  }
+  return out;
+}
+
+/**
+ * A printed hinge's pads inside a half's hinge wall that run into a board
+ * (its outline and parts, from under its parts to their tops).
+ */
+export function leafPadWarnings(layout: CaseLayout, hinge: HalfHinge, wall: number): Message[] {
+  const { leaf } = hinge;
+  if (!leaf) return [];
+  const { dims } = layout;
+  const r = bossDiameter({ size: leaf.screw, hole: leaf.hole, head: 'none' }) / 2;
+  const length = padLength(leaf);
+  const [y0, y1] = hinge.wall === 'back' ? [dims.d - wall - length, dims.d - wall] : [wall, wall + length];
+  const out: Message[] = [];
+  for (const screw of leaf.screws) {
+    const pad: SpotBox = { min: [screw.x - r, y0, Math.max(leaf.padZ[0], leaf.z - r - length)], max: [screw.x + r, y1, Math.min(leaf.padZ[1], leaf.z + r + length)] };
+    for (const board of layout.boards) {
+      const box = board.footprint;
+      if (pad.min[0] >= box.x1 || pad.max[0] <= box.x0 || pad.min[1] >= box.y1 || pad.max[1] <= box.y0) continue;
+      if (pad.min[2] >= board.zTop || pad.max[2] <= board.zBottom) continue;
+      out.push({ code: 'warn.leafPadHitsBoard', params: boardParams(board), spot: boxSpot(pad, 'body') });
+      break;
+    }
+  }
+  // one line per board, its spot on every pad that hits it
+  return dedupe(out);
+}
+
+/**
+ * How far anything stands out of a box's top face, mm (0 when nothing
+ * does): the parts through the plate (key tops, a knob's shaft; printed caps
+ * by `CAP_PROUD`) and the plugs standing up out of their slots
+ * (`plugNotes`). A hinged half's inner face: the gap between the halves
+ * must take it (plans/PLAN-HINGED.md, P5).
+ */
+export function topProtrusion(layout: CaseLayout, shape: ShapeState): number {
+  let out = 0;
+  for (const board of layout.boards) {
+    for (const port of board.def.ports) {
+      if (!onFace(port) || port.edge !== 'top' || !portCut(board.placement, port.id, port.cut)) continue;
+      if (port.type !== 'keys' && port.base === undefined) continue;
+      if (port.type === 'keys' && keysOpen(board.def, board.placement) === 'caps') {
+        out = Math.max(out, CAP_PROUD);
+        continue;
+      }
+      out = Math.max(out, keysProud(board, port, shape, layout.dims, layout.console.frontH, layout.console.backH));
+    }
+  }
+  for (const note of plugNotes(layout)) out = Math.max(out, Number(note.params?.mm ?? 0));
+  return out;
+}
+
+/** A hinged half's magnet bosses that run into a board. */
+export function magnetWarnings(layout: CaseLayout, hinge: HalfHinge): Message[] {
+  const m = hinge.magnets;
+  if (!m) return [];
+  const out: Message[] = [];
+  for (const spot of m.spots) {
+    const boss: SpotBox = { min: [spot.x - m.bossR, spot.y - m.bossR, m.bottom - 1], max: [spot.x + m.bossR, spot.y + m.bossR, layout.dims.h] };
+    for (const board of layout.boards) {
+      const box = board.footprint;
+      if (boss.min[0] >= box.x1 || boss.max[0] <= box.x0 || boss.min[1] >= box.y1 || boss.max[1] <= box.y0) continue;
+      if (boss.min[2] >= board.zTop || boss.max[2] <= board.zBottom) continue;
+      out.push({ code: 'warn.magnetHitsBoard', params: boardParams(board), spot: boxSpot(boss, 'body') });
+    }
+  }
+  return dedupe(out);
+}
+

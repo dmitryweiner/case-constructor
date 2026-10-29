@@ -7,7 +7,8 @@ import type { Dims } from './face';
 import type { LoftSpec } from './loft';
 import type { Vec3 } from './surface';
 
-export const SHAPE_KINDS = ['box', 'cylinder', 'console'] as const;
+// a hinged case is two boxes (state/hinged.ts): wherever the shape is read, it is a box
+export const SHAPE_KINDS = ['box', 'cylinder', 'console', 'hinged'] as const;
 export type ShapeKind = (typeof SHAPE_KINDS)[number];
 
 export interface ShapeState {

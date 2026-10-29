@@ -13,6 +13,7 @@ import { screwSolid, threadHole } from '../src/geo/screwSolids';
 import type { ThreadForm } from '../src/geo/thread';
 import { minorRadius, screwShape, threadEngagement, threadForm } from '../src/geo/thread';
 import { buildCase } from '../src/geo/build';
+import { casesOf, halfHinge } from '../src/state/hinged';
 import { encodeSTL } from '../src/geo/stl';
 import { validateMesh } from '../src/geo/validate';
 import { decodePresetFile } from '../src/state/presetFile';
@@ -149,74 +150,77 @@ it('inspect', async () => {
   const state = sanitizeState(raw);
   const segments = args.segments ?? state.resolution;
   const csg = await initCSG();
-  const started = performance.now();
-  const stages: string[] = [];
-  const built = buildCase(csg, state, segments, (stage) => {
-    stages.push(`${stage.code} @${(performance.now() - started).toFixed(0)}`);
-  });
-  const total = performance.now() - started;
-  console.log(`state: ${JSON.stringify({ shape: state.shape.kind, lid: state.lid.face, depth: state.lid.depth, boards: state.boards.map((b) => b.board) })}`);
-  console.log(`dims ${built.dims.w.toFixed(2)}×${built.dims.d.toFixed(2)}×${built.dims.h.toFixed(2)}, segments ${segments}, ${total.toFixed(0)} ms`);
-  console.log(`stages: ${stages.join(', ')}`);
-  for (const [id, mesh] of Object.entries({ body: built.body, lid: built.lid, ...(built.screw ? { screw: built.screw } : {}) })) {
-    const r = validateMesh(mesh);
-    console.log(`${id}: ${r.triangleCount} tri, ${r.degenerateTriangles} degenerate, watertight ${r.watertight}, `
-      + `volume ${(r.volume / 1000).toFixed(2)} cm³, bbox ${r.bbox.min.map((v) => v.toFixed(2))} … ${r.bbox.max.map((v) => v.toFixed(2))}`);
-    if (args.degenerate) {
-      // zero-area triangles: where they are, grouped to a 0.5 mm grid
-      const spots = new Map<string, number>();
-      const exact: string[] = [];
-      const p = mesh.positions;
-      for (let t = 0; t < mesh.indices.length; t += 3) {
-        const [a, b, c] = [mesh.indices[t] * 3, mesh.indices[t + 1] * 3, mesh.indices[t + 2] * 3];
-        const ab = [p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]];
-        const ac = [p[c] - p[a], p[c + 1] - p[a + 1], p[c + 2] - p[a + 2]];
-        const area = Math.hypot(ab[1] * ac[2] - ab[2] * ac[1], ab[2] * ac[0] - ab[0] * ac[2], ab[0] * ac[1] - ab[1] * ac[0]) / 2;
-        if (area >= 1e-12) continue;
-        const key = [p[a], p[a + 1], p[a + 2]].map((v) => (Math.round(v * 2) / 2).toFixed(1)).join(',');
-        spots.set(key, (spots.get(key) ?? 0) + 1);
-        // the first few in full: which vertices collapse, and along what
-        if (exact.length < 6) exact.push([a, b, c].map((i) => `(${[p[i], p[i + 1], p[i + 2]].map((v) => v.toFixed(4)).join(', ')})`).join(' '));
+  // a hinged case: each half in turn, with its knuckles
+  for (const { half, state: one } of casesOf(state)) {
+    const started = performance.now();
+    const stages: string[] = [];
+    const built = buildCase(csg, one, segments, (stage) => {
+      stages.push(`${stage.code} @${(performance.now() - started).toFixed(0)}`);
+    }, null, half ? halfHinge(state, half) : null);
+    const total = performance.now() - started;
+    console.log(`${half ? `half ${half}: ` : ''}state: ${JSON.stringify({ shape: one.shape.kind, lid: one.lid.face, depth: one.lid.depth, boards: one.boards.map((b) => b.board) })}`);
+    console.log(`dims ${built.dims.w.toFixed(2)}×${built.dims.d.toFixed(2)}×${built.dims.h.toFixed(2)}, segments ${segments}, ${total.toFixed(0)} ms`);
+    console.log(`stages: ${stages.join(', ')}`);
+    for (const [id, mesh] of Object.entries({ body: built.body, lid: built.lid, ...(built.screw ? { screw: built.screw } : {}), ...(built.hinge ? { hinge: built.hinge } : {}) })) {
+      const r = validateMesh(mesh);
+      console.log(`${id}: ${r.triangleCount} tri, ${r.degenerateTriangles} degenerate, watertight ${r.watertight}, `
+        + `volume ${(r.volume / 1000).toFixed(2)} cm³, bbox ${r.bbox.min.map((v) => v.toFixed(2))} … ${r.bbox.max.map((v) => v.toFixed(2))}`);
+      if (args.degenerate) {
+        // zero-area triangles: where they are, grouped to a 0.5 mm grid
+        const spots = new Map<string, number>();
+        const exact: string[] = [];
+        const p = mesh.positions;
+        for (let t = 0; t < mesh.indices.length; t += 3) {
+          const [a, b, c] = [mesh.indices[t] * 3, mesh.indices[t + 1] * 3, mesh.indices[t + 2] * 3];
+          const ab = [p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]];
+          const ac = [p[c] - p[a], p[c + 1] - p[a + 1], p[c + 2] - p[a + 2]];
+          const area = Math.hypot(ab[1] * ac[2] - ab[2] * ac[1], ab[2] * ac[0] - ab[0] * ac[2], ab[0] * ac[1] - ab[1] * ac[0]) / 2;
+          if (area >= 1e-12) continue;
+          const key = [p[a], p[a + 1], p[a + 2]].map((v) => (Math.round(v * 2) / 2).toFixed(1)).join(',');
+          spots.set(key, (spots.get(key) ?? 0) + 1);
+          // the first few in full: which vertices collapse, and along what
+          if (exact.length < 6) exact.push([a, b, c].map((i) => `(${[p[i], p[i + 1], p[i + 2]].map((v) => v.toFixed(4)).join(', ')})`).join(' '));
+        }
+        for (const [key, count] of [...spots].slice(0, 20)) console.log(`  degenerate ×${count} at ${key}`);
+        for (const line of exact) console.log(`    ${line}`);
       }
-      for (const [key, count] of [...spots].slice(0, 20)) console.log(`  degenerate ×${count} at ${key}`);
-      for (const line of exact) console.log(`    ${line}`);
-    }
-    if (args.levels) {
-      // horizontal faces by z level: up/down areas; a membrane shows as equal up and down at one level
-      const levels = new Map<string, { up: number; down: number }>();
-      const p = mesh.positions;
-      for (let t = 0; t < mesh.indices.length; t += 3) {
-        const [a, b, c] = [mesh.indices[t] * 3, mesh.indices[t + 1] * 3, mesh.indices[t + 2] * 3];
-        if (Math.abs(p[a + 2] - p[b + 2]) > 1e-4 || Math.abs(p[a + 2] - p[c + 2]) > 1e-4) continue;
-        const cross = (p[b] - p[a]) * (p[c + 1] - p[a + 1]) - (p[b + 1] - p[a + 1]) * (p[c] - p[a]);
-        const key = p[a + 2].toFixed(3);
-        const entry = levels.get(key) ?? { up: 0, down: 0 };
-        if (cross > 0) entry.up += cross / 2;
-        else entry.down -= cross / 2;
-        levels.set(key, entry);
+      if (args.levels) {
+        // horizontal faces by z level: up/down areas; a membrane shows as equal up and down at one level
+        const levels = new Map<string, { up: number; down: number }>();
+        const p = mesh.positions;
+        for (let t = 0; t < mesh.indices.length; t += 3) {
+          const [a, b, c] = [mesh.indices[t] * 3, mesh.indices[t + 1] * 3, mesh.indices[t + 2] * 3];
+          if (Math.abs(p[a + 2] - p[b + 2]) > 1e-4 || Math.abs(p[a + 2] - p[c + 2]) > 1e-4) continue;
+          const cross = (p[b] - p[a]) * (p[c + 1] - p[a + 1]) - (p[b + 1] - p[a + 1]) * (p[c] - p[a]);
+          const key = p[a + 2].toFixed(3);
+          const entry = levels.get(key) ?? { up: 0, down: 0 };
+          if (cross > 0) entry.up += cross / 2;
+          else entry.down -= cross / 2;
+          levels.set(key, entry);
+        }
+        for (const [z, { up, down }] of [...levels].sort((x, y) => Number(x[0]) - Number(y[0]))) {
+          console.log(`  z ${z}: up ${up.toFixed(1)} mm², down ${down.toFixed(1)} mm²`);
+        }
       }
-      for (const [z, { up, down }] of [...levels].sort((x, y) => Number(x[0]) - Number(y[0]))) {
-        console.log(`  z ${z}: up ${up.toFixed(1)} mm², down ${down.toFixed(1)} mm²`);
+      if (args.stl) {
+        mkdirSync(args.stl, { recursive: true });
+        writeFileSync(join(args.stl, `${half ? `${half}-` : ''}${id}.stl`), new Uint8Array(encodeSTL(mesh, { name: id })));
       }
     }
-    if (args.stl) {
-      mkdirSync(args.stl, { recursive: true });
-      writeFileSync(join(args.stl, `${id}.stl`), new Uint8Array(encodeSTL(mesh, { name: id })));
+    if (args.overlap) {
+      // the assembled lid and body must not share any volume: report where they do
+      const body = toManifold(csg, built.body);
+      const lid = toManifold(csg, built.lid);
+      const common = body.intersect(lid);
+      console.log(`overlap: ${common.volume().toFixed(4)} mm³`);
+      for (const piece of common.decompose()) {
+        const b = piece.boundingBox();
+        console.log(`  piece ${piece.volume().toFixed(4)} mm³ at ${b.min.map((v) => v.toFixed(2))} … ${b.max.map((v) => v.toFixed(2))}`);
+        piece.delete();
+      }
+      common.delete();
+      body.delete();
+      lid.delete();
     }
-  }
-  if (args.overlap) {
-    // the assembled lid and body must not share any volume: report where they do
-    const body = toManifold(csg, built.body);
-    const lid = toManifold(csg, built.lid);
-    const common = body.intersect(lid);
-    console.log(`overlap: ${common.volume().toFixed(4)} mm³`);
-    for (const piece of common.decompose()) {
-      const b = piece.boundingBox();
-      console.log(`  piece ${piece.volume().toFixed(4)} mm³ at ${b.min.map((v) => v.toFixed(2))} … ${b.max.map((v) => v.toFixed(2))}`);
-      piece.delete();
-    }
-    common.delete();
-    body.delete();
-    lid.delete();
   }
 });
