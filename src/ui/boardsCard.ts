@@ -139,6 +139,35 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
         return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
       },
     },
+    // how it is held: rails on screws and their ears, the screw and the hole of the standoffs or the rails' posts
+    {
+      kind: 'check', key: 'railScrews', label: 'board.railScrews', hint: 'board.railScrews.hint', when: railed,
+      get: (state) => at(state).railScrews === true,
+      set: (state, value) => patchBoard(state, index, { railScrews: value ? true : undefined, railEars: value ? at(state).railEars : undefined }),
+    },
+    {
+      kind: 'segmented', key: 'railEars', label: 'board.railEars', hint: 'board.railEars.hint', when: screwedRails,
+      options: RAIL_EARS.map((value) => ({ value, label: `board.railEars.${value}` as const })),
+      get: (state) => at(state).railEars ?? 'out',
+      set: (state, value) => patchBoard(state, index, { railEars: value === 'along' ? 'along' : undefined }),
+    },
+    {
+      kind: 'select', key: 'screw', label: 'board.screw', when: holes,
+      // an M1.6 holds no rail
+      options: SCREW_SIZES.filter((size) => entry.mount.kind !== 'rails' || size !== 'M1.6').map((size) => ({ value: size, text: size })),
+      get: (state) => (screwedRails(state) ? railScrewSpec(at(state).mount) : at(state).mount).size,
+      set: (state, value) => patchBoard(state, index, {
+        mount: { ...at(state).mount, size: SCREW_SIZES.find((size) => size === value) ?? at(state).mount.size },
+      }),
+    },
+    {
+      kind: 'segmented', key: 'hole', label: 'board.hole', hint: 'board.hole.hint', when: holes,
+      options: HOLE_KINDS.map((value) => ({ value, label: `hole.${value}` as const })),
+      get: (state) => at(state).mount.hole,
+      set: (state, value) => patchBoard(state, index, {
+        mount: { ...at(state).mount, hole: HOLE_KINDS.find((kind) => kind === value) ?? at(state).mount.hole },
+      }),
+    },
     {
       // a battery lies in cradles rather than on standoffs: the same height, its own words
       kind: 'range', key: 'z', label: entry.battery ? 'battery.z' : 'board.z', hint: entry.battery ? 'battery.z.hint' : 'board.z.hint',
@@ -283,34 +312,6 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       when: (state) => state.shape.kind !== 'cylinder' && (at(state).walls ?? []).length > 0 && battery(state) === undefined,
       get: (state) => at(state).wallOffset ?? 0,
       set: (state, value) => patchBoard(state, index, { wallOffset: value }),
-    },
-    {
-      kind: 'check', key: 'railScrews', label: 'board.railScrews', hint: 'board.railScrews.hint', when: railed,
-      get: (state) => at(state).railScrews === true,
-      set: (state, value) => patchBoard(state, index, { railScrews: value ? true : undefined, railEars: value ? at(state).railEars : undefined }),
-    },
-    {
-      kind: 'segmented', key: 'railEars', label: 'board.railEars', hint: 'board.railEars.hint', when: screwedRails,
-      options: RAIL_EARS.map((value) => ({ value, label: `board.railEars.${value}` as const })),
-      get: (state) => at(state).railEars ?? 'out',
-      set: (state, value) => patchBoard(state, index, { railEars: value === 'along' ? 'along' : undefined }),
-    },
-    {
-      kind: 'select', key: 'screw', label: 'board.screw', when: holes,
-      // an M1.6 holds no rail
-      options: SCREW_SIZES.filter((size) => entry.mount.kind !== 'rails' || size !== 'M1.6').map((size) => ({ value: size, text: size })),
-      get: (state) => (screwedRails(state) ? railScrewSpec(at(state).mount) : at(state).mount).size,
-      set: (state, value) => patchBoard(state, index, {
-        mount: { ...at(state).mount, size: SCREW_SIZES.find((size) => size === value) ?? at(state).mount.size },
-      }),
-    },
-    {
-      kind: 'segmented', key: 'hole', label: 'board.hole', hint: 'board.hole.hint', when: holes,
-      options: HOLE_KINDS.map((value) => ({ value, label: `hole.${value}` as const })),
-      get: (state) => at(state).mount.hole,
-      set: (state, value) => patchBoard(state, index, {
-        mount: { ...at(state).mount, hole: HOLE_KINDS.find((kind) => kind === value) ?? at(state).mount.hole },
-      }),
     },
   ];
 }

@@ -222,6 +222,13 @@ added), N2, N3.
   `warn.capOverPart`.
 - **N3.** The caps' sizes take a list of keys as well as a key field
   (`CapKeys`): a board's buttons are one such list.
+- **After the review (the user).** The rails' controls, the screw and the
+  hole kind moved up under "Fixing" (the floor/ceiling choice), one block
+  of how the board is held. "Insert" was unclear: in Russian and Ukrainian
+  it is "термовставка", in Hebrew "תותב חום", and the hole kind's hint in
+  every language says what each kind is (a self-tapping screw cuts its own
+  thread; a brass heat-set insert melted in with a soldering iron; a hex
+  nut dropped into a pocket).
 - **Found, not done.** A Heltec V3 or V4 hung under a top lid (the
   picker's default for a board with a display) has its USB-C opening in the
   lid's skirt band: `warn.cutUnderSkirt`, on `main` too, before N4. A

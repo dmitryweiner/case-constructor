@@ -293,7 +293,7 @@ export const en = {
   'board.wallOffset.hint': "where the connector faces end: 0 — flush with the outer surface, negative — inside the wall, positive — standing out, mm",
   'board.screw': 'Screw',
   'board.hole': 'Hole',
-  'board.hole.hint': 'tap — a pilot hole for a self-tapping screw; insert — for a heat-set insert; nut — a pocket for an embedded nut',
+  'board.hole.hint': 'tap — a narrow hole, the screw cuts its own thread in the plastic; insert — a hole for a threaded brass heat-set insert, melted in with a soldering iron, so the screw goes into metal (stronger, does not wear out); nut — a pocket a hex nut drops into',
   'hole.tap': 'tap',
   'hole.insert': 'insert',
   'hole.nut': 'nut',
