@@ -1,6 +1,6 @@
 # Case Constructor — a hinged case
 
-**Status: done (2026-10-29).**
+**Status: H1–H9 done (2026-10-29); H10–H12 in progress (the user's review).**
 
 Written on 2026-10-28 from the user's request: a new kind of case, two
 halves joined by hinges — a clamshell (a cyberdeck, a Meshtastic
@@ -205,9 +205,32 @@ request when the first item lands; the user reviews and merges.
   and a knuckle tied to its wall along its whole length does not. Chosen: a
   split ring (C) on a printed bar, clicked on radially.
 
+## After the review (2026-10-29, the user)
+
+- **H10. The half switch in the Boards card.** *Editing: Lower half /
+  Upper half* moves from its own bar to the top of the Boards card (shown
+  for a hinged case only). It still decides what the lid, openings and
+  extras cards show.
+- **H11. Knuckles on the side walls** (`hinge.place: 'back' | 'sides'`,
+  confirmed: the axis stays along the back edge). On each side a pivot:
+  the lower half's cheek lies on its side wall at the back corner, the
+  upper half's on its own side wall over a spacer, one layer further out;
+  both reach back to discs on the axis, and the axle goes through them
+  across (x) — a pin, a screw, a snap. The back wall stays free for ports
+  and cables. Both kinds: printed with the halves (the cheeks are
+  `knuckles`) or a printed hinge screwed on (`leaves`: the cheeks are
+  separate parts, pads inside the side walls). Cones (printed in place)
+  stay with the back: one cheek over the other with a 0.35 mm gap does not
+  print without supports. The axis lies a clearance behind the back walls
+  (no barrel is there), the discs stick out of the width by two cheeks.
+- **H12. Cables through the inner faces** (`cable.through: 'wall' |
+  'face'`): the slot goes through the inner face's plate next to the hinge
+  edge instead of the hinge wall; closed, the cable lies folded in the gap
+  between the halves. The knuckles keep off its zone as before.
+
 ## Order
 
-H1 → H2 → H3 → H4 → H5 → H6 → H7 → H8 → H9. H1 and H2 give two cases
+H1 → H2 → H3 → H4 → H5 → H6 → H7 → H8 → H9; then H10 → H12 → H11. H1 and H2 give two cases
 side by side and their export; H3 is the first hinge; each later item
 stands alone.
 
@@ -288,4 +311,8 @@ stands alone.
   Heltec stands against the left wall with its USB-C sunk 1.5 mm into it.
   `tests/presetsBuild.test.ts` builds a hinged preset per half, its leaves
   included, and wants no hinge warnings.
+
+- **H10 (2026-10-29).** Done. `#halfBar` is a sticky strip at the top of
+  the Boards card (not a card of its own); it still drives the lid,
+  openings and extras cards.
 

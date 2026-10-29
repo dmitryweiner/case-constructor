@@ -548,7 +548,7 @@ Hinged: the card `#hingeCard` (`#hinge_gapAuto`, `#hinge_gap`, `#hinge_magnets`,
 `#hinge_screw_M2|M2.5|M3` (a screw), `#hinge_kind_knuckles|leaves`,
 `#hinge_axle_cones` (leaves only), `#hinge_leafScrew_M2|M2.5|M3`, `#hinge_leafHole_tap|insert|nut` (leaves)), cables `#cableAdd`, per cable
 `#cable<i>_kind_flat|round`, `#cable<i>_x|_w|_t|_d|_plugW|_plugH|_remove`, the half switch `#halfBar`
-(`#edit_half_a|b`), the view's angle `#view_angle` (in the View and export
+at the top of the Boards card (`#edit_half_a|b`), the view's angle `#view_angle` (in the View and export
 card).
 Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets|printed`,
 `#lid_screw` (select), `#lid_hole_tap|insert|nut`, `#lid_magnet` (select),
