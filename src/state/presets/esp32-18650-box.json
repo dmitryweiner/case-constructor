@@ -1,7 +1,6 @@
 {
   "id": "esp32-18650-box",
   "name": "ESP32 on 18650 cells",
-  "about": "A battery-powered ESP32: two 18650 cells in cradles behind the board, held by printed clamps on M3 screws.",
   "state": {
     "shape": { "cornerR": 4 },
     "boards": [

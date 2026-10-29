@@ -20,7 +20,8 @@ describe('built-in presets', () => {
     // a hinged preset: each half, with its hinge, and no warning about the hinge either
     expect(hingeNotes(whole).filter((note) => note.code.startsWith('warn.'))).toEqual([]);
     for (const { half, state } of casesOf(whole)) {
-      expect(collisions(caseLayout(state))).toEqual([]);
+      // notes (`info.`) only describe: a connector recessed in a thick wall still has its opening
+      expect(collisions(caseLayout(state)).filter((note) => note.code.startsWith('warn.'))).toEqual([]);
       const built = buildCase(csg, state, 8, () => {}, null, half ? halfHinge(whole, half) : null);
       for (const mesh of [built.body, built.lid, ...(built.hinge ? [built.hinge] : [])]) {
         const report = validateMesh(mesh);

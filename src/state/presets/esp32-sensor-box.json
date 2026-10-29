@@ -1,14 +1,217 @@
 {
   "id": "esp32-sensor-box",
   "name": "ESP32 sensor box",
-  "about": "A small box for an ESP32 sensor: hex vents front and back, keyholes for the wall, the board slid into rails.",
   "state": {
-    "shape": { "cornerR": 4, "margin": { "side": 3, "top": 6 } },
+    "version": 1,
+    "shape": {
+      "kind": "box",
+      "cornerR": 4,
+      "edgeR": 0,
+      "wall": 2,
+      "floor": 2,
+      "auto": true,
+      "size": {
+        "w": 100,
+        "d": 70,
+        "h": 35
+      },
+      "margin": {
+        "side": 3,
+        "top": 6
+      },
+      "console": {
+        "frontH": 20,
+        "backH": 40
+      }
+    },
     "boards": [
-      { "board": "esp32-devkitc-v4" }
+      {
+        "board": "esp32-devkitc-v4",
+        "x": 0,
+        "y": 0,
+        "z": 0.3,
+        "rot": 0,
+        "mount": {
+          "size": "M2.5",
+          "hole": "tap",
+          "head": "none"
+        },
+        "cuts": {},
+        "pins": true,
+        "walls": [
+          "left"
+        ],
+        "wallOffset": 0,
+        "on": "ceiling",
+        "buttons": "caps",
+        "railScrews": true
+      }
     ],
-    "vents": { "on": true, "faces": ["front", "back"], "pattern": "hex", "size": 3, "pitch": 5, "margin": 3, "along": "y" },
-    "wallMount": { "kind": "keyholes", "spacing": 30, "screwD": 3.5 },
-    "label": { "on": true, "text": "SENSOR", "font": "oswald", "sizeMm": 5, "depth": 0.6, "raised": true }
+    "lid": {
+      "face": "bottom",
+      "chosen": "bottom",
+      "depth": 0,
+      "fastening": "snaps",
+      "screw": {
+        "size": "M3",
+        "hole": "tap",
+        "head": "counterbore"
+      },
+      "head": {
+        "d": null,
+        "depth": null
+      },
+      "magnet": {
+        "size": "6x3",
+        "fit": 0.2
+      },
+      "thread": {
+        "size": "P6",
+        "fit": 0.35
+      },
+      "lip": {
+        "h": 3,
+        "t": 1.2
+      },
+      "fit": 0.2
+    },
+    "extraCuts": [],
+    "vents": {
+      "on": true,
+      "faces": [
+        "front",
+        "back"
+      ],
+      "pattern": "hex",
+      "size": 3,
+      "pitch": 5,
+      "margin": 3,
+      "along": "y"
+    },
+    "fan": {
+      "on": false,
+      "face": "back",
+      "size": 40,
+      "x": 0,
+      "y": 0,
+      "screwD": 3.2
+    },
+    "wallMount": {
+      "kind": "ears",
+      "keyhole": "closed",
+      "ears": {
+        "count": 2,
+        "walls": "frontBack",
+        "wall": "back",
+        "along": "centre"
+      },
+      "spacing": 30,
+      "screwD": 3.5
+    },
+    "label": {
+      "on": true,
+      "text": "SENSOR",
+      "font": "oswald",
+      "sizeMm": 5,
+      "depth": 0.6,
+      "raised": true,
+      "anchor": "centre",
+      "margin": 3,
+      "x": 0,
+      "y": 0,
+      "angle": 0
+    },
+    "exportMode": "both",
+    "print": {
+      "lid": "auto",
+      "gap": 10
+    },
+    "resolution": 24,
+    "hinge": {
+      "kind": "knuckles",
+      "place": "back",
+      "layout": "ends",
+      "barrelD": 8,
+      "knuckles": 3,
+      "length": 10,
+      "clearance": 0.4,
+      "axle": "pin",
+      "pinD": 1.75,
+      "pinFit": 0.15,
+      "screw": "M2.5",
+      "cables": [],
+      "leafScrew": "M2.5",
+      "leafHole": "insert",
+      "gapAuto": true,
+      "magnets": false,
+      "magnet": "6x3",
+      "b": {
+        "h": 25,
+        "boards": [],
+        "lid": {
+          "face": "top",
+          "chosen": "top",
+          "depth": 0,
+          "fastening": "snaps",
+          "screw": {
+            "size": "M3",
+            "hole": "tap",
+            "head": "counterbore"
+          },
+          "head": {
+            "d": null,
+            "depth": null
+          },
+          "magnet": {
+            "size": "6x3",
+            "fit": 0.2
+          },
+          "thread": {
+            "size": "P6",
+            "fit": 0.35
+          },
+          "lip": {
+            "h": 3,
+            "t": 1.2
+          },
+          "fit": 0.2
+        },
+        "extraCuts": [],
+        "vents": {
+          "on": false,
+          "faces": [
+            "left",
+            "right"
+          ],
+          "pattern": "slots",
+          "size": 2,
+          "pitch": 4,
+          "margin": 4,
+          "along": "y"
+        },
+        "fan": {
+          "on": false,
+          "face": "back",
+          "size": 40,
+          "x": 0,
+          "y": 0,
+          "screwD": 3.2
+        },
+        "label": {
+          "on": false,
+          "text": "",
+          "font": "rubik",
+          "sizeMm": 6,
+          "depth": 0.6,
+          "raised": false,
+          "anchor": "centre",
+          "margin": 3,
+          "x": 0,
+          "y": 0,
+          "angle": 0
+        }
+      },
+      "gap": 1
+    }
   }
 }

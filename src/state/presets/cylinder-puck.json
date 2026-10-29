@@ -1,7 +1,6 @@
 {
   "id": "cylinder-puck",
   "name": "Cylinder sensor puck",
-  "about": "A round puck for a LoRa node: the display shows through the lid, round vents on the bottom, ears for screwing it down.",
   "state": {
     "shape": { "kind": "cylinder", "edgeR": 3, "margin": { "side": 3, "top": 2 } },
     "boards": [

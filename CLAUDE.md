@@ -522,7 +522,7 @@ Add a state when a feature lands, never edit an old one.
 ## Presets
 
 Built-in presets: one JSON file each in `src/state/presets/<id>.json`
-(`{ id, name, about, state }`; `state` is laid over the default — objects
+(`{ id, name, state }`; `state` is laid over the default — objects
 merge, lists and values replace — and sanitized), imported in the menu's
 order by `src/state/presets.ts`. `tests/presetFile.test.ts` fails on a file
 that is not imported, not named after its id, or has a key the sanitizer

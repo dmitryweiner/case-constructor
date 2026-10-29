@@ -1,7 +1,6 @@
 {
   "id": "arduino-uno-box",
   "name": "Arduino Uno box",
-  "about": "An Arduino Uno box with the headers open for jumper wires.",
   "state": {
     "shape": { "cornerR": 5 },
     "boards": [

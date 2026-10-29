@@ -1,7 +1,6 @@
 {
   "id": "plain-box",
   "name": "Plain box",
-  "about": "An empty box of a fixed size.",
   "state": {
     "boards": [],
     "shape": { "auto": false, "size": { "w": 100, "d": 70, "h": 35 } }

@@ -1,10 +1,9 @@
 // Built-in presets: one JSON file per preset in ./presets, in the menu's
-// order below. A file is `{ id, name, about, state }`: `state` is a partial
+// order below. A file is `{ id, name, state }`: `state` is a partial
 // state laid over the default — objects merge key by key, anything else
 // (a list, a number) replaces — and passed through sanitizeState, so an entry
 // only says what makes it different. A whole state (a saved project's
-// `state`) works too. `about` says what the preset is for, for whoever edits
-// the file.
+// `state`) works too.
 //
 // A preset is known by its `id`. Its name is one, in English, whatever the
 // interface language (it is a name, and it travels into file names); the
@@ -14,7 +13,6 @@
 import type { AppState } from './schema';
 import { defaultState, sanitizeState } from './schema';
 import pi4Desktop from './presets/pi4-desktop.json';
-import piZeroGpio from './presets/pi-zero-gpio.json';
 import esp32SensorBox from './presets/esp32-sensor-box.json';
 import esp3218650Box from './presets/esp32-18650-box.json';
 import arduinoUnoBox from './presets/arduino-uno-box.json';
@@ -59,7 +57,6 @@ function fromFile(file: PresetFile): Preset {
 
 export const PRESETS: Preset[] = [
   pi4Desktop,
-  piZeroGpio,
   esp32SensorBox,
   esp3218650Box,
   arduinoUnoBox,

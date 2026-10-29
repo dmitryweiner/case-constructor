@@ -1,7 +1,6 @@
 {
   "id": "meshtastic-cardkb",
   "name": "Meshtastic node with CardKB",
-  "about": "A Meshtastic node with a keyboard: the Heltec V3 and an M5Stack CardKB hung side by side from the lid, its screen and the keys in their windows, the CardKB's Grove cable inside, the LoRa antenna through the back wall. The lid is deep enough that the Heltec's USB-C, right under the top, opens in the lid's wall, clear of its skirt. The CardKB's Grove plug's slot reaches 12 mm left of it: the Heltec's edge lines up with the slot's.",
   "state": {
     "shape": { "cornerR": 6 },
     "lid": { "depth": 9, "fastening": "screws", "screw": { "size": "M3", "hole": "insert", "head": "counterbore" } },
