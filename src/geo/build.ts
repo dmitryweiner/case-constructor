@@ -30,7 +30,7 @@ import { openingPolygon } from './opening';
 import { loftSlice } from './section';
 import { extraCutters } from './cutters';
 import { outerTopAt, portCutters } from './ports';
-import { closedKeyholes, earSpecs, extrasCutters } from './extras';
+import { closedKeyholes, earSpecs, extrasCutters, mountFace } from './extras';
 import { earSolids, keyholePadSolids, labelSolid } from './extrasSolids';
 import { screwSolid } from './screwSolids';
 import type { HalfHinge } from './hinge';
@@ -253,13 +253,13 @@ export function buildCase(
       lidSolid = scope.keep(lidSolid.subtract(holes));
     }
 
-    // Additive extras: ears on the part that owns the floor, the label on the lid.
+    // Additive extras: ears on the part their root is in, the label on the lid.
     onStage(BUILD_STAGES[6]);
-    const ears = earSolids(csg, scope, earSpecs(state.wallMount, shape, dims), shape.floor, segments);
-    if (ears) {
-      const floorOnLid = applyAffine(frame.toFace, [dims.w / 2, dims.d / 2, shape.floor / 2])[2] > zp;
-      const material = scope.keep(ears.material.subtract(floorOnLid ? body : lidSolid));
-      if (floorOnLid) lidSolid = scope.keep(scope.keep(lidSolid.add(material)).subtract(ears.holes));
+    const earSpecsBuilt = earSpecs(state.wallMount, shape, dims, lid);
+    const mountFrame = faceFrame(mountFace(state.wallMount, shape.kind), dims);
+    for (const ears of earSolids(csg, scope, earSpecsBuilt, mountFrame, plateOf(shape, mountFrame.face), segments)) {
+      const material = scope.keep(ears.material.subtract(ears.onLid ? body : lidSolid));
+      if (ears.onLid) lidSolid = scope.keep(scope.keep(lidSolid.add(material)).subtract(ears.holes));
       else body = scope.keep(scope.keep(body.add(material)).subtract(ears.holes));
     }
     // closed keyholes: pads and feet on the part that owns their face, then

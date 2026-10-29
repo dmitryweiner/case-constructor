@@ -8,6 +8,7 @@ import { caseLayout, effectiveLid, standoffColumns } from '../src/geo/layout';
 import { portCutters, outerTopAt } from '../src/geo/ports';
 import {
   EAR_LENGTH, EAR_WIDTH, FAN_SCREWS, closedKeyholes, earSpecs, extrasCutters, extrasWarnings, fanCuts, flatRegion, keyholeCuts, mountFace, mountFaces,
+  earChoice, earSideFaces, earWallChoices, earWalls,
   sanitizeLabel, sanitizeVents, sanitizeWallMount, ventCuts,
 } from '../src/geo/extras';
 import { faceFrame } from '../src/geo/face';
@@ -335,12 +336,12 @@ describe('fan, keyholes, ears', () => {
 
   it('ears stand out at floor level on both sides and belong to the body', () => {
     const state = sanitizeState({ ...defaultState(), wallMount: { kind: 'ears', screwD: 4 } });
-    const { layout } = context(state);
-    const ears = earSpecs(state.wallMount, state.shape, layout.dims);
+    const { layout, shape, lid } = context(state);
+    const ears = earSpecs(state.wallMount, shape, layout.dims, lid);
     expect(ears).toHaveLength(2);
     // an old file: two ears, left and right, in the middle of the walls
     expect(state.wallMount.ears).toEqual({ count: 2, walls: 'leftRight', wall: 'back', along: 'centre' });
-    expect(ears.map((ear) => [ear.hx, ear.hy])).toEqual([[-EAR_LENGTH / 2, layout.dims.d / 2], [layout.dims.w + EAR_LENGTH / 2, layout.dims.d / 2]]);
+    expect(ears.map((ear) => [ear.hole[0], ear.hole[1]])).toEqual([[-EAR_LENGTH / 2, layout.dims.d / 2], [layout.dims.w + EAR_LENGTH / 2, layout.dims.d / 2]]);
     const built = buildCase(csg, state, 8);
     const report = validateMesh(built.body);
     expect(report.watertight).toBe(true);
@@ -348,17 +349,17 @@ describe('fan, keyholes, ears', () => {
   });
 
   it('the ears sanitizer: 1…4 ears, known walls and placements', () => {
-    expect(sanitizeWallMount({ kind: 'ears', ears: { count: 7, walls: 'up', wall: 'top', along: 'x' } }).ears)
+    expect(sanitizeWallMount({ kind: 'ears', ears: { count: 7, walls: 'up', wall: 'roof', along: 'x' } }).ears)
       .toEqual({ count: 4, walls: 'leftRight', wall: 'back', along: 'centre' });
     expect(sanitizeWallMount({ kind: 'ears', ears: { count: 0.6, walls: 'one', wall: 'left', along: 'ends' } }).ears)
       .toEqual({ count: 1, walls: 'one', wall: 'left', along: 'ends' });
   });
 
   /** Which wall an ear stands on: its hole beyond the case's box on that side. */
-  function wallOf(ear: { hx: number; hy: number }, dims: { w: number; d: number }): string {
-    if (ear.hx < 0) return 'left';
-    if (ear.hx > dims.w) return 'right';
-    if (ear.hy < 0) return 'front';
+  function wallOf(ear: { hole: readonly number[] }, dims: { w: number; d: number }): string {
+    if (ear.hole[0] < 0) return 'left';
+    if (ear.hole[0] > dims.w) return 'right';
+    if (ear.hole[1] < 0) return 'front';
     return 'back';
   }
 
@@ -372,12 +373,12 @@ describe('fan, keyholes, ears', () => {
       ...defaultState(), shape: { ...defaultState().shape, cornerR: 6 },
       wallMount: { kind: 'ears', spacing: 25, screwD: 4, ears: { count, walls, wall: 'back', along } },
     });
-    const { layout } = context(state);
+    const { layout, shape, lid } = context(state);
     const { dims } = layout;
-    const ears = earSpecs(state.wallMount, state.shape, dims);
+    const ears = earSpecs(state.wallMount, shape, dims, lid);
     expect(ears.map((ear) => wallOf(ear, dims))).toEqual(expected);
     for (const ear of ears) {
-      const along = wallOf(ear, dims) === 'left' || wallOf(ear, dims) === 'right' ? ear.hy : ear.hx;
+      const along = wallOf(ear, dims) === 'left' || wallOf(ear, dims) === 'right' ? ear.hole[1] : ear.hole[0];
       const length = wallOf(ear, dims) === 'left' || wallOf(ear, dims) === 'right' ? dims.d : dims.w;
       // clear of the rounded corners
       expect(along - EAR_WIDTH / 2).toBeGreaterThanOrEqual(state.shape.cornerR - 1e-9);
@@ -386,11 +387,11 @@ describe('fan, keyholes, ears', () => {
     // ears on one wall never overlap
     for (let i = 0; i < ears.length; i++) {
       for (let j = i + 1; j < ears.length; j++) {
-        if (wallOf(ears[i], dims) === wallOf(ears[j], dims)) expect(Math.hypot(ears[i].hx - ears[j].hx, ears[i].hy - ears[j].hy)).toBeGreaterThan(EAR_WIDTH);
+        if (wallOf(ears[i], dims) === wallOf(ears[j], dims)) expect(Math.hypot(ears[i].hole[0] - ears[j].hole[0], ears[i].hole[1] - ears[j].hole[1])).toBeGreaterThan(EAR_WIDTH);
       }
     }
     if (along === 'ends') {
-      const front = ears.filter((ear) => wallOf(ear, dims) === 'front').map((ear) => ear.hx);
+      const front = ears.filter((ear) => wallOf(ear, dims) === 'front').map((ear) => ear.hole[0]);
       expect(Math.min(...front)).toBeCloseTo(state.shape.cornerR + EAR_WIDTH / 2 + 1);
     }
     const built = buildCase(csg, state, 8);
@@ -404,17 +405,17 @@ describe('fan, keyholes, ears', () => {
       ...defaultState(), shape: { ...defaultState().shape, kind: 'cylinder' },
       wallMount: { kind: 'ears', screwD: 4, ears: { count: 3, walls: 'leftRight', wall: 'back', along: 'centre' } },
     });
-    const { layout } = context(state);
+    const { layout, shape, lid } = context(state);
     const { dims } = layout;
-    const ears = earSpecs(state.wallMount, state.shape, dims);
+    const ears = earSpecs(state.wallMount, shape, dims, lid);
     expect(ears).toHaveLength(3);
-    const angles = ears.map((ear) => Math.atan2(ear.hy - dims.d / 2, ear.hx - dims.w / 2)).map((a) => (a * 180) / Math.PI);
+    const angles = ears.map((ear) => Math.atan2(ear.hole[1] - dims.d / 2, ear.hole[0] - dims.w / 2)).map((a) => (a * 180) / Math.PI);
     const sorted = [...angles].sort((a, b) => a - b);
     expect(sorted[1] - sorted[0]).toBeCloseTo(120);
     expect(sorted[2] - sorted[1]).toBeCloseTo(120);
     // the first ear on the first wall asked for: the left
     expect(Math.abs(angles[0])).toBeCloseTo(180);
-    for (const ear of ears) expect(Math.hypot(ear.hx - dims.w / 2, ear.hy - dims.d / 2)).toBeCloseTo(dims.w / 2 + EAR_LENGTH / 2);
+    for (const ear of ears) expect(Math.hypot(ear.hole[0] - dims.w / 2, ear.hole[1] - dims.d / 2)).toBeCloseTo(dims.w / 2 + EAR_LENGTH / 2);
     const built = buildCase(csg, state, 8);
     const report = validateMesh(built.body);
     expect(report.watertight).toBe(true);
@@ -424,6 +425,125 @@ describe('fan, keyholes, ears', () => {
     expect(body.decompose().length).toBe(1);
     body.delete();
   });
+
+  /** Body and lid together: their box, and both closed and clean. */
+  function builtBox(state: AppState, name: string): { min: number[]; max: number[] } {
+    const built = buildCase(csg, state, 8);
+    const min = [Infinity, Infinity, Infinity];
+    const max = [-Infinity, -Infinity, -Infinity];
+    for (const mesh of [built.body, built.lid]) {
+      const report = validateMesh(mesh);
+      expect(report.watertight, name).toBe(true);
+      expect(report.degenerateTriangles, name).toBe(0);
+      for (let k = 0; k < 3; k++) {
+        min[k] = Math.min(min[k], report.bbox.min[k]);
+        max[k] = Math.max(max[k], report.bbox.max[k]);
+      }
+    }
+    return { min, max };
+  }
+
+  it('ears on every face of a box, every wall choice: out of their walls, flush with the face, clean', () => {
+    const base = sanitizeState({
+      ...defaultState(), boards: [], shape: { ...defaultState().shape, cornerR: 5, edgeR: 2, auto: false, size: { w: 110, d: 80, h: 60 } },
+      lid: { ...defaultState().lid, fastening: 'screws' },
+    });
+    const axisOf: Record<string, [number, number]> = { left: [0, -1], right: [0, 1], front: [1, -1], back: [1, 1], bottom: [2, -1], top: [2, 1] };
+    for (const face of mountFaces('box', 'ears')) {
+      for (const walls of earWallChoices(face, 'box')) {
+        const state = sanitizeState({ ...base, wallMount: { kind: 'ears', face, screwD: 4, ears: { count: 2, walls, wall: 'top', along: 'centre' } } });
+        const name = `${face}/${walls}`;
+        const { layout, shape, lid } = context(state);
+        const { dims } = layout;
+        const size = [dims.w, dims.d, dims.h];
+        const box = builtBox(state, name);
+        // out of each wall by an ear's length
+        for (const side of earWalls(state.wallMount, 'box')) {
+          const [k, sign] = axisOf[side];
+          if (sign < 0) expect(box.min[k], `${name}: ${side}`).toBeCloseTo(-EAR_LENGTH, 3);
+          else expect(box.max[k], `${name}: ${side}`).toBeCloseTo(size[k] + EAR_LENGTH, 3);
+        }
+        // nothing past the face against the wall
+        const [k, sign] = axisOf[face];
+        if (sign < 0) expect(box.min[k], name).toBeCloseTo(0, 3);
+        else expect(box.max[k], name).toBeCloseTo(size[k], 3);
+        // each ear in that face's plate
+        for (const ear of earSpecs(state.wallMount, shape, dims, lid)) {
+          expect(ear.face).toBe(face);
+          expect(ear.hole[k]).toBeCloseTo(sign < 0 ? 0 : size[k]);
+        }
+      }
+    }
+  });
+
+  it('a stale wall choice builds on the first pair the face offers', () => {
+    const state = sanitizeState({ ...defaultState(), wallMount: { kind: 'ears', face: 'back', ears: { count: 2, walls: 'frontBack' } } });
+    expect(earChoice(state.wallMount, 'box')).toBe('leftRight');
+    expect(earWalls(state.wallMount, 'box')).toEqual(['left', 'right']);
+    expect(earWalls({ ...state.wallMount, ears: { ...state.wallMount.ears, walls: 'one', wall: 'front' } }, 'box')).toEqual(['left']);
+    expect(earSideFaces('left', 'console')).toEqual(['front', 'back', 'bottom']);
+    expect(mountFaces('cylinder', 'ears')).toEqual(['top', 'bottom']);
+  });
+
+  it('an ear hanging in the print pose gets a 45° gusset on its lower side', () => {
+    // the back against the wall, the lid on top: the body prints on its bottom, the ears on the side walls stand upright
+    const state = sanitizeState({ ...defaultState(), boards: [], wallMount: { kind: 'ears', face: 'back', screwD: 4 } });
+    const { layout, shape, lid } = context(state);
+    const ears = earSpecs(state.wallMount, shape, layout.dims, lid);
+    expect(ears).toHaveLength(2);
+    for (const ear of ears) {
+      const vs = ear.outline.map((p) => p[1]);
+      // on the back face v is up: the gusset reaches an ear's length below the tab
+      expect(Math.min(...vs)).toBeCloseTo(ear.hv - EAR_WIDTH / 2 - EAR_LENGTH);
+      expect(Math.max(...vs)).toBeCloseTo(ear.hv + EAR_WIDTH / 2);
+      expect(ear.onLid).toBe(false);
+      expect(ear.onBed).toBe(false);
+    }
+    // on the bottom (the bed) no gusset
+    const flat = sanitizeState({ ...state, wallMount: { ...state.wallMount, face: 'bottom' } });
+    for (const ear of earSpecs(flat.wallMount, shape, layout.dims, lid)) expect(ear.outline).toHaveLength(4);
+  });
+
+  it('ears below the bed, on the lid, crowded off the body: each is warned about', () => {
+    const codes = (state: AppState): string[] => {
+      const { layout, shape, lid } = context(state);
+      return extrasWarnings(state, shape, layout, lid).map((m) => m.code);
+    };
+    const base = sanitizeState({
+      ...defaultState(), boards: [], shape: { ...defaultState().shape, auto: false, size: { w: 100, d: 70, h: 40 } },
+      lid: { ...defaultState().lid, fastening: 'screws' },
+    });
+    // the lid on the left: the left ear's root is in the lid's wall, and the body prints on its right wall, the right ear under it
+    expect(codes(sanitizeState({ ...base, lid: { ...base.lid, face: 'left' }, wallMount: { kind: 'ears' } }))).toEqual(['warn.mountOnLid', 'warn.earOnBed']);
+    // the back against the wall, ears on the top and bottom: the top one is the lid's
+    const topBottom = sanitizeState({ ...base, wallMount: { kind: 'ears', face: 'back', ears: { count: 2, walls: 'topBottom' } } });
+    expect(codes(topBottom)).toContain('warn.mountOnLid');
+    expect(codes(topBottom)).toContain('warn.earOnBed');
+    // a deep lid leaves the side walls no room for an ear under it
+    const deep = sanitizeState({
+      ...base, shape: { ...base.shape, auto: false, size: { w: 100, d: 70, h: 24 } }, lid: { ...base.lid, depth: 14 },
+      wallMount: { kind: 'ears', face: 'back' },
+    });
+    expect(codes(deep)).toContain('warn.earsOnParting');
+    expect(codes(sanitizeState({ ...base, wallMount: { kind: 'ears', face: 'back' } }))).toEqual([]);
+  });
+
+  it('a cylinder hung by its top: the ears go around the top, flush with it', () => {
+    const state = sanitizeState({
+      ...defaultState(), boards: [], shape: { ...defaultState().shape, kind: 'cylinder' }, lid: { ...defaultState().lid, face: 'bottom', fastening: 'screws' },
+      wallMount: { kind: 'ears', face: 'top', screwD: 4, ears: { count: 3, walls: 'leftRight', wall: 'back', along: 'centre' } },
+    });
+    const { layout, shape, lid } = context(state);
+    const ears = earSpecs(state.wallMount, shape, layout.dims, lid);
+    expect(ears).toHaveLength(3);
+    for (const ear of ears) {
+      expect(ear.hole[2]).toBeCloseTo(layout.dims.h);
+      expect(ear.onLid).toBe(false);
+    }
+    const box = builtBox(state, 'cylinder/top');
+    expect(box.max[2]).toBeCloseTo(layout.dims.h, 3);
+  });
+
 });
 
 describe('label', () => {

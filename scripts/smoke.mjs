@@ -816,6 +816,15 @@ await page.click('#mount_earCount_1');
 await expectWatertight('ears:1:left');
 await page.click('#mount_earWalls_leftRight');
 await page.click('#mount_earCount_2');
+// the back against the wall: ears flush with it, on the side walls, then on the top and bottom
+await page.click('#mount_face_back');
+if (!(await page.locator('#mount_earWalls_frontBack').isDisabled())) errors.push('[ears:back] front and back offered for ears on the back');
+await expectWatertight('ears:back');
+await page.click('#mount_earWalls_topBottom');
+await expectWatertight('ears:back:topBottom');
+if (!(await page.locator('#warnings').textContent()).includes('under the bed')) errors.push('[ears:back:topBottom] no warning about the ear under the bed');
+await page.click('#mount_earWalls_leftRight');
+await page.click('#mount_face_bottom');
 const trianglesBefore = await page.evaluate(() => window.__case.parts()?.lid.indices.length ?? 0);
 await page.check('#on_label');
 await page.fill('#label_text', 'Hello שלום Привет');

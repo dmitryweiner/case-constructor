@@ -11,7 +11,7 @@ import { FACES } from '../geo/face';
 import type { FanState, LabelAnchor, LabelState, VentState, WallMountState } from '../geo/extras';
 import {
   EAR_ALONG, EAR_COUNT_MAX, EAR_SIDES, EAR_WALLS, FAN_SIZES, KEYHOLE_STYLES, LABEL_ANCHORS, LABEL_FONTS, LABEL_MARGIN_MAX, LABEL_MAX_CHARS,
-  MOUNT_KINDS, VENT_PATTERNS, mountFace, mountFaces,
+  MOUNT_KINDS, VENT_PATTERNS, earChoice, earSideFaces, earWallChoices, earWalls, mountFace, mountFaces,
 } from '../geo/extras';
 import { LABEL_FONT_FILES } from './fonts';
 import type { AppState } from '../state/schema';
@@ -105,7 +105,7 @@ function mountControls(): Control<AppState>[] {
     {
       kind: 'segmented', key: 'face', label: 'mount.face', hint: 'mount.face.hint',
       options: FACES.map((value) => ({ value, label: `face.${value}` as const })),
-      optionDisabled: (state, value) => !mountFaces(state.shape.kind).some((face) => face === value),
+      optionDisabled: (state, value) => !mountFaces(state.shape.kind, state.wallMount.kind).some((face) => face === value),
       when: (state) => state.wallMount.kind !== 'none',
       get: (state) => mountFace(state.wallMount, state.shape.kind),
       set: (state, value) => mount(state, { face: FACES.find((face) => face === value) ?? state.wallMount.face }),
@@ -127,15 +127,17 @@ function mountControls(): Control<AppState>[] {
     {
       kind: 'segmented', key: 'earWalls', label: 'mount.earWalls', hint: 'mount.earWalls.hint',
       options: EAR_WALLS.map((value) => ({ value, label: `earWalls.${value}` as const })),
+      optionDisabled: (state, value) => !earWallChoices(mountFace(state.wallMount, state.shape.kind), state.shape.kind).some((walls) => walls === value),
       when: (state) => state.wallMount.kind === 'ears',
-      get: (state) => state.wallMount.ears.walls,
+      get: (state) => earChoice(state.wallMount, state.shape.kind),
       set: (state, value) => ears(state, { walls: EAR_WALLS.find((w) => w === value) ?? state.wallMount.ears.walls }),
     },
     {
       kind: 'select', key: 'earWall', label: 'mount.earWall',
       options: EAR_SIDES.map((value) => ({ value, label: `face.${value}` as const })),
+      optionDisabled: (state, value) => !earSideFaces(mountFace(state.wallMount, state.shape.kind), state.shape.kind).some((side) => side === value),
       when: (state) => state.wallMount.kind === 'ears' && state.wallMount.ears.walls === 'one',
-      get: (state) => state.wallMount.ears.wall,
+      get: (state) => earWalls(state.wallMount, state.shape.kind)[0],
       set: (state, value) => ears(state, { wall: EAR_SIDES.find((w) => w === value) ?? state.wallMount.ears.wall }),
     },
     {

@@ -76,6 +76,8 @@ export type MessageCode =
   | 'warn.keyholePadsOnBed'
   | 'warn.mountOnLid'
   | 'warn.mountOnSnaps'
+  | 'warn.earOnBed'
+  | 'warn.earsOnParting'
   | 'warn.labelTooBig'
   | 'warn.labelOverScrew'
   // worker job stages

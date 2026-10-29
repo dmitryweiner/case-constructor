@@ -53,14 +53,26 @@ the lid, and opens so.
   cylinder's round wall has no flat place for a pad: there the keyholes go
   through. Vents are left out under pads and feet. A standoff right above a
   pocket would open it (its hole goes into the plate) — the panel warns.
-- **ears** — tabs at floor level, 10 × 8 mm, as thick as the floor, with a
-  hole for the screw (+ 0.4 mm). *Ears*: 1–4. *On the walls*: left and
-  right, front and back (an odd ear goes to the first wall: 3 = 2 + 1) or
-  one wall of your choice. *Along the wall* (when a wall gets two or more):
-  centred, *Spacing* apart, or at the ends — spread out to the corners. Ears
-  stay on the flat part of a wall, clear of the rounded corners. A cylinder
-  has no walls: its ears go evenly around, the first towards the first wall
-  named.
+- **ears** — tabs flush with the face against the wall (at floor level when
+  the bottom is), 10 × 8 mm, as thick as that face's plate, with a hole for
+  the screw (+ 0.4 mm), standing out of the walls next to it. *Ears*: 1–4.
+  *On the walls*: a pair of opposite walls next to the face — left and
+  right, front and back, top and bottom, whichever the face has (an odd ear
+  goes to the first wall: 3 = 2 + 1) — or one wall of your choice. *Along
+  the wall* (when a wall gets two or more): centred, *Spacing* apart, or at
+  the ends — spread out to the corners. Ears stay on the flat part of a
+  wall, clear of the rounded corners and edges.
+
+  An ear that would hang in its part's print pose — on a side wall of a
+  body printed opening up, say — gets a 45° gusset back to its wall on its
+  lower side, so it prints without supports. An ear on a wall the lid's part
+  crosses stays on the body's part, 1 mm off the parting; when the body's
+  part is too short for it, the panel says so. An ear whose root is in the
+  lid's wall goes with the lid (the lid then holds the case — the panel
+  warns), and an ear standing out of the face its part prints on would be
+  under the bed (the panel warns: choose other walls or another lid face).
+  A cylinder hangs by its top or bottom only: its ears go evenly around,
+  the first towards the first wall named.
 
 ## Label
 

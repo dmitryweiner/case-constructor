@@ -194,4 +194,19 @@ L2, L3, L4.
   xy, which on a wall face compared x alone (a false alarm for any standoff
   in the keyhole's column): now only the supports on that face's plate —
   floor boards' under the bottom, hung boards' under a flat top.
-- **W3.** The user changes `ha-wall-panel` himself, if at all.
+- **W3.** `ha-wall-panel` stays as it is: the user changes it, if at all.
+- **W2.** An ear goes with the part its root is in, each ear apart (before,
+  all of them went with the floor's owner): with a side lid the ear out of
+  the lid's wall was the body's minus the lid — a loose piece beside it.
+  Now it is the lid's, and the panel warns that the lid holds the case.
+- **W2.** The ear's root reaches `2 + r` into its wall (r the rounded edge
+  between the face and the wall): on a rounded edge 2 mm left the tab
+  touching the case only by a sliver.
+- **W2.** Goldens `ears-four-ends` and `ears-three-cylinder` moved by 8 and 2
+  triangles, their volumes did not: the tab's outline is rounded in the
+  face's (u, v) now, not the case's xy.
+- **W2.** `warn.earOnBed`: an ear out of the face its part prints on (a
+  side lid's opposite wall, the top and bottom pair on the back). Not
+  built otherwise — the panel says to choose other walls.
+- **W2.** The wall select (`#mount_earWall`) disables the walls the face
+  has not as neighbours: the select control got `optionDisabled`.

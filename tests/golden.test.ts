@@ -397,6 +397,18 @@ const STATES: Record<string, AppState> = {
     lid: { ...defaultState().lid, face: 'bottom', fastening: 'screws' },
     wallMount: { kind: 'keyholes', face: 'bottom', spacing: 58 },
   }),
+  // W2: ears flush with the face against the wall
+  'ears-back-gussets': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, auto: false, size: { w: 100, d: 70, h: 45 } },
+    wallMount: { kind: 'ears', face: 'back', ears: { count: 4, walls: 'leftRight', along: 'ends' } },
+  }),
+  'ears-left-top-bottom': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, edgeR: 2, auto: false, size: { w: 100, d: 70, h: 45 } },
+    lid: { ...defaultState().lid, face: 'front', fastening: 'screws' },
+    wallMount: { kind: 'ears', face: 'left', ears: { count: 2, walls: 'topBottom' } },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

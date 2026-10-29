@@ -395,7 +395,12 @@ freely; a temporary script that turns out useful becomes a permanent one.
   and keyholes are ExtraCuts on faces and go through `extraCutters` (curved
   walls and the console's slope come for free); vents are thinned out of the
   skirt band, away from floor supports and port openings. Ears and the label
-  are additive. Closed keyholes (`closedKeyholes`) are additive pads and
+  are additive. The wall mount is on the face the user chose
+  (`wallMount.face`, built on `mountFace`; a file without it hangs by its
+  back when the floor is the lid, as it did): keyholes through it, ears
+  (`earSpecs`, in that face's frame) flush with it out of the walls next to
+  it, each with the part its root is in, a 45° gusset on the side that
+  hangs in its part's print pose (`printDown`). Closed keyholes (`closedKeyholes`) are additive pads and
   feet whose pockets are cut by the worker after the pads are added (in the
   common cutter pass the pads would fill them back); vents are thinned out
   under them. The label is rasterised in the main thread
@@ -563,7 +568,7 @@ Extras: toggled cards `#on_vents`, `#on_fan`, `#on_label`; vents
 `#vents_along_x|y`, `#vents_size|_pitch|_margin`; fan `#fan_face` (select),
 `#fan_size_25…60`, `#fan_x|_y|_screwD`; wall mount
 `#mount_kind_none|keyholes|ears`, `#mount_face_<face>` (the face against the wall), `#mount_keyhole_through|closed`, ears
-`#mount_earCount_1…4`, `#mount_earWalls_leftRight|frontBack|one`,
+`#mount_earCount_1…4`, `#mount_earWalls_leftRight|frontBack|topBottom|one` (the pairs next to the face against the wall),
 `#mount_earWall` (select), `#mount_earAlong_centre|ends`, `#mount_spacing`, `#mount_screwD`; label
 `#label_text`, `#label_font`, `#label_size`, `#label_raised`, `#label_depth`,
 `#label_anchor_<anchor>` (a 3 × 3 grid: topLeft … bottomRight), `#label_margin` (off the centre), `#label_x|_y`, `#label_turn_0|90|180|270`, `#label_angle`.

@@ -12,21 +12,29 @@ import type { FaceFrame } from './face';
 import type { LabelRaster } from './label';
 import { rasterRuns } from './label';
 
-/** Ear tabs at floor level: material and holes, case frame. */
-export function earSolids(csg: CsgApi, scope: CsgScope, ears: readonly EarSpec[], floor: number, segments: number): { material: Manifold; holes: Manifold } | null {
-  if (ears.length === 0) return null;
+/**
+ * Ear tabs in the plate of the face against the wall, flush with it:
+ * material and holes, case frame, the lid's and the body's apart.
+ */
+export function earSolids(
+  csg: CsgApi, scope: CsgScope, ears: readonly EarSpec[], frame: FaceFrame, plate: number, segments: number,
+): { onLid: boolean; material: Manifold; holes: Manifold }[] {
   const n = Math.max(16, segments * 4);
-  const material: Manifold[] = [];
-  const holes: Manifold[] = [];
-  for (const ear of ears) {
-    const rect = scope.keep(new csg.CrossSection([ear.outline], 'Positive'));
-    // rounded corners: shrink, then grow back
-    const rounded = scope.keep(scope.keep(scope.keep(rect.offset(-3, 'Round', 2, n)).offset(3, 'Round', 2, n)).simplify(1e-3));
-    material.push(extrude(csg, scope, rounded, 0, floor));
-    const hole = scope.keep(csg.Manifold.cylinder(floor + 2, ear.d / 2, ear.d / 2, n));
-    holes.push(scope.keep(hole.translate([ear.hx, ear.hy, -1])));
-  }
-  return { material: unionAll(csg, scope, material), holes: unionAll(csg, scope, holes) };
+  return [false, true].flatMap((onLid) => {
+    const mine = ears.filter((ear) => ear.onLid === onLid);
+    if (mine.length === 0) return [];
+    const material: Manifold[] = [];
+    const holes: Manifold[] = [];
+    for (const ear of mine) {
+      const outline = scope.keep(new csg.CrossSection([ear.outline], 'Positive'));
+      // rounded corners: shrink, then grow back
+      const rounded = scope.keep(scope.keep(scope.keep(outline.offset(-3, 'Round', 2, n)).offset(3, 'Round', 2, n)).simplify(1e-3));
+      material.push(transformSolid(scope, extrude(csg, scope, rounded, -plate, 0), frame.fromFace));
+      const hole = scope.keep(csg.Manifold.cylinder(plate + 2, ear.d / 2, ear.d / 2, n));
+      holes.push(transformSolid(scope, scope.keep(hole.translate([ear.hu, ear.hv, -plate - 1])), frame.fromFace));
+    }
+    return [{ onLid, material: unionAll(csg, scope, material), holes: unionAll(csg, scope, holes) }];
+  });
 }
 
 /** How far a pad reaches into its plate, so the union never meets on a coplanar face, mm. */
