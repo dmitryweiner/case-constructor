@@ -185,10 +185,11 @@ printed screws — is as for a single case ([Lid](lid.md)).
 
 ## The view
 
-Both halves are drawn, the upper one open by **Open by** in the View and
-export card (0° closed, 180° open flat; 110° by default — it is a view
-setting and is not saved in the project). Exploded, each lid lifts off its
-half. Warnings name their half (*Lower half: …*) and their badges move with
+Both halves are drawn. Assembled, the upper one is open by **Open by** in
+the View and export card (0° closed, 180° open flat; 110° by default — it
+is a view setting and is not saved in the project). Exploded, the case
+lies open flat and each lid lifts off its own half; **Open by** is greyed
+out there. Warnings name their half (*Lower half: …*) and their badges move with
 it.
 
 ## Export

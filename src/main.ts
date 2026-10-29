@@ -233,7 +233,8 @@ function renderPanel(): void {
   hingeRows = renderControls(hingeParams, hingeControls(), () => state, (next) => applyState(next), 'hinge');
   cableRows = renderCablesCard(cableCards, () => state, (next) => applyState(next));
   halfRows = renderControls(halfParams, halfControls(), () => halfView, setHalfView, 'edit');
-  angleRows = renderControls(angleParams, angleControls(() => effectiveView(state.exportMode) === 'print'), () => halfView, setHalfView, 'view');
+  // the angle is the assembled view's: exploded lies open flat, the bed has none
+  angleRows = renderControls(angleParams, angleControls(() => effectiveView(state.exportMode) !== 'assembled'), () => halfView, setHalfView, 'view');
   boardRows = renderBoardsCard(boardCards, () => edited(), applyEdit,
     (text, name) => download(text, name, 'application/json'));
   cutRows = renderCutsCard(cutCards, () => edited(), applyEdit);
@@ -682,9 +683,18 @@ function partById(parts: JobPart[], id: JobPart['id']): JobPart {
   return found;
 }
 
-/** Where a half lies in the view: the lower half (or a single case) where it is built, the upper one open by the view's angle. */
+/**
+ * How far the upper half is open in the view: the slider's angle when
+ * assembled; open flat when exploded, so each lid lifts off its own half and
+ * the two never cross.
+ */
+function shownAngle(built: AppState): number {
+  return effectiveView(built.exportMode) === 'exploded' ? 180 : halfView.angle;
+}
+
+/** Where a half lies in the view: the lower half (or a single case) where it is built, the upper one open by `shownAngle`. */
 function poseOf(built: AppState, half: Half | null): Affine {
-  return half === 'b' ? upperPose(foldOfState(built), halfView.angle) : IDENTITY;
+  return half === 'b' ? upperPose(foldOfState(built), shownAngle(built)) : IDENTITY;
 }
 
 type Vec = [number, number, number];
@@ -825,7 +835,7 @@ function describeView(state: AppState): string {
     return `${what} · ${t('caption.print')}${lid}${hinged ? ` · ${t('caption.upperBehind')}` : ''}`;
   }
   const boards = viewBoards.checked && casesOf(state).some((one) => one.state.boards.length > 0) ? ` · ${t('caption.withBoards')}` : '';
-  const open = hinged ? ` · ${t('caption.openBy', { angle: halfView.angle })}` : '';
+  const open = hinged ? ` · ${view === 'exploded' ? t('caption.openFlat') : t('caption.openBy', { angle: halfView.angle })}` : '';
   // the body alone has nothing to explode
   if (parts === 'body') return `${what}${open}${boards}`;
   return `${what} · ${t(view === 'exploded' ? 'view.exploded' : 'view.assembled')}${open}${boards}`;

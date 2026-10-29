@@ -628,8 +628,11 @@ await page.click('#hinge_magnets');
 await page.click('#hinge_gapAuto');
 if (await page.locator('#board0_remove').count()) errors.push('[hinged] the lower half shows the upper half\'s board');
 if ((await page.locator('#lid_face_top').getAttribute('class'))?.includes('active') !== true) errors.push('[hinged] the lower half shows the upper half\'s lid');
-await setRange('view_angle', 0);
+// exploded lies open flat; the angle is the assembled view's
+if (!(await page.locator('#view_angle').isDisabled())) errors.push('[hinged] the angle is live in the exploded view');
+if (!(await page.locator('#viewCaption').textContent()).includes('open flat')) errors.push('[hinged] the exploded caption does not say open flat');
 await page.click('#viewAssembled');
+await setRange('view_angle', 0);
 await expectWatertight('hinged:closed');
 if (!(await page.locator('#viewCaption').textContent()).includes('open by 0°')) errors.push('[hinged] the caption does not say the angle');
 await page.click('#viewPrint');

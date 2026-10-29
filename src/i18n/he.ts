@@ -26,7 +26,7 @@ export const he: Record<Key, string> = {
   'view.xray': 'שקיפות',
   'view.xray.title': 'לראות דרך הדפנות',
   'view.angle': 'פתוח ב-',
-  'view.angle.hint': 'עד כמה החצי העליון פתוח בתצוגה: 0° סגור, 180° פתוח שטוח',
+  'view.angle.hint': 'עד כמה החצי העליון פתוח בתצוגה המורכבת: 0° סגור, 180° פתוח שטוח (בתצוגה המפורקת הוא תמיד פתוח שטוח)',
   'unit.mm': 'מ״מ',
 
   'panel.case': 'מארז',
@@ -544,6 +544,7 @@ export const he: Record<Key, string> = {
   'caption.lidBehind': 'המכסה מאחור',
   'caption.upperBehind': 'החצי העליון מאחור',
   'caption.openBy': 'פתוח ב-{angle}°',
+  'caption.openFlat': 'פתוח שטוח',
   'caption.title': "מה מוצג — לחצו כדי לשנות",
   'boards.arrange': "סידור",
   'boards.arrange.hint': "מסדר מחדש את כל הלוחות לפי הסדר שלהם; גם מחברים בולטים שומרים על המרווח; הסיבובים נשמרים",

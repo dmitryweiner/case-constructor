@@ -338,3 +338,9 @@ stands alone.
   Then (the user, 2026-10-29) one frame instead: the Boards, Lid,
   Openings and Mounting cards stand in `#halfGroup`, framed when the case is
   hinged and headed by the one switch, sticky while they scroll.
+
+- **The review (2026-10-29).** Exploded, the case lies open flat (two lids
+  on top crossed each other at 110°): the angle is the assembled view's,
+  greyed out exploded and in the print layout; the caption says *open
+  flat*.
+
