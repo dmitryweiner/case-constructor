@@ -343,4 +343,6 @@ stands alone.
   on top crossed each other at 110°): the angle is the assembled view's,
   greyed out exploded and in the print layout; the caption says *open
   flat*.
+  Then (the user) the angle shows in the assembled view only, hidden
+  rather than greyed out exploded and in the print layout.
 

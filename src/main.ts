@@ -233,8 +233,7 @@ function renderPanel(): void {
   hingeRows = renderControls(hingeParams, hingeControls(), () => state, (next) => applyState(next), 'hinge');
   cableRows = renderCablesCard(cableCards, () => state, (next) => applyState(next));
   halfRows = renderControls(halfParams, halfControls(), () => halfView, setHalfView, 'edit');
-  // the angle is the assembled view's: exploded lies open flat, the bed has none
-  angleRows = renderControls(angleParams, angleControls(() => effectiveView(state.exportMode) !== 'assembled'), () => halfView, setHalfView, 'view');
+  angleRows = renderControls(angleParams, angleControls(), () => halfView, setHalfView, 'view');
   boardRows = renderBoardsCard(boardCards, () => edited(), applyEdit,
     (text, name) => download(text, name, 'application/json'));
   cutRows = renderCutsCard(cutCards, () => edited(), applyEdit);
@@ -858,7 +857,8 @@ function syncView(): void {
   viewWarningsLabel.hidden = parts === 'lid';
   viewWarnings.disabled = view === 'print';
   // a hinged case's angle: the bed has none, the lids alone are drawn as they print
-  angleParams.hidden = !isHinged(state) || parts === 'lid';
+  // the angle is the assembled view's: exploded lies open flat, the bed has none
+  angleParams.hidden = !isHinged(state) || view !== 'assembled';
   angleRows.sync(halfView);
   // the lid's place on the bed is seen only there
   printRows.sync(state);

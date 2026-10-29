@@ -147,12 +147,11 @@ export function halfControls(): Control<HalfView>[] {
   ];
 }
 
-/** `flat`: the parts lie on the bed, where the angle means nothing. */
-export function angleControls(flat: () => boolean): Control<HalfView>[] {
+/** Shown in the assembled view only: exploded lies open flat, the bed has no angle. */
+export function angleControls(): Control<HalfView>[] {
   return [
     {
       kind: 'range', key: 'angle', label: 'view.angle', hint: 'view.angle.hint', min: 0, max: 180, step: 5,
-      disabled: flat,
       get: (view) => view.angle,
       set: (view, value) => ({ ...view, angle: value }),
     },

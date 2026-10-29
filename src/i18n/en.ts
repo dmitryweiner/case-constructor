@@ -26,7 +26,7 @@ export const en = {
   'view.xray': 'X-ray',
   'view.xray.title': 'See through the walls',
   'view.angle': 'Open by',
-  'view.angle.hint': 'How far the upper half is open in the assembled view: 0° closed, 180° open flat (exploded, it lies open flat)',
+  'view.angle.hint': 'How far the upper half is open in the assembled view: 0° closed, 180° open flat (shown when assembled; exploded, it lies open flat)',
   'unit.mm': 'mm',
 
   // --- panel sections ---

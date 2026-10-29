@@ -629,7 +629,7 @@ await page.click('#hinge_gapAuto');
 if (await page.locator('#board0_remove').count()) errors.push('[hinged] the lower half shows the upper half\'s board');
 if ((await page.locator('#lid_face_top').getAttribute('class'))?.includes('active') !== true) errors.push('[hinged] the lower half shows the upper half\'s lid');
 // exploded lies open flat; the angle is the assembled view's
-if (!(await page.locator('#view_angle').isDisabled())) errors.push('[hinged] the angle is live in the exploded view');
+if (await page.locator('#view_angle').isVisible()) errors.push('[hinged] the angle is offered in the exploded view');
 if (!(await page.locator('#viewCaption').textContent()).includes('open flat')) errors.push('[hinged] the exploded caption does not say open flat');
 await page.click('#viewAssembled');
 await setRange('view_angle', 0);
@@ -637,7 +637,7 @@ await expectWatertight('hinged:closed');
 if (!(await page.locator('#viewCaption').textContent()).includes('open by 0°')) errors.push('[hinged] the caption does not say the angle');
 await page.click('#viewPrint');
 if (!(await page.locator('#viewCaption').textContent()).includes('upper half behind')) errors.push('[hinged] the print caption does not place the upper half');
-if (!(await page.locator('#view_angle').isDisabled())) errors.push('[hinged] the angle is live in the print layout');
+if (await page.locator('#view_angle').isVisible()) errors.push('[hinged] the angle is offered in the print layout');
 await page.click('#viewExploded');
 await exportStl('hinged');
 await page.click('#case_kind_box');
