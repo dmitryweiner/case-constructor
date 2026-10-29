@@ -27,7 +27,7 @@ printed hinge on screws, cable slots, magnets inside (the branch
 `hinged-2026-10-28`).
 `plans/PLAN-MOUNT-LABELS.md` — the wall mount on the face the user chooses
 (keyholes through it, ears flush with it), several labels on any flat face
-(W1…W3, L1…L4; the branch `mount-labels`).
+(W1…W3, L1…L4; the branch `mount-labels`): done.
 
 ## Node
 

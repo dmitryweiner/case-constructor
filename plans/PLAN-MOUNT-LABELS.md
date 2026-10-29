@@ -1,6 +1,6 @@
 # Case Constructor — the wall mount's face, several labels on any face
 
-**Status: in progress (2026-10-29).**
+**Status: done (2026-10-29).**
 
 Written on 2026-10-29 from the user's notes. Items W1…W3 (the wall mount),
 L1…L4 (labels); the order is at the end.
