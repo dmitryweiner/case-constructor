@@ -121,10 +121,16 @@ between the blocks, from slot to slot.
 
 | Parameter | Range | Default | Notes |
 |---|---|---|---|
+| Through | hinge wall, inner face | hinge wall | where the slot is |
 | Along the hinge | 0–400 mm | the middle | the slot's middle |
 | Width / Thickness | 1–60 / 0.1–5 mm | 16 / 0.3 | a flat cable |
 | Diameter | 1–60 mm | — | a round cable |
 | Plug width, Plug height | 0–40 mm | 0 | a plug that has to pass through the slot; 0 = the cable alone |
+
+**Through the inner face** instead: the slot goes through each half's
+inner face plate, right inside the hinge wall (clear of a top lid's skirt);
+closed, the two slots face each other across the gap and the cable crosses
+it straight, open it bends over the hinge line.
 
 The slot is the cable (or its plug, whichever is larger) plus 0.5 mm on
 every side. A note gives the cable's length from slot to slot as the case

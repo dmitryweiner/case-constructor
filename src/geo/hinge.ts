@@ -56,11 +56,15 @@ export const KNUCKLE_COUNTS = [3, 5, 7] as const;
 /** A cable from one half to the other: flat (an FFC, an IDC ribbon) or round (a bundle, a USB cable). */
 export const CABLE_KINDS = ['flat', 'round'] as const;
 export type CableKind = (typeof CABLE_KINDS)[number];
+/** Where a cable leaves each half: through its hinge wall, or through its inner face next to the hinge edge. */
+export const CABLE_THROUGH = ['wall', 'face'] as const;
+export type CableThrough = (typeof CABLE_THROUGH)[number];
 
 export interface Cable {
   /** its middle along the hinge, x in either half's frame */
   x: number;
   kind: CableKind;
+  through: CableThrough;
   /** a flat cable's width and thickness; a round one's diameter is `w` */
   w: number;
   t: number;
@@ -80,7 +84,7 @@ export const CABLE_TOP_GAP = 0.5;
 export const CABLE_KEEP = 1;
 
 export function defaultCable(x = 50): Cable {
-  return { x, kind: 'flat', w: 16, t: 0.3, plugW: 0, plugH: 0 };
+  return { x, kind: 'flat', through: 'wall', w: 16, t: 0.3, plugW: 0, plugH: 0 };
 }
 
 export function sanitizeCables(raw: unknown): Cable[] {
@@ -91,6 +95,7 @@ export function sanitizeCables(raw: unknown): Cable[] {
     return {
       x: clampNum(Reflect.get(r, 'x'), 0, 400, d.x),
       kind: oneOf(CABLE_KINDS, Reflect.get(r, 'kind'), d.kind),
+      through: oneOf(CABLE_THROUGH, Reflect.get(r, 'through'), d.through),
       w: clampNum(Reflect.get(r, 'w'), 1, CABLE_W_MAX, d.w),
       t: clampNum(Reflect.get(r, 't'), 0.1, 5, d.t),
       plugW: clampNum(Reflect.get(r, 'plugW'), 0, PLUG_MAX, d.plugW),
@@ -437,8 +442,8 @@ export interface HalfHinge {
   /** every block, for its axle's holes */
   blocks: { x0: number; x1: number }[];
   holes: AxleHoles;
-  /** the cables' slots through the hinge wall: middle along x, size, the middle's height */
-  slots: { x: number; w: number; h: number; z: number }[];
+  /** the cables' slots: middle along x, size, and the middle of their outer mouth (on the hinge wall or the inner face) */
+  slots: CableSlot[];
   kind: HingeKind;
   /** a printed hinge: this half's leaf (null for knuckles) */
   leaf: LeafLayout | null;
@@ -502,12 +507,27 @@ export function bodyRange(h: number, lidFace: string, plate: number, depth: numb
   return lidFace === 'top' ? [0, h - plate - depth] : [plate + depth, h];
 }
 
-/** The cables' slots of a half as openings through its hinge wall (the face's u runs right to left on the back). */
+/**
+ * A cable's slot in a half: through the hinge wall (`h` across the wall, at
+ * height `z`) or through the inner face's plate next to the hinge edge (`h`
+ * along y, its middle at `y`); `mouth` is the middle of its outer opening.
+ */
+export interface CableSlot {
+  x: number;
+  w: number;
+  h: number;
+  through: CableThrough;
+  z: number;
+  y: number;
+  mouth: [number, number, number];
+}
+
+/** The cables' slots of a half as openings through its hinge wall (the face's u runs right to left on the back) or its top. */
 export function cableCutters(hinge: HalfHinge, shape: ShapeState, dims: Dims, slopeTop: (x: number, y: number) => number): CutterSpec[] {
   const face = hinge.wall;
-  const cuts = hinge.slots.map((slot) => ({
-    face, shape: 'rect' as const, x: face === 'back' ? dims.w - slot.x : slot.x, y: slot.z, w: slot.w, h: slot.h, r: Math.min(slot.w, slot.h) / 2,
-  }));
+  const cuts = hinge.slots.map((slot) => (slot.through === 'face'
+    ? { face: 'top' as const, shape: 'rect' as const, x: slot.x, y: slot.y, w: slot.w, h: slot.h, r: Math.min(slot.w, slot.h) / 2 }
+    : { face, shape: 'rect' as const, x: face === 'back' ? dims.w - slot.x : slot.x, y: slot.z, w: slot.w, h: slot.h, r: Math.min(slot.w, slot.h) / 2 }));
   return extraCutters(cuts, shape, dims, slopeTop).map((cutter, index): CutterSpec => ({ ...cutter, source: { kind: 'cable', index } }));
 }
 

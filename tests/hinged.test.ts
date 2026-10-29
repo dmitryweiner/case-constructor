@@ -391,6 +391,38 @@ describe('cables', () => {
     }
   });
 
+  it('a slot through each half\'s inner face, facing each other when closed', () => {
+    const base = hinged();
+    const state = sanitizeState({ ...base, hinge: { ...base.hinge, cables: [{ ...defaultCable(49), through: 'face' }] } });
+    const slot = cableSlot(state.hinge.cables[0]);
+    const fold = foldOfState(state);
+    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, null, halfHinge(state, half)));
+    for (const [half, built] of [['a', a], ['b', b]] as const) {
+      const hinge = halfHinge(state, half);
+      if (!hinge) throw new Error('no hinge');
+      const { y } = hinge.slots[0];
+      const h = caseDims(halfState(state, half)).h;
+      const scope = new CsgScope();
+      try {
+        // a probe through the plate in the slot's straight part
+        const probe = fromManifold(scope.keep(csg.Manifold.cube([slot.w - slot.h - 1, slot.h - 1, state.shape.floor + 0.4], true).translate([49, y, h - state.shape.floor / 2])));
+        expect(shared(probe, mergeMeshes([built.body, built.lid])), half).toBeLessThan(1e-6);
+      } finally {
+        scope.dispose();
+      }
+    }
+    // closed, the upper half's slot is right over the lower half's
+    const lower = halfHinge(state, 'a')?.slots[0].mouth;
+    const upper = halfHinge(state, 'b')?.slots[0].mouth;
+    if (!lower || !upper) throw new Error('no slots');
+    const over = applyAffine(upperPose(fold, 0), upper);
+    expect(over[1]).toBeCloseTo(lower[1], 6);
+    expect(over[2] - lower[2]).toBeCloseTo(gapOf(state), 6);
+    for (let angle = 0; angle <= 180; angle += 30) {
+      expect(shared(mergeMeshes([a.body, a.lid]), transformMesh(mergeMeshes([b.body, b.lid]), upperPose(fold, angle)))).toBeLessThan(1e-6);
+    }
+  });
+
   it('says how long a cable runs between its slots, and when a slot meets a corner or another', () => {
     const base = hinged();
     const state = sanitizeState({ ...base, hinge: { ...base.hinge, cables: [defaultCable(49), defaultCable(2), defaultCable(55)] } });

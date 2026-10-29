@@ -579,6 +579,9 @@ if (!(await page.locator('#cable0_w').isVisible())) errors.push('[hinged] no cab
 await page.click('#cable0_kind_round');
 if (await page.locator('#cable0_t').isVisible()) errors.push('[hinged] a round cable offers a thickness');
 await setRange('cable0_plugH', 5);
+await page.click('#cable0_through_face');
+await expectWatertight('hinged:cable-face');
+await page.click('#cable0_through_wall');
 if (!(await page.textContent('#warnings'))?.includes('from slot to slot')) errors.push('[hinged] no word on the cable\'s length');
 await expectWatertight('hinged:cable');
 await page.click('#cable0_remove');

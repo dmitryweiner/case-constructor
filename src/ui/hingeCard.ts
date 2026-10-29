@@ -12,7 +12,7 @@ import { GAP_MAX, HALVES, gapOf } from '../state/hinged';
 import { HOLE_KINDS, MAGNETS, MAGNET_SIZES } from '../geo/fasteners';
 import type { Cable } from '../geo/hinge';
 import {
-  CABLE_KINDS, CABLE_W_MAX, HINGE_KINDS, MAX_CABLES, PLUG_MAX, axlesFor, defaultCable,
+  CABLE_KINDS, CABLE_THROUGH, CABLE_W_MAX, HINGE_KINDS, MAX_CABLES, PLUG_MAX, axlesFor, defaultCable,
   AXLES, BARREL_D_MAX, BARREL_D_MIN, HINGE_LAYOUTS, HINGE_SCREWS, KNUCKLE_COUNTS, KNUCKLE_LENGTH_MAX, KNUCKLE_LENGTH_MIN, PIN_D_MAX, PIN_D_MIN,
 } from '../geo/hinge';
 
@@ -170,6 +170,12 @@ function cableControls(index: number): Control<AppState>[] {
       options: CABLE_KINDS.map((value) => ({ value, label: `cable.kind.${value}` as const })),
       get: (state) => at(state).kind,
       set: (state, value) => patchCable(state, index, { kind: CABLE_KINDS.find((one) => one === value) ?? at(state).kind }),
+    },
+    {
+      kind: 'segmented', key: 'through', label: 'cable.through', hint: 'cable.through.hint',
+      options: CABLE_THROUGH.map((value) => ({ value, label: `cable.through.${value}` as const })),
+      get: (state) => at(state).through,
+      set: (state, value) => patchCable(state, index, { through: CABLE_THROUGH.find((one) => one === value) ?? at(state).through }),
     },
     range('x', 'x', 'cable.x', 0, 400, 0.5, undefined, 'cable.x.hint'),
     range('w', 'w', 'cable.w', 1, CABLE_W_MAX, 0.5, (state) => !round(state)),

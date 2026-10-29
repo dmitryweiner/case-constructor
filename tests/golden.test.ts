@@ -346,6 +346,12 @@ const STATES: Record<string, AppState> = {
     boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0.3, keys: 'caps' }],
     hinge: { magnets: true, magnet: '8x2', b: { boards: [], lid: { face: 'bottom' } } },
   }),
+  // H12: a cable through the inner faces, next to the hinge edge
+  'hinged-cable-face': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    hinge: { cables: [{ x: 50, kind: 'flat', through: 'face', w: 20, t: 0.3 }], b: { boards: [], lid: { face: 'bottom' } } },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

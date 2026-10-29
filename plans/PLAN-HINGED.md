@@ -316,3 +316,8 @@ stands alone.
   the Boards card (not a card of its own); it still drives the lid,
   openings and extras cards.
 
+- **H12 (2026-10-29).** Done. A face slot lies inside the hinge wall at
+  the same distance in both halves (the larger skirt clearance of the two),
+  so closed the slots face each other and the cable crosses the gap
+  straight; `CableSlot.mouth` is where the length note measures from.
+
