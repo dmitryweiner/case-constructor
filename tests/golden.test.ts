@@ -27,7 +27,7 @@ interface PartEntry {
   extents: number[];
 }
 
-type Entry = Record<'body' | 'lid', PartEntry> & { clamp?: PartEntry; lidClamp?: PartEntry; hinge?: PartEntry };
+type Entry = Record<'body' | 'lid', PartEntry> & { clamp?: PartEntry; lidClamp?: PartEntry; hinge?: PartEntry; rails?: PartEntry; lidRails?: PartEntry };
 
 /** The M0 base: no boards, the manual 100 × 70 × 35 size. */
 function base(): AppState {
@@ -364,6 +364,25 @@ const STATES: Record<string, AppState> = {
     lid: { ...defaultState().lid, face: 'bottom' },
     hinge: { place: 'sides', kind: 'leaves', axle: 'snap', leafHole: 'nut', b: { boards: [], lid: { face: 'bottom' } } },
   }),
+  // N1: the Heltec V4 went on rails, so a board on M1.6 screws is a Feather's (plans/PLAN-IMPROVEMENTS-2026-10-29.md)
+  'feather-m1.6': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'adafruit-feather-esp32-s3', mount: { size: 'M1.6', hole: 'tap', head: 'none' } }],
+  }),
+  // N2: rails on screws — ears outwards on the floor, along the edge on a hung board with nut pockets
+  'heltec-v4-rails-screwed': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'heltec-wifi-lora-32-v4', railScrews: true, pins: true }],
+  }),
+  'heltec-v4-rails-along-hung': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'heltec-wifi-lora-32-v4', railScrews: true, railEars: 'along', on: 'ceiling', mount: { size: 'M2', hole: 'nut', head: 'none' } }],
+  }),
+  // N3: printed caps over a board's buttons (the lid's holes; the caps are not the worker's)
+  'heltec-v4-button-caps': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'heltec-wifi-lora-32-v4', on: 'floor', z: 4, buttons: 'caps', capShape: 'square', capR: 0.8 }],
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {
@@ -387,6 +406,7 @@ describe('golden cases', () => {
           body: part(built.body), lid: part(built.lid),
           ...(built.clamps ? { clamp: part(built.clamps) } : {}), ...(built.lidClamps ? { lidClamp: part(built.lidClamps) } : {}),
           ...(built.hinge ? { hinge: part(built.hinge) } : {}),
+          ...(built.railsPrint ? { rails: part(built.railsPrint) } : {}), ...(built.lidRailsPrint ? { lidRails: part(built.lidRailsPrint) } : {}),
         };
       }
     }

@@ -5,7 +5,7 @@
 // as they print, flange down.
 
 import { keyFields } from '../boards/schema';
-import { capStyle, keyFit, keysOpen, portCut } from '../boards/placement';
+import { buttonFit, capButtons, capStyle, keyFit, keysOpen, portCut } from '../boards/placement';
 import type { CaseLayout } from './layout';
 import type { ShapeState } from './shape';
 import type { Affine, SurfaceMesh } from './surface';
@@ -35,8 +35,33 @@ const CAPS_PER_ROW = 12;
 /** Points on each quarter of a cap's outline. */
 const CAP_QUARTER = 6;
 
-/** The printed caps of every board whose lid has them over its keys. */
+/** The printed caps of every board whose lid has them over its keys or its top buttons. */
 export function keyCaps(layout: CaseLayout, shape: ShapeState): KeyCap[] {
+  return [...fieldCaps(layout, shape), ...buttonCaps(layout, shape)];
+}
+
+/**
+ * Caps over a board's top buttons (plans/PLAN-IMPROVEMENTS-2026-10-29.md,
+ * N3): the keyboards' caps, sized among the board's buttons, the flange on
+ * its button however deep that lies under the plate.
+ */
+function buttonCaps(layout: CaseLayout, shape: ShapeState): KeyCap[] {
+  return layout.boards.flatMap((board) => {
+    const buttons = capButtons(board.def, board.placement);
+    if (buttons.length === 0) return [];
+    const style = capStyle(board.placement);
+    return capSizes(buttons, { size: board.placement.capSize, fit: buttonFit(board.placement) }).map((cap, i): KeyCap => {
+      const { port } = buttons[i];
+      const depth = -keysProud(board, port, shape, layout.dims, layout.console.frontH, layout.console.backH);
+      return {
+        board: board.index, port: port.id, frame: composeAffine(board.toCase, translation(cap.x, cap.y, board.def.size.t + port.h)),
+        stemR: cap.stemR, flangeR: cap.flangeR, corner: capCorner(style.shape, style.r, cap.stemR), length: Math.max(CAP_FLANGE_T + 1, depth + CAP_PROUD),
+      };
+    });
+  });
+}
+
+function fieldCaps(layout: CaseLayout, shape: ShapeState): KeyCap[] {
   return layout.boards.flatMap((board) => {
     if (keysOpen(board.def, board.placement) !== 'caps') return [];
     return keyFields(board.def).flatMap((field) => {
@@ -101,6 +126,14 @@ export function capMesh(cap: Pick<KeyCap, 'stemR' | 'flangeR' | 'corner' | 'leng
   const pos = new Float32Array(positions);
   const index = new Uint32Array(indices);
   return { positions: pos, indices: index, normals: meshNormals(pos, index) };
+}
+
+/**
+ * Whether the caps print with the lid: when the lid is the top, the plate
+ * they go through; otherwise the top is the body's, and they go with it.
+ */
+export function capsWithLid(face: string): boolean {
+  return face === 'top';
 }
 
 /** The caps in their holes, case frame; `lift` moves them along the lid's normal `n` (the exploded view). */

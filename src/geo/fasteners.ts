@@ -39,7 +39,7 @@ export interface ScrewDims {
 }
 
 export const SCREWS: Readonly<Record<ScrewSize, ScrewDims>> = {
-  // M1.6: board holes only (Heltec V4); the insert is an estimate until a real one is measured
+  // M1.6: small boards' holes (a custom board); the insert is an estimate until a real one is measured
   'M1.6': { d: 1.6, tap: 1.3, insert: 2.4, insertLen: 3, nutAF: 3.2, nutH: 1.3, headD: 3.2, headH: 1.3 },
   'M2': { d: 2, tap: 1.7, insert: 3.2, insertLen: 4, nutAF: 4.0, nutH: 1.6, headD: 3.8, headH: 1.3 },
   'M2.5': { d: 2.5, tap: 2.2, insert: 3.5, insertLen: 4, nutAF: 5.0, nutH: 2.0, headD: 4.5, headH: 1.7 },

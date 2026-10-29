@@ -17,8 +17,10 @@ instead: a post from the lid would run into the keys (the MacroPad's holes
 are at its switches' edges; one of the BBQ20KBD's holes is under its
 keyboard). On the floor the case's ceiling comes down to it — the gap
 (0.3 mm) above what the plate lies on — rather than the top margin, so the
-keys reach through the lid. Added, it stands just high enough for the least
-case (20 mm); lower, the panel says how far the lid lies above its switches.
+keys reach through the lid. Added, it stands just high enough for a 20 mm
+case; lower, a case sized from the boards comes down with it, and in a
+taller case set by hand the panel says how far the lid lies above its
+switches.
 
 ## Screws, rails or clamp bars
 
@@ -58,9 +60,11 @@ the lid would be in the way: the lid prints face down.
   button, standing 1 mm out of the lid, and a flange under the lid wider than
   the hole, so it cannot fall out. For keys too low to reach with a finger
   (the CardKB's tact switches stand 1.75 mm). The flange lies on the key, the
-  plate the gap above it. The caps print with the lid: in the Lid STL and in
-  Both they lie flange down in rows next to the lid; in the view they stand
-  in their holes (exploded, over the lid).
+  plate the gap above it. The caps print with the part that has the top —
+  the lid when it is on top, the body otherwise: in that part's STL and in
+  Both they lie flange down in rows next to it; in the view they stand in
+  their holes (exploded, over a top lid). The same caps go over any board's
+  top buttons (**Buttons**, [boards](boards.md#printed-caps-over-buttons)).
   **Caps** picks their shape: round, or square with rounded corners
   (**Corner radius**, 0.3 mm at least — never sharp); the holes follow the
   stems' outline, grown by the fit. **Cap size** is the stems' width (a round

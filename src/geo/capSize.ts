@@ -1,6 +1,7 @@
 // Printed key caps (plans/PLAN-KEYBOARDS.md K3b): how big each one is.
 // Pure, from the key field alone — the openings (ports.ts) and the caps
-// themselves (caps.ts) both read it.
+// themselves (caps.ts) both read it. A board's top buttons are such a set of
+// keys too (plans/PLAN-IMPROVEMENTS-2026-10-29.md N3).
 //
 // A cap is a stem over its key, through a hole in the lid, and a flange
 // under the lid wider than the hole, so it cannot fall out: the flange lies
@@ -48,9 +49,28 @@ export interface CapSize {
 /** The thinnest web the lid may keep between two keys' holes, mm. */
 export const KEY_WEB = 0.8;
 
+/** A key a cap goes over: its centre and its button's size, board frame. */
+export interface CapKey {
+  x: number;
+  y: number;
+  w: number;
+  d: number;
+}
+
+/** The keys caps go over: a key field's rows, or a list (a board's buttons). */
+export type CapKeys = Pick<TopPort, 'rows'> | readonly CapKey[];
+
+function isKeyList(source: CapKeys): source is readonly CapKey[] {
+  return Array.isArray(source);
+}
+
+function keysFrom(source: CapKeys): readonly CapKey[] {
+  return isKeyList(source) ? source : keysOf(source);
+}
+
 /** Each key's nearest neighbour's distance, centre to centre (none: a long way). */
-function nearestOf(field: Pick<TopPort, 'rows'>): number[] {
-  const keys = keysOf(field);
+function nearestOf(source: CapKeys): number[] {
+  const keys = keysFrom(source);
   return keys.map((key, i) => {
     let nearest = Infinity;
     keys.forEach((other, j) => {
@@ -66,8 +86,8 @@ function nearestOf(field: Pick<TopPort, 'rows'>): number[] {
  * past its hole, `CAP_GAP` from its neighbour's, and a `KEY_WEB` between the
  * holes. Null without keys.
  */
-export function capSizeRange(field: Pick<TopPort, 'rows'>, fit: number): { min: number; max: number } | null {
-  const keys = keysOf(field);
+export function capSizeRange(field: CapKeys, fit: number): { min: number; max: number } | null {
+  const keys = keysFrom(field);
   if (keys.length === 0) return null;
   const nearest = nearestOf(field);
   const min = Math.max(...keys.map((key) => Math.max(key.w, key.d)));
@@ -80,8 +100,8 @@ export function capSizeRange(field: Pick<TopPort, 'rows'>, fit: number): { min: 
  * chosen width kept within `capSizeRange` — its flange as wide as the
  * neighbours leave room for.
  */
-export function capSizes(field: Pick<TopPort, 'rows'>, chosen?: { size?: number; fit: number }): CapSize[] {
-  const keys = keysOf(field);
+export function capSizes(field: CapKeys, chosen?: { size?: number; fit: number }): CapSize[] {
+  const keys = keysFrom(field);
   const nearest = nearestOf(field);
   const range = chosen?.size !== undefined ? capSizeRange(field, chosen.fit) : null;
   return keys.map((key, i) => {

@@ -11,6 +11,7 @@ import type { CsgApi, CsgScope } from './csg';
 import { extrude, transformSolid } from './csg';
 import type { FastenerSpec } from './fasteners';
 import { NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE, bossDiameter } from './fasteners';
+import type { Edge } from '../boards/schema';
 import type { PlacedBoard } from './layout';
 import {
   PIN_SLOT, PIN_SPACER, PIN_TIP_GAP, RAIL_GAP, RAIL_GRIP, RAIL_LIP, RAIL_SHORTEN, RAIL_THICK, pinEdges, railEdges, railReach,
@@ -23,6 +24,8 @@ export interface Support {
   base: [number, number, number];
   material: Manifold;
   holes: Manifold | null;
+  /** rails on screws: the rail printed apart, as screwed down (case frame) and in its own frame (`railSolids.ts`) */
+  loose?: { solid: Manifold; local: Manifold };
 }
 
 /** Skin left under every hole, so the floor stays closed. */
@@ -68,6 +71,7 @@ export function fromCeiling(scope: CsgScope, supports: readonly Support[], h: nu
     base: applyAffine(mirror, support.base),
     material: transformSolid(scope, support.material, mirror),
     holes: support.holes ? transformSolid(scope, support.holes, mirror) : null,
+    ...(support.loose ? { loose: { ...support.loose, solid: transformSolid(scope, support.loose.solid, mirror) } } : {}),
   }));
 }
 
@@ -132,14 +136,13 @@ export function postHole(
  * lower lip; under it a shelf for the header's plastic, reaching inwards
  * past it, with a slot along the pin row down to just below the pin tips.
  */
-function pinBedProfile(t: number, height: number, below: number, inset: number): [number, number][] {
+function pinBedProfile(t: number, bottom: number, below: number, inset: number): [number, number][] {
   const s0 = RAIL_GAP - RAIL_GRIP;
   const slotIn = -inset - PIN_SLOT / 2;
   const slotOut = -inset + PIN_SLOT / 2;
   const sIn = -railReach({ inset });
   const shelf = -PIN_SPACER - RAIL_GAP;
   const tips = -below - PIN_TIP_GAP;
-  const bottom = -height - SINK;
   return [
     [sIn, bottom], [s0 + RAIL_THICK, bottom], [s0 + RAIL_THICK, t + RAIL_LIP], [s0, t + RAIL_LIP],
     [s0, t + RAIL_GAP], [RAIL_GAP, t + RAIL_GAP], [RAIL_GAP, shelf], [slotOut, shelf],
@@ -147,44 +150,52 @@ function pinBedProfile(t: number, height: number, below: number, inset: number):
   ];
 }
 
+/** A rail's frame (u along the edge, s outward, z up from the PCB underside) → the board frame. */
+export function railToBoard(edge: Edge, w: number, d: number): Affine {
+  // x = ux·u + sx·s + ox, y = uy·u + sy·s + oy; u runs so that (u, s, z) stays right-handed
+  const place: Record<Edge, [number, number, number, number, number, number]> = {
+    front: [-1, 0, w - RAIL_SHORTEN, 0, -1, 0],
+    back: [1, 0, RAIL_SHORTEN, 0, 1, d],
+    left: [0, -1, 0, 1, 0, RAIL_SHORTEN],
+    right: [0, 1, w, -1, 0, d - RAIL_SHORTEN],
+  };
+  const [ux, sx, ox, uy, sy, oy] = place[edge];
+  return [ux, sx, 0, ox, uy, sy, 0, oy, 0, 0, 1, 0];
+}
+
+/**
+ * The rail along one edge in its own frame, from `bottom` up to `RAIL_LIP`
+ * above the PCB: a bar with a groove `t + 2·gap` wide that grips the edge
+ * `RAIL_GRIP` deep, or, on an edge with soldered pins, the pin bed
+ * (`pinBedProfile`). Its length is the edge's less `RAIL_SHORTEN` a side.
+ */
+export function railLocal(csg: CsgApi, scope: CsgScope, board: PlacedBoard, edge: Edge, bottom: number): { local: Manifold; length: number } {
+  const { w, d, t } = board.def.size;
+  const pins = board.def.pins;
+  const length = (edge === 'front' || edge === 'back' ? w : d) - 2 * RAIL_SHORTEN;
+  const s0 = RAIL_GAP - RAIL_GRIP;
+  if (pins && pinEdges(board).includes(edge)) {
+    // the profile in (s, z) extruded along u: (a, b, c) → (u, s, z) = (c, a, b)
+    const prism = extrude(csg, scope, [pinBedProfile(t, bottom, pins.below, pins.inset)], 0, length);
+    return { local: transformSolid(scope, prism, [0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0]), length };
+  }
+  const bar = box(csg, scope, 0, s0, bottom, length, s0 + RAIL_THICK, t + RAIL_LIP);
+  const groove = box(csg, scope, -EPS, s0 - EPS, -RAIL_GAP, length + EPS, RAIL_GAP, t + RAIL_GAP);
+  return { local: scope.keep(bar.subtract(groove)), length };
+}
+
 /**
  * Rails of one board without holes: a bar along each of two edges, from the
- * floor to `RAIL_LIP` above the PCB, with a groove `t + 2·gap` wide that
- * grips the edge `RAIL_GRIP` deep. Open at both ends and shorter than the
- * edge, so the board goes in diagonally and clicks into both grooves. An
- * edge with soldered pins gets the pin bed instead (`pinBedProfile`).
+ * floor (`railLocal`). Open at both ends and shorter than the edge, so the
+ * board goes in diagonally and clicks into both grooves. Printed apart and
+ * screwed down instead: `screwedRails` (`railSolids.ts`).
  */
 export function rails(csg: CsgApi, scope: CsgScope, board: PlacedBoard, floor: number): Support[] {
-  const { w, d, t } = board.def.size;
+  const { w, d } = board.def.size;
   const height = board.z0 - floor;
-  const pinned = pinEdges(board);
-  const pins = board.def.pins;
   return railEdges(board.def).map((edge) => {
-    // build along +x in a local frame: s across the edge (outward +), z up from the PCB underside
-    const length = (edge === 'front' || edge === 'back' ? w : d) - 2 * RAIL_SHORTEN;
-    const s0 = RAIL_GAP - RAIL_GRIP;
-    let local: Manifold;
-    if (pins && pinned.includes(edge)) {
-      // the profile in (s, z) extruded along u: (a, b, c) → (u, s, z) = (c, a, b)
-      const prism = extrude(csg, scope, [pinBedProfile(t, height, pins.below, pins.inset)], 0, length);
-      local = transformSolid(scope, prism, [0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0]);
-    } else {
-      const bar = box(csg, scope, 0, s0, -height - SINK, length, s0 + RAIL_THICK, t + RAIL_LIP);
-      const groove = box(csg, scope, -EPS, s0 - EPS, -RAIL_GAP, length + EPS, RAIL_GAP, t + RAIL_GAP);
-      local = scope.keep(bar.subtract(groove));
-    }
-    // local (u along the edge, s outward) → board frame
-    // x = ux·u + sx·s + ox, y = uy·u + sy·s + oy; u runs so that (u, s, z) stays right-handed
-    const place: Record<typeof edge, [number, number, number, number, number, number]> = {
-      front: [-1, 0, w - RAIL_SHORTEN, 0, -1, 0],
-      back: [1, 0, RAIL_SHORTEN, 0, 1, d],
-      left: [0, -1, 0, 1, 0, RAIL_SHORTEN],
-      right: [0, 1, w, -1, 0, d - RAIL_SHORTEN],
-    };
-    const [ux, sx, ox, uy, sy, oy] = place[edge];
-    const toBoard: [number, number, number, number, number, number, number, number, number, number, number, number] =
-      [ux, sx, 0, ox, uy, sy, 0, oy, 0, 0, 1, 0];
-    const inBoard = transformSolid(scope, local, toBoard);
+    const { local } = railLocal(csg, scope, board, edge, -height - SINK);
+    const inBoard = transformSolid(scope, local, railToBoard(edge, w, d));
     const material = transformSolid(scope, inBoard, board.toCase);
     const mid = applyAffine(board.toCase, [w / 2, d / 2, 0]);
     return { base: [mid[0], mid[1], floor / 2], material, holes: null };

@@ -5,15 +5,15 @@
 
 import type { FastenerSpec } from '../geo/fasteners';
 import { bossDiameter, sanitizeFastener } from '../geo/fasteners';
-import type { BoardDef, Edge, KeysOpen, MountKind, PortDef } from './schema';
+import type { BoardDef, Edge, KeysOpen, MountKind, PortDef, TopPort } from './schema';
 import { EDGES, KEYS_OPEN, autoPortId, bottomPartsH, isAutoPortId, keyFields, keysOf, onFace, resolveVariant, sanitizeBoard } from './schema';
 import { CATALOG, catalogBoard } from './catalog';
 import type { BatterySpec } from './battery';
 import { PRESS_MAX, PRESS_MIN, batteryDef, defaultBattery, sanitizeBattery } from './battery';
 import { defaultPress } from '../geo/clamp';
 import { attachTurns } from '../geo/attach';
-import { SIZE_MIN, defaultShape } from '../geo/shape';
-import type { CapShape } from '../geo/capSize';
+import { defaultShape } from '../geo/shape';
+import type { CapKey, CapShape } from '../geo/capSize';
 import { CAP_FIT, CAP_FLANGE_T, CAP_R_DEFAULT, CAP_R_MAX, CAP_R_MIN } from '../geo/capSize';
 
 export const ROTATIONS = [0, 90, 180, 270] as const;
@@ -68,6 +68,12 @@ export interface BoardPlacement {
   capSize?: number;
   /** a keyboard that hangs: held another way than its entry's (`holdChoices`) — rails, or clamp bars across its back */
   hold?: MountKind;
+  /** a board with top buttons only: a printed cap in each button's hole (missing: a bare hole); the cap fields above shape them */
+  buttons?: 'caps';
+  /** a board held by rails only: the rails are printed apart and screwed down (`mount` is their screw) */
+  railScrews?: true;
+  /** rails on screws only: their ears past the rails' ends along the edge (missing: outwards) */
+  railEars?: 'along';
 }
 
 /**
@@ -199,6 +205,28 @@ export function keysOpen(def: BoardDef, placement: Pick<BoardPlacement, 'keys'>)
   return wanted !== 'window' && rows ? wanted : 'window';
 }
 
+/** A board's buttons on its top: pressed through the plate, under a printed cap when the placement asks. */
+export function topButtons(def: Pick<BoardDef, 'ports'>): TopPort[] {
+  return def.ports.filter((port): port is TopPort => port.type === 'button' && port.edge === 'top');
+}
+
+/** How the plate opens over a board's top buttons: a hole each, or a hole with a printed cap in it. */
+export function buttonsOpen(def: Pick<BoardDef, 'ports'>, placement: Pick<BoardPlacement, 'buttons'>): 'hole' | 'caps' {
+  return placement.buttons === 'caps' && topButtons(def).length > 0 ? 'caps' : 'hole';
+}
+
+/** The buttons printed caps go over (those whose opening is on), as the keys of `capSizes`, with their ports. */
+export function capButtons(def: Pick<BoardDef, 'ports'>, placement: BoardPlacement): (CapKey & { port: TopPort })[] {
+  if (buttonsOpen(def, placement) !== 'caps') return [];
+  return topButtons(def).filter((port) => portCut(placement, port.id, port.cut))
+    .map((port) => ({ x: port.x, y: port.y, w: port.w, d: port.shape === 'round' ? port.w : port.d, port }));
+}
+
+/** The room round a button cap's stem in its hole: the placement's key fit, else a cap's. */
+export function buttonFit(placement: Pick<BoardPlacement, 'keyFit'>): number {
+  return placement.keyFit ?? CAP_FIT;
+}
+
 /** How the placement's printed caps are shaped: round, or square with this corner radius. */
 export function capStyle(placement: Pick<BoardPlacement, 'capShape' | 'capR'>): { shape: CapShape; r: number } {
   return { shape: placement.capShape ?? 'round', r: placement.capR ?? CAP_R_DEFAULT };
@@ -233,12 +261,15 @@ export function frontHeight(def: BoardDef, placement: Pick<BoardPlacement, 'keys
  * key its holes then hold the switches at their plate line; over a window
  * its keys come up into it).
  */
+/** The least case a keyboard's default standoff fills, mm (the least height was 20 when it was set; it stays). */
+const KEYBOARD_CASE_H = 20;
+
 export function floorZ(def: BoardDef, pins: boolean): number {
   if (def.battery) return minBoardZ(def, pins);
   const lowest = Math.max(4, minBoardZ(def, pins));
   if (keyFields(def).length === 0) return lowest;
   const { floor } = defaultShape();
-  return Math.max(lowest, +(SIZE_MIN - 2 * floor - CEILING_GAP - def.size.t - frontHeight(def, {})).toFixed(2));
+  return Math.max(lowest, +(KEYBOARD_CASE_H - 2 * floor - CEILING_GAP - def.size.t - frontHeight(def, {})).toFixed(2));
 }
 
 export function defaultPlacement(entry: BoardDef, x = 0, y = 0): BoardPlacement {
@@ -343,19 +374,32 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
     ...carried,
     ...withKeys(def, r),
     ...(hold ? { hold } : {}),
+    ...withRailScrews(def, r),
   };
 }
 
-/** A keyboard's opening choice and fit, kept only when they differ from the entry's. */
-function withKeys(def: BoardDef, r: object): Pick<BoardPlacement, 'keys' | 'keyFit' | 'capShape' | 'capR' | 'capSize'> {
+/** Rails on screws and where their ears are, kept only for a board held by rails. */
+function withRailScrews(def: BoardDef, r: object): Pick<BoardPlacement, 'railScrews' | 'railEars'> {
+  if (def.mount.kind !== 'rails' || def.battery || Reflect.get(r, 'railScrews') !== true) return {};
+  return { railScrews: true, ...(Reflect.get(r, 'railEars') === 'along' ? { railEars: 'along' as const } : {}) };
+}
+
+/**
+ * A keyboard's opening choice and fit, kept only when they differ from the
+ * entry's; caps over a board's top buttons, and the caps' shape and fit
+ * whenever there are caps to shape.
+ */
+function withKeys(def: BoardDef, r: object): Pick<BoardPlacement, 'keys' | 'keyFit' | 'capShape' | 'capR' | 'capSize' | 'buttons'> {
   const fields = keyFields(def);
-  if (fields.length === 0) return {};
+  const buttonCaps = topButtons(def).length > 0 && Reflect.get(r, 'buttons') === 'caps';
+  if (fields.length === 0 && !buttonCaps) return {};
   const raw: unknown = Reflect.get(r, 'keys');
   const chosen = keysOpen(def, { keys: KEYS_OPEN.find((open) => open === raw) });
   const fit: unknown = Reflect.get(r, 'keyFit');
   return {
-    ...(chosen !== keysOpen(def, {}) ? { keys: chosen } : {}),
-    ...(typeof fit === 'number' && Number.isFinite(fit) ? { keyFit: num(fit, 0, KEY_FIT_MAX, fields[0].clearance) } : {}),
+    ...(fields.length > 0 && chosen !== keysOpen(def, {}) ? { keys: chosen } : {}),
+    ...(buttonCaps ? { buttons: 'caps' as const } : {}),
+    ...(typeof fit === 'number' && Number.isFinite(fit) ? { keyFit: num(fit, 0, KEY_FIT_MAX, fields[0]?.clearance ?? CAP_FIT) } : {}),
     ...(Reflect.get(r, 'capShape') === 'square' ? { capShape: 'square' as const } : {}),
     ...(typeof Reflect.get(r, 'capR') === 'number' ? { capR: num(Reflect.get(r, 'capR'), CAP_R_MIN, CAP_R_MAX, CAP_R_DEFAULT) } : {}),
     ...(typeof Reflect.get(r, 'capSize') === 'number' ? { capSize: num(Reflect.get(r, 'capSize'), 0.5, 30, 4) } : {}),

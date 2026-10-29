@@ -10,8 +10,9 @@
 
 import type { PortDef, TopPort } from '../boards/schema';
 import { keyFields, keysOf, onFace } from '../boards/schema';
-import { CEILING_GAP, capStyle, frontHeight, keyFit, keysOpen, portCut } from '../boards/placement';
-import { CAP_HOLD, CAP_PROUD, KEY_WEB, capCorner, capSizes } from './capSize';
+import { CEILING_GAP, buttonFit, buttonsOpen, capButtons, capStyle, frontHeight, keyFit, keysOpen, portCut } from '../boards/placement';
+import type { CapSize } from './capSize';
+import { CAP_FLANGE_T, CAP_HOLD, CAP_PROUD, KEY_WEB, capCorner, capSizes } from './capSize';
 import type { CutterSpec, ExtraCut } from './cutters';
 import { VERTICAL_AXES, flareAt, horizontalAxes } from './cutters';
 import type { Dims } from './face';
@@ -98,21 +99,31 @@ export { KEY_WEB } from './capSize';
  * a straight one).
  */
 function openingsOf(board: PlacedBoard, port: PortDef): { port: PortDef; window: boolean; corner?: number }[] {
+  // a printed cap over a top button: its stem's hole, sized with the board's other buttons
+  if (port.type === 'button' && port.edge === 'top' && onFace(port)) {
+    const buttons = capButtons(board.def, board.placement);
+    const i = buttons.findIndex((button) => button.port.id === port.id);
+    if (i < 0) return [{ port, window: false }];
+    const fit = buttonFit(board.placement);
+    return [capOpening(board, port, capSizes(buttons, { size: board.placement.capSize, fit })[i], fit)];
+  }
   if (port.type !== 'keys' || !onFace(port) || port.edge !== 'top') return [{ port, window: port.type === 'display' }];
   const clearance = keyFit(board.def, board.placement, port);
   const open = keysOpen(board.def, board.placement);
   if (open === 'window' || !port.rows) return [{ port: { ...port, clearance }, window: true }];
   // a printed cap's stem goes through its hole
-  if (open === 'caps') {
-    const style = capStyle(board.placement);
-    return capSizes(port, { size: board.placement.capSize, fit: clearance }).map((cap) => ({
-      port: { ...port, x: cap.x, y: cap.y, w: 2 * cap.stemR, d: 2 * cap.stemR, shape: style.shape === 'round' ? 'round' : 'rect', clearance },
-      window: false,
-      // a square stem's hole follows its rounded corners, grown by the fit
-      ...(style.shape === 'square' ? { corner: capCorner('square', style.r, cap.stemR) + clearance } : {}),
-    }));
-  }
+  if (open === 'caps') return capSizes(port, { size: board.placement.capSize, fit: clearance }).map((cap) => capOpening(board, port, cap, clearance));
   return keysOf(port).map((key) => ({ port: { ...port, ...key, clearance }, window: false }));
+}
+
+/** The hole a printed cap's stem goes through: round, or square with its rounded corners grown by the fit. */
+function capOpening(board: PlacedBoard, port: TopPort, cap: CapSize, fit: number): { port: PortDef; window: boolean; corner?: number } {
+  const style = capStyle(board.placement);
+  return {
+    port: { ...port, x: cap.x, y: cap.y, w: 2 * cap.stemR, d: 2 * cap.stemR, shape: style.shape === 'round' ? 'round' : 'rect', clearance: fit },
+    window: false,
+    ...(style.shape === 'square' ? { corner: capCorner('square', style.r, cap.stemR) + fit } : {}),
+  };
 }
 
 export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[] {
@@ -402,7 +413,47 @@ export function keyNotes(layout: CaseLayout, shape: ShapeState): Message[] {
       const web = open === 'holes' ? thinnestWeb(field, fit) : open === 'caps' ? thinnestCapWeb(field, fit, board.placement.capSize) : Infinity;
       if (web < KEY_WEB - 1e-9) out.push({ code: 'warn.keyWebThin', params: { ...params, mm: Math.max(0, web).toFixed(1), min: KEY_WEB }, spot });
     }
+    out.push(...buttonCapNotes(board));
   }
+  return out;
+}
+
+/**
+ * Printed caps over a board's top buttons (N3): a word on them, a warning
+ * when a flange is too small to hold its cap in, and one when a flange
+ * (lying on its button) or the stem over it runs into a taller part next to
+ * the button.
+ */
+function buttonCapNotes(board: PlacedBoard): Message[] {
+  const buttons = capButtons(board.def, board.placement);
+  if (buttons.length === 0) return [];
+  const { t } = board.def.size;
+  const fit = buttonFit(board.placement);
+  const caps = capSizes(buttons, { size: board.placement.capSize, fit });
+  const columnSpot = (i: number, r: number, h: number): MessageSpot => {
+    const { x, y } = caps[i];
+    const corners: Vec3[] = [];
+    for (const px of [x - r, x + r]) for (const py of [y - r, y + r]) for (const pz of [t, t + h]) corners.push(applyAffine(board.toCase, [px, py, pz]));
+    return boxSpot(boxAround(corners), { board: board.index });
+  };
+  const all = boxAround(caps.flatMap((cap, i) => columnSpot(i, cap.flangeR, buttons[i].port.h + CAP_FLANGE_T).boxes.flatMap((box) => [box.min, box.max])));
+  const out: Message[] = [{ code: 'info.buttonCaps', params: { ...boardParams(board), n: caps.length }, spot: boxSpot(all, { board: board.index }) }];
+  caps.forEach((cap, i) => {
+    const { port } = buttons[i];
+    const params = { ...boardParams(board), port: port.id, portType: port.type };
+    const hold = cap.flangeR - cap.stemR - fit;
+    if (hold < CAP_HOLD - 1e-9) out.push({ code: 'warn.capFlangeSmall', params: { ...params, mm: Math.max(0, hold).toFixed(1) }, spot: columnSpot(i, cap.flangeR, port.h) });
+    const top = t + port.h;
+    const over = board.def.ports.find((other) => {
+      if (other.id === port.id || (onFace(other) && other.edge === 'bottom')) return false;
+      const [x0, y0, , x1, y1, z1] = portBlock(board, other);
+      if (z1 <= top + 1e-6) return false;
+      const dx = Math.max(x0 - cap.x, 0, cap.x - x1);
+      const dy = Math.max(y0 - cap.y, 0, cap.y - y1);
+      return Math.hypot(dx, dy) < cap.flangeR - 1e-6;
+    });
+    if (over) out.push({ code: 'warn.capOverPart', params: { ...params, part: over.id }, spot: columnSpot(i, cap.flangeR, port.h + CAP_FLANGE_T) });
+  });
   return out;
 }
 
@@ -519,6 +570,10 @@ export function topProtrusion(layout: CaseLayout, shape: ShapeState): number {
       if (!onFace(port) || port.edge !== 'top' || !portCut(board.placement, port.id, port.cut)) continue;
       if (port.type !== 'keys' && port.base === undefined) continue;
       if (port.type === 'keys' && keysOpen(board.def, board.placement) === 'caps') {
+        out = Math.max(out, CAP_PROUD);
+        continue;
+      }
+      if (port.type === 'button' && buttonsOpen(board.def, board.placement) === 'caps') {
         out = Math.max(out, CAP_PROUD);
         continue;
       }

@@ -159,6 +159,20 @@ export function clampsForPrint(clamps: SurfaceMesh, x0: number): SurfaceMesh {
   return onBed(transformMesh(clamps, FLIP), x0);
 }
 
+/** Two groups of pieces on the bed as one: the second behind the first, `gap` apart. */
+export function stackBehind(first: SurfaceMesh, second: SurfaceMesh, gap = PRINT_GAP_MM): SurfaceMesh {
+  const a = meshBounds(first);
+  const b = meshBounds(second);
+  return mergeMeshes([first, transformMesh(second, translation(a.min[0] - b.min[0], a.max[1] + gap - b.min[1], a.min[2] - b.min[2]))]);
+}
+
+/** Parts already on the bed, then the rails on screws (already in their print pose, `railsForPrint`) to their right. */
+export function withRails(parts: SurfaceMesh[], rails: SurfaceMesh | null, gap = PRINT_GAP_MM): SurfaceMesh[] {
+  if (!rails) return parts;
+  const right = parts.length > 0 ? Math.max(...parts.map((part) => meshBounds(part).max[0])) : 0;
+  return [...parts, onBed(rails, right + gap)];
+}
+
 /** Parts already on the bed, then the clamps to their right. */
 export function withClamps(parts: SurfaceMesh[], clamps: SurfaceMesh | null): SurfaceMesh[] {
   if (!clamps) return parts;

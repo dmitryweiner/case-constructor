@@ -33,7 +33,17 @@ export interface ShapeState {
 
 export const WALL_MIN = 1.2;
 export const WALL_MAX = 6;
+/** The least width and depth, mm. */
 export const SIZE_MIN = 20;
+/** The least height, mm: a bare small board's case is about 14 (plans/PLAN-IMPROVEMENTS-2026-10-29.md N4). */
+export const H_MIN = 10;
+/** A hinged half keeps 20: its hinge (a printed one's leaves, the pivots) needs the wall. */
+export const HINGED_H_MIN = 20;
+
+/** The least outer height of a case of this kind, mm. */
+export function heightMin(kind: ShapeKind): number {
+  return kind === 'hinged' ? HINGED_H_MIN : H_MIN;
+}
 export const SIZE_MAX = 400;
 export const CORNER_MAX = 50;
 export const EDGE_MAX = 20;
@@ -84,7 +94,7 @@ export function sanitizeShape(raw: unknown): ShapeState {
     size: {
       w: clampNum(size.w, SIZE_MIN, SIZE_MAX, d.size.w),
       d: clampNum(size.d, SIZE_MIN, SIZE_MAX, d.size.d),
-      h: clampNum(size.h, SIZE_MIN, SIZE_MAX, d.size.h),
+      h: clampNum(size.h, H_MIN, SIZE_MAX, d.size.h),
     },
     margin: {
       side: clampNum(margin.side, 0, 20, d.margin.side),

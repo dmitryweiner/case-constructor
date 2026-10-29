@@ -11,7 +11,8 @@ import { t } from '../i18n';
 import type { BackPlacement, BoardPlacement } from '../boards/placement';
 import {
   BACK_STANDOFF_MAX, BACK_STANDOFF_MIN, CEILING_GAP, NEW_BOARD_GAP, backPortDefault, backStandoffMin, withBackCut, POSITION_MAX, ROTATIONS, SIDES, WALL_OFFSET_MAX, WALL_OFFSET_MIN, Z_MAX, boardOf, entryOf, floorZ, pinsDown, placementMinZ,
-  ownPortDefault, portCut, withPortCut, withSide, withTopCut, KEY_FIT_MAX, capStyle, holdChoices, keyFit, keysOpen, pressedOn, sanitizePlacement,
+  ownPortDefault, portCut, withPortCut, withSide, withTopCut, KEY_FIT_MAX, buttonFit, buttonsOpen, capButtons, capStyle, holdChoices, keyFit, keysOpen, pressedOn,
+  sanitizePlacement, topButtons,
 } from '../boards/placement';
 import type { BoardDef } from '../boards/schema';
 import { KEYS_OPEN, keyFields, resolveVariant } from '../boards/schema';
@@ -29,6 +30,7 @@ import { tDynamic } from '../i18n';
 import type { CustomEditorHandle } from './customBoard';
 import { customSignature, renderCustomEditor } from './customBoard';
 import { HOLE_KINDS, SCREW_SIZES } from '../geo/fasteners';
+import { RAIL_EARS, railScrewSpec, railsScrewed } from '../geo/rails';
 import type { AppState } from '../state/schema';
 
 /** Whether the board could stand against this wall of the case (the layout would keep it). */
@@ -46,7 +48,12 @@ function patchBoard(state: AppState, index: number, patch: Partial<BoardPlacemen
 function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
   const at = (state: AppState): BoardPlacement => state.boards[index];
   // the screw and hole kind of the standoffs, or of a clamped panel's posts
-  const holes = (state: AppState): boolean => boardOf(at(state)).mount.kind !== 'rails';
+  // (rails take them too when they are screwed down)
+  const screwedRails = (state: AppState): boolean => railsScrewed(boardOf(at(state)), at(state));
+  const holes = (state: AppState): boolean => boardOf(at(state)).mount.kind !== 'rails' || screwedRails(state);
+  const railed = (state: AppState): boolean => boardOf(at(state)).mount.kind === 'rails' && battery(state) === undefined;
+  // printed caps over its keys or its top buttons
+  const capped = (state: AppState): boolean => keysOpen(boardOf(at(state)), at(state)) === 'caps' || buttonsOpen(boardOf(at(state)), at(state)) === 'caps';
   const clamped = (state: AppState): boolean => boardOf(at(state)).mount.kind === 'clamp';
   const battery = (state: AppState): BatterySpec | undefined => at(state).battery;
   const hung = (state: AppState): boolean => hangs(at(state));
@@ -132,6 +139,35 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
         return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
       },
     },
+    // how it is held: rails on screws and their ears, the screw and the hole of the standoffs or the rails' posts
+    {
+      kind: 'check', key: 'railScrews', label: 'board.railScrews', hint: 'board.railScrews.hint', when: railed,
+      get: (state) => at(state).railScrews === true,
+      set: (state, value) => patchBoard(state, index, { railScrews: value ? true : undefined, railEars: value ? at(state).railEars : undefined }),
+    },
+    {
+      kind: 'segmented', key: 'railEars', label: 'board.railEars', hint: 'board.railEars.hint', when: screwedRails,
+      options: RAIL_EARS.map((value) => ({ value, label: `board.railEars.${value}` as const })),
+      get: (state) => at(state).railEars ?? 'out',
+      set: (state, value) => patchBoard(state, index, { railEars: value === 'along' ? 'along' : undefined }),
+    },
+    {
+      kind: 'select', key: 'screw', label: 'board.screw', when: holes,
+      // an M1.6 holds no rail
+      options: SCREW_SIZES.filter((size) => entry.mount.kind !== 'rails' || size !== 'M1.6').map((size) => ({ value: size, text: size })),
+      get: (state) => (screwedRails(state) ? railScrewSpec(at(state).mount) : at(state).mount).size,
+      set: (state, value) => patchBoard(state, index, {
+        mount: { ...at(state).mount, size: SCREW_SIZES.find((size) => size === value) ?? at(state).mount.size },
+      }),
+    },
+    {
+      kind: 'segmented', key: 'hole', label: 'board.hole', hint: 'board.hole.hint', when: holes,
+      options: HOLE_KINDS.map((value) => ({ value, label: `hole.${value}` as const })),
+      get: (state) => at(state).mount.hole,
+      set: (state, value) => patchBoard(state, index, {
+        mount: { ...at(state).mount, hole: HOLE_KINDS.find((kind) => kind === value) ?? at(state).mount.hole },
+      }),
+    },
     {
       // a battery lies in cradles rather than on standoffs: the same height, its own words
       kind: 'range', key: 'z', label: entry.battery ? 'battery.z' : 'board.z', hint: entry.battery ? 'battery.z.hint' : 'board.z.hint',
@@ -168,18 +204,29 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       },
     },
     {
+      // a board's top buttons: a bare hole each, or a printed cap in it (the caps' controls follow)
+      kind: 'segmented', key: 'buttons', label: 'board.buttons', hint: 'board.buttons.hint',
+      when: (state) => topButtons(boardOf(at(state))).length > 0,
+      options: (['hole', 'caps'] as const).map((value) => ({ value, label: `board.buttons.${value}` as const })),
+      get: (state) => buttonsOpen(boardOf(at(state)), at(state)),
+      set: (state, value) => {
+        const placement = sanitizePlacement({ ...at(state), buttons: value === 'caps' ? 'caps' : undefined });
+        return { ...state, boards: state.boards.map((one, i) => (i === index ? placement : one)) };
+      },
+    },
+    {
       kind: 'range', key: 'keyFit', label: 'board.keyFit', hint: 'board.keyFit.hint', min: 0, max: KEY_FIT_MAX, step: 0.05,
-      when: (state) => keyFields(boardOf(at(state))).length > 0,
+      when: (state) => keyFields(boardOf(at(state))).length > 0 || buttonsOpen(boardOf(at(state)), at(state)) === 'caps',
       get: (state) => {
         const field = keyFields(boardOf(at(state)))[0];
-        return field ? keyFit(boardOf(at(state)), at(state), field) : 0;
+        return field ? keyFit(boardOf(at(state)), at(state), field) : buttonFit(at(state));
       },
       set: (state, value) => patchBoard(state, index, { keyFit: value }),
     },
     {
       // printed caps: round, or square with rounded corners
       kind: 'segmented', key: 'capShape', label: 'board.capShape', hint: 'board.capShape.hint',
-      when: (state) => keysOpen(boardOf(at(state)), at(state)) === 'caps',
+      when: capped,
       options: CAP_SHAPES.map((shape) => ({ value: shape, label: `board.capShape.${shape}` as const })),
       get: (state) => capStyle(at(state)).shape,
       set: (state, value) => {
@@ -192,23 +239,24 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       // the caps' width: from covering the buttons to as wide as the neighbours leave room for
       kind: 'range', key: 'capSize', label: 'board.capSize', hint: 'board.capSize.hint',
       min: capRange(entry, CAP_FIT).min, max: capRange(entry, CAP_FIT).max, step: 0.1,
-      when: (state) => keysOpen(boardOf(at(state)), at(state)) === 'caps',
+      when: capped,
       get: (state) => {
         const def = boardOf(at(state));
-        const field = keyFields(def).find((one) => one.rows);
-        const [cap] = field ? capSizes(field, { size: at(state).capSize, fit: keyFit(def, at(state), field) }) : [];
+        const field = keysOpen(def, at(state)) === 'caps' ? keyFields(def).find((one) => one.rows) : undefined;
+        const [cap] = field ? capSizes(field, { size: at(state).capSize, fit: keyFit(def, at(state), field) })
+          : capSizes(capButtons(def, at(state)), { size: at(state).capSize, fit: buttonFit(at(state)) });
         return cap ? +(2 * cap.stemR).toFixed(2) : 0;
       },
       set: (state, value) => {
         const def = boardOf(at(state));
         const field = keyFields(def).find((one) => one.rows);
-        const range = capRange(def, field ? keyFit(def, at(state), field) : CAP_FIT);
+        const range = capRange(def, field ? keyFit(def, at(state), field) : buttonFit(at(state)));
         return patchBoard(state, index, { capSize: Math.min(range.max, Math.max(range.min, value)) });
       },
     },
     {
       kind: 'range', key: 'capR', label: 'board.capR', hint: 'board.capR.hint', min: CAP_R_MIN, max: CAP_R_MAX, step: 0.1,
-      when: (state) => keysOpen(boardOf(at(state)), at(state)) === 'caps' && capStyle(at(state)).shape === 'square',
+      when: (state) => capped(state) && capStyle(at(state)).shape === 'square',
       get: (state) => capStyle(at(state)).r,
       set: (state, value) => patchBoard(state, index, { capR: Math.max(CAP_R_MIN, value) }),
     },
@@ -264,22 +312,6 @@ function boardControls(index: number, entry: BoardDef): Control<AppState>[] {
       when: (state) => state.shape.kind !== 'cylinder' && (at(state).walls ?? []).length > 0 && battery(state) === undefined,
       get: (state) => at(state).wallOffset ?? 0,
       set: (state, value) => patchBoard(state, index, { wallOffset: value }),
-    },
-    {
-      kind: 'select', key: 'screw', label: 'board.screw', when: holes,
-      options: SCREW_SIZES.map((size) => ({ value: size, text: size })),
-      get: (state) => at(state).mount.size,
-      set: (state, value) => patchBoard(state, index, {
-        mount: { ...at(state).mount, size: SCREW_SIZES.find((size) => size === value) ?? at(state).mount.size },
-      }),
-    },
-    {
-      kind: 'segmented', key: 'hole', label: 'board.hole', hint: 'board.hole.hint', when: holes,
-      options: HOLE_KINDS.map((value) => ({ value, label: `hole.${value}` as const })),
-      get: (state) => at(state).mount.hole,
-      set: (state, value) => patchBoard(state, index, {
-        mount: { ...at(state).mount, hole: HOLE_KINDS.find((kind) => kind === value) ?? at(state).mount.hole },
-      }),
     },
   ];
 }
@@ -482,9 +514,11 @@ export interface BoardsCardHandle {
   sync(state: AppState): void;
 }
 
-/** The cap widths a keyboard's every field allows at a fit: the widest key at least, the tightest field's room at most. */
+/** The cap widths a board's every field (and its top buttons) allow at a fit: the widest key at least, the tightest room at most. */
 function capRange(def: BoardDef, fit: number): { min: number; max: number } {
-  const ranges = keyFields(def).flatMap((field) => capSizeRange(field, fit) ?? []);
+  const buttons = topButtons(def).map((port) => ({ x: port.x, y: port.y, w: port.w, d: port.shape === 'round' ? port.w : port.d }));
+  const buttonRange = capSizeRange(buttons, fit);
+  const ranges = [...keyFields(def).flatMap((field) => capSizeRange(field, fit) ?? []), ...(buttonRange ? [buttonRange] : [])];
   if (ranges.length === 0) return { min: 0, max: 0 };
   const min = Math.max(...ranges.map((range) => range.min));
   return { min, max: Math.max(min, Math.min(...ranges.map((range) => range.max))) };
@@ -496,7 +530,7 @@ function signatureOf(state: AppState): string {
   // a battery's kind decides its controls, its cell count its name; how a board is held, its note
   return state.boards.map((board) => (board.board === 'custom' ? `custom:${customSignature(boardOf(board))}`
     : board.battery ? `battery:${board.battery.kind}:${board.battery.count}`
-      : `${board.board}:${board.variant ?? ''}:${board.back?.board ?? ''}:${board.back?.variant ?? ''}:${board.top?.board ?? ''}:${board.hold ?? ''}`)).join('|');
+      : `${board.board}:${board.variant ?? ''}:${board.back?.board ?? ''}:${board.back?.variant ?? ''}:${board.top?.board ?? ''}:${board.hold ?? ''}:${board.railScrews ?? ''}`)).join('|');
 }
 
 export function renderBoardsCard(
@@ -590,7 +624,7 @@ export function renderBoardsCard(
       });
       head.append(remove);
       box.append(head);
-      if (def.mount.kind === 'rails') box.append(make('p', 'board-note', t('board.rails')));
+      if (def.mount.kind === 'rails') box.append(make('p', 'board-note', t(railsScrewed(def, placement) ? 'board.rails.screwed' : 'board.rails')));
       if (def.battery) box.append(make('p', 'board-note', t('battery.note')));
       const controls = make('div');
       box.append(controls);

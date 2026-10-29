@@ -24,7 +24,7 @@ that opens like a book is narrow and deep.
 | Parameter | Range | Default | Notes |
 |---|---|---|---|
 | Width, Depth | 20–400 mm | from the boards | shared: both halves have one footprint, the larger of what each half's boards need |
-| Lower half height, Upper half height | 20–400 mm | from the boards | each half's own; with **Size from boards** on, what its boards need |
+| Lower half height, Upper half height | 20–400 mm | from the boards | each half's own (a single case goes down to 10; a half keeps 20 for its hinge); with **Size from boards** on, what its boards need |
 | Gap from what stands out | on/off | on | the gap below from what the inner faces carry |
 | Gap when closed | 0–10 mm | 1 | between the inner faces of the closed case |
 

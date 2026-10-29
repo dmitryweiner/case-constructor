@@ -101,6 +101,57 @@ for (const id of ranges) {
 }
 await expectWatertight('slider-extremes');
 
+// N4: a case down to 10 mm high (manual size, nothing inside to grow it)
+label('low-case');
+if (await page.locator('#case_h').getAttribute('min') !== '10') errors.push('[low-case] the height slider does not start at 10');
+// the plain box (manual size, no boards) with the extremes above undone
+await page.click('#presetBtn');
+await page.click('#presetList [data-preset="b:plain-box"]');
+await setRange('case_h', 10);
+await expectWatertight('low-case');
+if (await page.locator('#case_h').inputValue() !== '10') errors.push(`[low-case] built ${await page.locator('#case_h').inputValue()} high, not 10`);
+await page.check('#case_auto');
+// the auto size of a bare Heltec V4 on its rails: lower than the old least 20
+await page.click('#boardAdd');
+await page.click('#boardList [data-board="heltec-wifi-lora-32-v4"]');
+await expectWatertight('low-case:heltec');
+if (Number(await page.locator('#case_h').inputValue()) >= 20) errors.push(`[low-case] the auto Heltec case is ${await page.locator('#case_h').inputValue()} high`);
+
+// N2: rails on screws — every hole kind, both kinds of ears; hung (the lid's rails) and on the floor (the body's)
+label('rails-screwed');
+await page.check('#board0_railScrews');
+await expectWatertight('rails-screwed');
+for (const hole of ['insert', 'nut', 'tap']) {
+  await page.click(`#board0_hole_${hole}`);
+  await expectWatertight(`rails-screwed:${hole}`);
+}
+await page.click('#board0_railEars_along');
+await expectWatertight('rails-screwed:along');
+if (!(await drawn()).split(',').includes('clamp')) errors.push(`[rails-screwed] the rails are not drawn: ${await drawn()}`);
+await page.click('#tabLid');
+await exportStl('rails:lid');
+await page.click('#tabBoth');
+await page.click('#board0_on_floor');
+await page.click('#board0_railEars_out');
+await expectWatertight('rails-screwed:floor');
+await page.click('#tabBody');
+await exportStl('rails:body');
+await page.click('#tabBoth');
+await page.uncheck('#board0_railScrews');
+
+// N3: printed caps over the Heltec's buttons — square ones too; the Lid export carries them
+label('button-caps');
+await page.click('#board0_buttons_caps');
+await expectWatertight('button-caps');
+if (!(await drawn()).split(',').includes('cap')) errors.push(`[button-caps] no caps drawn: ${await drawn()}`);
+await page.click('#board0_capShape_square');
+await expectWatertight('button-caps:square');
+await page.click('#tabLid');
+if (!(await drawn()).split(',').includes('cap')) errors.push(`[button-caps] the Lid tab has no caps: ${await drawn()}`);
+await exportStl('button-caps:lid');
+await page.click('#tabBoth');
+await page.click('#board0_buttons_hole');
+
 // boards: every catalog board from the picker, hole kinds, rotation, removal
 label('boards');
 const catalog = await page.evaluate(async () => {

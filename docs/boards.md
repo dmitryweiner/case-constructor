@@ -128,6 +128,44 @@ a shelf 2.5 mm below the PCB, the pins go into a slot along the row, and
 the upper lip still clicks over the edge. Without pins the rail is the plain
 one, gripping the edge from both sides.
 
+### Rails on screws
+
+With **Rails on screws** on, the rails are printed apart and screwed onto
+posts of the case: the board goes in straight, the rails are pushed onto
+its edges, then screwed down — no clicking in at an angle, and a broken
+lip costs a rail, not the case. Each rail has an ear at each end, (almost)
+flush with its top, with a through hole; under each ear a post rises from
+the floor (from the ceiling for a hung board) with the **Screw** and
+**Hole** chosen below (M2 and up: an M1.6 holds no rail).
+
+| Control | Values | Default | Notes |
+|---|---|---|---|
+| Rails on screws | on / off | off | boards held by rails (catalog, custom, a keyboard held by rails) |
+| Ears | Outwards / Along the edge | Outwards | outwards: off each rail's outer side at its ends, the board takes a post's width more across its rails; along the edge: past the rails' ends, the board takes that much more along them, and it cannot stand against a wall on those sides |
+
+The rails go with the part their posts are on — the body for a board on
+the floor, the lid for one it holds — and print top down, ears on the bed,
+right of the rest (in the Both, Body or Lid STL as that part). The ear's top
+is 0.05 mm under the rail's top, inside the first layer.
+
+## Printed caps over buttons
+
+A board's buttons on its top get a hole each in the plate over them. With
+**Buttons: Printed caps** each hole takes a printed cap instead — the
+keyboards' cap: a flange lying on the button under the plate, wider than
+the hole so the cap cannot fall out, and a stem up through the hole,
+standing 1 mm out of the case. A button deep under the lid (the Heltec's
+PRG sits 1.5 mm over its PCB, the display beside it 5.5) is reached with a
+finger. The caps' controls are the keyboards': **Caps** (round or square,
+with its **Corner radius**), **Cap size** (from the widest button to as wide
+as the board's buttons leave room for) and **Key fit** (the room round the
+stem, 0.25 mm by default).
+
+A cap's flange that runs into a taller part next to its button (a
+connector, the display) is a warning: make the caps narrower, or switch
+that button's opening off. The caps print with the part that has the top —
+the lid when it is on top, the body otherwise — flange down next to it.
+
 ## Catalog
 
 "Checked" means the outline, holes and connectors were transcribed from the
@@ -194,7 +232,7 @@ shows the same mark). New boards: the add-board skill
 | Arduino UNO Q | Arduino | 68.58 × 53.34 | 4 × M3 | [source](https://docs.arduino.cc/resources/datasheets/ABX00162-datasheet.pdf) | yes |
 | Heltec WiFi LoRa 32 V3 | Heltec | 50.2 × 25.5 | rails (long) | [source](https://resource.heltec.cn/download/WiFi_LoRa_32_V3/HTIT-WB32LA_V3.2.pdf) | yes |
 | Heltec Mesh Node T114 | Heltec | 50.8 × 22.86 | rails (long) | [source](https://resource.heltec.cn/download/Mesh_Node_T114/Datasheet.pdf) | yes |
-| Heltec WiFi LoRa 32 V4 | Heltec | 51.69 × 25.4 | 4 × M1.6 | [source](https://resource.heltec.cn/download/WiFi_LoRa_32_V4/datasheet/WiFi_LoRa_32_V4.3.1_Datasheet.pdf) | yes |
+| Heltec WiFi LoRa 32 V4 | Heltec | 51.69 × 25.4 | rails (long; its holes hold the display) | [source](https://resource.heltec.cn/download/WiFi_LoRa_32_V4/datasheet/WiFi_LoRa_32_V4.3.1_Datasheet.pdf) | yes |
 | Heltec Wireless Stick Lite V3 | Heltec | 58.08 × 22.6 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Stick_Lite_V3/HTIT-WSL_V3(Rev1.1).pdf) | yes |
 | Heltec Wireless Stick V3 | Heltec | 58.08 × 22.6 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Stick_V3/HTIT-WS_V3(Rev1.0).pdf) | yes |
 | Heltec Wireless Tracker | Heltec | 63.64 × 28 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Tracker/Wireless%20Tracker1.1.pdf) | yes |
