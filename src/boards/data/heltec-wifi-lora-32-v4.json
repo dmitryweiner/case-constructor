@@ -5,16 +5,7 @@
   "kind": "mcu",
   "size": { "w": 51.69, "d": 25.4, "t": 1.6 },
   "outline": [[2.16, 0], [47.88, 0], [51.69, 3.81], [51.69, 21.59], [47.88, 25.4], [2.16, 25.4], [0, 23.24], [0, 2.16]],
-  "mount": {
-    "kind": "holes",
-    "holes": [
-      { "x": 16.7, "y": 5.7, "d": 1.9 },
-      { "x": 45.65, "y": 5.7, "d": 1.9 },
-      { "x": 16.7, "y": 19.7, "d": 1.9 },
-      { "x": 45.65, "y": 19.7, "d": 1.9 }
-    ],
-    "screw": "M1.6"
-  },
+  "mount": { "kind": "rails", "holes": [], "screw": "M2", "rails": "long" },
   "topHeight": 5.5,
   "bottomHeight": 2,
   "pins": { "below": 8.5, "edges": ["front", "back"], "inset": 1.27, "soldered": false },

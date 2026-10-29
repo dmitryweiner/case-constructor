@@ -364,6 +364,11 @@ const STATES: Record<string, AppState> = {
     lid: { ...defaultState().lid, face: 'bottom' },
     hinge: { place: 'sides', kind: 'leaves', axle: 'snap', leafHole: 'nut', b: { boards: [], lid: { face: 'bottom' } } },
   }),
+  // N1: the Heltec V4 went on rails, so a board on M1.6 screws is a Feather's (plans/PLAN-IMPROVEMENTS-2026-10-29.md)
+  'feather-m1.6': sanitizeState({
+    ...defaultState(),
+    boards: [{ board: 'adafruit-feather-esp32-s3', mount: { size: 'M1.6', hole: 'tap', head: 'none' } }],
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

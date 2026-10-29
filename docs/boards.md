@@ -194,7 +194,7 @@ shows the same mark). New boards: the add-board skill
 | Arduino UNO Q | Arduino | 68.58 × 53.34 | 4 × M3 | [source](https://docs.arduino.cc/resources/datasheets/ABX00162-datasheet.pdf) | yes |
 | Heltec WiFi LoRa 32 V3 | Heltec | 50.2 × 25.5 | rails (long) | [source](https://resource.heltec.cn/download/WiFi_LoRa_32_V3/HTIT-WB32LA_V3.2.pdf) | yes |
 | Heltec Mesh Node T114 | Heltec | 50.8 × 22.86 | rails (long) | [source](https://resource.heltec.cn/download/Mesh_Node_T114/Datasheet.pdf) | yes |
-| Heltec WiFi LoRa 32 V4 | Heltec | 51.69 × 25.4 | 4 × M1.6 | [source](https://resource.heltec.cn/download/WiFi_LoRa_32_V4/datasheet/WiFi_LoRa_32_V4.3.1_Datasheet.pdf) | yes |
+| Heltec WiFi LoRa 32 V4 | Heltec | 51.69 × 25.4 | rails (long; its holes hold the display) | [source](https://resource.heltec.cn/download/WiFi_LoRa_32_V4/datasheet/WiFi_LoRa_32_V4.3.1_Datasheet.pdf) | yes |
 | Heltec Wireless Stick Lite V3 | Heltec | 58.08 × 22.6 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Stick_Lite_V3/HTIT-WSL_V3(Rev1.1).pdf) | yes |
 | Heltec Wireless Stick V3 | Heltec | 58.08 × 22.6 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Stick_V3/HTIT-WS_V3(Rev1.0).pdf) | yes |
 | Heltec Wireless Tracker | Heltec | 63.64 × 28 | rails (long) | [source](https://resource.heltec.cn/download/Wireless_Tracker/Wireless%20Tracker1.1.pdf) | yes |

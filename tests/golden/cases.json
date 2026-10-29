@@ -461,20 +461,20 @@
   },
   "heltec-v4-m1.6": {
     "body": {
-      "triangles": 1304,
-      "volume": 9725.42,
+      "triangles": 856,
+      "volume": 11733.7,
       "extents": [
         60.99,
-        33.4,
+        36.7,
         17.99
       ]
     },
     "lid": {
       "triangles": 1424,
-      "volume": 4066.45,
+      "volume": 4492.88,
       "extents": [
         60.99,
-        33.4,
+        36.7,
         5
       ]
     }
@@ -1595,6 +1595,26 @@
         112.7,
         28.255,
         22
+      ]
+    }
+  },
+  "feather-m1.6": {
+    "body": {
+      "triangles": 1304,
+      "volume": 9116.69,
+      "extents": [
+        59.9,
+        30.86,
+        17.99
+      ]
+    },
+    "lid": {
+      "triangles": 1540,
+      "volume": 4168.54,
+      "extents": [
+        59.9,
+        30.86,
+        5
       ]
     }
   }
