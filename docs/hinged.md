@@ -41,6 +41,7 @@ iron), a rod or a nail — or a screw (below).
 
 | Parameter | Range | Default | Notes |
 |---|---|---|---|
+| Knuckles on | the back, the sides | the back | the sides: see below |
 | Knuckles | at the ends, along the edge | at the ends | two blocks near the ends (one in the middle when the edge is too short for two), or one block along the whole edge |
 | Knuckles per block | 3, 5, 7 | 3 | odd: a block starts and ends on the lower half |
 | Knuckle length | 4–40 mm | 10 | two blocks only; shorter when the edge is short |
@@ -81,6 +82,26 @@ panel warns; put one half's lid on top, or take the printed hinge (below).
 A port or an opening through the hinge wall where knuckles stand behind it
 is warned about: the opening cuts the knuckles, and a plug has no way out
 there.
+
+## Knuckles on the sides
+
+**Knuckles on → the sides**: instead of blocks along the back edge, a pivot
+on each side wall at the back corners. The lower half's cheek lies on its
+side wall and reaches back to a disc on the axis; the upper half's cheek
+lies one layer further out, on a spacer from its own side wall, with its
+disc over the lower one's. The axle goes across both discs: a pin, a screw
+(its head in the outer disc, its nut in the inner one, put in from behind
+the case) or a snap (the lower disc's bar through the upper disc's split
+ring). The axis stays along the back edge, a clearance behind the back
+walls; the discs stand out of the width by two cheeks, and the back wall
+is free for ports and cables.
+
+Both kinds work on the sides: cheeks printed with the halves (a vertical
+plate on the wall prints opening up), or a printed hinge — four separate
+cheeks screwed onto the side walls into pads inside them, each printed on
+a flat face (the lower half's on the face that goes on the wall, the upper
+half's on its outer face, its spacer up). Cones are not offered there: one
+cheek printed over the other with a 0.35 mm gap needs supports.
 
 ## A printed hinge on screws
 

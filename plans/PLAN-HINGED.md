@@ -1,6 +1,6 @@
 # Case Constructor — a hinged case
 
-**Status: H1–H9 done (2026-10-29); H10–H12 in progress (the user's review).**
+**Status: done (2026-10-29), H10–H12 after the user's review.**
 
 Written on 2026-10-28 from the user's request: a new kind of case, two
 halves joined by hinges — a clamshell (a cyberdeck, a Meshtastic
@@ -320,4 +320,15 @@ stands alone.
   the same distance in both halves (the larger skirt clearance of the two),
   so closed the slots face each other and the cable crosses the gap
   straight; `CableSlot.mouth` is where the length note measures from.
+
+- **H11 (2026-10-29).** Done. A cheek is the hull of its disc and a 6 mm
+  strip on the side wall's flat by the back corner (the body's part of the
+  wall); the upper half's spacer had to stand past the lower cheek's strip
+  as well as the axis's clearance — with the axis split towards one half,
+  the other half's cheek reaches up past the faces to its disc and ran into
+  the spacer closed (the rotation test found it). Cheeks are 3.5 mm, more
+  when a screw axle's head and nut sink in them. A printed hinge's upper
+  cheek takes its screws through the spacer, past its own strip; the screw
+  note gives one length, the shortest of the cheeks'. Openings through the
+  side walls under a cheek are not warned about yet.
 

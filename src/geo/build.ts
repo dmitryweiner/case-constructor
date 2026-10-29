@@ -33,7 +33,7 @@ import { earSolids, keyholePadSolids, labelSolid } from './extrasSolids';
 import { screwSolid } from './screwSolids';
 import type { HalfHinge } from './hinge';
 import { bodyRange, cableCutters } from './hinge';
-import { knuckleSolids, leafSolids } from './hingeSolids';
+import { knuckleSolids, leafSolids, pivotSolids } from './hingeSolids';
 import { effectiveRadii } from './loft';
 import { screwShape, threadPoints } from './thread';
 import type { LabelRaster } from './label';
@@ -156,7 +156,16 @@ export function buildCase(
     // before the openings, so a port through that wall cuts them too (and is warned about).
     // A printed hinge is a part of its own: the half gets the pads and holes for its screws.
     let leaf: Manifold | null = null;
-    if (hinge?.kind === 'leaves') {
+    if (hinge?.place === 'sides') {
+      // side pivots: integral cheeks on the side walls, or a printed hinge's cheeks screwed onto them
+      const solids = pivotSolids(csg, scope, hinge, dims, shape.wall, segments);
+      if (solids) {
+        leaf = solids.leaf;
+        const material = solids.material ?? solids.pads;
+        if (material) body = scope.keep(body.add(scope.keep(material.subtract(lidSolid))));
+        if (solids.holes) body = scope.keep(body.subtract(solids.holes));
+      }
+    } else if (hinge?.kind === 'leaves') {
       const solids = leafSolids(csg, scope, hinge, dims, shape.wall, segments);
       if (solids) {
         leaf = solids.leaf;

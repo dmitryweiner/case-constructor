@@ -7,6 +7,7 @@ import type { CsgApi } from '../src/geo/csg';
 import type { CaseBuild } from '../src/geo/build';
 import type { SurfaceMesh } from '../src/geo/surface';
 import { mergeMeshes, transformMesh } from '../src/geo/surface';
+import { sideCheeksForPrint } from '../src/geo/print';
 import { buildCase } from '../src/geo/build';
 import { validateMesh } from '../src/geo/validate';
 import { caseDims } from '../src/geo/layout';
@@ -565,6 +566,86 @@ describe('the gap and the magnets', () => {
     }
     for (let angle = 0; angle <= 180; angle += 30) {
       expect(shared(mergeMeshes([a.body, a.lid]), transformMesh(mergeMeshes([b.body, b.lid]), upperPose(fold, angle)))).toBeLessThan(1e-6);
+    }
+  });
+});
+
+describe('side pivots', () => {
+  let csg: CsgApi;
+  beforeAll(async () => {
+    csg = await initCSG();
+  });
+
+  function shared(one: SurfaceMesh, other: SurfaceMesh): number {
+    const scope = new CsgScope();
+    try {
+      return scope.keep(scope.keep(toManifold(csg, one)).intersect(scope.keep(toManifold(csg, other)))).volume();
+    } finally {
+      scope.dispose();
+    }
+  }
+
+  const cases = [
+    ['knuckles', 'pin', 'top', 'top'], ['knuckles', 'screw', 'bottom', 'top'], ['knuckles', 'snap', 'top', 'bottom'],
+    ['leaves', 'pin', 'bottom', 'bottom'], ['leaves', 'screw', 'top', 'top'], ['leaves', 'snap', 'bottom', 'top'],
+  ] as const;
+  for (const [kind, axle, lidA, lidB] of cases) {
+    it(`${kind} on the sides, ${axle}, lids ${lidA}/${lidB}: the back wall stays free, and it turns clear`, () => {
+      const base = hinged();
+      const state = sanitizeState({
+        ...base,
+        lid: { ...base.lid, face: lidA },
+        hinge: { ...base.hinge, place: 'sides', kind, axle, leafHole: 'nut', b: { ...base.hinge.b, lid: { ...base.hinge.b.lid, face: lidB } } },
+      });
+      const hinges = (['a', 'b'] as const).map((half) => halfHinge(state, half));
+      for (const hinge of hinges) {
+        expect(hinge?.runs).toEqual([]);
+        expect(hinge?.pivot).not.toBeNull();
+      }
+      const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, null, halfHinge(state, half)));
+      const dims = caseDims(halfState(state, 'a'));
+      for (const built of [a, b]) {
+        for (const mesh of [built.body, built.lid, built.hinge]) if (mesh) expect(validateMesh(mesh).watertight).toBe(true);
+        expect(shared(built.body, built.lid)).toBeLessThan(1e-6);
+        // the pivots stand beside the case, not behind it
+        const parts = validateMesh(mergeMeshes([built.body, ...(built.hinge ? [built.hinge] : [])])).bbox;
+        expect(parts.min[0]).toBeLessThan(-1);
+        expect(parts.max[0]).toBeGreaterThan(dims.w + 1);
+      }
+      if (kind === 'leaves') {
+        expect(a.hinge).not.toBeNull();
+        expect(b.hinge).not.toBeNull();
+      }
+      const fold = foldOfState(state);
+      const lower = mergeMeshes([a.body, a.lid, ...(a.hinge ? [a.hinge] : [])]);
+      const upper = mergeMeshes([b.body, b.lid, ...(b.hinge ? [b.hinge] : [])]);
+      for (let angle = 0; angle <= 180; angle += 15) {
+        expect(shared(lower, transformMesh(upper, upperPose(fold, angle))), `${angle}°`).toBeLessThan(1e-6);
+      }
+    });
+  }
+
+  it('takes no cones', () => {
+    expect(sanitizeHingeSpec({ kind: 'leaves', place: 'sides', axle: 'cones' }).axle).toBe('pin');
+  });
+
+  it('a printed hinge\'s side cheeks print one by one, each on a flat face', () => {
+    const base = hinged();
+    const state = sanitizeState({ ...base, hinge: { ...base.hinge, place: 'sides', kind: 'leaves' } });
+    const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, null, halfHinge(state, half)));
+    const pieces = sideCheeksForPrint(a.hinge, b.hinge, caseDims(halfState(state, 'a')).w, 0, 0, 5);
+    expect(pieces).toHaveLength(4);
+    for (const piece of pieces) {
+      expect(validateMesh(piece).bbox.min[2]).toBeCloseTo(0, 6);
+      // the face on the bed: downward triangles at z = 0, at least the cheek's strip
+      let area = 0;
+      const p = piece.positions;
+      for (let t = 0; t < piece.indices.length; t += 3) {
+        const [i, j, k] = [piece.indices[t] * 3, piece.indices[t + 1] * 3, piece.indices[t + 2] * 3];
+        if (Math.max(Math.abs(p[i + 2]), Math.abs(p[j + 2]), Math.abs(p[k + 2])) > 1e-4) continue;
+        area += Math.abs((p[j] - p[i]) * (p[k + 1] - p[i + 1]) - (p[j + 1] - p[i + 1]) * (p[k] - p[i])) / 2;
+      }
+      expect(area).toBeGreaterThan(40);
     }
   });
 });

@@ -178,3 +178,58 @@ export function hingeForPrint(leaves: SurfaceMesh, x0: number, y0: number): Surf
   return transformMesh(turned, translation(x0 - min[0], y0 - min[1], -min[2]));
 }
 
+/** The triangles of a mesh whose first vertex passes `keep` (a mesh of disjoint pieces, split by where they are). */
+export function meshPart(mesh: SurfaceMesh, keep: (p: readonly [number, number, number]) => boolean): SurfaceMesh {
+  const { positions, normals, indices } = mesh;
+  const map = new Map<number, number>();
+  const outP: number[] = [];
+  const outN: number[] = [];
+  const outI: number[] = [];
+  for (let t = 0; t < indices.length; t += 3) {
+    const v = indices[t] * 3;
+    if (!keep([positions[v], positions[v + 1], positions[v + 2]])) continue;
+    for (let k = 0; k < 3; k++) {
+      const i = indices[t + k];
+      let j = map.get(i);
+      if (j === undefined) {
+        j = outP.length / 3;
+        map.set(i, j);
+        outP.push(positions[3 * i], positions[3 * i + 1], positions[3 * i + 2]);
+        outN.push(normals[3 * i] ?? 0, normals[3 * i + 1] ?? 0, normals[3 * i + 2] ?? 0);
+      }
+      outI.push(j);
+    }
+  }
+  return { positions: new Float32Array(outP), normals: new Float32Array(outN), indices: new Uint32Array(outI) };
+}
+
+/**
+ * A printed hinge's side cheeks as they print (plans/PLAN-HINGED.md, H11):
+ * each half's cheeks split into the left and the right one, each laid on
+ * its flat face — the lower half's on the face that goes on the wall, the
+ * upper half's on its outer face (its spacer stands on the cheek) — in a
+ * row from (x0, y0).
+ */
+export function sideCheeksForPrint(lower: SurfaceMesh | null, upper: SurfaceMesh | null, w: number, x0: number, y0: number, gap: number): SurfaceMesh[] {
+  // +x down, or −x down
+  const plusDown: Affine = [0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, 0];
+  const minusDown: Affine = [0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0];
+  const pieces: SurfaceMesh[] = [];
+  for (const [mesh, isUpper] of [[lower, false], [upper, true]] as const) {
+    if (!mesh) continue;
+    for (const left of [true, false]) {
+      const part = meshPart(mesh, (p) => (p[0] < w / 2) === left);
+      if (part.indices.length === 0) continue;
+      // the lower left cheek's wall face looks to +x; the upper left one's outer face to −x
+      pieces.push(transformMesh(part, left !== isUpper ? plusDown : minusDown));
+    }
+  }
+  let x = x0;
+  return pieces.map((piece) => {
+    const { min, max } = meshBounds(piece);
+    const placed = transformMesh(piece, translation(x - min[0], y0 - min[1], -min[2]));
+    x += max[0] - min[0] + gap;
+    return placed;
+  });
+}
+

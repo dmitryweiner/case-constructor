@@ -446,6 +446,12 @@ freely; a temporary script that turns out useful becomes a permanent one.
   and lays both on their wall faces behind everything (`hingeForPrint`).
   Cones (`axle: 'cones'`, leaves only) print in place. The axle's solids are
   shared by both kinds (`axleSolids`).
+  Side pivots (`hinge.place: 'sides'`, `pivotLayout`, `pivotSolids`): no
+  knuckles on the back (`runs` empty, the axis `clearance` behind the
+  walls); per side the lower half's cheek on its wall, the upper half's one
+  layer out on a spacer that stands past the lower cheek's strip; the axle
+  across both discs. A printed hinge's side cheeks are split by x and laid
+  flat one by one (`sideCheeksForPrint`). No cones there (`axlesFor`).
   The gap (`gapOf`): automatic from `innerProtrusion` of both halves
   (`topProtrusion` in `ports.ts` plus a raised label on a top lid), or the
   user's. Magnets (`magnetBosses`): two bosses under each inner face's
@@ -545,7 +551,7 @@ Case card: `#case_kind_box|cylinder|console|hinged`, `#case_cornerR`, `#case_edg
 Hinged: the card `#hingeCard` (`#hinge_gapAuto`, `#hinge_gap`, `#hinge_magnets`, `#hinge_magnet`, `#hinge_layout_ends|full`,
 `#hinge_knuckles_3|5|7`, `#hinge_length` (two blocks), `#hinge_barrelD`,
 `#hinge_clearance`, `#hinge_axle_pin|screw|snap|cones`, `#hinge_pinD`, `#hinge_pinFit` (a pin),
-`#hinge_screw_M2|M2.5|M3` (a screw), `#hinge_kind_knuckles|leaves`,
+`#hinge_screw_M2|M2.5|M3` (a screw), `#hinge_kind_knuckles|leaves`, `#hinge_place_back|sides`,
 `#hinge_axle_cones` (leaves only), `#hinge_leafScrew_M2|M2.5|M3`, `#hinge_leafHole_tap|insert|nut` (leaves)), cables `#cableAdd`, per cable
 `#cable<i>_kind_flat|round`, `#cable<i>_through_wall|face`, `#cable<i>_x|_w|_t|_d|_plugW|_plugH|_remove`, the half switch `#halfBar`
 at the top of the Boards card (`#edit_half_a|b`), the view's angle `#view_angle` (in the View and export

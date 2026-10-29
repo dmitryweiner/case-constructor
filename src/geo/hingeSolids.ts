@@ -200,3 +200,119 @@ export function leafSolids(
   const room = frame.box(-1, dims.w + 1, -wall - length - 1, 0, leaf.padZ[0], leaf.padZ[1]);
   return { leaf: solid, pads: scope.keep(unionAll(csg, scope, pads).intersect(room)), holes: unionAll(csg, scope, holes) };
 }
+
+/**
+ * Side pivots (H11): on each side wall a cheek per half reaching back to a
+ * disc on the axis, the upper half's one layer further out on a spacer; the
+ * axle across both discs. Integral cheeks are the half's (`material`, with
+ * their axle's `holes`); a printed hinge's are a part (`leaf`), and the half
+ * gets `pads` inside its side walls and the screws' `holes`.
+ */
+export function pivotSolids(
+  csg: CsgApi, scope: CsgScope, hinge: HalfHinge, dims: Dims, wall: number, segments: number,
+): { material: Manifold | null; leaf: Manifold | null; pads: Manifold | null; holes: Manifold | null } | null {
+  const { pivot, r, e, zAxis, holes: axle } = hinge;
+  if (!pivot) return null;
+  const n = roundSegments(segments);
+  const upper = hinge.wall === 'front';
+  const leaves = hinge.kind === 'leaves';
+  const leafScrew: FastenerSpec = { ...hinge.leafScrew, head: 'none' };
+  const yAxis = upper ? -e : dims.d + e;
+  // z → x onto the axis (a cylinder along z becomes one along x); `x0`…`x1` in case x
+  const alongX = (x0: number, x1: number, radius: number, sides = n): Manifold => transformSolid(
+    scope, cylinder(csg, scope, 0, 0, x0, x1, radius, sides), [0, 0, 1, 0, 0, 1, 0, yAxis, -1, 0, 0, zAxis],
+  );
+  // and across a side wall at (y, z), from q = a to q = b
+  const xq = (left: boolean, q: number): number => (left ? -q : dims.w + q);
+  const across = (left: boolean, a: number, b: number, y: number, z: number, radius: number, sides = n): Manifold => {
+    const [x0, x1] = [xq(left, a), xq(left, b)].sort((p, q) => p - q);
+    return transformSolid(scope, cylinder(csg, scope, 0, 0, x0, x1, radius, sides), [0, 0, 1, 0, 0, 1, 0, y, -1, 0, 0, z]);
+  };
+  const block = (left: boolean, a: number, b: number, y0: number, y1: number, z0: number, z1: number): Manifold => {
+    const [x0, x1] = [xq(left, a), xq(left, b)].sort((p, q) => p - q);
+    return box(csg, scope, x0, y0, z0, x1, y1, z1);
+  };
+  const add: Manifold[] = [];
+  const cut: Manifold[] = [];
+  const screwHoles: Manifold[] = [];
+  const pads: Manifold[] = [];
+  const padHoles: Manifold[] = [];
+  for (const left of [true, false]) {
+    const at = (q: number, y: number, z: number): Vec3 => [xq(left, q), y, z];
+    const points: Vec3[] = [];
+    for (const q of [pivot.q0, pivot.q1]) {
+      for (let i = 0; i < n; i++) {
+        const a = (2 * Math.PI * i) / n;
+        points.push(at(q, yAxis + r * Math.cos(a), zAxis + r * Math.sin(a)));
+      }
+      for (const y of pivot.cheekY) for (const z of [pivot.z0, pivot.z1]) points.push(at(q, y, z));
+    }
+    add.push(hullOf(csg, scope, points));
+    // the upper cheek stands on a spacer from its wall; an integral lower one sinks into its wall over the strip
+    if (pivot.spacer) add.push(block(left, pivot.spacer.q0, pivot.spacer.q1, pivot.y0, pivot.y1, pivot.z0, pivot.z1));
+    else if (!leaves) add.push(block(left, -KNUCKLE_SINK, pivot.q0 + 0.1, pivot.y0, pivot.y1, pivot.z0, pivot.z1));
+    // the axle across both discs
+    const [inner, outer] = pivot.span;
+    if (axle.snap) {
+      const { snap } = axle;
+      if (!upper) add.push(alongXq(left, pivot.q1 - 1, outer, snap.barR));
+      else {
+        cut.push(alongXq(left, pivot.q0 - 1, pivot.q1 + 1, snap.ringR));
+        // the slit away from the upper half's body
+        cut.push(block(left, pivot.q0 - 1, pivot.q1 + 1, yAxis - r - 1, yAxis, zAxis - snap.slit / 2, zAxis + snap.slit / 2));
+      }
+    } else {
+      cut.push(alongXq(left, inner - 1, outer + 1, axle.r));
+      if (axle.screw) {
+        const { headR, headDepth, nutAF, nutDepth } = axle.screw;
+        // the head in the upper (outer) disc, the nut in the lower (inner) one, opening behind the back wall
+        cut.push(alongXq(left, outer - headDepth, outer + 1, headR));
+        cut.push(alongXq(left, inner - 1, inner + nutDepth, nutAF / Math.sqrt(3), 6));
+      }
+    }
+    if (leaves) {
+      const size = SCREWS[leafScrew.size];
+      const through = (size.d + THROUGH_CLEARANCE) / 2;
+      const length = padLength({ screw: hinge.leafScrew.size, hole: hinge.leafScrew.hole });
+      const padR = bossDiameter(leafScrew) / 2;
+      for (const screw of pivot.screws) {
+        const y = pivot.screwY;
+        screwHoles.push(across(left, -1, pivot.q1 + 1, y, screw.z, through));
+        pads.push(hullOf(csg, scope, [
+          ...Array.from({ length: n }, (_, i): Vec3 => {
+            const a = (2 * Math.PI * i) / n;
+            return at(-wall - length, y + padR * Math.cos(a), screw.z + padR * Math.sin(a));
+          }),
+          ...[-1, 1].flatMap((sy) => [-1, 1].map((sz) => at(-wall + 0.5, y + sy * padR, screw.z + sz * (padR + length)))),
+        ]));
+        padHoles.push(across(left, -1, wall + 0.5, y, screw.z, through));
+        if (leafScrew.hole === 'nut') {
+          padHoles.push(across(left, -wall, -wall - length - 1, y, screw.z, through));
+          const pocket = size.nutH + NUT_CLEARANCE;
+          padHoles.push(across(left, -wall - length + pocket, -wall - length - 1, y, screw.z, (size.nutAF + NUT_CLEARANCE) / Math.sqrt(3), 6));
+        } else {
+          padHoles.push(across(left, -wall, -wall - length - 1, y, screw.z, holeDiameter(leafScrew) / 2));
+        }
+      }
+    }
+  }
+
+  /** Along the axis on one side, from q = a to q = b. */
+  function alongXq(left: boolean, a: number, b: number, radius: number, sides = n): Manifold {
+    const [x0, x1] = [xq(left, a), xq(left, b)].sort((p, q) => p - q);
+    return alongX(x0, x1, radius, sides);
+  }
+
+  const cheeks = unionAll(csg, scope, add);
+  const cuts = [...cut, ...screwHoles];
+  const solid = cuts.length > 0 ? scope.keep(cheeks.subtract(unionAll(csg, scope, cuts))) : cheeks;
+  if (!leaves) return { material: cheeks, leaf: null, pads: null, holes: cut.length > 0 ? unionAll(csg, scope, cut) : null };
+  // the pads stop short of the lid's skirt and the plates
+  const room = box(csg, scope, -1, -1, pivot.padZ[0], dims.w + 1, dims.d + 1, pivot.padZ[1]);
+  return {
+    material: null,
+    leaf: solid,
+    pads: pads.length > 0 ? scope.keep(unionAll(csg, scope, pads).intersect(room)) : null,
+    holes: padHoles.length > 0 ? unionAll(csg, scope, padHoles) : null,
+  };
+}

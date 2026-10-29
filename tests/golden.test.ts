@@ -352,6 +352,18 @@ const STATES: Record<string, AppState> = {
     shape: { ...defaultState().shape, kind: 'hinged' },
     hinge: { cables: [{ x: 50, kind: 'flat', through: 'face', w: 20, t: 0.3 }], b: { boards: [], lid: { face: 'bottom' } } },
   }),
+  // H11: pivots on the side walls, printed with the halves, on a screw; and a printed hinge's cheeks there, on a snap
+  'hinged-sides-screw': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    hinge: { place: 'sides', axle: 'screw', b: { boards: [] } },
+  }),
+  'hinged-sides-leaves-snap': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'hinged' },
+    lid: { ...defaultState().lid, face: 'bottom' },
+    hinge: { place: 'sides', kind: 'leaves', axle: 'snap', leafHole: 'nut', b: { boards: [], lid: { face: 'bottom' } } },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

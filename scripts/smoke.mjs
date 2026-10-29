@@ -602,7 +602,17 @@ await page.click('#viewPrint');
 if (!(await drawn()).includes('hinge')) errors.push('[hinged] the printed hinge is not on the bed');
 await exportStl('hinged:leaves');
 await page.click('#viewExploded');
+// on the sides: the cheeks beside the case, the back edge's layout gone, no cones
+await page.click('#hinge_place_sides');
+if (await page.locator('#hinge_layout_ends').isVisible()) errors.push('[hinged] side pivots offer the back edge\'s layout');
+if (!(await page.locator('#hinge_axle_cones').isDisabled())) errors.push('[hinged] side pivots offer cones');
+await expectWatertight('hinged:sides-leaves');
+await page.click('#viewPrint');
+if ((await drawn()).split(',').filter((role) => role === 'hinge').length !== 4) errors.push('[hinged] the side cheeks are not four on the bed');
+await page.click('#viewExploded');
 await page.click('#hinge_kind_knuckles');
+await expectWatertight('hinged:sides-knuckles');
+await page.click('#hinge_place_back');
 await page.click('#lid_face_top');
 await page.click('#edit_half_a');
 await page.click('#lid_face_top');

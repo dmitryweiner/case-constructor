@@ -12,7 +12,7 @@ import { GAP_MAX, HALVES, gapOf } from '../state/hinged';
 import { HOLE_KINDS, MAGNETS, MAGNET_SIZES } from '../geo/fasteners';
 import type { Cable } from '../geo/hinge';
 import {
-  CABLE_KINDS, CABLE_THROUGH, CABLE_W_MAX, HINGE_KINDS, MAX_CABLES, PLUG_MAX, axlesFor, defaultCable,
+  CABLE_KINDS, CABLE_THROUGH, CABLE_W_MAX, HINGE_KINDS, HINGE_PLACES, MAX_CABLES, PLUG_MAX, axlesFor, defaultCable,
   AXLES, BARREL_D_MAX, BARREL_D_MIN, HINGE_LAYOUTS, HINGE_SCREWS, KNUCKLE_COUNTS, KNUCKLE_LENGTH_MAX, KNUCKLE_LENGTH_MIN, PIN_D_MAX, PIN_D_MIN,
 } from '../geo/hinge';
 
@@ -21,6 +21,8 @@ function hingeOf(state: AppState, patch: Partial<HingeState>): AppState {
 }
 
 export function hingeControls(): Control<AppState>[] {
+  // the knuckles' layout along the edge means something on the back only
+  const back = (state: AppState): boolean => state.hinge.place === 'back';
   return [
     {
       kind: 'check', key: 'gapAuto', label: 'hinge.gapAuto', hint: 'hinge.gapAuto.hint',
@@ -52,20 +54,26 @@ export function hingeControls(): Control<AppState>[] {
       set: (state, value) => hingeOf(state, { kind: HINGE_KINDS.find((one) => one === value) ?? state.hinge.kind }),
     },
     {
-      kind: 'segmented', key: 'layout', label: 'hinge.layout', hint: 'hinge.layout.hint',
+      kind: 'segmented', key: 'place', label: 'hinge.place', hint: 'hinge.place.hint',
+      options: HINGE_PLACES.map((value) => ({ value, label: `hinge.place.${value}` as const })),
+      get: (state) => state.hinge.place,
+      set: (state, value) => hingeOf(state, { place: HINGE_PLACES.find((one) => one === value) ?? state.hinge.place }),
+    },
+    {
+      kind: 'segmented', key: 'layout', label: 'hinge.layout', hint: 'hinge.layout.hint', when: back,
       options: HINGE_LAYOUTS.map((value) => ({ value, label: `hinge.layout.${value}` as const })),
       get: (state) => state.hinge.layout,
       set: (state, value) => hingeOf(state, { layout: HINGE_LAYOUTS.find((one) => one === value) ?? state.hinge.layout }),
     },
     {
-      kind: 'segmented', key: 'knuckles', label: 'hinge.knuckles', hint: 'hinge.knuckles.hint',
+      kind: 'segmented', key: 'knuckles', label: 'hinge.knuckles', hint: 'hinge.knuckles.hint', when: back,
       options: KNUCKLE_COUNTS.map((value) => ({ value: String(value), text: String(value) })),
       get: (state) => String(state.hinge.knuckles),
       set: (state, value) => hingeOf(state, { knuckles: KNUCKLE_COUNTS.find((one) => String(one) === value) ?? state.hinge.knuckles }),
     },
     {
       kind: 'range', key: 'length', label: 'hinge.length', hint: 'hinge.length.hint',
-      min: KNUCKLE_LENGTH_MIN, max: KNUCKLE_LENGTH_MAX, step: 0.5, when: (state) => state.hinge.layout === 'ends',
+      min: KNUCKLE_LENGTH_MIN, max: KNUCKLE_LENGTH_MAX, step: 0.5, when: (state) => back(state) && state.hinge.layout === 'ends',
       get: (state) => state.hinge.length,
       set: (state, value) => hingeOf(state, { length: value }),
     },
@@ -83,7 +91,7 @@ export function hingeControls(): Control<AppState>[] {
       kind: 'segmented', key: 'axle', label: 'hinge.axle', hint: 'hinge.axle.hint',
       options: AXLES.map((value) => ({ value, label: `hinge.axle.${value}` as const })),
       // cones print in place: only in a printed hinge, its leaves together
-      optionDisabled: (state, value) => !axlesFor(state.hinge.kind).some((axle) => axle === value),
+      optionDisabled: (state, value) => !axlesFor(state.hinge.kind, state.hinge.place).some((axle) => axle === value),
       get: (state) => state.hinge.axle,
       set: (state, value) => hingeOf(state, { axle: AXLES.find((one) => one === value) ?? state.hinge.axle }),
     },

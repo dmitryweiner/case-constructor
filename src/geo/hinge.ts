@@ -41,9 +41,20 @@ export type HingeKind = (typeof HINGE_KINDS)[number];
 export const AXLES = ['pin', 'screw', 'snap', 'cones'] as const;
 export type Axle = (typeof AXLES)[number];
 
-/** The axles a kind of hinge takes: cones only print in place, the leaves together. */
-export function axlesFor(kind: HingeKind): readonly Axle[] {
-  return kind === 'leaves' ? AXLES : ['pin', 'screw', 'snap'];
+/**
+ * Where the knuckles are: along the back edge, or as pivots on the side
+ * walls at the back corners (the axis along the back edge either way; the
+ * back wall stays free).
+ */
+export const HINGE_PLACES = ['back', 'sides'] as const;
+export type HingePlace = (typeof HINGE_PLACES)[number];
+
+/**
+ * The axles a hinge takes: cones only print in place, the leaves together,
+ * and only on the back — a side pivot's cheeks lie one over the other.
+ */
+export function axlesFor(kind: HingeKind, place: HingePlace = 'back'): readonly Axle[] {
+  return kind === 'leaves' && place === 'back' ? AXLES : ['pin', 'screw', 'snap'];
 }
 export const HINGE_SCREWS = ['M2', 'M2.5', 'M3'] as const;
 export type HingeScrew = (typeof HINGE_SCREWS)[number];
@@ -113,6 +124,7 @@ export function cableSlot(cable: Cable): { w: number; h: number } {
 
 export interface HingeSpec {
   kind: HingeKind;
+  place: HingePlace;
   axle: Axle;
   layout: HingeLayout;
   /** the knuckles' outer diameter, mm */
@@ -184,7 +196,7 @@ export const LEAF_SCREW_INSET = 4;
 
 export function defaultHingeSpec(): HingeSpec {
   return {
-    kind: 'knuckles', axle: 'pin', layout: 'ends', barrelD: 8, knuckles: 3, length: 10, clearance: 0.4, pinD: 1.75, pinFit: 0.15, screw: 'M2.5', cables: [],
+    kind: 'knuckles', place: 'back', axle: 'pin', layout: 'ends', barrelD: 8, knuckles: 3, length: 10, clearance: 0.4, pinD: 1.75, pinFit: 0.15, screw: 'M2.5', cables: [],
     leafScrew: 'M2.5', leafHole: 'insert', gapAuto: true, magnets: false, magnet: '6x3',
   };
 }
@@ -250,8 +262,9 @@ export function sanitizeHingeSpec(raw: unknown): HingeSpec {
   const d = defaultHingeSpec();
   const r = typeof raw === 'object' && raw !== null ? raw : {};
   const kind = oneOf(HINGE_KINDS, Reflect.get(r, 'kind'), d.kind);
+  const place = oneOf(HINGE_PLACES, Reflect.get(r, 'place'), d.place);
   const axle = {
-    axle: oneOf(axlesFor(kind), Reflect.get(r, 'axle'), d.axle),
+    axle: oneOf(axlesFor(kind, place), Reflect.get(r, 'axle'), d.axle),
     pinD: clampNum(Reflect.get(r, 'pinD'), PIN_D_MIN, PIN_D_MAX, d.pinD),
     pinFit: clampNum(Reflect.get(r, 'pinFit'), 0, 0.5, d.pinFit),
     screw: oneOf(HINGE_SCREWS, Reflect.get(r, 'screw'), d.screw),
@@ -259,6 +272,7 @@ export function sanitizeHingeSpec(raw: unknown): HingeSpec {
   const barrelD = clampNum(Reflect.get(r, 'barrelD'), BARREL_D_MIN, BARREL_D_MAX, d.barrelD);
   return {
     kind,
+    place,
     layout: oneOf(HINGE_LAYOUTS, Reflect.get(r, 'layout'), d.layout),
     // + 0: never -0 (JSON would make it 0, and the sanitizer must be idempotent through a file)
     barrelD: Math.min(BARREL_D_MAX, Math.max(barrelD, Math.ceil(barrelMin(axle) * 2) / 2)) + 0,
@@ -292,9 +306,12 @@ export interface Fold {
   zB: number;
 }
 
-/** How far the axis lies behind the hinge walls: the barrel and a clearance. */
-export function axisOffset(spec: Pick<HingeSpec, 'barrelD' | 'clearance'>): number {
-  return spec.barrelD / 2 + spec.clearance;
+/**
+ * How far the axis lies behind the hinge walls: the barrel and a clearance —
+ * just the clearance with side pivots, nothing of the hinge is behind the walls.
+ */
+export function axisOffset(spec: Pick<HingeSpec, 'barrelD' | 'clearance'> & { place?: HingePlace }): number {
+  return spec.place === 'sides' ? spec.clearance : spec.barrelD / 2 + spec.clearance;
 }
 
 /**
@@ -321,7 +338,7 @@ export function axisSplit(
  * The axis of two halves of depth `d`, heights `hA` and `hB`, closed with
  * `gap` between their inner faces, the axis `zA` over the lower one's.
  */
-export function foldOf(spec: Pick<HingeSpec, 'barrelD' | 'clearance'>, d: number, hA: number, hB: number, gap: number, zA = gap / 2): Fold {
+export function foldOf(spec: Pick<HingeSpec, 'barrelD' | 'clearance'> & { place?: HingePlace }, d: number, hA: number, hB: number, gap: number, zA = gap / 2): Fold {
   const e = axisOffset(spec);
   return { y: d + e, z: hA + zA, yB: -e, zB: hB + gap - zA };
 }
@@ -449,6 +466,80 @@ export interface HalfHinge {
   leaf: LeafLayout | null;
   /** magnets inside, at the edge away from the hinge; null without */
   magnets: MagnetBosses | null;
+  place: HingePlace;
+  /** side pivots: this half's cheeks (null on the back) */
+  pivot: PivotLayout | null;
+  /** a printed hinge's screws into the walls */
+  leafScrew: { size: HingeScrew; hole: HoleKind };
+}
+
+/** A side pivot's cheek: thickness, mm (more when a screw's head or nut sinks in it). */
+export const PIVOT_T = 3.5;
+/** A cheek's strip on its side wall: how long along y, mm (plus the barrel). */
+export const PIVOT_STRIP = 6;
+
+/**
+ * A half's cheeks of side pivots, in the half's frame, the same on both
+ * sides: q is the distance out from a side wall's outer face. The lower
+ * half's cheek lies on its wall (`q0`…`q1`), the upper half's one layer
+ * further out on a spacer from its own wall (`spacer`). A cheek is the hull
+ * of its disc on the axis and its strip on the wall (y `y0`…`y1`, z `z0`…`z1`,
+ * the body's part of the wall's flat); a printed hinge's cheek takes its
+ * screws there (`screws`, at `screwY`).
+ */
+export interface PivotLayout {
+  q0: number;
+  q1: number;
+  spacer: { q0: number; q1: number } | null;
+  y0: number;
+  y1: number;
+  z0: number;
+  z1: number;
+  screws: { z: number }[];
+  screwY: number;
+  /** the y range of the strip the cheek itself holds on to (an upper printed cheek's screws are past it, in the spacer) */
+  cheekY: [number, number];
+  /** both cheeks of a pivot, from the lower one's inner face to the upper one's outer face */
+  span: [number, number];
+  /** where pads inside the side wall may go (a printed hinge) */
+  padZ: [number, number];
+}
+
+/**
+ * The cheeks of a half (`upper`: the outer layer on a spacer). The upper
+ * half's strip keeps the barrel and a clearance off the axis (it turns past
+ * the lower half's disc); a printed hinge's cheeks sit on the wall (q from
+ * 0), integral ones a hair off it beyond the strip, sunk into it on it.
+ */
+export function pivotLayout(input: {
+  upper: boolean; leaves: boolean; t: number; gap: number; r: number; c: number; e: number; zAxis: number; d: number; cornerR: number;
+  body: readonly [number, number]; flat: readonly [number, number]; pads: readonly [number, number]; head: number; padR: number;
+}): PivotLayout | null {
+  const { upper, leaves, t, gap, r, c, e, zAxis, d, cornerR, head, padR } = input;
+  const base = leaves ? 0 : KNUCKLE_LID_GAP;
+  const [q0, q1] = upper ? [base + t + gap, base + 2 * t + gap] : [base, base + t];
+  // along y in the half's frame: the lower half's hinge edge is its back (y = d), the upper half's its front (y = 0)
+  // the upper half's spacer stands in the lower cheek's layer: past the axis's clearance, and past the
+  // lower cheek's own strip (closed, that cheek reaches up past the faces to its disc)
+  const clear = r + c + 0.5 - e;
+  const near = Math.max(cornerR, upper ? Math.max(clear, cornerR + PIVOT_STRIP + 1) : 0);
+  const length = PIVOT_STRIP + (leaves && upper ? head + 3 : 0);
+  const [y0, y1] = upper ? [near, near + length] : [d - near - length, d - near];
+  const z0 = Math.max(input.body[0] + KNUCKLE_PART_GAP, input.flat[0]);
+  const z1 = Math.min(input.body[1] - KNUCKLE_PART_GAP, input.flat[1], zAxis + r);
+  if (z1 - z0 < (leaves ? head + 2 : 2) || y1 > d - cornerR || y0 < cornerR) return null;
+  // a printed hinge's screws: their heads on the cheek, their pads inside clear of the lid's skirt
+  const lo = Math.max(z0 + head / 2 + 1, input.pads[0] + padR);
+  const hi = Math.min(z1 - head / 2 - 1, input.pads[1] - padR);
+  const screws = hi - lo >= head + 2 ? [{ z: lo }, { z: hi }] : hi >= lo ? [{ z: (lo + hi) / 2 }] : [];
+  if (leaves && screws.length === 0) return null;
+  // an upper cheek's screws go through its spacer only, past the cheek's own strip
+  const screwY = upper ? y1 - head / 2 - 1 : (y0 + y1) / 2;
+  const cheekY: [number, number] = upper ? [y0, y0 + PIVOT_STRIP] : [y0, y1];
+  return {
+    q0, q1, spacer: upper ? { q0: leaves ? 0 : -KNUCKLE_SINK, q1: q0 + 0.1 } : null, y0, y1, z0, z1, screws, screwY, cheekY,
+    span: [base, base + 2 * t + gap], padZ: [input.pads[0], input.pads[1]],
+  };
 }
 
 /**
@@ -540,10 +631,13 @@ export function padLength(leaf: Pick<LeafLayout, 'screw' | 'hole'>): number {
 }
 
 /** A printed hinge's screws: how many, and how long — through the leaf and the wall into the pad, the nearest shorter. */
-export function leafScrews(leaves: readonly LeafLayout[], wall: number): { count: number; length: number } | null {
+export function leafScrews(
+  leaves: readonly Pick<LeafLayout, 't' | 'screw' | 'hole' | 'screws'>[], wall: number,
+): { count: number; length: number } | null {
   if (leaves.length === 0) return null;
-  const leaf = leaves[0];
-  return { count: leaves.reduce((sum, one) => sum + one.screws.length, 0), length: Math.floor(leaf.t + wall + padLength(leaf) - 0.5) };
+  // one length for all: the shortest any leaf takes (the nearest shorter will do)
+  const length = Math.min(...leaves.map((leaf) => Math.floor(leaf.t + wall + padLength(leaf) - 0.5)));
+  return { count: leaves.reduce((sum, one) => sum + one.screws.length, 0), length };
 }
 
 /** The gap's spare over what stands out of both inner faces, and the gap when nothing does, mm. */
@@ -587,5 +681,11 @@ export function magnetBosses(
   const y = side === 'front' ? inset : d - inset;
   const top = h - MAGNET_SKIN;
   return { spots: [{ x: w / 4, y }, { x: (3 * w) / 4, y }], pocketR, top, bottom: top - magnet.h - 0.2, bossR };
+}
+
+/** A side pivot's cheek thickness: enough for a screw axle's head seat and nut pocket. */
+export function pivotThickness(spec: Pick<HingeSpec, 'axle' | 'pinD' | 'pinFit' | 'screw' | 'barrelD'>): number {
+  const holes = axleHoles(spec);
+  return holes.screw ? Math.max(PIVOT_T, holes.screw.headDepth + 1, holes.screw.nutDepth + 1) : PIVOT_T;
 }
 

@@ -55,7 +55,7 @@ import { resolveVariant } from './boards/schema';
 import { catalogBoard } from './boards/catalog';
 import type { LidPlace, PrintArrange } from './geo/print';
 import {
-  LID_PLACES, PRINT_GAP_MAX, PRINT_GAP_MIN, bodyForPrint, bothForPrint, hingeForPrint, lidWithScrews, screwsInCase, withClamps,
+  LID_PLACES, PRINT_GAP_MAX, PRINT_GAP_MIN, bodyForPrint, bothForPrint, hingeForPrint, lidWithScrews, screwsInCase, sideCheeksForPrint, withClamps,
 } from './geo/print';
 import { capsInCase, keyCaps, withCaps } from './geo/caps';
 import { restWarnings } from './geo/rests';
@@ -373,6 +373,9 @@ function caseNotices(one: AppState, label: LabelRaster | null, hinged: ReturnTyp
     else out.push(...knuckleCutWarnings(layout, hinged.hinge, from, cutters).map(notice));
     out.push(...leafPadWarnings(layout, hinged.hinge, one.shape.wall).map(notice));
   }
+  if (hinged && hinged.hinge.place === 'sides' && !hinged.hinge.pivot) {
+    out.push(notice({ code: hinged.hinge.kind === 'leaves' ? 'warn.leafNoWall' : 'warn.knuckleNoWall' }));
+  }
   if (hinged) out.push(...magnetWarnings(layout, hinged.hinge).map(notice));
   if (lidBuilt.fastening !== 'snaps') {
     const { frame, plate, zp, spots } = lidPosts(one);
@@ -651,6 +654,14 @@ function printAll(built: AppState, cases: BuiltCase[], arrange: PrintArrange = b
     out.push(...(y0 > 0 ? parts.map((part): ScenePart => ({ ...part, mesh: transformMesh(part.mesh, translation(0, y0, 0)) })) : parts));
   }
   lidPlaced = place;
+  if (built.exportMode !== 'lid' && isHinged(built) && built.hinge.place === 'sides') {
+    // side cheeks print one by one, each on a flat face
+    const hinge = (half: Half): SurfaceMesh | null => cases.find((one) => one.half === half)?.hinge ?? null;
+    const w = caseLayout(halfState(built, 'a')).dims.w;
+    const y0 = behind();
+    out.push(...sideCheeksForPrint(hinge('a'), hinge('b'), w, 0, y0, arrange.gap).map((mesh): ScenePart => ({ role: 'hinge', mesh })));
+    return out;
+  }
   const leaves = cases.flatMap((one) => (one.hinge ? [one.half === 'b' ? transformMesh(one.hinge, upperPose(foldOfState(built), 0)) : one.hinge] : []));
   if (leaves.length > 0 && built.exportMode !== 'lid') out.push({ role: 'hinge', mesh: hingeForPrint(mergeMeshes(leaves), 0, behind()) });
   return out;

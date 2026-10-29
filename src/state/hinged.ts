@@ -20,8 +20,9 @@ import { SIZE_MAX, SIZE_MIN, clampNum, plateOf, shapeSpec } from '../geo/shape';
 import type { CableSlot, CableThrough, Fold, HalfHinge, HingeSpec } from '../geo/hinge';
 import {
   CABLE_KEEP, CABLE_TOP_GAP, GAP_DEFAULT, gapFor, magnetBosses, upperPose, axisOffset, axisSplit, axleHoles, bodyRange, cableSlot, defaultHingeSpec, foldOf, hingeScrews, knuckleRuns,
-  knuckleStrip, leafLayout, leafScrews, sanitizeHingeSpec,
+  knuckleStrip, leafLayout, leafScrews, pivotLayout, pivotThickness, sanitizeHingeSpec,
 } from '../geo/hinge';
+import { SCREWS, bossDiameter } from '../geo/fasteners';
 import type { Message, SpotBox } from '../geo/message';
 import { boxSpot } from '../geo/message';
 import type { Vec3 } from '../geo/surface';
@@ -180,8 +181,10 @@ export function halfHinge(state: AppState, half: Half): HalfHinge | null {
   const cornerR = Math.max(0, Math.min(state.shape.cornerR, dims.w / 2, dims.d / 2));
   const slots = cableSlots(state);
   const keepOut = slots.map((slot) => ({ x0: slot.x - slot.w / 2 - CABLE_KEEP, x1: slot.x + slot.w / 2 + CABLE_KEEP }));
-  const { blocks, runs } = knuckleRuns(state.hinge, dims.w, cornerR, keepOut);
   const { hinge } = state;
+  const sides = hinge.place === 'sides';
+  // side pivots leave the back edge to the cables
+  const { blocks, runs } = sides ? { blocks: [], runs: [] } : knuckleRuns(state.hinge, dims.w, cornerR, keepOut);
   const ceiling = dims.h - one.shape.floor;
   const zAxis = half === 'a' ? fold.z : fold.zB;
   return {
@@ -209,7 +212,14 @@ export function halfHinge(state: AppState, half: Half): HalfHinge | null {
       ? magnetBosses(hinge.magnet, dims.w, dims.d, dims.h, one.shape.wall, half === 'a' ? 'front' : 'back',
         Math.max(magnetClear(halfState(state, 'a')), magnetClear(halfState(state, 'b'))))
       : null,
-    leaf: hinge.kind === 'leaves' ? leafLayout({
+    place: hinge.place,
+    leafScrew: { size: hinge.leafScrew, hole: hinge.leafHole },
+    pivot: sides ? pivotLayout({
+      upper: half === 'b', leaves: hinge.kind === 'leaves', t: pivotThickness(hinge), gap: hinge.clearance, r: hinge.barrelD / 2,
+      c: hinge.clearance, e: axisOffset(hinge), zAxis, d: dims.d, cornerR, head: SCREWS[hinge.leafScrew].headD,
+      padR: bossDiameter({ size: hinge.leafScrew, hole: hinge.leafHole, head: 'none' }) / 2, ...wallOf(one),
+    }) : null,
+    leaf: hinge.kind === 'leaves' && !sides ? leafLayout({
       zAxis, e: axisOffset(hinge), blocks, screw: hinge.leafScrew, hole: hinge.leafHole, ...wallOf(one),
     }) : null,
   };
@@ -259,7 +269,9 @@ export function hingeNotes(state: AppState): Message[] {
   const { printable } = axisSplit(state.hinge, gapOf(state), state.lid.face, state.hinge.b.lid.face);
   if (!printable) out.push({ code: 'warn.hingeUnprintable' });
   const hinge = halfHinge(state, 'a');
-  const screws = hinge ? hingeScrews(state.hinge, hinge.blocks) : null;
+  // a screw axle across a side pivot spans both cheeks
+  const span = hinge?.pivot ? [{ x0: hinge.pivot.span[0], x1: hinge.pivot.span[1] }, { x0: hinge.pivot.span[0], x1: hinge.pivot.span[1] }] : null;
+  const screws = hinge ? hingeScrews(state.hinge, span ?? hinge.blocks) : null;
   if (screws) out.push({ code: 'info.hingeScrews', params: { n: screws.count, size: state.hinge.screw, len: screws.length } });
   if (state.hinge.axle === 'snap') out.push({ code: 'info.hingeSnap' });
   const proud = innerProtrusion(state, 'a') + innerProtrusion(state, 'b');
@@ -267,7 +279,17 @@ export function hingeNotes(state: AppState): Message[] {
   if (!state.hinge.gapAuto && state.hinge.gap < proud) out.push({ code: 'warn.gapSmall', params: { gap: state.hinge.gap.toFixed(1), need: need.toFixed(1) } });
   if (state.hinge.gapAuto && need > GAP_DEFAULT) out.push({ code: 'info.gapAuto', params: { gap: need.toFixed(1) } });
   if (state.hinge.kind === 'leaves') {
-    const leaves = HALVES.flatMap((half) => halfHinge(state, half)?.leaf ?? []);
+    const leaves = HALVES.flatMap((half) => {
+      const one = halfHinge(state, half);
+      // a side pivot's printed cheek: its screws through the cheek (the upper one's through its spacer)
+      const pivot = one?.pivot;
+      if (pivot) {
+        const t = pivot.spacer ? pivot.spacer.q1 : pivot.q1;
+        // on both sides
+        return [{ t, screw: state.hinge.leafScrew, hole: state.hinge.leafHole, screws: Array.from({ length: 2 * pivot.screws.length }, () => ({ x: 0 })) }];
+      }
+      return one?.leaf ? [one.leaf] : [];
+    });
     const screws = leafScrews(leaves, state.shape.wall);
     if (screws) out.push({ code: `info.leafScrews.${state.hinge.leafHole}`, params: { n: screws.count, size: state.hinge.leafScrew, len: screws.length } });
   }
