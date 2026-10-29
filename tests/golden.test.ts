@@ -383,6 +383,20 @@ const STATES: Record<string, AppState> = {
     ...defaultState(),
     boards: [{ board: 'heltec-wifi-lora-32-v4', on: 'floor', z: 4, buttons: 'caps', capShape: 'square', capR: 0.8 }],
   }),
+  // W1: the face against the wall (plans/PLAN-MOUNT-LABELS.md)
+  'keyholes-left-wall': sanitizeState({
+    ...defaultState(),
+    wallMount: { kind: 'keyholes', face: 'left', spacing: 30 },
+  }),
+  'closed-keyholes-back-top-lid': sanitizeState({
+    ...defaultState(),
+    wallMount: { kind: 'keyholes', keyhole: 'closed', face: 'back', spacing: 50, screwD: 4 },
+  }),
+  'keyholes-in-bottom-lid': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, face: 'bottom', fastening: 'screws' },
+    wallMount: { kind: 'keyholes', face: 'bottom', spacing: 58 },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

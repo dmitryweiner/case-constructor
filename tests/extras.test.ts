@@ -7,7 +7,7 @@ import { buildCase } from '../src/geo/build';
 import { caseLayout, effectiveLid, standoffColumns } from '../src/geo/layout';
 import { portCutters, outerTopAt } from '../src/geo/ports';
 import {
-  EAR_LENGTH, EAR_WIDTH, FAN_SCREWS, closedKeyholes, earSpecs, extrasCutters, extrasWarnings, fanCuts, flatRegion, keyholeCuts, keyholeFace,
+  EAR_LENGTH, EAR_WIDTH, FAN_SCREWS, closedKeyholes, earSpecs, extrasCutters, extrasWarnings, fanCuts, flatRegion, keyholeCuts, mountFace, mountFaces,
   sanitizeLabel, sanitizeVents, sanitizeWallMount, ventCuts,
 } from '../src/geo/extras';
 import { faceFrame } from '../src/geo/face';
@@ -101,14 +101,77 @@ describe('fan, keyholes, ears', () => {
     expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(FAN_SCREWS[40]);
   });
 
-  it('keyholes go through the floor, or the back wall when the floor is the lid', () => {
-    const dims = { w: 100, d: 80, h: 40 };
-    const lid = defaultState().lid;
-    expect(keyholeFace(lid)).toBe('bottom');
-    expect(keyholeFace({ ...lid, face: 'bottom' })).toBe('back');
-    const cuts = keyholeCuts(sanitizeWallMount({ kind: 'keyholes', spacing: 40, screwD: 4 }), dims, lid);
+  it('keyholes go through the face against the wall, the bottom by default', () => {
+    const state = sanitizeState({ ...defaultState(), boards: [], wallMount: { kind: 'keyholes', spacing: 40, screwD: 4 } });
+    const { layout, shape } = context(state);
+    expect(state.wallMount.face).toBe('bottom');
+    const cuts = keyholeCuts(state.wallMount, shape, layout.dims);
     expect(cuts).toHaveLength(4);
+    expect(cuts.every((cut) => cut.face === 'bottom')).toBe(true);
     expect(Math.abs(cuts[0].x - cuts[2].x)).toBeCloseTo(40);
+    const left = keyholeCuts({ ...state.wallMount, face: 'left' }, shape, layout.dims);
+    expect(left.every((cut) => cut.face === 'left')).toBe(true);
+  });
+
+  it('every face but the console\'s slope can hang on the wall; a stale choice builds on the bottom', () => {
+    expect(mountFaces('box')).toHaveLength(6);
+    expect(mountFaces('cylinder')).toHaveLength(6);
+    expect(mountFaces('console')).not.toContain('top');
+    const mount = { ...sanitizeWallMount({ kind: 'keyholes' }), face: 'top' as const };
+    expect(mountFace(mount, 'box')).toBe('top');
+    expect(mountFace(mount, 'console')).toBe('bottom');
+  });
+
+  it('an old file with the floor as the lid hangs by its back, as it was built; a new one keeps its face', () => {
+    const lid = { ...defaultState().lid, face: 'bottom' };
+    const old = sanitizeState({ ...defaultState(), lid, wallMount: { kind: 'keyholes', spacing: 40, screwD: 4 } });
+    expect(old.wallMount.face).toBe('back');
+    expect(sanitizeState(old).wallMount.face).toBe('back');
+    const chosen = sanitizeState({ ...defaultState(), lid, wallMount: { kind: 'keyholes', face: 'bottom' } });
+    expect(chosen.wallMount.face).toBe('bottom');
+    expect(sanitizeState({ ...defaultState(), wallMount: { kind: 'keyholes' } }).wallMount.face).toBe('bottom');
+    expect(sanitizeWallMount({ face: 'sideways' }).face).toBe('bottom');
+  });
+
+  it('keyholes on every face of every shape stay on that face\'s flat part, their slots up', () => {
+    for (const kind of ['box', 'console', 'cylinder'] as const) {
+      const state = sanitizeState({
+        ...defaultState(), boards: [],
+        shape: { ...defaultState().shape, kind, edgeR: 2, cornerR: 4, auto: false, size: { w: 120, d: 90, h: 50 } },
+        wallMount: { kind: 'keyholes', spacing: 40, screwD: 4 },
+      });
+      const { layout, shape } = context(state);
+      for (const face of mountFaces(kind)) {
+        const cuts = keyholeCuts({ ...state.wallMount, face }, shape, layout.dims);
+        const flat = flatRegion(shape, layout.dims, face, 0);
+        for (const cut of cuts) {
+          expect(cut.face).toBe(face);
+          expect(cut.x - cut.w / 2, `${kind}/${face}`).toBeGreaterThanOrEqual(flat.u0);
+          expect(cut.x + cut.w / 2, `${kind}/${face}`).toBeLessThanOrEqual(flat.u1);
+          expect(cut.y - cut.h / 2, `${kind}/${face}`).toBeGreaterThanOrEqual(flat.v0);
+          expect(cut.y + cut.h / 2, `${kind}/${face}`).toBeLessThanOrEqual(flat.v1);
+        }
+        // on a wall v is up: the slot above its head hole
+        const [head, slot] = cuts;
+        expect(slot.y, `${kind}/${face}`).toBeGreaterThan(head.y);
+        if (face !== 'top' && face !== 'bottom') {
+          const frame = faceFrame(face, layout.dims);
+          expect(applyAffine(frame.fromFace, [slot.x, slot.y, 0])[2]).toBeGreaterThan(applyAffine(frame.fromFace, [head.x, head.y, 0])[2]);
+        }
+      }
+    }
+  });
+
+  it('a mount on the lid is warned about, more sharply on snaps', () => {
+    const base = sanitizeState({ ...defaultState(), boards: [], wallMount: { kind: 'keyholes', face: 'top', spacing: 40, screwD: 4 } });
+    const codes = (state: AppState): string[] => {
+      const { layout, shape, lid } = context(state);
+      return extrasWarnings(state, shape, layout, lid).map((m) => m.code);
+    };
+    expect(codes(base)).toContain('warn.mountOnSnaps');
+    expect(codes(sanitizeState({ ...base, lid: { ...base.lid, fastening: 'screws' } }))).toContain('warn.mountOnLid');
+    expect(codes(sanitizeState({ ...base, wallMount: { ...base.wallMount, kind: 'ears' } }))).toContain('warn.mountOnSnaps');
+    expect(codes(sanitizeState({ ...base, wallMount: { ...base.wallMount, face: 'bottom' } }))).not.toContain('warn.mountOnSnaps');
   });
 
   it('a keyhole is through by default; old files load as through', () => {
@@ -120,7 +183,7 @@ describe('fan, keyholes, ears', () => {
   it('closed keyholes on the bottom: two pads and two mirrored feet of one height', () => {
     const state = sanitizeState({ ...defaultState(), wallMount: { kind: 'keyholes', keyhole: 'closed', spacing: 40, screwD: 4 } });
     const { layout, shape, lid } = context(state);
-    const closed = closedKeyholes(state.wallMount, shape, layout.dims, lid);
+    const closed = closedKeyholes(state.wallMount, shape, layout.dims);
     expect(closed).not.toBeNull();
     if (!closed) return;
     expect(closed.face).toBe('bottom');
@@ -155,8 +218,8 @@ describe('fan, keyholes, ears', () => {
       ...defaultState(), boards: [], shape: { ...defaultState().shape, auto: false, size: { w: 90, d: 40, h: 30 } },
       wallMount: { kind: 'keyholes', keyhole: 'closed', spacing: 40, screwD: 4 },
     });
-    const { layout, shape, lid } = context(state);
-    const closed = closedKeyholes(state.wallMount, shape, layout.dims, lid);
+    const { layout, shape } = context(state);
+    const closed = closedKeyholes(state.wallMount, shape, layout.dims);
     expect(closed?.pads).toHaveLength(2);
     expect(closed?.pads.every((pad) => pad.keyhole)).toBe(true);
   });
@@ -166,8 +229,8 @@ describe('fan, keyholes, ears', () => {
       ...defaultState(), lid: { ...defaultState().lid, face: 'bottom' },
       wallMount: { kind: 'keyholes', keyhole: 'closed', spacing: 40, screwD: 4 },
     });
-    const { layout, shape, lid } = context(state);
-    const closed = closedKeyholes(state.wallMount, shape, layout.dims, lid);
+    const { layout, shape } = context(state);
+    const closed = closedKeyholes(state.wallMount, shape, layout.dims);
     expect(closed?.face).toBe('back');
     expect(closed?.pads).toHaveLength(2);
   });
@@ -192,8 +255,8 @@ describe('fan, keyholes, ears', () => {
     const report = validateMesh(built.body);
     expect(report.watertight).toBe(true);
     expect(report.degenerateTriangles).toBe(0);
-    const { layout, shape, lid } = context(closed);
-    const height = closedKeyholes(closed.wallMount, shape, layout.dims, lid)?.height ?? 0;
+    const { layout, shape } = context(closed);
+    const height = closedKeyholes(closed.wallMount, shape, layout.dims)?.height ?? 0;
     expect(report.bbox.min[2]).toBeCloseTo(-height, 3);
   });
 
@@ -218,6 +281,30 @@ describe('fan, keyholes, ears', () => {
     }
   });
 
+  it('closed keyholes build clean on a chosen face: a wall, the lid, a cylinder\'s top', () => {
+    const cases: [string, string, string, string[]][] = [
+      ['box', 'top', 'back', []], ['box', 'top', 'left', []], ['box', 'top', 'top', ['warn.mountOnSnaps']],
+      ['box', 'bottom', 'top', ['warn.keyholePadsOnBed']], ['console', 'bottom', 'front', []],
+      ['cylinder', 'top', 'top', ['warn.mountOnSnaps']], ['cylinder', 'bottom', 'back', ['warn.keyholeClosedRound']],
+    ];
+    for (const [kind, lidFace, face, expected] of cases) {
+      const state = sanitizeState({
+        ...defaultState(), boards: [],
+        shape: { ...defaultState().shape, kind, edgeR: kind === 'console' ? 0 : 3, auto: false, size: { w: 110, d: 80, h: 45 } },
+        lid: { ...defaultState().lid, face: lidFace },
+        wallMount: { kind: 'keyholes', keyhole: 'closed', face, spacing: 50, screwD: 4 },
+      });
+      const built = buildCase(csg, state, 8);
+      for (const mesh of [built.body, built.lid]) {
+        const report = validateMesh(mesh);
+        expect(report.watertight, `${kind}/${lidFace}/${face}`).toBe(true);
+        expect(report.degenerateTriangles, `${kind}/${lidFace}/${face}`).toBe(0);
+      }
+      const { layout, shape, lid } = context(state);
+      expect(extrasWarnings(state, shape, layout, lid).map((m) => m.code), `${kind}/${lidFace}/${face}`).toEqual(expected);
+    }
+  });
+
   it('a closed pocket next to a standoff is warned about: the standoff hole would open it', () => {
     // the Pi 4's right standoffs stand 19 mm right of the case centre, the keyhole 20 mm
     const state = sanitizeState({ ...defaultState(), wallMount: { kind: 'keyholes', keyhole: 'closed', spacing: 40, screwD: 4 } });
@@ -234,7 +321,7 @@ describe('fan, keyholes, ears', () => {
       wallMount: { kind: 'keyholes', keyhole: 'closed', spacing: 40, screwD: 4 },
     });
     const { layout, shape, lid, top, ports } = context(state);
-    const closed = closedKeyholes(state.wallMount, shape, layout.dims, lid);
+    const closed = closedKeyholes(state.wallMount, shape, layout.dims);
     const frame = faceFrame('bottom', layout.dims);
     const vents = extrasCutters(state, shape, layout, lid, top, ports).filter((c) => c.source.kind === 'extra' && c.shape === 'round');
     expect(vents.length).toBeGreaterThan(0);

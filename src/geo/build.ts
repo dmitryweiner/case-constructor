@@ -264,7 +264,7 @@ export function buildCase(
     }
     // closed keyholes: pads and feet on the part that owns their face, then
     // the pockets — after the pads, or the pads would fill them back
-    const closed = closedKeyholes(state.wallMount, shape, dims, lid);
+    const closed = closedKeyholes(state.wallMount, shape, dims);
     if (closed) {
       const pads = keyholePadSolids(csg, scope, closed, faceFrame(closed.face, dims), segments);
       const keyFrame = faceFrame(closed.face, dims);

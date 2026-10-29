@@ -794,6 +794,13 @@ await expectWatertight('keyholes');
 await page.click('#mount_keyhole_closed');
 await expectWatertight('keyholes:closed');
 if (!(await page.locator('#warnings').textContent()).includes('supports')) errors.push('[keyholes:closed] no warning about the pads on the bed');
+await page.click('#mount_face_back');
+await expectWatertight('keyholes:closed:back');
+// the lid's face: allowed, with a warning (the lid holds the weight)
+await page.click('#mount_face_top');
+await expectWatertight('keyholes:closed:lid');
+if (!(await page.locator('#warnings').textContent()).includes('on the lid')) errors.push('[keyholes:lid] no warning about the mount on the lid');
+await page.click('#mount_face_bottom');
 await page.click('#mount_keyhole_through');
 await page.click('#mount_kind_ears');
 await expectWatertight('ears');

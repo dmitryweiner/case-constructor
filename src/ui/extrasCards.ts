@@ -11,7 +11,7 @@ import { FACES } from '../geo/face';
 import type { FanState, LabelAnchor, LabelState, VentState, WallMountState } from '../geo/extras';
 import {
   EAR_ALONG, EAR_COUNT_MAX, EAR_SIDES, EAR_WALLS, FAN_SIZES, KEYHOLE_STYLES, LABEL_ANCHORS, LABEL_FONTS, LABEL_MARGIN_MAX, LABEL_MAX_CHARS,
-  MOUNT_KINDS, VENT_PATTERNS,
+  MOUNT_KINDS, VENT_PATTERNS, mountFace, mountFaces,
 } from '../geo/extras';
 import { LABEL_FONT_FILES } from './fonts';
 import type { AppState } from '../state/schema';
@@ -101,6 +101,14 @@ function mountControls(): Control<AppState>[] {
       options: MOUNT_KINDS.map((value) => ({ value, label: `mount.${value}` as const })),
       get: (state) => state.wallMount.kind,
       set: (state, value) => mount(state, { kind: MOUNT_KINDS.find((k) => k === value) ?? state.wallMount.kind }),
+    },
+    {
+      kind: 'segmented', key: 'face', label: 'mount.face', hint: 'mount.face.hint',
+      options: FACES.map((value) => ({ value, label: `face.${value}` as const })),
+      optionDisabled: (state, value) => !mountFaces(state.shape.kind).some((face) => face === value),
+      when: (state) => state.wallMount.kind !== 'none',
+      get: (state) => mountFace(state.wallMount, state.shape.kind),
+      set: (state, value) => mount(state, { face: FACES.find((face) => face === value) ?? state.wallMount.face }),
     },
     {
       kind: 'segmented', key: 'keyhole', label: 'mount.keyhole', hint: 'mount.keyhole.hint',

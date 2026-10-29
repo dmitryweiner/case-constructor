@@ -74,6 +74,8 @@ export type MessageCode =
   | 'warn.keyholeOffFlat'
   | 'warn.keyholeClosedRound'
   | 'warn.keyholePadsOnBed'
+  | 'warn.mountOnLid'
+  | 'warn.mountOnSnaps'
   | 'warn.labelTooBig'
   | 'warn.labelOverScrew'
   // worker job stages

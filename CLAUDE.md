@@ -25,6 +25,9 @@ keypad's flange, the Tier A + B keyboards of `plans/PERSPECTIVE-KEYBOARDS.md`.
 case with its own lid, knuckles on a pin, a screw or snapping cones, a
 printed hinge on screws, cable slots, magnets inside (the branch
 `hinged-2026-10-28`).
+`plans/PLAN-MOUNT-LABELS.md` — the wall mount on the face the user chooses
+(keyholes through it, ears flush with it), several labels on any flat face
+(W1…W3, L1…L4; the branch `mount-labels`).
 
 ## Node
 
@@ -559,7 +562,7 @@ Extras: toggled cards `#on_vents`, `#on_fan`, `#on_label`; vents
 `#vents_face_<face>` (checkboxes), `#vents_pattern_slots|hex|round`,
 `#vents_along_x|y`, `#vents_size|_pitch|_margin`; fan `#fan_face` (select),
 `#fan_size_25…60`, `#fan_x|_y|_screwD`; wall mount
-`#mount_kind_none|keyholes|ears`, `#mount_keyhole_through|closed`, ears
+`#mount_kind_none|keyholes|ears`, `#mount_face_<face>` (the face against the wall), `#mount_keyhole_through|closed`, ears
 `#mount_earCount_1…4`, `#mount_earWalls_leftRight|frontBack|one`,
 `#mount_earWall` (select), `#mount_earAlong_centre|ends`, `#mount_spacing`, `#mount_screwD`; label
 `#label_text`, `#label_font`, `#label_size`, `#label_raised`, `#label_depth`,

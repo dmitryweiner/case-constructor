@@ -79,6 +79,8 @@ export interface EarsState {
 
 export interface WallMountState {
   kind: WallMountKind;
+  /** the face against the wall, as the user chose it (`mountFace`: the one built) */
+  face: Face;
   keyhole: KeyholeStyle;
   ears: EarsState;
   /** keyholes, and ears centred on a wall: distance between them, mm */
@@ -124,7 +126,7 @@ export function defaultFan(): FanState {
 }
 
 export function defaultWallMount(): WallMountState {
-  return { kind: 'none', keyhole: 'through', ears: { count: 2, walls: 'leftRight', wall: 'back', along: 'centre' }, spacing: 40, screwD: 4 };
+  return { kind: 'none', face: 'bottom', keyhole: 'through', ears: { count: 2, walls: 'leftRight', wall: 'back', along: 'centre' }, spacing: 40, screwD: 4 };
 }
 
 export function defaultLabel(): LabelState {
@@ -175,6 +177,7 @@ export function sanitizeWallMount(raw: unknown): WallMountState {
   const r = rec(raw);
   return {
     kind: MOUNT_KINDS.find((k) => k === r.kind) ?? d.kind,
+    face: isFace(r.face) ? r.face : d.face,
     keyhole: KEYHOLE_STYLES.find((k) => k === r.keyhole) ?? d.keyhole,
     ears: sanitizeEars(r.ears, d.ears),
     spacing: clampNum(r.spacing, 10, 300, d.spacing),
@@ -305,9 +308,14 @@ export function fanCuts(fan: FanState, dims: Dims): ExtraCut[] {
   ];
 }
 
-/** The face wall-mount keyholes go on: the floor, or the back wall when the floor is the lid. */
-export function keyholeFace(lid: LidState): Face {
-  return lid.face === 'bottom' ? 'back' : 'bottom';
+/** Faces a case may hang by: every face but the console's slope (a cylinder's round wall takes keyholes through only). */
+export function mountFaces(kind: ShapeKind): readonly Face[] {
+  return kind === 'console' ? FACES.filter((face) => face !== 'top') : FACES;
+}
+
+/** The face the mount is built on: the one chosen, or the bottom when the shape has no such face. */
+export function mountFace(mount: WallMountState, kind: ShapeKind): Face {
+  return mountFaces(kind).includes(mount.face) ? mount.face : 'bottom';
 }
 
 /** How far the shank slides from the head hole to the end of the slot, mm. */
@@ -320,12 +328,12 @@ function keyholeSizes(screwD: number): { head: number; slot: number; pocket: num
 }
 
 /**
- * Two keyholes `spacing` apart through the floor (or the back wall): a hole
+ * Two keyholes `spacing` apart through the face against the wall: a hole
  * for the screw head, then a slot the shank slides along.
  */
-export function keyholeCuts(mount: WallMountState, dims: Dims, lid: LidState): ExtraCut[] {
+export function keyholeCuts(mount: WallMountState, shape: ShapeState, dims: Dims): ExtraCut[] {
   if (mount.kind !== 'keyholes') return [];
-  const face = keyholeFace(lid);
+  const face = mountFace(mount, shape.kind);
   const extent = faceFrame(face, dims).extent;
   const { head, slot } = keyholeSizes(mount.screwD);
   const length = KEYHOLE_SLIDE;
@@ -334,7 +342,7 @@ export function keyholeCuts(mount: WallMountState, dims: Dims, lid: LidState): E
     const x = extent.w / 2 + (sign * mount.spacing) / 2;
     const y = extent.h / 2 - length / 2;
     cuts.push({ face, shape: 'round', x, y, w: head, h: head, r: 0 });
-    // the slot runs up from the head hole (for the back wall: up when hanging)
+    // the slot runs up from the head hole (on a wall: up when hanging)
     cuts.push({ face, shape: 'rect', x, y: y + length / 2, w: slot, h: length, r: slot / 2 });
   }
   return cuts;
@@ -375,14 +383,14 @@ export interface ClosedKeyholes {
  * `KEYHOLE_SKIN` of the plate left towards the cavity. On the bottom the
  * pads go to its far end and two feet of the same height to the near end,
  * mirrored, so the case stands level; where they would meet they make one
- * strip. On the back wall (the floor is the lid) there are no feet. A
- * cylinder's round wall has no flat place for a pad: null, and the keyholes
- * go through (the panel says so).
+ * strip. On any other face there are no feet. A cylinder's round wall has
+ * no flat place for a pad: null, and the keyholes go through (the panel
+ * says so).
  */
-export function closedKeyholes(mount: WallMountState, shape: ShapeState, dims: Dims, lid: LidState): ClosedKeyholes | null {
+export function closedKeyholes(mount: WallMountState, shape: ShapeState, dims: Dims): ClosedKeyholes | null {
   if (mount.kind !== 'keyholes' || mount.keyhole !== 'closed') return null;
-  const face = keyholeFace(lid);
-  if (shape.kind === 'cylinder' && face !== 'bottom') return null;
+  const face = mountFace(mount, shape.kind);
+  if (shape.kind === 'cylinder' && face !== 'bottom' && face !== 'top') return null;
   const frame = faceFrame(face, dims);
   const { extent } = frame;
   const { head, slot, pocket } = keyholeSizes(mount.screwD);
@@ -534,11 +542,11 @@ export function extrasCutters(
     return !portCutters.some((port) => cutterContains(port, centre, reach));
   });
   // no vent under a pad or a foot of closed keyholes: it would open into the pad
-  const closed = closedKeyholes(state.wallMount, shape, dims, lid);
+  const closed = closedKeyholes(state.wallMount, shape, dims);
   const free = closed ? kept.filter((cutter) => !underPad(cutter, closed, dims)) : kept;
   const fan = extraCutters(fanCuts(state.fan, dims), shape, dims, slopeTop);
   // closed keyholes are cut by the worker after their pads are added
-  const keyholes = closed ? [] : extraCutters(keyholeCuts(state.wallMount, dims, lid), shape, dims, slopeTop);
+  const keyholes = closed ? [] : extraCutters(keyholeCuts(state.wallMount, shape, dims), shape, dims, slopeTop);
   return [...free, ...fan, ...keyholes];
 }
 
@@ -561,11 +569,15 @@ export function faceSpot(face: Face, dims: Dims, shape: ShapeState, lid: LidStat
   return boxSpot(boxAround(corners), face === lid.face ? 'lid' : 'body');
 }
 
+/** The face across the case from each face. */
+const OPPOSITE: Readonly<Record<Face, Face>> = { top: 'bottom', bottom: 'top', front: 'back', back: 'front', left: 'right', right: 'left' };
+
 /**
- * Warnings: a fan that does not fit its face, keyholes next to a standoff
- * (its hole reaches into the floor: through a keyhole, or into a closed
- * pocket), pads off the flat part of the face, pads under a floor that
- * prints on the bed, closed keyholes asked for on a round wall.
+ * Warnings: a fan that does not fit its face, a mount on the lid (the lid's
+ * fastening holds the weight), keyholes next to a standoff (its hole reaches
+ * into the plate: through a keyhole, or into a closed pocket), pads off the
+ * flat part of the face, pads on the face the body prints on, closed
+ * keyholes asked for on a round wall.
  */
 export function extrasWarnings(
   state: { fan: FanState; wallMount: WallMountState }, shape: ShapeState, layout: CaseLayout, lid: LidState,
@@ -583,11 +595,19 @@ export function extrasWarnings(
       out.push({ code: 'warn.fanTooBig', params: { size: state.fan.size }, spot });
     }
   }
-  if (state.wallMount.kind === 'keyholes') {
-    const closed = closedKeyholes(state.wallMount, shape, dims, lid);
-    if (state.wallMount.keyhole === 'closed' && !closed) out.push({ code: 'warn.keyholeClosedRound' });
-    const cutters = closed ? closed.cutters : extraCutters(keyholeCuts(state.wallMount, dims, lid), shape, dims, () => dims.h);
-    const supports = layout.boards.flatMap((board) => standoffColumns(board));
+  const mount = state.wallMount;
+  if (mount.kind !== 'none' && mountFace(mount, shape.kind) === lid.face) {
+    out.push({ code: lid.fastening === 'snaps' ? 'warn.mountOnSnaps' : 'warn.mountOnLid' });
+  }
+  if (mount.kind === 'keyholes') {
+    const face = mountFace(mount, shape.kind);
+    const closed = closedKeyholes(mount, shape, dims);
+    if (mount.keyhole === 'closed' && !closed) out.push({ code: 'warn.keyholeClosedRound' });
+    // the supports standing on this face's plate: floor boards' on the bottom, hung ones' under a flat top
+    const onPlate = face === 'bottom' ? layout.boards.filter((board) => !board.hung)
+      : face === 'top' && shape.kind !== 'console' ? layout.boards.filter((board) => board.hung) : [];
+    const cutters = closed ? closed.cutters : extraCutters(keyholeCuts(mount, shape, dims), shape, dims, () => dims.h);
+    const supports = onPlate.flatMap((board) => standoffColumns(board));
     // how far a standoff's centre is from a cutter's section, across the cutter
     const gap = (cutter: CutterSpec, x: number, y: number): number => {
       const d = [x - cutter.origin[0], y - cutter.origin[1], 0];
@@ -596,11 +616,11 @@ export function extrasWarnings(
       return Math.hypot(Math.max(0, Math.abs(a) - cutter.w / 2), Math.max(0, Math.abs(b) - cutter.h / 2));
     };
     const near = cutters.find((cutter) => supports.some((c) => gap(cutter, c.x, c.y) < c.r + 1));
-    if (near) out.push({ code: 'warn.keyholeNearStandoff', spot: boxSpot(boxAround(cutterCorners(near)), 'body') });
+    if (near) out.push({ code: 'warn.keyholeNearStandoff', spot: boxSpot(boxAround(cutterCorners(near)), face === lid.face ? 'lid' : 'body') });
     if (closed) {
-      // the body prints standing on the face opposite the lid: with the lid
-      // on top the pads are under the floor, and the floor between them hangs
-      if (closed.face === 'bottom' && lid.face === 'top') out.push({ code: 'warn.keyholePadsOnBed' });
+      // the body prints standing on the face opposite the lid: pads there
+      // stand on the bed, and the plate between them hangs
+      if (closed.face === OPPOSITE[lid.face]) out.push({ code: 'warn.keyholePadsOnBed' });
       const flat = flatRegion(shape, dims, closed.face, 0);
       const eps = 1e-6;
       if (closed.pads.some((pad) => pad.u0 < flat.u0 - eps || pad.u1 > flat.u1 + eps || pad.v0 < flat.v0 - eps || pad.v1 > flat.v1 + eps)) {

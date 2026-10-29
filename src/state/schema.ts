@@ -77,6 +77,17 @@ export function withShapeKind(state: AppState, kind: ShapeKind): AppState {
   return { ...state, shape: { ...state.shape, kind }, lid: lidForKind(state.lid, kind) };
 }
 
+/**
+ * The wall mount; a file from before the mount had a face hung by its
+ * floor, or by its back wall when the floor was the lid, and builds so.
+ */
+function sanitizeMount(raw: unknown, lid: unknown): WallMountState {
+  const mount = sanitizeWallMount(raw);
+  const old = typeof raw === 'object' && raw !== null && Reflect.get(raw, 'face') === undefined;
+  const onFloor = typeof lid === 'object' && lid !== null && Reflect.get(lid, 'face') === 'bottom';
+  return old && onFloor ? { ...mount, face: 'back' } : mount;
+}
+
 export function sanitizeState(raw: unknown): AppState {
   const d = defaultState();
   const r = typeof raw === 'object' && raw !== null ? raw : {};
@@ -91,7 +102,7 @@ export function sanitizeState(raw: unknown): AppState {
     extraCuts: sanitizeExtraCuts(Reflect.get(r, 'extraCuts'), shape.kind),
     vents: sanitizeVents(Reflect.get(r, 'vents')),
     fan: sanitizeFan(Reflect.get(r, 'fan')),
-    wallMount: sanitizeWallMount(Reflect.get(r, 'wallMount')),
+    wallMount: sanitizeMount(Reflect.get(r, 'wallMount'), Reflect.get(r, 'lid')),
     label: sanitizeLabel(Reflect.get(r, 'label')),
     exportMode: isExportMode(exportMode) ? exportMode : d.exportMode,
     print: sanitizePrint(Reflect.get(r, 'print')),

@@ -1695,5 +1695,65 @@
         5
       ]
     }
+  },
+  "keyholes-left-wall": {
+    "body": {
+      "triangles": 2744,
+      "volume": 26115.89,
+      "extents": [
+        97.9,
+        66.5,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 1916,
+      "volume": 12915.81,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "closed-keyholes-back-top-lid": {
+    "body": {
+      "triangles": 3424,
+      "volume": 28032.85,
+      "extents": [
+        97.9,
+        71,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 1916,
+      "volume": 12915.81,
+      "extents": [
+        97.9,
+        66.5,
+        5
+      ]
+    }
+  },
+  "keyholes-in-bottom-lid": {
+    "body": {
+      "triangles": 3776,
+      "volume": 30576.71,
+      "extents": [
+        106.5,
+        75.1,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 2532,
+      "volume": 16883.77,
+      "extents": [
+        106.5,
+        75.1,
+        6
+      ]
+    }
   }
 }

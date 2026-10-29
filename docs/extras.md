@@ -27,27 +27,32 @@ any face, shifted from the face's centre by X / Y. Screw holes default to
 
 ## Wall mount
 
-- **keyholes** — two keyholes, *Spacing* apart, through the floor (through
-  the back wall when the floor is the lid): a hole for the screw head
-  (2 × screw + 1 mm) and a 6 mm slot for the shank (screw + 0.6 mm). Hang the
+*Against the wall* picks the face the case rests on: bottom (the default),
+back, front, left, right or top — the console's slope is not offered. The
+lid's face may be chosen too: then whatever holds the lid holds the case,
+and the panel warns (more sharply on snaps, which let go). A file saved
+before this choice hung by its floor, or by its back wall when the floor was
+the lid, and opens so.
+
+- **keyholes** — two keyholes, *Spacing* apart, through the face against the
+  wall: a hole for the screw head (2 × screw + 1 mm) and a 6 mm slot for the
+  shank (screw + 0.6 mm), running up from the head hole on a wall. Hang the
   case on two screws and slide it down. Keep them away from standoffs (the
   panel warns).
 
   *Keyholes: through / closed.* A through keyhole opens into the case. A
   closed one is a blind pocket the screw head slides in, in a pad standing
-  out of the floor (the floor alone is too thin for it), so the case stays
+  out of the face (the plate alone is too thin for it), so the case stays
   closed: the head hole and the slot from outside, the head's channel
-  behind the slot, 1 mm of the floor left towards the cavity. On the bottom
+  behind the slot, 1 mm of the plate left towards the cavity. On the bottom
   the pads go to its far end and two feet of the same height to the near
   end, so the case stands level on four; on a short case each pad and its
-  foot merge into one strip. With the lid on top the body prints on its
-  bottom — on the pads — and the floor between them needs supports (the
-  panel says so); with a side lid the bottom prints standing and the pads
-  are a small overhang. When the floor is the lid the pads stand out of the
-  back wall, without feet. A cylinder's round wall has no flat place for a
-  pad: there the keyholes go through. Vents are left out under pads and
-  feet. A standoff right above a pocket would open it (its hole goes into
-  the floor) — the panel warns.
+  foot merge into one strip. On any other face there are no feet. Pads on
+  the face the body prints on (the one opposite the lid) stand on the bed,
+  and the plate between them needs supports (the panel says so). A
+  cylinder's round wall has no flat place for a pad: there the keyholes go
+  through. Vents are left out under pads and feet. A standoff right above a
+  pocket would open it (its hole goes into the plate) — the panel warns.
 - **ears** — tabs at floor level, 10 × 8 mm, as thick as the floor, with a
   hole for the screw (+ 0.4 mm). *Ears*: 1–4. *On the walls*: left and
   right, front and back (an odd ear goes to the first wall: 3 = 2 + 1) or
