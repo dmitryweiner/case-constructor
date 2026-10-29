@@ -785,7 +785,8 @@ for (const pattern of ['slots', 'hex', 'round']) {
   await page.click(`#vents_pattern_${pattern}`);
   await expectWatertight(`vents:${pattern}`);
 }
-await page.check('#vents_face_bottom');
+await page.click('#vents_face_bottom');
+if ((await page.locator('#vents_face_bottom').getAttribute('aria-pressed')) !== 'true') errors.push('[vents] the bottom face not pressed');
 await page.check('#on_fan');
 await page.selectOption('#fan_face', 'top');
 await page.click('#fan_size_30');
@@ -828,6 +829,8 @@ await page.click('#mount_earWalls_leftRight');
 await page.click('#mount_face_bottom');
 const trianglesBefore = await page.evaluate(() => window.__case.parts()?.lid.indices.length ?? 0);
 await page.click('#labelAdd');
+// the plain box has no board to name (a board's name: tests/extras.test.ts)
+if ((await page.inputValue('#label0_text')) !== '') errors.push(`[label] a new label in a box with no boards says: ${await page.inputValue('#label0_text')}`);
 await page.fill('#label0_text', 'Hello שלום Привет');
 await page.waitForTimeout(1500);
 await expectWatertight('label');

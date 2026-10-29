@@ -475,6 +475,8 @@ export const uk: Record<Key, string> = {
   'panel.mounting': 'Кріплення на стіну',
   'panel.labels': 'Написи',
   'vents.pattern': 'Візерунок',
+  'vents.faces': 'Грані',
+  'vents.faces.hint': 'натисніть грані, де потрібна вентиляція, — скільки завгодно',
   'vents.slots': 'прорізи',
   'vents.hex': 'стільники',
   'vents.round': 'отвори',

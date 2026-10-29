@@ -20,11 +20,13 @@ const mount = (state: AppState, patch: Partial<WallMountState>): AppState => ({ 
 
 function ventControls(): Control<AppState>[] {
   return [
-    ...FACES.map((face): Control<AppState> => ({
-      kind: 'check', key: `face_${face}`, label: `face.${face}`,
-      get: (state) => state.vents.faces.includes(face),
-      set: (state, on) => vents(state, { faces: on ? [...state.vents.faces, face] : state.vents.faces.filter((f) => f !== face) }),
-    })),
+    {
+      // a row of faces like the wall mount's, any number pressed
+      kind: 'toggles', key: 'face', label: 'vents.faces', hint: 'vents.faces.hint',
+      options: FACES.map((value) => ({ value, label: `face.${value}` as const })),
+      get: (state) => state.vents.faces,
+      set: (state, values) => vents(state, { faces: FACES.filter((face) => values.includes(face)) }),
+    },
     {
       kind: 'segmented', key: 'pattern', label: 'vents.pattern',
       options: VENT_PATTERNS.map((value) => ({ value, label: `vents.${value}` as const })),

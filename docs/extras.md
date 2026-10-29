@@ -2,7 +2,7 @@
 
 ## Ventilation
 
-Turn on **Ventilation** in the Openings card and tick the faces.
+Turn on **Ventilation** in the Openings card and press the faces to vent in the *Faces* row (top, bottom, front, back, left, right — any number; press again to take one off).
 
 | Control | Range | Default | Notes |
 |---|---|---|---|
@@ -78,7 +78,8 @@ the lid, and opens so.
 
 **+ Add label** puts a line of text on a face — up to 8 labels, each with
 its own face, text and place, and a ✕ to remove it. A new label goes on the
-lid's face. A file saved with the one label of before opens as a list of
+lid's face and says the name of the first board no label names yet (edit
+or clear it). A file saved with the one label of before opens as a list of
 one (none, if that label was off).
 
 | Control | Range | Default | Notes |

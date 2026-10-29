@@ -235,3 +235,9 @@ L2, L3, L4.
   card (`#mountCard`) after it — the whole case's, hidden on a hinged case,
   which hangs on no wall. Its first row, "Wall mount" under the card of the
   same name, is "Kind".
+- **After the review (the user).** A new label says the name of the first
+  board no label names yet (`addLabel`; batteries skipped), empty when every
+  board is named or there is none.
+- **After the review (the user).** The vents' faces are a row of buttons
+  like the wall mount's (the `toggles` control, any number pressed), not six
+  checkboxes; the ids `#vents_face_<face>` stay.

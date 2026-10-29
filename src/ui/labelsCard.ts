@@ -9,6 +9,7 @@ import { FACES } from '../geo/face';
 import type { LabelAnchor, LabelState } from '../geo/extras';
 import { LABELS_MAX, LABEL_ANCHORS, LABEL_FONTS, LABEL_MARGIN_MAX, LABEL_MAX_CHARS, defaultLabel, labelFace, labelFaces } from '../geo/extras';
 import { LABEL_FONT_FILES } from './fonts';
+import { boardOf } from '../boards/placement';
 import type { AppState } from '../state/schema';
 
 function patchLabel(state: AppState, index: number, patch: Partial<LabelState>): AppState {
@@ -135,10 +136,17 @@ export function renderLabelsCard(
   return { sync };
 }
 
-/** A new label on the lid's face (the first face the shape allows a label on otherwise). */
+/**
+ * A new label on the lid's face (the first face the shape allows a label on
+ * otherwise), saying the name of the first board no label names yet —
+ * batteries have no name worth printing.
+ */
 export function addLabel(state: AppState): AppState {
   if (state.labels.length >= LABELS_MAX) return state;
   const faces = labelFaces(state.shape.kind);
   const face = faces.includes(state.lid.face) ? state.lid.face : faces[0];
-  return { ...state, labels: [...state.labels, defaultLabel(face)] };
+  const named = new Set(state.labels.map((label) => label.text.trim()));
+  const name = state.boards.map((placement) => boardOf(placement)).filter((def) => !def.battery)
+    .map((def) => [...def.name.trim()].slice(0, LABEL_MAX_CHARS).join('')).find((one) => one !== '' && !named.has(one)) ?? '';
+  return { ...state, labels: [...state.labels, { ...defaultLabel(face), text: name }] };
 }

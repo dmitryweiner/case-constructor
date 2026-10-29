@@ -16,6 +16,8 @@ import { applyAffine } from '../src/geo/surface';
 import type { LabelRaster } from '../src/geo/label';
 import { labelPlacement, labelSurface, labelWarnings, rasterRuns, sanitizeLabelRaster } from '../src/geo/label';
 import { extraCutters } from '../src/geo/cutters';
+import { addLabel } from '../src/ui/labelsCard';
+import { boardOf } from '../src/boards/placement';
 import { validateMesh } from '../src/geo/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
@@ -704,6 +706,17 @@ describe('label', () => {
     expect(of(3)).toEqual(['warn.labelOnBed']);
     expect(of(4)).toEqual(['warn.labelTooBig']);
     expect(messages.filter((m) => m.code === 'warn.labelsOverlap').map((m) => m.params)).toEqual([{ a: 1, b: 2 }]);
+  });
+
+  it('a new label says the name of the first board no label names yet', () => {
+    const state = sanitizeState({ ...defaultState(), boards: [{ board: 'battery', battery: { kind: '18650' } }, { board: 'raspberry-pi-4b' }, { board: 'esp32-devkitc-v4' }] });
+    const one = addLabel(state);
+    expect(one.labels[0]).toMatchObject({ face: state.lid.face, text: 'Raspberry Pi 4 Model B' });
+    const two = addLabel(one);
+    expect(two.labels[1].text).toBe(boardOf(two.boards[2]).name);
+    // every board named already, or no boards: empty
+    expect(addLabel(two).labels[2].text).toBe('');
+    expect(addLabel(sanitizeState({ ...defaultState(), boards: [] })).labels[0].text).toBe('');
   });
 
   it('the sanitizer keeps one line of at most 40 characters', () => {

@@ -476,6 +476,8 @@ export const he: Record<Key, string> = {
   'panel.mounting': 'תלייה על קיר',
   'panel.labels': 'כיתובים',
   'vents.pattern': 'דגם',
+  'vents.faces': 'דפנות',
+  'vents.faces.hint': 'לחצו על הדפנות שבהן צריך אוורור, כמה שרוצים',
   'vents.slots': 'חריצים',
   'vents.hex': 'משושים',
   'vents.round': 'חורים',

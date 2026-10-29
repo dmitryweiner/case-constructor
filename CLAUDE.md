@@ -568,7 +568,7 @@ Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHei
 `_port_add`, `_save`. The card rebuilds only when a custom board's structure changes
 (`customSignature`), so a number input keeps its focus while typing.
 Extras: toggled cards `#on_vents`, `#on_fan`; vents
-`#vents_face_<face>` (checkboxes), `#vents_pattern_slots|hex|round`,
+`#vents_face_<face>` (toggle buttons, any number pressed), `#vents_pattern_slots|hex|round`,
 `#vents_along_x|y`, `#vents_size|_pitch|_margin`; fan `#fan_face` (select),
 `#fan_size_25…60`, `#fan_x|_y|_screwD`; wall mount
 `#mount_kind_none|keyholes|ears`, `#mount_face_<face>` (the face against the wall), `#mount_keyhole_through|closed`, ears

@@ -475,6 +475,8 @@ export const ru: Record<Key, string> = {
   'panel.mounting': 'Крепление на стену',
   'panel.labels': 'Надписи',
   'vents.pattern': 'Узор',
+  'vents.faces': 'Грани',
+  'vents.faces.hint': 'нажмите грани, где нужна вентиляция, — сколько угодно',
   'vents.slots': 'прорези',
   'vents.hex': 'соты',
   'vents.round': 'отверстия',

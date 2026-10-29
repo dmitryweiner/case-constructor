@@ -484,6 +484,8 @@ export const en = {
   'panel.mounting': 'Wall mount',
   'panel.labels': 'Labels',
   'vents.pattern': 'Pattern',
+  'vents.faces': 'Faces',
+  'vents.faces.hint': 'press each face to vent, as many as you like',
   'vents.slots': 'slots',
   'vents.hex': 'hexagons',
   'vents.round': 'holes',
