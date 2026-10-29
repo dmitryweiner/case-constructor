@@ -8,9 +8,10 @@ handheld). **Case → Shape → Hinged.**
 
 The **lower half** is the base, the **upper half** the cover, as the case
 lies closed. Each is a box of its own with its own boards, lid, openings,
-vents, fan and label. **Editing** (at the top of the Boards card, it stays
-in sight while the boards scroll) picks which half the boards — and the
-lid, openings and extras cards below — show: *lower* or *upper*. A board added goes to the half being edited.
+vents, fan and label. The cards that edit one half — Boards, Lid,
+Openings, Mounting and label — stand in one frame headed by **Editing**:
+*lower* or *upper* (it stays in sight while they scroll) picks the half
+they all show. A board added goes to the half being edited.
 
 The hinge runs along the lower half's **back** edge and the upper half's
 **front** edge. Each half's **top** is its *inner face* — the face the other

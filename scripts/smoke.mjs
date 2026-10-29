@@ -540,6 +540,7 @@ label('hinged');
 await page.click('#case_kind_hinged');
 await expectWatertight('hinged');
 if (!(await page.locator('#hingeCard').isVisible()) || !(await page.locator('#halfBar').isVisible())) errors.push('[hinged] no hinge card or half switch');
+if (!(await page.locator('#halfGroup').evaluate((group) => group.contains(document.getElementById('lidParams'))))) errors.push('[hinged] the lid is not under the half switch');
 if (!(await page.locator('#lid_face_front').isDisabled())) errors.push('[hinged] a half allows a side lid');
 if (await page.locator('#mount_kind').isVisible()) errors.push('[hinged] a hinged case offers a wall mount');
 await page.click('#edit_half_b');

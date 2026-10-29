@@ -110,6 +110,8 @@ const cutAdd = el('cutAdd', HTMLButtonElement);
 const lidParams = el('lidParams', HTMLDivElement);
 const hingeCard = el('hingeCard', HTMLElement);
 const hingeParams = el('hingeParams', HTMLDivElement);
+/** A hinged case: the cards that edit one half, framed under one switch (`#edit_half_*`). */
+const halfGroup = el('halfGroup', HTMLDivElement);
 const halfBar = el('halfBar', HTMLDivElement);
 const halfParams = el('halfParams', HTMLDivElement);
 const angleParams = el('angleParams', HTMLDivElement);
@@ -253,6 +255,7 @@ function syncPanel(): void {
   const hinged = isHinged(state);
   hingeCard.hidden = !hinged;
   halfBar.hidden = !hinged;
+  halfGroup.classList.toggle('on', hinged);
   hingeRows.sync(state);
   cableRows.sync(state);
   cableAdd.disabled = state.hinge.cables.length >= MAX_CABLES;

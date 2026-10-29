@@ -335,4 +335,6 @@ stands alone.
 - **H10, the review (2026-10-29).** The switch reads *Editing: lower /
   upper* on one row (`half.a.short`, `half.b.short`); the warnings keep
   the full *Lower half: / Upper half:*.
-
+  Then (the user, 2026-10-29) one frame instead: the Boards, Lid,
+  Openings and Mounting cards stand in `#halfGroup`, framed when the case is
+  hinged and headed by the one switch, sticky while they scroll.
