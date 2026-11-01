@@ -44,6 +44,38 @@ body {
   border-bottom: 1px solid var(--line);
 }
 
+#storageNote {
+  padding: 6px 12px;
+  background: rgba(224, 108, 92, 0.14);
+  border-bottom: 1px solid var(--bad);
+  font-size: 12.5px;
+}
+
+.storage-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 2px 0;
+}
+
+.storage-line span {
+  flex: 1;
+}
+
+.storage-close {
+  padding: 0 6px;
+  background: none;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.storage-close:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
 #brand {
   font-size: 17px;
   font-weight: 700;

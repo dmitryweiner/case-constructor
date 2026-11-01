@@ -80,7 +80,10 @@ freely; a temporary script that turns out useful becomes a permanent one.
   warning, the Lid tab with the screws, a lid export), vents, fan, through
   and closed keyholes, ears by count and walls, a label in a real font,
   export of each mode with a real download (times printed), undo/redo, user
-  preset and the current project through a reload (a first visit opens the first preset), project file round trip and a foreign JSON
+  preset and the current project through a reload (a first visit opens the first preset),
+  a refusing storage's banner (outlives a rebuild, a preset's note dismissed,
+  gone once writes work), a changed preset no longer shown as open (and
+  back on undo), project file round trip and a foreign JSON
   refused, the view modes per parts tab and the caption (the Lid tab's lid
   on its outer face), all four languages (switch, memory, the open preset
   keeps its name, a fresh `he-IL` browser keeps the panel on the left), the
@@ -107,7 +110,8 @@ freely; a temporary script that turns out useful becomes a permanent one.
 - `scripts/inspect.mjs` — builds a case in Node (through vitest, so the same
   module resolution) and reports per part (body, lid, and the printed screw
   when there is one): triangles, degenerate triangles, watertight, volume,
-  bbox, stage timings; `--stl <dir>` writes the raw parts. Manifold is lazy:
+  bbox, stage timings; `--stl <dir>` writes the raw parts. Labels are not
+  built (they need the browser's fonts). Manifold is lazy:
   a boolean's cost shows where its mesh is read, usually at the end.
   Flags: `--preset`, `--file <json>`, `--state '<json>'`, `--set
   path.in.state=value` (repeatable; JSON values like `boards=[]` work),
@@ -502,22 +506,20 @@ browser is within ~10 % of it):
 |---|---|---|---|
 | default Pi 4 case (preview) | 12 | 75 ms | 6k |
 | default Pi 4 case (export) | 24 | 130 ms | 12k |
-| `pi4-desktop` preset (vents, posts, label) — preview | 12 | 250 ms | 20k |
-| `pi4-desktop` — export | 24 | 0.5 s | 44k |
-| `pi4-desktop` — finest export | 64 | 2.0 s | 150k |
-| `cylinder-puck` — finest export | 64 | 1.2 s | 130k |
+| `pi4-desktop` preset (back vents, snaps; no label in Node) — preview | 12 | 135 ms | 12.6k |
+| `pi4-desktop` — export | 24 | 0.27 s | 29k |
+| `pi4-desktop` — finest export | 64 | 1.0 s | 113k |
 | default Pi 4 on printed P6 screws — preview | 12 | 275 ms | 27k + a 6.3k screw |
 | printed P6 screws — export | 24 | 1.3 s | 175k + a 50k screw |
 | printed P6 screws — finest export | 64 | 2.8 s | 317k + an 87k screw |
-| `klipperscreen-console` (TFT50 on the slope, a Pi on its back) — preview | 12 | 270 ms | 14k |
-| `ha-wall-panel` (Touch Display 2, a Pi 5 on its back) — preview | 12 | 255 ms | 19k |
-| `ha-wall-panel` — finest export | 64 | 1.5 s | 89k |
-| `meshtastic-cardkb` (Heltec V3 + CardKB) — preview | 12 | 140 ms | 7k |
+| `klipperscreen-console` (TFT50 on the slope, a Pi on its back) — preview | 12 | 260 ms | 14k |
+| `ha-wall-panel` (Touch Display 2, a Pi 5 on its back) — preview | 12 | 250 ms | 19k |
+| `ha-wall-panel` — finest export | 64 | 1.6 s | 97k |
 | CardKB with printed caps — preview | 12 | 135 ms | 12.5k + 9.6k of caps |
 | CardKB with printed caps — finest export | 64 | 0.75 s | 64k + the caps |
 | KeebDeck Basic, a hole per key — preview | 12 | 260 ms | 19k |
-| `meshtastic-clamshell` (two halves, a printed hinge) — preview | 12 | 160 + 125 ms (a half's build is reused while the other is edited) | 9k + 10k + 2k of leaves |
-| `meshtastic-clamshell` — finest export | 64 | 0.8 + 0.7 s | 43k + 44k + 10k of leaves |
+| `repair-station-clamshell` (two halves, a printed hinge; the caps not counted) — preview | 12 | 260 + 130 ms (a half's build is reused while the other is edited) | 18k + 9.6k + 2k of leaves |
+| `repair-station-clamshell` — finest export | 64 | 2.1 + 0.76 s | 94k + 46k + 10k of leaves |
 
 Decided at M1 and confirmed at M8: the preview is the exact case (the same
 pipeline as the export, 12 segments per quarter arc), rebuilt 120 ms after
@@ -538,9 +540,9 @@ Built-in presets: one JSON file each in `src/state/presets/<id>.json`
 merge, lists and values replace — and sanitized), imported in the menu's
 order by `src/state/presets.ts`. `tests/presetFile.test.ts` fails on a file
 that is not imported, not named after its id, or has a key the sanitizer
-would drop (a typo). `pi4-desktop`, `pi-zero-gpio`,
-`esp32-sensor-box`, `esp32-18650-box`, `arduino-uno-box`, `cylinder-puck`,
-`klipperscreen-console`, `ha-wall-panel`, `meshtastic-cardkb`, `meshtastic-clamshell`, `plain-box`. Each is
+would drop (a typo). `pi4-desktop`, `esp32-sensor-box`,
+`esp32-18650-box`, `arduino-uno-box`, `klipperscreen-console`,
+`ha-wall-panel`, `repair-station-clamshell`, `plain-box`. Each is
 built by `tests/presetsBuild.test.ts` (closed, no slivers, no overlap, no
 layout warnings; a hinged one per half, with no hinge warnings). A preset's name is one English string in its file
 (not translated: the review asked for one name); its note is the
@@ -551,7 +553,16 @@ The current project (`state/currentProject.ts`, key
 written on every `applyState` and `setPresetRef`, and again on `pagehide` /
 a hidden tab. Startup opens it, or the first preset (`PRESETS[0]`) when
 there is none; so a fresh browser — the smoke's, snap's — starts from
-`pi4-desktop`, not `defaultState()`.
+`pi4-desktop`, not `defaultState()`. A failed write (`state/storage.ts`:
+`writeStorage` → `'ok' | 'blocked' | 'full'`, the user presets' too) is
+shown in the banner `#storageNote` under the top bar (`ui/storageNote.ts`):
+the project's line while it fails, a preset's until ✕ or a successful
+preset action. Never in `#blockers`: every rebuild rewrites it.
+The preset is shown as open (the button's name, the list's
+`aria-current`) only while `presetSignature(state)` — the state without
+the parts tab, resolution and print layout — equals the preset's
+(`presetBase`, computed from the ref); undo back to it shows it again. A
+project file's name (no ref) has nothing to compare with and stays.
 
 ## What is not in v1
 
@@ -633,3 +644,4 @@ Top bar: `#presetBtn` (list `#presetList [data-preset="b:<id>"|"u:<name>"]`),
 `#saveBtn`, `#fileOpenBtn`, `#fileSaveBtn`, `#fileInput`, `#undoBtn`,
 `#redoBtn`,
 `#langSel`, `#panelBtn`.
+Under the top bar, the storage banner `#storageNote` (`.storage-close` dismisses a preset's note).

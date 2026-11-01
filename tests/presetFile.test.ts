@@ -1,7 +1,7 @@
 import { decodePresetFile, encodePresetFile, presetFileName } from '../src/state/presetFile';
 import { nextPresetNumber, parseUserPresets } from '../src/state/userPresets';
 import { defaultState, sanitizeState } from '../src/state/schema';
-import { PRESETS, presetById } from '../src/state/presets';
+import { PRESETS, presetById, presetSignature } from '../src/state/presets';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -78,5 +78,24 @@ describe('built-in presets', () => {
       const built = new Set(keyPaths(presetById(name.replace(/\.json$/, ''))?.build()));
       expect(keyPaths(state).filter((path) => !built.has(path)), name).toEqual([]);
     }
+  });
+});
+
+describe('whether the project still is the open preset', () => {
+  const preset = PRESETS[0].build();
+
+  it('is the preset as opened, and again through storage', () => {
+    expect(presetSignature(sanitizeState(preset))).toBe(presetSignature(PRESETS[0].build()));
+    expect(presetSignature(sanitizeState(JSON.parse(JSON.stringify(preset))))).toBe(presetSignature(preset));
+  });
+
+  it('is no longer the preset once a parameter changes', () => {
+    const changed = sanitizeState({ ...preset, shape: { ...preset.shape, wall: preset.shape.wall + 0.5 } });
+    expect(presetSignature(changed)).not.toBe(presetSignature(preset));
+  });
+
+  it('still is the preset when only the view or the export changes', () => {
+    const viewed = sanitizeState({ ...preset, exportMode: 'lid', resolution: 64, print: { lid: 'behind', gap: 20 } });
+    expect(presetSignature(viewed)).toBe(presetSignature(preset));
   });
 });

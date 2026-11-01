@@ -5,6 +5,8 @@
 
 import type { AppState } from './schema';
 import { sanitizeState } from './schema';
+import type { StorageWrite } from './storage';
+import { writeStorage } from './storage';
 
 export const CURRENT_PROJECT_KEY = 'caseconstructor_current_v1';
 const VERSION = 1;
@@ -49,11 +51,7 @@ export function parseCurrentProject(raw: string): CurrentProject | null {
   };
 }
 
-export function saveCurrentProject(project: CurrentProject, storage: () => ProjectStorage = () => localStorage): boolean {
-  try {
-    storage().setItem(CURRENT_PROJECT_KEY, JSON.stringify({ version: VERSION, ...project }));
-    return true;
-  } catch {
-    return false;
-  }
+/** Why the write failed matters to the person: blocked never keeps anything, full is fixed by deleting presets. */
+export function saveCurrentProject(project: CurrentProject, storage: () => ProjectStorage = () => localStorage): StorageWrite {
+  return writeStorage(storage, CURRENT_PROJECT_KEY, JSON.stringify({ version: VERSION, ...project }));
 }

@@ -199,7 +199,11 @@ export const en = {
   'error.export': 'Export failed: {error}',
   'error.notPreset': '“{name}” is not a Case Constructor project file.',
   'error.presetSave': 'Could not save the preset: the browser storage is unavailable.',
+  'error.presetSaveFull': 'Could not save the preset: the browser storage is full. Delete presets you no longer need and try again.',
   'error.presetDelete': 'Could not delete the preset: the browser storage is unavailable.',
+  'storage.project.blocked': 'This browser does not keep your project: its storage is unavailable (a private window or blocked site data). Save the project to a file with ⬇️ before closing the page.',
+  'storage.project.full': 'Your latest changes are not kept in this browser: its storage is full. Delete presets you no longer need, or save the project to a file with ⬇️.',
+  'storage.dismiss': 'Dismiss',
 
   // --- presets ---
   'presets.title': 'Presets',
@@ -546,16 +550,13 @@ export const en = {
   'progress.extras': 'Ears and label',
 
   // --- built-in presets ---
-  'preset.pi4-desktop.note': "Vents on two sides, the lid on four screws into heat-set inserts, a label",
-  'preset.pi-zero-gpio.note': "A flat case with the 40-pin header open through the lid",
-  'preset.esp32-sensor-box.note': "Hex vents, keyholes for the wall, the board slides into rails",
+  'preset.pi4-desktop.note': 'Against all four walls, the connectors flush with the outside; vents at the back, the lid on snaps, an engraved label',
+  'preset.esp32-sensor-box.note': 'Hung from the top on rails on screws, printed caps over the buttons, hex vents, the lid underneath on snaps, ears for the wall',
   'preset.esp32-18650-box.note': "Two 18650 cells in cradles under printed clamps, the lid on countersunk screws",
   'preset.arduino-uno-box.note': "Headers open for jumper wires, the lid on M3 screws",
-  'preset.cylinder-puck.note': "A round LoRa node: the display through the lid, vents below, ears",
   'preset.klipperscreen-console.note': "A BTT Pi TFT50 on the slope on clamp tabs, a Pi 4 on its back, the lid underneath, vents at the back",
   'preset.ha-wall-panel.note': "Touch Display 2 7-inch held by the lid, a Pi 5 on its back, side vents, keyholes for the wall",
-  'preset.meshtastic-cardkb.note': "A Meshtastic node: Heltec V3 and an M5Stack CardKB under the lid, the screen and the keys in their windows, a hole for the LoRa antenna",
-  'preset.meshtastic-clamshell.note': "A Meshtastic communicator that folds: the CardKB below, the Heltec V3's screen above, the Grove cable through the hinge, a printed hinge on screws, magnets to keep it closed",
+  'preset.repair-station-clamshell.note': 'A case that folds open: an M5Stack CardKB with printed caps on screwed rails below, a 4-inch touch TFT above, a cable through the hinge, a printed hinge on screw axles, both lids underneath on M3 screws',
   'preset.plain-box.note': "An empty rounded box with a flat lid on snaps",
   'show.what': "Parts — shown and exported",
   'show.how': "View",

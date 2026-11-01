@@ -64,6 +64,16 @@ export const PRESETS: Preset[] = [
   plainBox,
 ].map(fromFile);
 
+/**
+ * What makes a project the preset it was opened from: everything but how it
+ * is viewed and exported (the parts tab, the resolution, the print layout).
+ * The presets button and list show a preset as open only while the project's
+ * signature is still the preset's: changed, it is no longer that preset.
+ */
+export function presetSignature(state: AppState): string {
+  return JSON.stringify({ ...state, exportMode: null, resolution: null, print: null });
+}
+
 export function presetById(id: string): Preset | undefined {
   return PRESETS.find((preset) => preset.id === id);
 }

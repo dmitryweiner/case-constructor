@@ -156,7 +156,8 @@ it('inspect', async () => {
     const stages: string[] = [];
     const built = buildCase(csg, one, segments, (stage) => {
       stages.push(`${stage.code} @${(performance.now() - started).toFixed(0)}`);
-    }, null, half ? halfHinge(state, half) : null);
+      // labels are rasterised by the browser's fonts: none here
+    }, [], half ? halfHinge(state, half) : null);
     const total = performance.now() - started;
     console.log(`${half ? `half ${half}: ` : ''}state: ${JSON.stringify({ shape: one.shape.kind, lid: one.lid.face, depth: one.lid.depth, boards: one.boards.map((b) => b.board) })}`);
     console.log(`dims ${built.dims.w.toFixed(2)}×${built.dims.d.toFixed(2)}×${built.dims.h.toFixed(2)}, segments ${segments}, ${total.toFixed(0)} ms`);

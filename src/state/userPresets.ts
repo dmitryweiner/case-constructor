@@ -4,6 +4,8 @@
 
 import type { AppState } from './schema';
 import { sanitizeState } from './schema';
+import type { StorageWrite } from './storage';
+import { writeStorage } from './storage';
 
 export const USER_PRESETS_KEY = 'caseconstructor_user_presets_v1';
 
@@ -40,13 +42,8 @@ export function parseUserPresets(raw: string): UserPreset[] {
   return presets;
 }
 
-export function saveUserPresets(presets: UserPreset[]): boolean {
-  try {
-    localStorage.setItem(USER_PRESETS_KEY, JSON.stringify(presets));
-    return true;
-  } catch {
-    return false;
-  }
+export function saveUserPresets(presets: UserPreset[], storage: () => Pick<Storage, 'setItem'> = () => localStorage): StorageWrite {
+  return writeStorage(storage, USER_PRESETS_KEY, JSON.stringify(presets));
 }
 
 /**

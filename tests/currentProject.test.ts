@@ -30,7 +30,7 @@ describe('the current project in storage', () => {
   it('comes back as it was saved: state, name and the open preset', () => {
     const storage = fakeStorage();
     const state = { ...defaultState(), exportMode: 'lid' as const };
-    expect(saveCurrentProject({ name: 'Mine', ref: 'u:Mine', state }, () => storage)).toBe(true);
+    expect(saveCurrentProject({ name: 'Mine', ref: 'u:Mine', state }, () => storage)).toBe('ok');
     expect(storage.data.has(CURRENT_PROJECT_KEY)).toBe(true);
     expect(loadCurrentProject(() => storage)).toEqual({ name: 'Mine', ref: 'u:Mine', state });
   });
@@ -59,11 +59,11 @@ describe('the current project in storage', () => {
 
   it('never throws when storage is unavailable or full', () => {
     expect(loadCurrentProject(() => broken)).toBeNull();
-    expect(saveCurrentProject({ name: '', ref: '', state: defaultState() }, () => broken)).toBe(false);
+    expect(saveCurrentProject({ name: '', ref: '', state: defaultState() }, () => broken)).toBe('blocked');
     const missing = (): Storage => {
       throw new Error('localStorage is blocked');
     };
     expect(loadCurrentProject(missing)).toBeNull();
-    expect(saveCurrentProject({ name: '', ref: '', state: defaultState() }, missing)).toBe(false);
+    expect(saveCurrentProject({ name: '', ref: '', state: defaultState() }, missing)).toBe('blocked');
   });
 });

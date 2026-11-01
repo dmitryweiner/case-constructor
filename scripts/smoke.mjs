@@ -584,13 +584,13 @@ await page.click('#case_kind_console');
 if (!(await page.locator('#lid_face_top').isDisabled())) errors.push('[lid] the console allows a lid on its slope');
 await expectWatertight('lid:console');
 
-// the hinged preset: two halves, a printed hinge, a cable, magnets
-label('preset:meshtastic-clamshell');
+// the hinged preset: two halves, a printed hinge, a cable
+label('preset:repair-station-clamshell');
 await page.click('#presetBtn');
-await page.click('#presetList [data-preset="b:meshtastic-clamshell"]');
-await expectWatertight('preset:meshtastic-clamshell');
-if ((await page.locator('#warnings .warn-line:not(.info)').count()) > 0) errors.push('[preset:meshtastic-clamshell] warnings');
-if (!(await drawn()).includes('hinge')) errors.push('[preset:meshtastic-clamshell] no printed hinge drawn');
+await page.click('#presetList [data-preset="b:repair-station-clamshell"]');
+await expectWatertight('preset:repair-station-clamshell');
+if ((await page.locator('#warnings .warn-line:not(.info)').count()) > 0) errors.push('[preset:repair-station-clamshell] warnings');
+if (!(await drawn()).includes('hinge')) errors.push('[preset:repair-station-clamshell] no printed hinge drawn');
 await page.click('#presetBtn');
 await page.click('#presetList [data-preset="b:plain-box"]');
 
@@ -920,6 +920,34 @@ await page.click('#presetList [data-preset="u:Smoke preset"]');
 await page.waitForTimeout(100);
 if ((await page.locator('#case_wall').inputValue()) !== '3.5') errors.push('[user-preset] the wall is not 3.5');
 
+// storage that refuses: the banner says so and outlives rebuilds; a preset's note is dismissed; it goes once writes work
+label('storage-note');
+await page.evaluate(() => {
+  window.__setItem = Storage.prototype.setItem;
+  Storage.prototype.setItem = () => {
+    throw new DOMException('quota', 'QuotaExceededError');
+  };
+});
+await setRange('case_wall', 3);
+await expectWatertight('storage-note');
+const storageText = () => page.locator('#storageNote').textContent();
+if (!(await page.locator('#storageNote').isVisible()) || !(await storageText()).includes('storage is full')) {
+  errors.push(`[storage-note] no banner for a full storage: "${await storageText()}"`);
+}
+page.once('dialog', (dialog) => dialog.accept('Unsaved preset'));
+await page.click('#saveBtn');
+if (!(await storageText()).includes('Could not save the preset')) errors.push('[storage-note] no note for the preset');
+await page.click('#presetBtn');
+if (await page.locator('#presetList [data-preset="u:Unsaved preset"]').count()) errors.push('[storage-note] an unsaved preset is listed');
+await page.click('#presetsClose');
+await page.click('#storageNote .storage-close');
+if ((await storageText()).includes('Could not save the preset')) errors.push('[storage-note] the preset note was not dismissed');
+await page.evaluate(() => {
+  Storage.prototype.setItem = window.__setItem;
+});
+await setRange('case_wall', 3.5);
+if (await page.locator('#storageNote').isVisible()) errors.push(`[storage-note] the banner stays once writes work: "${await storageText()}"`);
+
 // the project file round trip: save, change, open
 label('file');
 page.once('dialog', (dialog) => dialog.accept('Smoke file'));
@@ -966,6 +994,28 @@ label('view');
 await page.click('#presetBtn');
 await page.click('#presetList [data-preset="b:pi4-desktop"]');
 await expectWatertight('view:preset');
+// a preset is shown as open only while the project still is it; undo brings it back
+label('preset-changed');
+const presetShown = async () => ({
+  button: (await page.locator('#presetBtn').textContent()).trim(),
+  current: await page.evaluate(async () => {
+    document.querySelector('#presetBtn').click();
+    const ref = document.querySelector('#presetList [aria-current="true"]')?.dataset.preset ?? '';
+    document.querySelector('#presetsClose').click();
+    return ref;
+  }),
+});
+// edits within HISTORY_DELAY_MS of each other are one undo step: let the preset's own step land first
+await page.waitForTimeout(700);
+let shown = await presetShown();
+if (shown.button !== 'Pi 4 desktop case' || shown.current !== 'b:pi4-desktop') errors.push(`[preset-changed] opened: ${JSON.stringify(shown)}`);
+await setRange('case_wall', 2.5);
+await page.waitForTimeout(700);
+shown = await presetShown();
+if (shown.button !== 'Presets…' || shown.current !== '') errors.push(`[preset-changed] changed, still shown as open: ${JSON.stringify(shown)}`);
+await page.click('#undoBtn');
+shown = await presetShown();
+if (shown.button !== 'Pi 4 desktop case' || shown.current !== 'b:pi4-desktop') errors.push(`[preset-changed] undone: ${JSON.stringify(shown)}`);
 const tabOrder = await page.$$eval('.tabs .tab', (nodes) => nodes.map((n) => n.id));
 if (tabOrder[0] !== 'tabBoth') errors.push(`[view] the first export tab is ${tabOrder[0]}`);
 await page.click('#tabBoth');

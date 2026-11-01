@@ -40,6 +40,8 @@ import { headLimitsOf, lidPosts } from './geo/lidPosts';
 import { postCollisions, postsInOpenings, printedScrewWarnings } from './geo/fastening';
 import { setupAdjustmentButtons } from './ui/adjust';
 import { createProgress } from './ui/progress';
+import type { StorageStatus } from './ui/storageNote';
+import { renderStorageNote } from './ui/storageNote';
 import { renderPresetList } from './ui/presetList';
 import type { PresetRow } from './ui/presetList';
 import { applyStaticText } from './ui/staticText';
@@ -69,13 +71,14 @@ import { encodeSTL } from './geo/stl';
 import { assessExport, validateMesh } from './geo/validate';
 import type { AppState, ExportMode } from './state/schema';
 import { sanitizeState, RESOLUTIONS } from './state/schema';
-import { PRESETS, presetById } from './state/presets';
+import { PRESETS, presetById, presetSignature } from './state/presets';
 import { encodePresetFile, decodePresetFile, presetFileName } from './state/presetFile';
 import type { UserPreset } from './state/userPresets';
 import { loadUserPresets, saveUserPresets, nextPresetNumber } from './state/userPresets';
 import { History } from './state/history';
 import type { CurrentProject } from './state/currentProject';
 import { loadCurrentProject, saveCurrentProject } from './state/currentProject';
+import type { StorageWrite } from './state/storage';
 import type { Half } from './state/hinged';
 import { casesOf, foldOfState, halfHinge, halfState, halfStrip, hingeNotes, isHinged, withHalf } from './state/hinged';
 import type { JobPart } from './worker/protocol';
@@ -132,6 +135,9 @@ const statusEl = el('status', HTMLParagraphElement);
 const auditEl = el('audit', HTMLParagraphElement);
 const warningsEl = el('warnings', HTMLDivElement);
 const blockersEl = el('blockers', HTMLParagraphElement);
+const storageNote = el('storageNote', HTMLDivElement);
+/** What browser storage failed to keep: shown under the top bar, never in the blockers line a rebuild rewrites. */
+let storageStatus: StorageStatus = { project: 'ok', preset: null };
 const presetBtn = el('presetBtn', HTMLButtonElement);
 const presetsPanel = el('presets', HTMLDivElement);
 const presetsClose = el('presetsClose', HTMLButtonElement);
@@ -281,6 +287,7 @@ function syncPanel(): void {
   syncView();
   resolutionSel.value = String(state.resolution);
   updateHistoryButtons();
+  showPreset();
   refresh();
 }
 
@@ -1054,8 +1061,10 @@ function download(data: BlobPart, filename: string, type = 'model/stl'): void {
 let userPresets: UserPreset[] = loadUserPresets();
 /** Name of the last opened preset — the suggestion when saving to a file. */
 let presetName = '';
-/** Which preset is open: 'b:<id>', 'u:<name>' or empty — the list highlights it. */
+/** Which preset the project came from: 'b:<id>', 'u:<name>' or empty. */
 let presetRef = '';
+/** That preset's `presetSignature`, '' when there is none: while the project's matches, the preset is shown as open. */
+let presetBase = '';
 
 function builtinName(id: string): string {
   return presetById(id)?.name ?? id;
@@ -1076,9 +1085,23 @@ function presetRows(): PresetRow[] {
 function setPresetRef(ref: string, name: string): void {
   presetRef = ref;
   presetName = name;
+  const id = ref.slice(2);
+  const source = ref.startsWith('b:') ? presetById(id)?.build()
+    : ref.startsWith('u:') ? userPresets.find((item) => item.name === id)?.state : undefined;
+  presetBase = source ? presetSignature(source) : '';
   keepProject();
-  presetBtn.textContent = name || t('topbar.presets');
-  if (!presetsPanel.hidden) renderPresets();
+  showPreset();
+}
+
+/**
+ * The preset on the button and highlighted in the list only while the project
+ * still is it: changed, it is no longer that preset (undo back to it, and it
+ * is again). A project file's name has nothing to compare with and stays.
+ */
+function showPreset(): void {
+  const open = presetRef !== '' && presetSignature(state) === presetBase;
+  presetBtn.textContent = (presetRef === '' || open ? presetName : '') || t('topbar.presets');
+  if (!presetsPanel.hidden) renderPresetList(presetList, presetRows(), open ? presetRef : '', { onPick: openPreset, onDelete: deletePreset });
 }
 
 function firstPreset(): CurrentProject {
@@ -1088,7 +1111,20 @@ function firstPreset(): CurrentProject {
 
 /** The current project into localStorage: on every change, and once more when the page goes. */
 function keepProject(): void {
-  saveCurrentProject({ name: presetName, ref: presetRef, state });
+  const project = saveCurrentProject({ name: presetName, ref: presetRef, state });
+  if (project !== storageStatus.project) setStorageStatus({ ...storageStatus, project });
+}
+
+function setStorageStatus(next: StorageStatus): void {
+  storageStatus = next;
+  renderStorageNote(storageNote, storageStatus, () => setStorageStatus({ ...storageStatus, preset: null }));
+}
+
+/** A preset written or deleted: its note goes on success, and the project gets another try (deleting frees space). */
+function presetWritten(action: 'save' | 'delete', result: StorageWrite): boolean {
+  setStorageStatus({ ...storageStatus, preset: result === 'ok' ? null : { action, result } });
+  if (result === 'ok') keepProject();
+  return result === 'ok';
 }
 
 // every change is already kept; a closing tab (pagehide) or one sent to the
@@ -1102,13 +1138,9 @@ function autoPresetName(): string {
   return t('presets.auto', { n: nextPresetNumber(userPresets, autoPresetPrefixes()) });
 }
 
-function renderPresets(): void {
-  renderPresetList(presetList, presetRows(), presetRef, { onPick: openPreset, onDelete: deletePreset });
-}
-
 function openPresets(): void {
-  renderPresets();
   presetsPanel.hidden = false;
+  showPreset();
 }
 
 function closePresets(): void {
@@ -1134,13 +1166,10 @@ function openPreset(ref: string): void {
 function deletePreset(ref: string): void {
   const name = ref.slice(2);
   const next = userPresets.filter((item) => item.name !== name);
-  if (!saveUserPresets(next)) {
-    blockersEl.textContent = t('error.presetDelete');
-    return;
-  }
+  if (!presetWritten('delete', saveUserPresets(next))) return;
   userPresets = next;
   if (presetRef === ref) setPresetRef('', '');
-  renderPresets();
+  showPreset();
 }
 
 presetBtn.addEventListener('click', () => {
@@ -1158,13 +1187,12 @@ window.addEventListener('keydown', (event) => {
 saveBtn.addEventListener('click', () => {
   const name = prompt(t('presets.prompt'), autoPresetName())?.trim();
   if (!name) return;
-  userPresets = [...userPresets.filter((item) => item.name !== name), { name, state }];
-  if (saveUserPresets(userPresets)) {
-    setPresetRef(`u:${name}`, name);
-    flash(saveBtn, '✓');
-  } else {
-    blockersEl.textContent = t('error.presetSave');
-  }
+  const next = [...userPresets.filter((item) => item.name !== name), { name, state }];
+  // the list changes only when it is stored: a preset that is not there must not show in "Mine"
+  if (!presetWritten('save', saveUserPresets(next))) return;
+  userPresets = next;
+  setPresetRef(`u:${name}`, name);
+  flash(saveBtn, '✓');
 });
 
 // --- project file ---
@@ -1355,6 +1383,7 @@ onLangChange(() => {
   panel.scrollTop = scroll;
   // preset names are not translated: only the button's placeholder is
   setPresetRef(presetRef, presetName);
+  setStorageStatus(storageStatus);
   exportBtn.textContent = t('export.button');
   progress.refresh();
   syncPanel();
