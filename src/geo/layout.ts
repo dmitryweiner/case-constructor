@@ -153,6 +153,8 @@ export interface CaseLayout {
   console: { frontH: number; backH: number };
   /** where the inner walls are: x for left / right, y for front / back */
   inner: Record<Edge, number>;
+  /** the side margin of a board on the floor and of a hung one; `posts` what the lid's corner posts take (0 without them) */
+  margin: { floor: number; ceiling: number; posts: number };
 }
 
 /** Board frame → layout frame for a rotation, with the rotated outline's corner at (x, y). */
@@ -446,9 +448,12 @@ function union(rects: readonly Rect[]): Rect | null {
  * the band the lid skirt occupies along the walls.
  */
 export function sideMargin(shape: ShapeState, lid: LidState): number {
-  // a top or bottom lid on screws or magnets has a post in every vertical corner
-  const posts = lid.fastening !== 'snaps' && (lid.face === 'top' || lid.face === 'bottom') ? postDiameter(lid) + 0.5 : 0;
-  return Math.max(shape.margin.side, lid.fit + lid.lip.t + 0.3, posts);
+  return Math.max(shape.margin.side, lid.fit + lid.lip.t + 0.3, postRoom(lid));
+}
+
+/** The room the corner posts take: a top or bottom lid on screws or magnets has a post in every vertical corner. */
+function postRoom(lid: LidState): number {
+  return lid.fastening !== 'snaps' && (lid.face === 'top' || lid.face === 'bottom') ? postDiameter(lid) + 0.5 : 0;
 }
 
 /**
@@ -609,13 +614,15 @@ export function caseLayout(input: LayoutInput): CaseLayout {
     walls: board.walls.map((wall) => ({ ...wall, against: Math.abs(wall.line - inner[wall.side]) < 1e-6 })),
   }));
 
+  const margin = { floor: sideMargin(shape, input.lid), ceiling: hungMargin(shape, input.lid), posts: postRoom(input.lid) };
+
   let frontH = shape.console.frontH;
   let backH = shape.console.backH;
   if (shape.kind !== 'console') {
     // a carried display under the flat top: how far below the ceiling its front ended up
     const boards = placeAll(flatFrame(dims.h)).map((board): PlacedBoard => (board.carried
       ? { ...board, gap: dims.h - shape.floor - board.zTop } : board));
-    return { dims, boards, console: { frontH, backH }, inner };
+    return { dims, boards, console: { frontH, backH }, inner, margin };
   }
   // The console's heights rise together — the slope's angle stays — until
   // its inside clears every floor board, and every board hung from it clears
@@ -639,7 +646,7 @@ export function caseLayout(input: LayoutInput): CaseLayout {
   frontH = Math.min(SIZE_MAX, frontH + deficit);
   backH = Math.min(SIZE_MAX, backH + deficit);
   dims = { ...dims, h: Math.max(frontH, backH) };
-  return { dims, boards: placeAll(slopeFrame(frontH, backH, dims.d)), console: { frontH, backH }, inner };
+  return { dims, boards: placeAll(slopeFrame(frontH, backH, dims.d)), console: { frontH, backH }, inner, margin };
 }
 
 /** The outer size the case is built at. */
@@ -764,28 +771,48 @@ function onBoard(board: PlacedBoard, boxes: readonly SpotBox[]): Pick<Message, '
   return spot ? { spot } : {};
 }
 
-/** How far a board reaches towards a side of the case, by its outline. */
-function towards(board: PlacedBoard, side: Edge): number {
-  const o = board.outline;
-  return side === 'right' ? o.x1 : side === 'left' ? -o.x0 : side === 'back' ? o.y1 : -o.y0;
+/**
+ * Where a board wants the inner wall on a side of the case (x for left /
+ * right, y for front / back), as `cavityOf` puts it: its wall's line when it
+ * stands against that wall, else its footprint's edge plus its side margin.
+ */
+function wantedLine(board: PlacedBoard, side: Edge, layout: CaseLayout): { line: number; edge: number; margin: number } {
+  const f = board.footprint;
+  const edge = side === 'left' ? f.x0 : side === 'right' ? f.x1 : side === 'front' ? f.y0 : f.y1;
+  const wall = board.walls.find((one) => one.side === side);
+  if (wall) return { line: wall.line, edge, margin: 0 };
+  const margin = board.hung ? layout.margin.ceiling : layout.margin.floor;
+  return { line: edge + (side === 'right' || side === 'back' ? margin : -margin), edge, margin };
 }
 
 /**
- * Why a board is not at a wall it asked for: the board that reaches
- * further, or the case's own size. The spot is the strip between its edge
- * and the wall.
+ * Why a board is not at a wall it asked for: the board that wants the wall
+ * further out — standing further towards it, or flush with the board (or
+ * further in) but off the wall and keeping its margin there (the lid's
+ * corner posts may make that wide) — or the case's own size. The spot is
+ * the strip between its edge and the wall.
  */
 function notAgainst(board: PlacedBoard, side: Edge, layout: CaseLayout): Message {
+  const out = side === 'right' || side === 'back' ? 1 : -1;
+  const own = board.walls.find((one) => one.side === side)?.line ?? layout.inner[side];
   const others = layout.boards.filter((other) => other.index !== board.index && other.attached === undefined);
-  const further = others.reduce<PlacedBoard | undefined>((best, other) => (!best || towards(other, side) > towards(best, side) ? other : best), undefined);
+  let further: { other: PlacedBoard; beyond: number; edge: number; margin: number } | undefined;
+  for (const other of others) {
+    const wanted = wantedLine(other, side, layout);
+    const beyond = out * (wanted.line - own);
+    if (!further || beyond > further.beyond) further = { other, beyond, edge: wanted.edge, margin: wanted.margin };
+  }
   const o = board.outline;
   const wall = layout.inner[side];
   const [x0, x1] = side === 'left' ? [wall, o.x0] : side === 'right' ? [o.x1, wall] : [o.x0, o.x1];
   const [y0, y1] = side === 'front' ? [wall, o.y0] : side === 'back' ? [o.y1, wall] : [o.y0, o.y1];
   const strip = onBoard(board, [{ min: [x0, y0, board.zBottom], max: [x1, y1, board.zTop] }]);
-  return further && towards(further, side) > towards(board, side) - 1e-6
-    ? { code: 'warn.notAgainstWall', params: { ...boardParams(board), side, ...boardParams(further, 'other') }, ...strip }
-    : { code: 'warn.notAgainstWallSize', params: { ...boardParams(board), side }, ...strip };
+  if (!further || further.beyond <= 1e-6) return { code: 'warn.notAgainstWallSize', params: { ...boardParams(board), side }, ...strip };
+  const params = { ...boardParams(board), side, ...boardParams(further.other, 'other'), mm: further.beyond.toFixed(1) };
+  // its own edge short of this board's line: only the margin it keeps takes the wall
+  if (further.margin === 0 || out * (further.edge - own) > 1e-6) return { code: 'warn.notAgainstWall', params, ...strip };
+  const posts = layout.margin.posts > 0 && Math.abs(further.margin - layout.margin.posts) < 1e-9;
+  return { code: posts ? 'warn.notAgainstWallPosts' : 'warn.notAgainstWallMargin', params: { ...params, margin: further.margin.toFixed(1) }, ...strip };
 }
 
 /**

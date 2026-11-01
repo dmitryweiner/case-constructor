@@ -200,7 +200,35 @@ describe('a board against a wall', () => {
     // the second board reaches 10 mm further right: it takes the wall, the first is left short of it
     const codes = collisions(caseLayout(state));
     const pushed = codes.filter((m) => m.code === 'warn.notAgainstWall').map((m) => m.params);
-    expect(pushed).toEqual([{ board: 1, boardName: 'Raspberry Pi 4 Model B', side: 'right', other: 2, otherName: 'Raspberry Pi 4 Model B' }]);
+    expect(pushed).toEqual([{ board: 1, boardName: 'Raspberry Pi 4 Model B', side: 'right', other: 2, otherName: 'Raspberry Pi 4 Model B', mm: '10.0' }]);
+  });
+
+  it('a board flush with one against the wall: the other keeps its margin, and the message says so', () => {
+    // a user's project: an ESP32 against the left wall, two 18650 cells flush with it, a top lid on M3 screws
+    const state = sanitizeState({
+      ...base,
+      lid: { ...base.lid, face: 'top', chosen: 'top', fastening: 'screws', screw: { size: 'M3', hole: 'tap', head: 'countersunk' } },
+      boards: [
+        { board: 'esp32-devkitc-v4', x: 1.7, y: 1.65, z: 9.5, rot: 0, mount: { size: 'M2.5', hole: 'tap', head: 'none' }, cuts: {}, pins: true, walls: ['left'], wallOffset: 0 },
+        { board: 'battery', battery: { kind: '18650', count: 2, pack: { w: 60, d: 35, h: 8 }, press: 0.3 }, x: 1.7, y: 46.2, z: 1, rot: 0, mount: { size: 'M3', hole: 'tap', head: 'none' }, cuts: {} },
+      ],
+    });
+    const messages = collisions(caseLayout(state)).filter((m) => m.code.startsWith('warn.notAgainstWall'));
+    // the posts take 5.8 + 0.5 mm, the ESP32 keeps WALL_GAP: the wall is 6 mm off it
+    expect(messages.map(({ code, params }) => ({ code, params }))).toEqual([{
+      code: 'warn.notAgainstWallPosts',
+      params: { board: 1, boardName: 'ESP32-DevKitC V4', side: 'left', other: 2, otherName: '2 × 18650', margin: '6.3', mm: '6.0' },
+    }]);
+    setLang('ru');
+    const [text] = messages.map(tm);
+    setLang('en');
+    expect(text).toContain('плата 2 «2 × 18650» к этой стенке не прижата');
+    expect(text).not.toContain('Выровняйте');
+    // pressing the cells against the wall too, or moving them 6 mm in, puts the ESP32 at its wall
+    const pressed = sanitizeState({ ...state, boards: [state.boards[0], { ...state.boards[1], walls: ['left'] }] });
+    expect(collisions(caseLayout(pressed)).filter((m) => m.code.startsWith('warn.notAgainstWall'))).toEqual([]);
+    const moved = sanitizeState({ ...state, boards: [state.boards[0], { ...state.boards[1], x: 7.7 }] });
+    expect(collisions(caseLayout(moved)).filter((m) => m.code.startsWith('warn.notAgainstWall'))).toEqual([]);
   });
 
   it('a cylinder, a rail edge and the side lid\'s own face ignore the wall', () => {
@@ -231,9 +259,9 @@ describe('a user\'s project: the layout messages say where and what to do', () =
   it('a board off its wall: which wall, and which board pushes it', () => {
     const pushed = messages.filter((m) => m.code.startsWith('warn.notAgainstWall')).map((m) => m.params);
     expect(pushed).toEqual([
-      { board: 1, boardName: 'TPA3118', side: 'right', other: 3, otherName: 'KaRadio ESP32' },
-      { board: 2, boardName: 'DC-DC', side: 'left', other: 1, otherName: 'TPA3118' },
-      { board: 2, boardName: 'DC-DC', side: 'right', other: 3, otherName: 'KaRadio ESP32' },
+      { board: 1, boardName: 'TPA3118', side: 'right', other: 3, otherName: 'KaRadio ESP32', mm: '117.7' },
+      { board: 2, boardName: 'DC-DC', side: 'left', other: 1, otherName: 'TPA3118', mm: '55.0' },
+      { board: 2, boardName: 'DC-DC', side: 'right', other: 3, otherName: 'KaRadio ESP32', mm: '92.2' },
     ]);
   });
 
@@ -242,7 +270,7 @@ describe('a user\'s project: the layout messages say where and what to do', () =
     const text = messages.map(tm);
     setLang('en');
     expect(text).toContain('Плата 1 «TPA3118», спереди и сзади: разъёмы кончаются у края платы, а стенка 2 мм — их торцы на 2.3 мм глубже, чем просит «Разъёмы от поверхности». Обычно это не мешает: штекер или палец достаёт их через отверстие. Если разъёмы на самом деле выступают за край платы, укажите это в «Выступ» (редактор своей платы).');
-    expect(text).toContain('Плата 1 «TPA3118» не у стенки справа: её отодвигает плата 3 «KaRadio ESP32». Выровняйте платы по этой стороне или снимите «справа» в «К стенке».');
+    expect(text).toContain('Плата 1 «TPA3118» не у стенки справа: плата 3 «KaRadio ESP32» стоит ближе к ней и отодвигает стенку на 117.7 мм. Сдвиньте плату 3 «KaRadio ESP32» от стенки на 117.7 мм или снимите «справа» в «К стенке».');
   });
 
   it('connectors that do stick out: how thin a wall brings them flush', () => {

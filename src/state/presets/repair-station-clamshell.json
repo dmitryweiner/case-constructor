@@ -1,0 +1,229 @@
+{
+  "id": "repair-station-clamshell",
+  "name": "Repair station clamshell",
+  "state": {
+    "version": 1,
+    "shape": {
+      "kind": "hinged",
+      "cornerR": 6,
+      "edgeR": 0,
+      "wall": 2,
+      "floor": 2,
+      "auto": false,
+      "size": {
+        "w": 115,
+        "d": 86,
+        "h": 20
+      },
+      "margin": {
+        "side": 2,
+        "top": 3
+      },
+      "console": {
+        "frontH": 20,
+        "backH": 40
+      }
+    },
+    "boards": [
+      {
+        "board": "m5stack-cardkb-v1.1",
+        "x": 0,
+        "y": 0,
+        "z": 0.3,
+        "rot": 0,
+        "mount": {
+          "size": "M2",
+          "hole": "tap",
+          "head": "none"
+        },
+        "cuts": {
+          "grove": false
+        },
+        "on": "ceiling",
+        "keys": "caps",
+        "railScrews": true,
+        "railEars": "along"
+      }
+    ],
+    "lid": {
+      "face": "bottom",
+      "chosen": "top",
+      "depth": 0,
+      "fastening": "screws",
+      "screw": {
+        "size": "M3",
+        "hole": "insert",
+        "head": "counterbore"
+      },
+      "head": {
+        "d": null,
+        "depth": null
+      },
+      "magnet": {
+        "size": "6x3",
+        "fit": 0.2
+      },
+      "thread": {
+        "size": "P6",
+        "fit": 0.35
+      },
+      "lip": {
+        "h": 3,
+        "t": 1.2
+      },
+      "fit": 0.2
+    },
+    "extraCuts": [],
+    "vents": {
+      "on": false,
+      "faces": [
+        "left",
+        "right"
+      ],
+      "pattern": "slots",
+      "size": 2,
+      "pitch": 4,
+      "margin": 4,
+      "along": "y"
+    },
+    "fan": {
+      "on": false,
+      "face": "back",
+      "size": 40,
+      "x": 0,
+      "y": 0,
+      "screwD": 3.2
+    },
+    "wallMount": {
+      "kind": "none",
+      "face": "bottom",
+      "keyhole": "through",
+      "ears": {
+        "count": 2,
+        "walls": "leftRight",
+        "wall": "back",
+        "along": "centre"
+      },
+      "spacing": 40,
+      "screwD": 4
+    },
+    "labels": [],
+    "exportMode": "both",
+    "print": {
+      "lid": "auto",
+      "gap": 10
+    },
+    "resolution": 24,
+    "hinge": {
+      "kind": "leaves",
+      "place": "back",
+      "layout": "ends",
+      "barrelD": 8.5,
+      "knuckles": 3,
+      "length": 10,
+      "clearance": 0.4,
+      "axle": "screw",
+      "pinD": 1.75,
+      "pinFit": 0.15,
+      "screw": "M2.5",
+      "cables": [
+        {
+          "x": 45,
+          "kind": "round",
+          "through": "wall",
+          "w": 4,
+          "t": 0.3,
+          "plugW": 9,
+          "plugH": 5
+        }
+      ],
+      "leafScrew": "M2.5",
+      "leafHole": "insert",
+      "gapAuto": true,
+      "magnets": false,
+      "magnet": "6x2",
+      "b": {
+        "h": 20,
+        "boards": [
+          {
+            "board": "lcdwiki-msp4021",
+            "x": 0,
+            "y": 0,
+            "z": 0.3,
+            "rot": 90,
+            "mount": {
+              "size": "M3",
+              "hole": "tap",
+              "head": "none"
+            },
+            "cuts": {
+              "microsd": false
+            },
+            "on": "ceiling"
+          }
+        ],
+        "lid": {
+          "face": "bottom",
+          "chosen": "top",
+          "depth": 0,
+          "fastening": "screws",
+          "screw": {
+            "size": "M3",
+            "hole": "insert",
+            "head": "counterbore"
+          },
+          "head": {
+            "d": null,
+            "depth": null
+          },
+          "magnet": {
+            "size": "6x3",
+            "fit": 0.2
+          },
+          "thread": {
+            "size": "P6",
+            "fit": 0.35
+          },
+          "lip": {
+            "h": 3,
+            "t": 1.2
+          },
+          "fit": 0.2
+        },
+        "extraCuts": [
+          {
+            "face": "back",
+            "shape": "round",
+            "x": 57,
+            "y": 10,
+            "w": 6.6,
+            "h": 6.6,
+            "r": 0
+          }
+        ],
+        "vents": {
+          "on": false,
+          "faces": [
+            "left",
+            "right"
+          ],
+          "pattern": "slots",
+          "size": 2,
+          "pitch": 4,
+          "margin": 4,
+          "along": "y"
+        },
+        "fan": {
+          "on": false,
+          "face": "back",
+          "size": 40,
+          "x": 0,
+          "y": 0,
+          "screwD": 3.2
+        },
+        "labels": []
+      },
+      "gap": 1
+    }
+  }
+}

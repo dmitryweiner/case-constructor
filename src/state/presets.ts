@@ -16,11 +16,9 @@ import pi4Desktop from './presets/pi4-desktop.json';
 import esp32SensorBox from './presets/esp32-sensor-box.json';
 import esp3218650Box from './presets/esp32-18650-box.json';
 import arduinoUnoBox from './presets/arduino-uno-box.json';
-import cylinderPuck from './presets/cylinder-puck.json';
 import klipperscreenConsole from './presets/klipperscreen-console.json';
 import haWallPanel from './presets/ha-wall-panel.json';
-import meshtasticCardkb from './presets/meshtastic-cardkb.json';
-import meshtasticClamshell from './presets/meshtastic-clamshell.json';
+import repairStationClamshell from './presets/repair-station-clamshell.json';
 import plainBox from './presets/plain-box.json';
 
 export interface Preset {
@@ -60,11 +58,9 @@ export const PRESETS: Preset[] = [
   esp32SensorBox,
   esp3218650Box,
   arduinoUnoBox,
-  cylinderPuck,
   klipperscreenConsole,
   haWallPanel,
-  meshtasticCardkb,
-  meshtasticClamshell,
+  repairStationClamshell,
   plainBox,
 ].map(fromFile);
 

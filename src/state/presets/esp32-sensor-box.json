@@ -98,6 +98,7 @@
     },
     "wallMount": {
       "kind": "ears",
+      "face": "bottom",
       "keyhole": "closed",
       "ears": {
         "count": 2,
@@ -110,12 +111,12 @@
     },
     "labels": [
       {
-        "face": "bottom",
+        "face": "top",
         "text": "SENSOR",
         "font": "oswald",
         "sizeMm": 5,
         "depth": 0.6,
-        "raised": true,
+        "raised": false,
         "anchor": "centre",
         "margin": 3,
         "x": 0,

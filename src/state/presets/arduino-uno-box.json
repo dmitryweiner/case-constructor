@@ -2,10 +2,203 @@
   "id": "arduino-uno-box",
   "name": "Arduino Uno box",
   "state": {
-    "shape": { "cornerR": 5 },
+    "version": 1,
+    "shape": {
+      "kind": "box",
+      "cornerR": 5,
+      "edgeR": 0,
+      "wall": 2,
+      "floor": 2,
+      "auto": false,
+      "size": {
+        "w": 83.28,
+        "d": 69.94,
+        "h": 26
+      },
+      "margin": {
+        "side": 2,
+        "top": 3
+      },
+      "console": {
+        "frontH": 20,
+        "backH": 40
+      }
+    },
     "boards": [
-      { "board": "arduino-uno", "z": 5, "mount": { "size": "M3", "hole": "tap" } }
+      {
+        "board": "arduino-uno",
+        "x": 0,
+        "y": 0,
+        "z": 5,
+        "rot": 0,
+        "mount": {
+          "size": "M3",
+          "hole": "tap",
+          "head": "none"
+        },
+        "cuts": {},
+        "walls": [
+          "left"
+        ],
+        "wallOffset": 0
+      }
     ],
-    "lid": { "fastening": "screws", "screw": { "size": "M3", "hole": "tap", "head": "counterbore" } }
+    "lid": {
+      "face": "top",
+      "chosen": "top",
+      "depth": 0,
+      "fastening": "screws",
+      "screw": {
+        "size": "M3",
+        "hole": "tap",
+        "head": "counterbore"
+      },
+      "head": {
+        "d": null,
+        "depth": null
+      },
+      "magnet": {
+        "size": "6x3",
+        "fit": 0.2
+      },
+      "thread": {
+        "size": "P6",
+        "fit": 0.35
+      },
+      "lip": {
+        "h": 3,
+        "t": 1.2
+      },
+      "fit": 0.2
+    },
+    "extraCuts": [],
+    "vents": {
+      "on": false,
+      "faces": [
+        "left",
+        "right"
+      ],
+      "pattern": "slots",
+      "size": 2,
+      "pitch": 4,
+      "margin": 4,
+      "along": "y"
+    },
+    "fan": {
+      "on": false,
+      "face": "back",
+      "size": 40,
+      "x": 0,
+      "y": 0,
+      "screwD": 3.2
+    },
+    "wallMount": {
+      "kind": "none",
+      "face": "bottom",
+      "keyhole": "through",
+      "ears": {
+        "count": 2,
+        "walls": "leftRight",
+        "wall": "back",
+        "along": "centre"
+      },
+      "spacing": 40,
+      "screwD": 4
+    },
+    "labels": [
+      {
+        "face": "top",
+        "text": "Arduino Uno R3",
+        "font": "rubik",
+        "sizeMm": 6,
+        "depth": 0.6,
+        "raised": false,
+        "anchor": "centre",
+        "margin": 3,
+        "x": 0,
+        "y": 0,
+        "angle": 0
+      }
+    ],
+    "exportMode": "both",
+    "print": {
+      "lid": "auto",
+      "gap": 10
+    },
+    "resolution": 24,
+    "hinge": {
+      "kind": "knuckles",
+      "place": "back",
+      "layout": "ends",
+      "barrelD": 8,
+      "knuckles": 3,
+      "length": 10,
+      "clearance": 0.4,
+      "axle": "pin",
+      "pinD": 1.75,
+      "pinFit": 0.15,
+      "screw": "M2.5",
+      "cables": [],
+      "leafScrew": "M2.5",
+      "leafHole": "insert",
+      "gapAuto": true,
+      "magnets": false,
+      "magnet": "6x3",
+      "b": {
+        "h": 25,
+        "boards": [],
+        "lid": {
+          "face": "top",
+          "chosen": "top",
+          "depth": 0,
+          "fastening": "snaps",
+          "screw": {
+            "size": "M3",
+            "hole": "tap",
+            "head": "counterbore"
+          },
+          "head": {
+            "d": null,
+            "depth": null
+          },
+          "magnet": {
+            "size": "6x3",
+            "fit": 0.2
+          },
+          "thread": {
+            "size": "P6",
+            "fit": 0.35
+          },
+          "lip": {
+            "h": 3,
+            "t": 1.2
+          },
+          "fit": 0.2
+        },
+        "extraCuts": [],
+        "vents": {
+          "on": false,
+          "faces": [
+            "left",
+            "right"
+          ],
+          "pattern": "slots",
+          "size": 2,
+          "pitch": 4,
+          "margin": 4,
+          "along": "y"
+        },
+        "fan": {
+          "on": false,
+          "face": "back",
+          "size": 40,
+          "x": 0,
+          "y": 0,
+          "screwD": 3.2
+        },
+        "labels": []
+      },
+      "gap": 1
+    }
   }
 }

@@ -36,6 +36,8 @@ export type MessageCode =
   | 'warn.boardsOverlap'
   | 'warn.standoffHitsBoard'
   | 'warn.notAgainstWall'
+  | 'warn.notAgainstWallMargin'
+  | 'warn.notAgainstWallPosts'
   | 'warn.notAgainstWallSize'
   | 'info.portsRecessed'
   | 'info.portsRecessedOut'
