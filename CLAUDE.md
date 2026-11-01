@@ -80,7 +80,7 @@ freely; a temporary script that turns out useful becomes a permanent one.
   warning, the Lid tab with the screws, a lid export), vents, fan, through
   and closed keyholes, ears by count and walls, a label in a real font,
   export of each mode with a real download (times printed), undo/redo, user
-  preset through a reload, project file round trip and a foreign JSON
+  preset and the current project through a reload (a first visit opens the first preset), project file round trip and a foreign JSON
   refused, the view modes per parts tab and the caption (the Lid tab's lid
   on its outer face), all four languages (switch, memory, the open preset
   keeps its name, a fresh `he-IL` browser keeps the panel on the left), the
@@ -545,6 +545,13 @@ built by `tests/presetsBuild.test.ts` (closed, no slivers, no overlap, no
 layout warnings; a hinged one per half, with no hinge warnings). A preset's name is one English string in its file
 (not translated: the review asked for one name); its note is the
 dictionary key `preset.<id>.note`.
+
+The current project (`state/currentProject.ts`, key
+`caseconstructor_current_v1`: the state, the open preset's name and ref) is
+written on every `applyState` and `setPresetRef`, and again on `pagehide` /
+a hidden tab. Startup opens it, or the first preset (`PRESETS[0]`) when
+there is none; so a fresh browser — the smoke's, snap's — starts from
+`pi4-desktop`, not `defaultState()`.
 
 ## What is not in v1
 

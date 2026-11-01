@@ -1,5 +1,10 @@
 # Presets and project files
 
+The case you are working on is kept in this browser as you edit it: close
+the tab or reload the page and it opens again where you left it, with the
+name of the preset you opened. A first visit opens the first built-in
+preset. Two tabs of the app share this one copy: the tab edited last wins.
+
 - **Presets…** opens the list: your presets and the built-in ones. 🗑 deletes
   one of yours (tap twice).
 - 💾 saves the current case as a preset in this browser.

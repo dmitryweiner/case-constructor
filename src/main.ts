@@ -68,12 +68,14 @@ import { ANGLE_DEFAULT, MAX_CABLES, upperPose } from './geo/hinge';
 import { encodeSTL } from './geo/stl';
 import { assessExport, validateMesh } from './geo/validate';
 import type { AppState, ExportMode } from './state/schema';
-import { defaultState, sanitizeState, RESOLUTIONS } from './state/schema';
+import { sanitizeState, RESOLUTIONS } from './state/schema';
 import { PRESETS, presetById } from './state/presets';
 import { encodePresetFile, decodePresetFile, presetFileName } from './state/presetFile';
 import type { UserPreset } from './state/userPresets';
 import { loadUserPresets, saveUserPresets, nextPresetNumber } from './state/userPresets';
 import { History } from './state/history';
+import type { CurrentProject } from './state/currentProject';
+import { loadCurrentProject, saveCurrentProject } from './state/currentProject';
 import type { Half } from './state/hinged';
 import { casesOf, foldOfState, halfHinge, halfState, halfStrip, hingeNotes, isHinged, withHalf } from './state/hinged';
 import type { JobPart } from './worker/protocol';
@@ -170,7 +172,9 @@ const progress = createProgress({
 
 const scene = createScene(view, el('portCaptions', HTMLDivElement));
 const csg = new CsgClient();
-const history = new History<AppState>(defaultState());
+/** The project the last visit left (kept on every change), or the first preset on a first visit. */
+const opened: CurrentProject = loadCurrentProject() ?? firstPreset();
+const history = new History<AppState>(opened.state);
 let state: AppState = history.value;
 
 setupAdjustmentButtons(panel);
@@ -254,6 +258,7 @@ function applyState(next: AppState, record = true): void {
   state = sanitizeState(next);
   if (record) rememberLater(state);
   else history.replace(state);
+  keepProject();
   syncPanel();
 }
 
@@ -1071,9 +1076,27 @@ function presetRows(): PresetRow[] {
 function setPresetRef(ref: string, name: string): void {
   presetRef = ref;
   presetName = name;
+  keepProject();
   presetBtn.textContent = name || t('topbar.presets');
   if (!presetsPanel.hidden) renderPresets();
 }
+
+function firstPreset(): CurrentProject {
+  const first = PRESETS[0];
+  return { name: first.name, ref: `b:${first.id}`, state: first.build() };
+}
+
+/** The current project into localStorage: on every change, and once more when the page goes. */
+function keepProject(): void {
+  saveCurrentProject({ name: presetName, ref: presetRef, state });
+}
+
+// every change is already kept; a closing tab (pagehide) or one sent to the
+// background on a phone, where pagehide may never come, gets the last word anyway
+window.addEventListener('pagehide', keepProject);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') keepProject();
+});
 
 function autoPresetName(): string {
   return t('presets.auto', { n: nextPresetNumber(userPresets, autoPresetPrefixes()) });
@@ -1361,4 +1384,5 @@ if (import.meta.env.DEV) {
   });
 }
 
+setPresetRef(opened.ref, opened.name);
 applyState(state, false);

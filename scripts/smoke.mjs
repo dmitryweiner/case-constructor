@@ -52,6 +52,11 @@ async function setRange(id, value) {
   await page.waitForTimeout(40);
 }
 
+/** Opens a folding card; a card on since the boot preset is open already, and a click would fold it. */
+async function unfold(id) {
+  if (await page.locator(`#card_${id}.collapsed`).count()) await page.click(`#card_${id} .fcard-head`);
+}
+
 /** Roles drawn last (dev builds): 'body,board,…,lid'. */
 async function drawn() {
   await page.waitForTimeout(150);
@@ -81,6 +86,9 @@ if (faviconStatus !== 200) errors.push(`[favicon] favicon.svg → ${faviconStatu
 
 label('boot');
 await expectWatertight('boot');
+// a first visit (empty localStorage) opens the first preset
+const bootPreset = (await page.locator('#presetBtn').textContent()).trim();
+if (bootPreset !== 'Pi 4 desktop case') errors.push(`[boot] the first visit opened "${bootPreset}"`);
 
 // every shape builds watertight; the sliders' extremes do not break it
 for (const kind of ['box', 'cylinder', 'console']) {
@@ -782,7 +790,7 @@ await setRange('case_edgeR', 0);
 label('extras');
 // no checkbox: the vents are on while a face is pressed, the fan while it has a face
 if (await page.locator('#on_vents, #on_fan').count()) errors.push('[vents] a checkbox on the vents or the fan card');
-await page.click('#card_vents .fcard-head');
+await unfold('vents');
 if (await page.locator('#vents_pattern').isVisible()) errors.push('[vents] the pattern shows with no face pressed');
 await page.click('#vents_face_left');
 await page.click('#vents_face_right');
@@ -793,7 +801,7 @@ for (const pattern of ['slots', 'hex', 'round']) {
 }
 await page.click('#vents_face_bottom');
 if ((await page.locator('#vents_face_bottom').getAttribute('aria-pressed')) !== 'true') errors.push('[vents] the bottom face not pressed');
-await page.click('#card_fan .fcard-head');
+await unfold('fan');
 if (await page.locator('#fan_size').isVisible()) errors.push('[fan] the size shows with no face');
 await page.click('#fan_face_top');
 await page.click('#fan_size_30');
@@ -903,6 +911,10 @@ page.once('dialog', (dialog) => dialog.accept('Smoke preset'));
 await page.click('#saveBtn');
 await page.reload();
 await verdict();
+// so does the current project, the open preset's name with it
+if ((await page.locator('#case_wall').inputValue()) !== '3.5') errors.push('[current-project] the wall is not 3.5 after the reload');
+const reloadedPreset = (await page.locator('#presetBtn').textContent()).trim();
+if (reloadedPreset !== 'Smoke preset') errors.push(`[current-project] the open preset is "${reloadedPreset}" after the reload`);
 await page.click('#presetBtn');
 await page.click('#presetList [data-preset="u:Smoke preset"]');
 await page.waitForTimeout(100);
