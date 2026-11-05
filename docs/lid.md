@@ -11,12 +11,16 @@ the lid.
 | Parameter | Range | Default | Notes |
 |---|---|---|---|
 | Lid depth | 0–60 mm | 0 | 0 = a flat plate; more = the lid takes this much of the walls. Never less than the rounded zone of the walls (the inner corner radius for a side lid, the inner edge fillet for a top or bottom lid): the parting line runs where the straight walls begin, so the skirt sits against them. Limited so the body keeps room for the skirt. The panel says when it raises or clamps the depth |
-| Fastening | snaps / screws / magnets / printed screws | snaps | see below |
-| Screw | M2 / M2.5 / M3 / M4 | M3 | screws only |
+| Fastening | snaps / screws / magnets / printed screws / through bolts | snaps | see below; through bolts only with a top or bottom lid on a box, a cylinder or a hinged half |
+| Screw | M2 / M2.5 / M3 / M4 | M3 | screws and through bolts |
 | Hole in the posts | tap / insert / nut | tap | as for board standoffs (docs/boards.md) |
 | Head | flat / counterbore / countersunk | counterbore | flat — the head sits on the lid; counterbore — a pocket the head's diameter + 0.4 mm, its height deep; countersunk — a 90° cone |
 | Head diameter | 2–16 mm | from the table | counterbore and countersunk; the screw head's diameter (the seat adds 0.4 mm), at least the screw + 1 mm, at most what leaves 0.8 mm of plastic to the lid's edge (the slider stops there; a file asking for more gets a warning). The table: a pan head for a counterbore (M2 3.8, M2.5 4.5, M3 5.5, M4 7), a countersunk head by DIN 7991 (M2 4, M2.5 5, M3 6, M4 8) |
 | Counterbore depth | 0.5–10 mm | the pan head's height | counterbore only; never deeper than the lid plate less 0.6 mm (the slider stops there; the panel says when a file asks for more) |
+| Nut | hex / nyloc | hex | through bolts only: a plain hex nut (DIN 934: M2 4 × 1.6, M2.5 5 × 2, M3 5.5 × 2.4, M4 7 × 3.2 — across flats × height) or a nyloc one (DIN 985, as wide: M2 2.8, M2.5 3.5, M3 4, M4 5 high) |
+| Nut across flats | 3–14 mm | from the table | through bolts only; the pocket adds 0.4 mm |
+| Nut height | 1–8 mm | from the table | through bolts only |
+| Nut sits | recessed / on the face | recessed | through bolts only: in a hex pocket in the far face, or standing on it |
 | Magnet | 5 × 2 … 10 × 3 mm | 6 × 3 | magnets only: disc diameter × height |
 | Magnet fit | 0–0.5 mm | 0.2 | magnets only: added to the magnet's diameter for its pocket |
 | Thread | 4 × 1 / 6 × 1 / 8 × 1.25 / 10 × 1.5 mm | 6 × 1 | printed screws only: major diameter × pitch |
@@ -26,7 +30,8 @@ the lid.
 | Fit clearance | 0–0.6 mm | 0.2 | gap between the skirt and the walls; raise it if the lid is too tight on your printer |
 
 *Head from the table* drops your diameter and depth; another screw size
-does too.
+does too. *Nut from the table* drops the nut's numbers; another screw size
+or nut kind does too.
 
 The skirt follows the opening of the body at the parting plane, so it fits
 rounded corners and fillets and never makes an undercut.

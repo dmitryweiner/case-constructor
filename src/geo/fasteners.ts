@@ -55,6 +55,14 @@ export const COUNTERSUNK_HEAD_D: Readonly<Record<ScrewSize, number>> = {
   'M1.6': 3.2, 'M2': 4, 'M2.5': 5, 'M3': 6, 'M4': 8,
 };
 
+/**
+ * A nyloc nut's height (DIN 985; as wide as the hex nut). The standard
+ * starts at M3: M2 and M2.5 are the vendors' sizes, M1.6 an estimate.
+ */
+export const NYLOC_NUT_H: Readonly<Record<ScrewSize, number>> = {
+  'M1.6': 2.3, 'M2': 2.8, 'M2.5': 3.5, 'M3': 4, 'M4': 5,
+};
+
 /** Disc magnets for the lid, diameter × height. */
 export const MAGNET_SIZES = ['5x2', '6x2', '6x3', '8x2', '8x3', '10x2', '10x3'] as const;
 export type MagnetSize = (typeof MAGNET_SIZES)[number];
