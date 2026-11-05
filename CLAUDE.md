@@ -28,6 +28,10 @@ printed hinge on screws, cable slots, magnets inside (the branch
 `plans/PLAN-MOUNT-LABELS.md` — the wall mount on the face the user chooses
 (keyholes through it, ears flush with it), several labels on any flat face
 (W1…W3, L1…L4; the branch `mount-labels`): done.
+`plans/PLAN-THROUGH-BOLTS.md` — a lid on through bolts (T1…T6): a column
+in each corner plate to plate, the bolt's head in the lid, a nut recessed
+in the far face or standing on it, the bolt's standard length, hardware
+ghosts (the branch `through-bolts`): done.
 
 ## Node
 
@@ -77,7 +81,10 @@ freely; a temporary script that turns out useful becomes a permanent one.
   undo), every lid face, cylinder/console lid restrictions, a hinged case
   (the half switch, a board and a lid in the upper half, closed, export), snaps and screws
   with every hole and head kind, magnets, printed screws (P4 with its
-  warning, the Lid tab with the screws, a lid export), vents, fan, through
+  warning, the Lid tab with the screws, a lid export), through bolts (both
+  nut places, the bolts named and drawn but not in the print layout, the
+  nut's reset, a bottom lid, a cylinder, screws instead on a side lid and a
+  console), vents, fan, through
   and closed keyholes, ears by count and walls, a label in a real font,
   export of each mode with a real download (times printed), undo/redo, user
   preset and the current project through a reload (a first visit opens the first preset),
@@ -375,6 +382,15 @@ freely; a temporary script that turns out useful becomes a permanent one.
   (`magnetPockets`); a magnet post stops a fit below the lid's boss, and its
   corner fill stops `POST_STEP` below its top — reaching it, the top face met
   the outer corner's edge on the diagonal: slivers.
+  Through bolts (`lid.fastening: 'through'`, `throughAllowed`: a top or
+  bottom lid, not a console; elsewhere `effectiveLid` builds screws) turn
+  the posts into columns from the far plate's middle to the lid plate, no
+  taper; a hole through everything, the screws' head seat in the lid, a
+  recessed nut's hex pocket from the far face as deep as `throughBolt`
+  (`bolts.ts`, pure) says: the longest standard bolt that does not stick
+  out, its end flush with the nut's outer face. The bolts and nuts are
+  drawn, not built: `hardware.ts` (pure meshes, role `hardware`), with the
+  boards in Both, never in the print layout or an STL.
   The lid's holes are cut after the skirt is added: the skirt reaches up
   into the plate and filled a deep counterbore back in (a crescent at the
   corner). A head's seat stays `SEAT_WALL` inside the lid's face
@@ -518,6 +534,8 @@ browser is within ~10 % of it):
 | CardKB with printed caps — preview | 12 | 135 ms | 12.5k + 9.6k of caps |
 | CardKB with printed caps — finest export | 64 | 0.75 s | 64k + the caps |
 | KeebDeck Basic, a hole per key — preview | 12 | 260 ms | 19k |
+| `pi4-desktop` on M3 through bolts, recessed nuts — preview | 12 | 140 ms | 8k |
+| `pi4-desktop` on M3 through bolts — finest export | 64 | 0.77 s | 33k |
 | `repair-station-clamshell` (two halves, a printed hinge; the caps not counted) — preview | 12 | 260 + 130 ms (a half's build is reused while the other is edited) | 18k + 9.6k + 2k of leaves |
 | `repair-station-clamshell` — finest export | 64 | 2.1 + 0.76 s | 94k + 46k + 10k of leaves |
 
@@ -608,11 +626,14 @@ Hinged: the card `#hingeCard` (`#hinge_gapAuto`, `#hinge_gap`, `#hinge_magnets`,
 heading the frame `#halfGroup` (class `on` when hinged) round the Boards, Lid,
 Openings and Labels cards (`#edit_half_a|b`; the wall mount's card `#mountCard`, the whole case's, stands after it and hides when hinged), the view's angle `#view_angle` (in the View and export
 card).
-Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets|printed`,
-`#lid_screw` (select), `#lid_hole_tap|insert|nut`, `#lid_magnet` (select),
+Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets|printed|through`
+(through disabled on a console and with a side lid),
+`#lid_screw` (select; screws and through bolts), `#lid_hole_tap|insert|nut` (screws only),
+`#lid_nut_hex|nyloc`, `#lid_nutAF`, `#lid_nutH`, `#lid_nutReset` (when set),
+`#lid_nutPlace_recessed|surface` (through bolts only), `#lid_magnet` (select),
 `#lid_magnetFit` (magnets only), `#lid_thread` (select), `#lid_threadFit`
 (printed screws only),
-`#lid_head_none|counterbore|countersunk` (screws only), `#lid_headD`, `#lid_headDepth` (counterbore), `#lid_headReset` (when set), `#lid_lipH`,
+`#lid_head_none|counterbore|countersunk` (screws and through bolts), `#lid_headD`, `#lid_headDepth` (counterbore), `#lid_headReset` (when set), `#lid_lipH`,
 `#lid_lipT`, `#lid_fit`.
 View and export card (`#exportCard`): parts `#tabBoth` (first, default),
 `#tabBody`, `#tabLid`; view `#viewExploded` (default), `#viewAssembled`,

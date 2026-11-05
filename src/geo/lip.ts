@@ -1,11 +1,14 @@
 // Lid fastening solids: snap rods and grooves, posts with their screw holes
-// or magnet pockets, the holes and head seats in the lid plate or its magnet
-// bosses. Worker only; the positions come from fastening.ts.
+// or magnet pockets, through bolts' columns with their holes and nut
+// pockets, the holes and head seats in the lid plate or its magnet bosses.
+// Worker only; the positions come from fastening.ts, a through bolt's
+// pocket from bolts.ts.
 
 import type { CrossSection, Manifold } from 'manifold-3d';
 import type { CsgApi, CsgScope } from './csg';
 import { extrude, hullOf, transformSolid, trimByPlane, unionAll } from './csg';
 import { cutterSolid } from './cut';
+import { throughBolt } from './bolts';
 import type { CutterSpec } from './cutters';
 import type { FaceFrame } from './face';
 import { NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE } from './fasteners';
@@ -14,7 +17,7 @@ import { magnetPockets, postLength, snapSpots } from './fastening';
 import { threadSolid } from './screwSolids';
 import { THREADS, minorRadius, threadEngagement, threadPoints } from './thread';
 import type { LidState } from './lidSpec';
-import { HEAD_FLOOR, headSeat } from './lidSpec';
+import { HEAD_FLOOR, headSeat, nutSize } from './lidSpec';
 import type { Vec2 } from './section';
 import { bounds2, convexIntersect } from './opening';
 import { SPLIT_OFFSET } from './parting';
@@ -67,6 +70,9 @@ export function postSolids(
   const n = Math.max(16, segments * 4);
   const dims = SCREWS[lid.screw.size];
   const magnets = lid.fastening === 'magnets' ? magnetPockets(lid, plate) : null;
+  // a through bolt's column stands on the far plate (its middle, as the trimmed posts below)
+  const bolt = lid.fastening === 'through' ? throughBolt(lid, plate, frame.depth) : null;
+  const far = -frame.depth + plate / 2;
   // a magnet post stops a fit below the lid's boss
   const top = magnets ? magnets.postTop : -plate - lid.fit;
   // offsets are simplified: clipper leaves near-duplicate arc vertices that become slivers
@@ -84,7 +90,7 @@ export function postSolids(
   for (const spot of spots) {
     const outline = [...circlePoints(spot.centre, spot.r, n), spot.anchor];
     const footprint = scope.keep(csg.CrossSection.hull([outline]));
-    const bottom = zp - postLength(lid);
+    const bottom = bolt ? far : zp - postLength(lid);
     // The part filled out to the walls ends just below the body's rim (the
     // body is cut SPLIT_OFFSET below the plane): reaching the plane it would
     // poke into the lid's walls, and trimming that leaves a sliver step.
@@ -103,15 +109,18 @@ export function postSolids(
       const above = extrude(csg, scope, insideOpening, lowerTop - EPS, top + 1);
       post = scope.keep(post.intersect(scope.keep(below.add(above))));
     }
-    // 45° taper down to the corner, so the post prints without support
-    const taperPoints: Vec3[] = [...outline.map((p): Vec3 => [p[0], p[1], bottom + EPS]), [spot.anchor[0], spot.anchor[1], bottom - reach]];
-    const parts: Manifold[] = [post, hullOf(csg, scope, taperPoints)];
-    // In a low case the post and its taper reach the far plate: they stop in
-    // its middle. Clipped by the outer shell instead, they met the outer
-    // surface and left zero-area triangles on its fillet.
-    const far = -frame.depth + plate / 2;
-    const whole = unionAll(csg, scope, parts);
-    posts.push(bottom - reach < far ? trimByPlane(scope, whole, [0, 0, 1], far) : whole);
+    if (bolt) {
+      posts.push(post);
+    } else {
+      // 45° taper down to the corner, so the post prints without support
+      const taperPoints: Vec3[] = [...outline.map((p): Vec3 => [p[0], p[1], bottom + EPS]), [spot.anchor[0], spot.anchor[1], bottom - reach]];
+      const parts: Manifold[] = [post, hullOf(csg, scope, taperPoints)];
+      // In a low case the post and its taper reach the far plate: they stop in
+      // its middle. Clipped by the outer shell instead, they met the outer
+      // surface and left zero-area triangles on its fillet.
+      const whole = unionAll(csg, scope, parts);
+      posts.push(bottom - reach < far ? trimByPlane(scope, whole, [0, 0, 1], far) : whole);
+    }
     clearance.push(extrude(csg, scope, grow(footprint, lid.fit), zp - lid.lip.h - 1, zp + 2));
 
     // the hole the screw goes into, down from the post's top
@@ -141,7 +150,17 @@ export function postSolids(
       lidHoles.push(column(csg, scope, c, r + 0.5 + EPS, lidMouth - EPS, lidMouth + 0.5, n, r));
       continue;
     }
-    if (lid.screw.hole === 'insert') {
+    if (bolt) {
+      // through the column and the far plate; the lid's hole and head seat follow, as for screws
+      postHoles.push(column(csg, scope, c, (dims.d + THROUGH_CLEARANCE) / 2, -frame.depth - 1, top + EPS, n));
+      if (bolt.pocket > 0) {
+        const af = nutSize(lid).af + NUT_CLEARANCE;
+        const hex = scope.keep(csg.Manifold.cylinder(bolt.pocket + 1, af / Math.sqrt(3), af / Math.sqrt(3), 6));
+        // a flat towards the corner, where the walls are nearest
+        const angle = (Math.atan2(c[1] - spot.anchor[1], c[0] - spot.anchor[0]) * 180) / Math.PI + 30;
+        postHoles.push(scope.keep(scope.keep(hex.rotate([0, 0, angle])).translate([c[0], c[1], -frame.depth - 1])));
+      }
+    } else if (lid.screw.hole === 'insert') {
       const ri = dims.insert / 2;
       const insertDepth = Math.min(dims.insertLen, depth);
       postHoles.push(column(csg, scope, c, ri, top - insertDepth, top + EPS, n));

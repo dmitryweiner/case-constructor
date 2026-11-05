@@ -11,12 +11,16 @@ the lid.
 | Parameter | Range | Default | Notes |
 |---|---|---|---|
 | Lid depth | 0–60 mm | 0 | 0 = a flat plate; more = the lid takes this much of the walls. Never less than the rounded zone of the walls (the inner corner radius for a side lid, the inner edge fillet for a top or bottom lid): the parting line runs where the straight walls begin, so the skirt sits against them. Limited so the body keeps room for the skirt. The panel says when it raises or clamps the depth |
-| Fastening | snaps / screws / magnets / printed screws | snaps | see below |
-| Screw | M2 / M2.5 / M3 / M4 | M3 | screws only |
+| Fastening | snaps / screws / magnets / printed screws / through bolts | snaps | see below; through bolts only with a top or bottom lid on a box, a cylinder or a hinged half |
+| Screw | M2 / M2.5 / M3 / M4 | M3 | screws and through bolts |
 | Hole in the posts | tap / insert / nut | tap | as for board standoffs (docs/boards.md) |
 | Head | flat / counterbore / countersunk | counterbore | flat — the head sits on the lid; counterbore — a pocket the head's diameter + 0.4 mm, its height deep; countersunk — a 90° cone |
 | Head diameter | 2–16 mm | from the table | counterbore and countersunk; the screw head's diameter (the seat adds 0.4 mm), at least the screw + 1 mm, at most what leaves 0.8 mm of plastic to the lid's edge (the slider stops there; a file asking for more gets a warning). The table: a pan head for a counterbore (M2 3.8, M2.5 4.5, M3 5.5, M4 7), a countersunk head by DIN 7991 (M2 4, M2.5 5, M3 6, M4 8) |
 | Counterbore depth | 0.5–10 mm | the pan head's height | counterbore only; never deeper than the lid plate less 0.6 mm (the slider stops there; the panel says when a file asks for more) |
+| Nut | hex / nyloc | hex | through bolts only: a plain hex nut (DIN 934: M2 4 × 1.6, M2.5 5 × 2, M3 5.5 × 2.4, M4 7 × 3.2 — across flats × height) or a nyloc one (DIN 985, as wide: M2 2.8, M2.5 3.5, M3 4, M4 5 high) |
+| Nut across flats | 3–14 mm | from the table | through bolts only; the pocket adds 0.4 mm |
+| Nut height | 1–8 mm | from the table | through bolts only |
+| Nut sits | recessed / on the face | recessed | through bolts only: in a hex pocket in the far face, or standing on it |
 | Magnet | 5 × 2 … 10 × 3 mm | 6 × 3 | magnets only: disc diameter × height |
 | Magnet fit | 0–0.5 mm | 0.2 | magnets only: added to the magnet's diameter for its pocket |
 | Thread | 4 × 1 / 6 × 1 / 8 × 1.25 / 10 × 1.5 mm | 6 × 1 | printed screws only: major diameter × pitch |
@@ -26,7 +30,8 @@ the lid.
 | Fit clearance | 0–0.6 mm | 0.2 | gap between the skirt and the walls; raise it if the lid is too tight on your printer |
 
 *Head from the table* drops your diameter and depth; another screw size
-does too.
+does too. *Nut from the table* drops the nut's numbers; another screw size
+or nut kind does too.
 
 The skirt follows the opening of the body at the parting plane, so it fits
 rounded corners and fillets and never makes an undercut.
@@ -94,3 +99,50 @@ twice the resolution's segments (48 at the default 24, at most 64) — four
 threaded holes make the body several times heavier, so a printed-screw case
 takes about a second to export.
 
+
+## Through bolts
+
+Bought bolts run through the whole case, from the lid's face to the
+opposite one, with a nut there: the lid and the body are clamped between
+the head and the nut, and nothing is threaded into plastic. Offered with a
+top or bottom lid on a box, a cylinder or a hinged half; a console (the far
+face of its bottom lid is the slope) and a side lid cannot have them — the
+option is disabled, and a project that has them is built on screws with a
+note until the shape and the lid allow them again.
+
+A column stands in every corner of the opening from the far plate up to the
+lid plate (with a deep lid it rises inside the lid, as the screws' posts
+do), filled out to the walls; it stands on the plate, so it needs no taper.
+A clearance hole (bolt + 0.4 mm) runs through the lid, the column and the
+far plate. The lid gets the head seat as for screws: flat, counterbore or
+countersunk, with the same diameter and depth settings and limits.
+
+The nut:
+
+- **Recessed** — a hex pocket in the far face (across flats + 0.4 mm), a
+  flat towards the corner, so the nut cannot turn: tighten the bolt from
+  the lid's side alone. The pocket is as deep as the longest standard bolt
+  that does not stick out of the far face needs: its end is flush with the
+  nut's outer face. It is never shallower than the nut + 0.4 mm, so the far
+  face stays flat and the case stands level. The column is as thick as the
+  pocket + 2 × 1.6 mm.
+- **On the face** — a plain hole: the nut (and a washer, if you like)
+  stands on the far face; the shortest standard bolt that goes through it
+  sticks out past it a little. The column is as thick as the hole + 2 ×
+  1.6 mm.
+
+The panel names what to buy — "4 × M3 × 30 mm, M3 nuts — 4", how deep the
+nuts sit or how far the bolts' ends stand out past them — and says when the
+case stands on its nuts (nuts on the face, the lid on top), when no
+standard bolt is long enough (past 100 mm: a threaded rod with two nuts),
+and when the nuts run past the far face's edge (a nut on the face wider
+than its column). A column runs the walls' whole height, so the checks
+look at all of it: a board it runs into, an opening (a port, your cut, the
+fan, a keyhole) that cuts it. Vents step aside for the columns on the walls
+and around the nuts on the far face, and a label there is warned when it
+runs over a nut. On a hinged half a flat head or a nut on the face standing
+out of its inner face widens the automatic gap between the halves.
+
+Standard lengths are ISO 4762's preferred ones up to 100 mm (5, 6, 8, 10,
+12, 16, 20, 25 … 70, 80, 90, 100); the length is under the head, or overall
+for a countersunk head (ISO 10642).

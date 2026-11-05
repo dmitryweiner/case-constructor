@@ -4,7 +4,7 @@
 
 import type { CutterSpec } from './cutters';
 import type { Dims, Face } from './face';
-import { faceFrame } from './face';
+import { OPPOSITE, faceFrame } from './face';
 import type { LabelState } from './extras';
 import { LABELS_MAX, flatRegion, labelFace } from './extras';
 import { slopeFrame } from './layout';
@@ -129,14 +129,13 @@ export interface LabelHead {
   u: number;
   v: number;
   r: number;
+  /** a through bolt's nut: the face it is on, (u, v) in that face's frame; missing = a head on the lid's face */
+  face?: Face;
 }
-
-/** The face across the case from each face. */
-const OPPOSITE: Readonly<Record<Face, Face>> = { top: 'bottom', bottom: 'top', front: 'back', back: 'front', left: 'right', right: 'left' };
 
 /**
  * Warnings about the labels, each naming its label: off the flat part of
- * its face, over a screw head on the lid, across the parting (a seam through
+ * its face, over a screw head on the lid or a through bolt's nut, across the parting (a seam through
  * the letters), over an opening on its face, raised on the face its part
  * prints on (the letters would be the first layer), two on one face over
  * each other.
@@ -170,13 +169,13 @@ export function labelWarnings(
     if (box.u0 < flat.u0 - eps || box.u1 > flat.u1 + eps || box.v0 < flat.v0 - eps || box.v1 > flat.v1 + eps) {
       out.push({ code: 'warn.labelTooBig', params: { n }, spot });
     }
-    if (surface.face === lid.face && heads.some((head) => {
+    const under = heads.find((head) => {
+      if (surface.face !== (head.face ?? lid.face)) return false;
       const du = Math.max(0, Math.abs(head.u - (box.u0 + box.u1) / 2) - (box.u1 - box.u0) / 2);
       const dv = Math.max(0, Math.abs(head.v - (box.v0 + box.v1) / 2) - (box.v1 - box.v0) / 2);
       return Math.hypot(du, dv) < head.r;
-    })) {
-      out.push({ code: 'warn.labelOverScrew', params: { n }, spot });
-    }
+    });
+    if (under) out.push({ code: under.face ? 'warn.labelOverNut' : 'warn.labelOverScrew', params: { n }, spot });
     if (Math.min(...depths) < zp && Math.max(...depths) > zp) out.push({ code: 'warn.labelOnParting', params: { n }, spot });
     // an opening through the plate under the label: its corners on the face, where it crosses the plate
     const normal = [surface.fromFace[2], surface.fromFace[6], surface.fromFace[10]];

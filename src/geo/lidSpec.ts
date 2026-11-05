@@ -4,14 +4,21 @@
 import type { Face } from './face';
 import { isFace } from './face';
 import type { FastenerSpec, MagnetSize } from './fasteners';
-import { BOSS_MIN_D, BOSS_WALL, COUNTERSUNK_HEAD_D, MAGNETS, SCREWS, bossDiameter, defaultFastener, isLidScrewSize, isMagnetSize, sanitizeFastener } from './fasteners';
+import { BOSS_MIN_D, BOSS_WALL, COUNTERSUNK_HEAD_D, MAGNETS, NUT_CLEARANCE, NYLOC_NUT_H, SCREWS, THROUGH_CLEARANCE, bossDiameter, defaultFastener, isLidScrewSize, isMagnetSize, sanitizeFastener } from './fasteners';
 import type { ShapeKind } from './shape';
 import type { ThreadSize } from './thread';
 import { THREADS, THREAD_WALL, isThreadSize } from './thread';
 import { clampNum } from './shape';
 
-export const FASTENINGS = ['snaps', 'screws', 'magnets', 'printed'] as const;
+export const FASTENINGS = ['snaps', 'screws', 'magnets', 'printed', 'through'] as const;
 export type Fastening = (typeof FASTENINGS)[number];
+
+/** Through bolts' nuts: a plain hex nut (DIN 934) or a nyloc one (DIN 985) */
+export const NUT_KINDS = ['hex', 'nyloc'] as const;
+export type NutKind = (typeof NUT_KINDS)[number];
+/** in a hex pocket in the far face, or standing on it */
+export const NUT_PLACES = ['recessed', 'surface'] as const;
+export type NutPlace = (typeof NUT_PLACES)[number];
 
 export interface LidState {
   /** the face the lid is built on: the chosen one, or an allowed one when the shape cannot have it */
@@ -28,6 +35,8 @@ export interface LidState {
   magnet: { size: MagnetSize; fit: number };
   /** printed screws: the thread size and the radial clearance of its hole, mm */
   thread: { size: ThreadSize; fit: number };
+  /** through bolts: the nut's kind, its across-flats and height (null = from the table), where it sits */
+  nut: { kind: NutKind; af: number | null; h: number | null; place: NutPlace };
   /** skirt height and thickness */
   lip: { h: number; t: number };
   /** printing clearance between the skirt and the walls */
@@ -48,6 +57,7 @@ export function defaultLid(): LidState {
     head: { d: null, depth: null },
     magnet: { size: '6x3', fit: 0.2 },
     thread: { size: 'P6', fit: 0.35 },
+    nut: { kind: 'hex', af: null, h: null, place: 'recessed' },
     lip: { h: 3, t: 1.2 },
     fit: 0.2,
   };
@@ -72,6 +82,15 @@ export function lidForKind(lid: LidState, kind: ShapeKind): LidState {
   return { ...lid, face };
 }
 
+/**
+ * Through bolts run from the lid's face to the opposite one: a top or
+ * bottom lid, never a side lid (the bolts would run along the floor's
+ * corners) nor a console (the far face of its bottom lid is the slope).
+ */
+export function throughAllowed(kind: ShapeKind, face: Face): boolean {
+  return kind !== 'console' && (face === 'top' || face === 'bottom');
+}
+
 /** Ranges of the head seat the user may set, mm. */
 export const HEAD_D_MIN = 2;
 export const HEAD_D_MAX = 16;
@@ -79,6 +98,12 @@ export const HEAD_DEPTH_MIN = 0.5;
 export const HEAD_DEPTH_MAX = 10;
 /** Plastic a counterbore leaves under the head, mm. */
 export const HEAD_FLOOR = 0.6;
+
+/** Ranges of the nut the user may set, mm. */
+export const NUT_AF_MIN = 3;
+export const NUT_AF_MAX = 14;
+export const NUT_H_MIN = 1;
+export const NUT_H_MAX = 8;
 
 /** A number in range, or null when it is not a number at all (= from the tables). */
 function optionalNum(x: unknown, min: number, max: number): number | null {
@@ -97,6 +122,20 @@ export function headSeat(lid: LidState): { d: number; depth: number } {
   return {
     d: Math.max(lid.head.d ?? table, screw.d + 1),
     depth: lid.head.depth ?? screw.headH,
+  };
+}
+
+/** A bought screw with its head in the lid: lid screws and through bolts. */
+export function hasHead(lid: LidState): boolean {
+  return lid.fastening === 'screws' || lid.fastening === 'through';
+}
+
+/** A through bolt's nut: the user's across-flats and height, or the table's for its kind. */
+export function nutSize(lid: LidState): { af: number; h: number } {
+  const screw = SCREWS[lid.screw.size];
+  return {
+    af: lid.nut.af ?? screw.nutAF,
+    h: lid.nut.h ?? (lid.nut.kind === 'nyloc' ? NYLOC_NUT_H[lid.screw.size] : screw.nutH),
   };
 }
 
@@ -125,6 +164,10 @@ export function sanitizeLid(raw: unknown, kind: ShapeKind): LidState {
   const thread: unknown = Reflect.get(r, 'thread');
   const threadRec = typeof thread === 'object' && thread !== null ? thread : {};
   const threadSize: unknown = Reflect.get(threadRec, 'size');
+  const nut: unknown = Reflect.get(r, 'nut');
+  const nutRec = typeof nut === 'object' && nut !== null ? nut : {};
+  const nutKind: unknown = Reflect.get(nutRec, 'kind');
+  const nutPlace: unknown = Reflect.get(nutRec, 'place');
   const allowed = lidFaces(kind);
   return {
     face: isFace(face) && allowed.includes(face) ? face : allowed[0],
@@ -145,6 +188,12 @@ export function sanitizeLid(raw: unknown, kind: ShapeKind): LidState {
       size: isThreadSize(threadSize) ? threadSize : d.thread.size,
       fit: clampNum(Reflect.get(threadRec, 'fit'), 0.1, THREAD_FIT_MAX, d.thread.fit),
     },
+    nut: {
+      kind: NUT_KINDS.find((one) => one === nutKind) ?? d.nut.kind,
+      af: optionalNum(Reflect.get(nutRec, 'af'), NUT_AF_MIN, NUT_AF_MAX),
+      h: optionalNum(Reflect.get(nutRec, 'h'), NUT_H_MIN, NUT_H_MAX),
+      place: NUT_PLACES.find((one) => one === nutPlace) ?? d.nut.place,
+    },
     lip: {
       h: clampNum(Reflect.get(lipRec, 'h'), 1.5, 10, d.lip.h),
       t: clampNum(Reflect.get(lipRec, 't'), 0.8, 4, d.lip.t),
@@ -153,9 +202,13 @@ export function sanitizeLid(raw: unknown, kind: ShapeKind): LidState {
   };
 }
 
-/** Outer diameter of a corner post: around the screw's hole, a magnet's pocket or a printed thread. */
+/** Outer diameter of a corner post: around the screw's hole, a magnet's pocket, a printed thread or a through bolt's hole or nut pocket. */
 export function postDiameter(lid: LidState): number {
   if (lid.fastening === 'magnets') return Math.max(BOSS_MIN_D, MAGNETS[lid.magnet.size].d + lid.magnet.fit + 2 * BOSS_WALL);
   if (lid.fastening === 'printed') return THREADS[lid.thread.size].d + 2 * lid.thread.fit + 2 * THREAD_WALL;
+  if (lid.fastening === 'through') {
+    const inner = lid.nut.place === 'recessed' ? nutSize(lid).af + NUT_CLEARANCE : SCREWS[lid.screw.size].d + THROUGH_CLEARANCE;
+    return Math.max(BOSS_MIN_D, inner + 2 * BOSS_WALL);
+  }
   return bossDiameter(lid.screw);
 }

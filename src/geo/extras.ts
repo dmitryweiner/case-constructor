@@ -9,9 +9,10 @@ import type { CutShape, CutterSpec, ExtraCut } from './cutters';
 import { cutterContains, extraCutters } from './cutters';
 import { cutterCorners } from './ports';
 import type { Dims, Face } from './face';
-import { FACES, faceFrame, isFace } from './face';
+import { FACES, OPPOSITE, faceFrame, isFace } from './face';
 import type { CaseLayout } from './layout';
 import { standoffColumns } from './layout';
+import { throughColumns } from './fastening';
 import type { LidState } from './lidSpec';
 import type { Message, MessageSpot } from './message';
 import { boxAround, boxSpot } from './message';
@@ -330,9 +331,6 @@ export function fanCuts(fan: FanState, dims: Dims): ExtraCut[] {
     hole(cx - half, cy - half), hole(cx + half, cy - half), hole(cx - half, cy + half), hole(cx + half, cy + half),
   ];
 }
-
-/** The face across the case from each face. */
-const OPPOSITE: Readonly<Record<Face, Face>> = { top: 'bottom', bottom: 'top', front: 'back', back: 'front', left: 'right', right: 'left' };
 
 /**
  * Faces a case may hang by: every face but the console's slope. A
@@ -663,7 +661,9 @@ export function earSpecs(mount: WallMountState, shape: ShapeState, dims: Dims, l
 /**
  * Every opening of the extras as cutters, with the vents thinned out: none
  * through the lid skirt band, none under a standoff or a rail (they stand on
- * the floor and a vent there would open them), none in a port opening.
+ * the floor and a vent there would open them), none in a port opening,
+ * none through a through bolt's column (it runs the walls' whole height
+ * and its nut sits on the far face).
  */
 export function extrasCutters(
   state: { vents: VentState; fan: FanState; wallMount: WallMountState },
@@ -675,6 +675,7 @@ export function extrasCutters(
   const zp = -(plateOf(shape, lid.face) + lid.depth);
   const supports = layout.boards.flatMap((board) => standoffColumns(board));
   const rails = layout.boards.filter((board) => board.def.mount.kind === 'rails').map((board) => board.footprint);
+  const columns = throughColumns(shape, dims, lid);
   const kept = vents.filter((cutter) => {
     const centre = cutter.origin;
     const reach = Math.max(cutter.w, cutter.h) / 2;
@@ -686,6 +687,7 @@ export function extrasCutters(
     const lo = Math.min(...zs);
     const hi = Math.max(...zs);
     if (hi > zp - lid.lip.h - 1 && lo < zp + 0.5 && !(lo > zp - 0.01)) return false;
+    if (columns.some((column) => Math.hypot(centre[0] - column.x, centre[1] - column.y) < column.r + reach + 1)) return false;
     // supports on the floor
     if (Math.abs(cutter.ez[2]) > 0.9) {
       for (const column of supports) {

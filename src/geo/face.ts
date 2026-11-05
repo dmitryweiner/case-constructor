@@ -24,6 +24,9 @@ export interface Dims {
   h: number;
 }
 
+/** The face across the case from each face. */
+export const OPPOSITE: Readonly<Record<Face, Face>> = { top: 'bottom', bottom: 'top', front: 'back', back: 'front', left: 'right', right: 'left' };
+
 export interface FaceFrame {
   face: Face;
   /** case frame → face frame */

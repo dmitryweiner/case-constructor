@@ -21,7 +21,7 @@ import { faceFrame } from './face';
 import { bossDiameter } from './fasteners';
 import { postLength } from './fastening';
 import type { LidState } from './lidSpec';
-import { postDiameter } from './lidSpec';
+import { postDiameter, throughAllowed } from './lidSpec';
 import type { Message, SpotBox } from './message';
 import { boardParams, boxAround, spotOf } from './message';
 import type { ShapeState } from './shape';
@@ -678,11 +678,13 @@ export function cornerZone(shape: ShapeState, face: string, dims: Dims): number 
 /**
  * The lid as built: deep enough to take the rounded zone of the walls (the
  * parting line runs where the straight walls begin), never deeper than the
- * case allows.
+ * case allows; through bolts the shape or face cannot have are screws
+ * (they come back with a shape and face that allow them).
  */
 export function effectiveLid(shape: ShapeState, lid: LidState, dims: Dims): LidState {
-  const depth = Math.max(lid.depth, cornerZone(shape, lid.face, dims));
-  return { ...lid, depth: Math.min(depth, lidDepthMax(shape, lid, dims)) };
+  const held = lid.fastening === 'through' && !throughAllowed(shape.kind, lid.face) ? { ...lid, fastening: 'screws' as const } : lid;
+  const depth = Math.max(held.depth, cornerZone(shape, held.face, dims));
+  return { ...held, depth: Math.min(depth, lidDepthMax(shape, held, dims)) };
 }
 
 function overlap(a: Rect, b: Rect): number {

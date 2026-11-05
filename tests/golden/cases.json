@@ -1795,5 +1795,45 @@
         45
       ]
     }
+  },
+  "through-bolts-recessed": {
+    "body": {
+      "triangles": 3164,
+      "volume": 40044.81,
+      "extents": [
+        113.1,
+        81.7,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 2640,
+      "volume": 18235.83,
+      "extents": [
+        113.1,
+        81.7,
+        5
+      ]
+    }
+  },
+  "through-bolts-cylinder-surface": {
+    "body": {
+      "triangles": 3296,
+      "volume": 43782.78,
+      "extents": [
+        127.458,
+        127.458,
+        26.39
+      ]
+    },
+    "lid": {
+      "triangles": 2300,
+      "volume": 26638.12,
+      "extents": [
+        127.458,
+        127.458,
+        6
+      ]
+    }
   }
 }

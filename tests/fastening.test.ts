@@ -8,7 +8,7 @@ import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, effectiveLid } from '../src/geo/layout';
 import { faceFrame } from '../src/geo/face';
-import { HEAD_DEPTH_MIN, HEAD_D_MAX, headSeat, lidFaces } from '../src/geo/lidSpec';
+import { HEAD_DEPTH_MIN, HEAD_D_MAX, headSeat, lidFaces, throughAllowed } from '../src/geo/lidSpec';
 import { SEAT_WALL, headLimitsOf, lidPosts } from '../src/geo/lidPosts';
 import { openingPolygon } from '../src/geo/opening';
 import { MAGNET_SKIN, POST_LEN, SNAP_R, magnetPockets, postCollisions, postSpots, postsInOpenings, snapSpots } from '../src/geo/fastening';
@@ -63,7 +63,10 @@ function lidGeometry(state: AppState) {
 
 const VARIANTS: [ShapeKind, string, Fastening][] = [];
 for (const kind of ['box', 'cylinder', 'console'] as const) {
-  for (const face of lidFaces(kind)) for (const fastening of ['snaps', 'screws', 'magnets', 'printed'] as const) VARIANTS.push([kind, face, fastening]);
+  for (const face of lidFaces(kind)) {
+    for (const fastening of ['snaps', 'screws', 'magnets', 'printed'] as const) VARIANTS.push([kind, face, fastening]);
+    if (throughAllowed(kind, face)) VARIANTS.push([kind, face, 'through']);
+  }
 }
 
 describe('fastening variants', () => {

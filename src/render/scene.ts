@@ -8,7 +8,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SurfaceMesh } from '../geo/surface';
 
-export type PartRole = 'body' | 'lid' | 'screw' | 'clamp' | 'cap' | 'hinge' | 'board' | 'port' | 'glass';
+export type PartRole = 'body' | 'lid' | 'screw' | 'clamp' | 'cap' | 'hinge' | 'board' | 'port' | 'glass' | 'hardware';
 
 export interface ScenePart {
   role: PartRole;
@@ -68,6 +68,7 @@ const COLORS: Record<PartRole, number> = {
   board: 0x3fae6a,
   port: 0xd9b45a,
   glass: 0x1e2a36,
+  hardware: 0x9aa3ad,
 };
 const WARN_COLOR = 0xe5484d;
 /** Vertical field of view of the whole canvas, degrees. */
@@ -134,6 +135,10 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
     }),
     port: new THREE.MeshStandardMaterial({
       color: COLORS.port, metalness: 0.2, roughness: 0.6, transparent: true, opacity: 0.6, depthWrite: false,
+    }),
+    // through bolts and their nuts: bought steel, schematic like the boards
+    hardware: new THREE.MeshStandardMaterial({
+      color: COLORS.hardware, metalness: 0.6, roughness: 0.4, transparent: true, opacity: 0.8, depthWrite: false,
     }),
     // a display's glass: dark, its window in the ports' amber over it
     glass: new THREE.MeshStandardMaterial({

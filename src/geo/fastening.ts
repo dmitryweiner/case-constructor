@@ -21,13 +21,16 @@ import { cutterContains } from './cutters';
 import type { PlacedBoard } from './layout';
 import type { Message, MessageSpot } from './message';
 import { boardParams, boxAround, boxSpot } from './message';
-import type { FaceFrame } from './face';
+import type { Dims, FaceFrame } from './face';
+import { faceFrame } from './face';
 import type { LidState } from './lidSpec';
-import { postDiameter } from './lidSpec';
+import { nutSize, postDiameter } from './lidSpec';
 import { THREADS, THREAD_RELIABLE_D, threadEngagement } from './thread';
 import type { Vec2 } from './section';
-import { MAGNETS } from './fasteners';
-import { boundaryHit, bounds2 } from './opening';
+import { MAGNETS, NUT_CLEARANCE } from './fasteners';
+import { boundaryHit, bounds2, openingPolygon } from './opening';
+import type { ShapeState } from './shape';
+import { plateOf, shapeSpec } from './shape';
 import type { Vec3 } from './surface';
 import { applyAffine, rotateVec } from './surface';
 
@@ -49,6 +52,15 @@ export const POST_LEN = 8;
 /** A post's length below the parting plane: longer for a printed screw, which goes in 1.5 diameters. */
 export function postLength(lid: LidState): number {
   return lid.fastening === 'printed' ? Math.max(POST_LEN, threadEngagement(lid.thread.size) + 1.5) : POST_LEN;
+}
+
+/**
+ * How far down a post reaches in the face frame: `postLength` below the
+ * parting plane (its taper below that), or a through bolt's column down to
+ * the far plate.
+ */
+export function postFoot(lid: LidState, frame: FaceFrame, zp: number, plate: number): number {
+  return lid.fastening === 'through' ? -frame.depth + plate : zp - postLength(lid);
 }
 
 /** Printed screws thinner than 6 mm: the thread may strip, the screw may snap. */
@@ -225,7 +237,8 @@ export function postCollisions(spots: readonly PostSpot[], frame: FaceFrame, zp:
     const reach = Math.hypot(spot.centre[0] - spot.anchor[0], spot.centre[1] - spot.anchor[1]) + spot.r;
     const us = [spot.centre[0] - spot.r, spot.centre[0] + spot.r];
     const vs = [spot.centre[1] - spot.r, spot.centre[1] + spot.r];
-    const zs = [zp - postLength(lid) - reach * 0.5, -plate - lid.fit];
+    // a column stands on the far plate; a post's taper reaches half its reach below it
+    const zs = [lid.fastening === 'through' ? postFoot(lid, frame, zp, plate) : postFoot(lid, frame, zp, plate) - reach * 0.5, -plate - lid.fit];
     const pts: Vec3[] = [];
     for (const u of us) for (const v of vs) for (const z of zs) pts.push(applyAffine(frame.fromFace, [u, v, z]));
     const lo = [0, 1, 2].map((k) => Math.min(...pts.map((p) => p[k])));
@@ -246,8 +259,11 @@ export function postCollisions(spots: readonly PostSpot[], frame: FaceFrame, zp:
 export function postsInOpenings(spots: readonly PostSpot[], frame: FaceFrame, zp: number, plate: number, lid: LidState, cutters: readonly CutterSpec[]): Message[] {
   const out: Message[] = [];
   spots.forEach((spot, index) => {
-    const len = postLength(lid);
-    const zs = [zp - len / 2, (zp - len - plate - lid.fit) / 2 + zp / 2, -plate - lid.fit - 0.5];
+    const foot = postFoot(lid, frame, zp, plate);
+    // a column all the way down, in 2 mm steps from inside the far plate; a post at three heights
+    const zs = lid.fastening === 'through'
+      ? Array.from({ length: Math.max(2, Math.ceil((-plate - lid.fit - foot) / 2) + 2) }, (_, i) => Math.min(foot - plate / 2 + i * 2, -plate - lid.fit - 0.5))
+      : [zp - (zp - foot) / 2, (foot - plate - lid.fit) / 2 + zp / 2, -plate - lid.fit - 0.5];
     const hit = zs.some((z) => {
       const p = applyAffine(frame.fromFace, [spot.centre[0], spot.centre[1], z]);
       return cutters.some((cutter) => cutterContains(cutter, p, spot.r));
@@ -256,10 +272,28 @@ export function postsInOpenings(spots: readonly PostSpot[], frame: FaceFrame, zp
     const pts: Vec3[] = [];
     for (const u of [spot.centre[0] - spot.r, spot.centre[0] + spot.r]) {
       for (const v of [spot.centre[1] - spot.r, spot.centre[1] + spot.r]) {
-        for (const z of [zp - len, -plate - lid.fit]) pts.push(applyAffine(frame.fromFace, [u, v, z]));
+        for (const z of [foot, -plate - lid.fit]) pts.push(applyAffine(frame.fromFace, [u, v, z]));
       }
     }
     out.push({ code: 'warn.postInOpening', params: { n: index + 1 }, spot: postSpot(pts) });
   });
   return out;
+}
+
+/**
+ * Through bolts' columns in the case frame: their axes (x, y; a top or
+ * bottom lid, so they stand along z) and the radius they or their nuts take
+ * on the far face. Empty for any other fastening. From the opening at 8
+ * segments, so the preview and the export keep the same room.
+ */
+export function throughColumns(shape: ShapeState, dims: Dims, lid: LidState): { x: number; y: number; r: number }[] {
+  if (lid.fastening !== 'through') return [];
+  const frame = faceFrame(lid.face, dims);
+  const zp = -(plateOf(shape, lid.face) + lid.depth);
+  const opening = openingPolygon(shapeSpec(shape, dims), frame, zp, lid.lip.h, 8);
+  const nutR = (nutSize(lid).af + NUT_CLEARANCE) / Math.sqrt(3);
+  return postSpots(opening, lid, shape.wall).map((spot) => {
+    const p = applyAffine(frame.fromFace, [spot.centre[0], spot.centre[1], 0]);
+    return { x: p[0], y: p[1], r: Math.max(spot.r, nutR) };
+  });
 }

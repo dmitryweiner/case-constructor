@@ -35,8 +35,9 @@ import { addLabel, renderLabelsCard } from './ui/labelsCard';
 import { cutWarnings, knuckleCutWarnings, leafPadWarnings, magnetWarnings, outerTopAt, portCutters } from './geo/ports';
 import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
 import { effectiveLid } from './geo/layout';
-import { HEAD_FLOOR, headSeat, lidFaces } from './geo/lidSpec';
-import { headLimitsOf, lidPosts } from './geo/lidPosts';
+import { HEAD_FLOOR, hasHead, headSeat, lidFaces } from './geo/lidSpec';
+import { headLimitsOf, lidPosts, nutHeads, throughNotes } from './geo/lidPosts';
+import { throughHardware } from './geo/hardware';
 import { postCollisions, postsInOpenings, printedScrewWarnings } from './geo/fastening';
 import { setupAdjustmentButtons } from './ui/adjust';
 import { createProgress } from './ui/progress';
@@ -395,6 +396,7 @@ function caseNotices(one: AppState, labels: readonly (LabelRaster | null)[], hin
   if (one.lid.face !== one.lid.chosen && !lidFaces(one.shape.kind).includes(one.lid.chosen)) {
     out.push(said('info.lidFaceMoved', { chosen: t(`face.${one.lid.chosen}`), face: t(`face.${one.lid.face}`) }));
   }
+  if (one.lid.fastening === 'through' && lidBuilt.fastening !== 'through') out.push(said('info.throughAsScrews'));
   out.push(...cutWarnings(layout, shapeBuilt, lidBuilt, cutters, one.extraCuts).map(notice));
   if (hinged && hinged.hinge.runs.length > 0) {
     // what stands behind the hinge wall: the knuckles' webs, or a printed hinge's leaf
@@ -411,23 +413,26 @@ function caseNotices(one: AppState, labels: readonly (LabelRaster | null)[], hin
   if (lidBuilt.fastening !== 'snaps') {
     const { frame, plate, zp, spots } = lidPosts(one);
     const limits = headLimitsOf(one);
-    if (lidBuilt.fastening === 'screws' && lidBuilt.screw.head !== 'none' && headSeat(lidBuilt).d > limits.d + 1e-6) {
+    if (hasHead(lidBuilt) && lidBuilt.screw.head !== 'none' && headSeat(lidBuilt).d > limits.d + 1e-6) {
       out.push(said('warn.headDClamped', { max: limits.d.toFixed(1) }));
     }
     // the table's depth was always capped quietly; a depth the user set is worth a word
-    if (lidBuilt.fastening === 'screws' && lidBuilt.screw.head === 'counterbore' && lidBuilt.head.depth !== null
+    if (hasHead(lidBuilt) && lidBuilt.screw.head === 'counterbore' && lidBuilt.head.depth !== null
       && headSeat(lidBuilt).depth > plate - HEAD_FLOOR) {
       out.push(said('warn.headDepthClamped', { max: (plate - HEAD_FLOOR).toFixed(1) }));
     }
     out.push(...postCollisions(spots, frame, zp, plate, lidBuilt, layout.boards).map(notice));
-    out.push(...postsInOpenings(spots, frame, zp, plate, lidBuilt, cutters).map(notice));
+    // a through bolt's column runs the walls' whole height: the extras' openings may cut it too
+    const extras = lidBuilt.fastening === 'through' ? extrasCutters(one, shapeBuilt, layout, lidBuilt, top, cutters) : [];
+    out.push(...postsInOpenings(spots, frame, zp, plate, lidBuilt, [...cutters, ...extras]).map(notice));
   }
+  out.push(...throughNotes(one).map(notice));
   out.push(...printedScrewWarnings(lidBuilt).map(notice));
   out.push(...extrasWarnings(one, shapeBuilt, layout, lidBuilt).map(notice));
   // a screw head on the lid: a label there keeps clear of it
-  const head = lidBuilt.fastening === 'screws' ? (lidBuilt.screw.head === 'none' ? SCREWS[lidBuilt.screw.size].headD : headSeat(lidBuilt).d) / 2 + 0.5
+  const head = hasHead(lidBuilt) ? (lidBuilt.screw.head === 'none' ? SCREWS[lidBuilt.screw.size].headD : headSeat(lidBuilt).d) / 2 + 0.5
     : lidBuilt.fastening === 'printed' ? screwShape(lidBuilt.thread.size, 0, 0).headD / 2 + 0.5 : 0;
-  const heads = head > 0 ? lidPosts(one).spots.map((spot) => ({ u: spot.centre[0], v: spot.centre[1], r: head })) : [];
+  const heads = [...(head > 0 ? lidPosts(one).spots.map((spot) => ({ u: spot.centre[0], v: spot.centre[1], r: head })) : []), ...nutHeads(one)];
   const openings = [...cutters, ...extrasCutters(one, shapeBuilt, layout, lidBuilt, top, cutters)];
   out.push(...labelWarnings(one.labels, labels, shapeBuilt, dims, lidBuilt, openings, heads).map(notice));
   return out;
@@ -796,6 +801,12 @@ function drawParts(): void {
       const posts = one.screw ? lidPosts(own).spots.map((spot) => spot.centre) : [];
       const screws = one.screw ? screwsInCase(one.screw, posts, own.lid.face, dims, 2 * lidLift) : null;
       if (screws) local.push({ role: 'screw', mesh: screws });
+      // through bolts in their columns, nuts on the far face, with the boards; exploded, the bolts over the lifted lid
+      const hardware = withBoards ? throughHardware(own) : null;
+      if (hardware) {
+        local.push({ role: 'hardware', mesh: hardware.bolts, offset: lifted(true, 2) });
+        local.push({ role: 'hardware', mesh: hardware.nuts });
+      }
       // printed caps in the lid's holes; exploded, over the lifted lid
       const caps = capsWithLid(own.lid.face) ? capsInCase(keyCaps(layout, { ...own.shape, console: layout.console }), n, 2 * lidLift) : null;
       if (caps) local.push({ role: 'cap', mesh: caps });

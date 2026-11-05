@@ -16,6 +16,8 @@ import type { LidState } from '../geo/lidSpec';
 import { defaultLid, sanitizeLid } from '../geo/lidSpec';
 import { caseDims, caseLayout, effectiveLid, minimumDims } from '../geo/layout';
 import { topProtrusion } from '../geo/ports';
+import { hardwareProud } from '../geo/bolts';
+import { lidPosts } from '../geo/lidPosts';
 import { HINGED_H_MIN, SIZE_MAX, clampNum, plateOf, shapeSpec } from '../geo/shape';
 import type { CableSlot, CableThrough, Fold, HalfHinge, HingeSpec } from '../geo/hinge';
 import {
@@ -140,13 +142,17 @@ export function casesOf(state: AppState): { half: Half | null; state: AppState }
 
 /**
  * How far anything stands out of a half's inner face: what goes through its
- * plate, plugs in their slots, a raised label on it.
+ * plate, plugs in their slots, a raised label on it, a through bolt's head
+ * or its nut on the face.
  */
 export function innerProtrusion(state: AppState, half: Half): number {
   const one = halfState(state, half);
   const layout = caseLayout(one);
   const label = Math.max(0, ...one.labels.filter((each) => each.raised && each.text.trim() !== '' && labelFace(each, one.shape.kind) === 'top').map((each) => each.depth));
-  return Math.max(topProtrusion(layout, { ...one.shape, console: layout.console }), label);
+  const { lid, plate, frame } = lidPosts(one);
+  const proud = lid.fastening === 'through' ? hardwareProud(lid, plate, frame.depth) : null;
+  const bolts = proud ? (lid.face === 'top' ? proud.lid : proud.far) : 0;
+  return Math.max(topProtrusion(layout, { ...one.shape, console: layout.console }), label, bolts);
 }
 
 /** The gap between the closed halves: from what stands out of their inner faces, or as set. */
