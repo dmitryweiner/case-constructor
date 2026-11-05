@@ -8,7 +8,7 @@
 // outer face, and the pocket is never shallower than the nut and its
 // clearance. A nut on the face takes the shortest standard bolt through it.
 
-import { NUT_CLEARANCE } from './fasteners';
+import { NUT_CLEARANCE, SCREWS } from './fasteners';
 import type { LidState } from './lidSpec';
 import { HEAD_FLOOR, headSeat, nutSize } from './lidSpec';
 
@@ -53,4 +53,16 @@ export function throughBolt(lid: LidState, plate: number, depth: number): Throug
   // no standard bolt fits: the whole length, the nut just inside the face
   const whole = Math.floor(span - NUT_CLEARANCE);
   return { length: whole, standard: false, underHead, pocket: pocketFor(whole), out: 0 };
+}
+
+/**
+ * How far the hardware stands out of the lid's face and of the far face,
+ * mm: a pan head on a flat seat or over a shallow counterbore (a
+ * countersunk head is flush), a nut on the face and the bolt's end past it.
+ */
+export function hardwareProud(lid: LidState, plate: number, depth: number): { lid: number; far: number } {
+  const bolt = throughBolt(lid, plate, depth);
+  const headH = SCREWS[lid.screw.size].headH;
+  const head = lid.screw.head === 'countersunk' ? 0 : Math.max(0, headH + bolt.underHead);
+  return { lid: head, far: lid.nut.place === 'surface' ? nutSize(lid).h + bolt.out : 0 };
 }

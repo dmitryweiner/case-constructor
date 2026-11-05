@@ -36,7 +36,7 @@ import { cutWarnings, knuckleCutWarnings, leafPadWarnings, magnetWarnings, outer
 import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
 import { effectiveLid } from './geo/layout';
 import { HEAD_FLOOR, hasHead, headSeat, lidFaces } from './geo/lidSpec';
-import { headLimitsOf, lidPosts } from './geo/lidPosts';
+import { headLimitsOf, lidPosts, nutHeads, throughNotes } from './geo/lidPosts';
 import { postCollisions, postsInOpenings, printedScrewWarnings } from './geo/fastening';
 import { setupAdjustmentButtons } from './ui/adjust';
 import { createProgress } from './ui/progress';
@@ -421,14 +421,17 @@ function caseNotices(one: AppState, labels: readonly (LabelRaster | null)[], hin
       out.push(said('warn.headDepthClamped', { max: (plate - HEAD_FLOOR).toFixed(1) }));
     }
     out.push(...postCollisions(spots, frame, zp, plate, lidBuilt, layout.boards).map(notice));
-    out.push(...postsInOpenings(spots, frame, zp, plate, lidBuilt, cutters).map(notice));
+    // a through bolt's column runs the walls' whole height: the extras' openings may cut it too
+    const extras = lidBuilt.fastening === 'through' ? extrasCutters(one, shapeBuilt, layout, lidBuilt, top, cutters) : [];
+    out.push(...postsInOpenings(spots, frame, zp, plate, lidBuilt, [...cutters, ...extras]).map(notice));
   }
+  out.push(...throughNotes(one).map(notice));
   out.push(...printedScrewWarnings(lidBuilt).map(notice));
   out.push(...extrasWarnings(one, shapeBuilt, layout, lidBuilt).map(notice));
   // a screw head on the lid: a label there keeps clear of it
   const head = hasHead(lidBuilt) ? (lidBuilt.screw.head === 'none' ? SCREWS[lidBuilt.screw.size].headD : headSeat(lidBuilt).d) / 2 + 0.5
     : lidBuilt.fastening === 'printed' ? screwShape(lidBuilt.thread.size, 0, 0).headD / 2 + 0.5 : 0;
-  const heads = head > 0 ? lidPosts(one).spots.map((spot) => ({ u: spot.centre[0], v: spot.centre[1], r: head })) : [];
+  const heads = [...(head > 0 ? lidPosts(one).spots.map((spot) => ({ u: spot.centre[0], v: spot.centre[1], r: head })) : []), ...nutHeads(one)];
   const openings = [...cutters, ...extrasCutters(one, shapeBuilt, layout, lidBuilt, top, cutters)];
   out.push(...labelWarnings(one.labels, labels, shapeBuilt, dims, lidBuilt, openings, heads).map(notice));
   return out;

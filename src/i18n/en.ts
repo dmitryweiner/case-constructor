@@ -558,6 +558,7 @@ export const en = {
   'warn.keyholeNearStandoff': 'A keyhole is next to a standoff — move them apart.',
   'warn.labelTooBig': 'Label {n} runs off the flat part of its face.',
   'warn.labelOverScrew': 'Label {n} runs over a screw head on the lid.',
+  'warn.labelOverNut': "Label {n} runs over a through bolt's nut.",
   'warn.labelOnParting': 'Label {n} crosses the line between the body and the lid: its letters are split there.',
   'warn.labelOverOpening': 'Label {n} runs over an opening in its face.',
   'warn.labelOnBed': 'Label {n} is raised on the face its part prints on: the letters would be the first layer and the part would stand on them. Engrave it or put it on another face.',
@@ -652,4 +653,9 @@ export const en = {
   'earAlong.centre': "centred",
   'earAlong.ends': "at the ends",
   'warn.threadSmall': "A 4 mm printed thread is at the limit of a 0.4 mm nozzle: it may strip and the screw may snap at the head. Print it slowly, in a tough plastic (PETG), and do not overtighten.",
+  'info.boltsRecessed': "Through bolts: {n} × {size} × {length} mm and {n} {size} nuts. The nuts sit {depth} mm deep in the far face; push each into its pocket and tighten from the lid's side.",
+  'info.boltsOnFace': "Through bolts: {n} × {size} × {length} mm and {n} {size} nuts on the far face; each bolt's end stands out {out} mm past its nut.",
+  'info.standsOnNuts': 'The nuts are on the bottom: the case stands on them.',
+  'warn.boltTooLong': 'No standard bolt is that long ({length} mm, past 100): use a threaded rod with two nuts, or a lower case.',
+  'warn.nutOverEdge': "The nuts run past the far face's edge: take a smaller nut, recess it, or make the case bigger.",
 };

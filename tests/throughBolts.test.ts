@@ -8,7 +8,13 @@ import { buildCase } from '../src/geo/build';
 import type { CsgApi } from '../src/geo/csg';
 import { initCSG, toManifold } from '../src/geo/csg';
 import { caseLayout, effectiveLid } from '../src/geo/layout';
-import { lidPosts } from '../src/geo/lidPosts';
+import { lidPosts, nutHeads, throughNotes } from '../src/geo/lidPosts';
+import { postCollisions, postsInOpenings, throughColumns } from '../src/geo/fastening';
+import { extrasCutters } from '../src/geo/extras';
+import { extraCutters } from '../src/geo/cutters';
+import type { LabelRaster } from '../src/geo/label';
+import { labelWarnings } from '../src/geo/label';
+import { innerProtrusion } from '../src/state/hinged';
 import { applyAffine } from '../src/geo/surface';
 import { validateMesh } from '../src/geo/validate';
 import { NUT_AF_MAX, NUT_AF_MIN, NUT_H_MAX, NUT_H_MIN, defaultLid, nutSize, postDiameter, sanitizeLid, throughAllowed } from '../src/geo/lidSpec';
@@ -235,5 +241,126 @@ describe('the built case', () => {
     }
     body.delete();
     lidPart.delete();
+  });
+});
+
+describe('the notes and checks', () => {
+  const codes = (messages: readonly { code: string }[]) => messages.map((m) => m.code);
+  const plain = (lid: Record<string, unknown>, shape: Record<string, unknown> = {}) => {
+    const base = defaultState();
+    return sanitizeState({
+      ...base, boards: [],
+      shape: { ...base.shape, auto: false, size: { w: 90, d: 70, h: 40 }, ...shape },
+      lid: { ...base.lid, fastening: 'through', screw: { size: 'M3', head: 'countersunk' }, ...lid },
+    });
+  };
+
+  it('a recessed nut: which bolts to buy and how deep the nuts sit', () => {
+    const state = plain({ nut: { place: 'recessed' } });
+    const notes = throughNotes(state);
+    expect(codes(notes)).toEqual(['info.boltsRecessed']);
+    const { frame, plate, lid } = lidPosts(state);
+    const bolt = throughBolt(lid, plate, frame.depth);
+    expect(notes[0].params).toEqual({ n: 4, size: 'M3', length: bolt.length, depth: bolt.pocket.toFixed(1) });
+  });
+
+  it('nuts on the bottom: the case stands on them; on the top they do not', () => {
+    expect(codes(throughNotes(plain({ nut: { place: 'surface' } })))).toEqual(['info.boltsOnFace', 'info.standsOnNuts']);
+    expect(codes(throughNotes(plain({ face: 'bottom', nut: { place: 'surface' } })))).toEqual(['info.boltsOnFace']);
+  });
+
+  it('a case taller than the longest standard bolt', () => {
+    expect(codes(throughNotes(plain({ nut: { place: 'surface' } }, { size: { w: 90, d: 70, h: 150 } })))).toContain('warn.boltTooLong');
+  });
+
+  it('screws have no bolt notes', () => {
+    expect(throughNotes(plain({ fastening: 'screws' }))).toEqual([]);
+  });
+
+  it('a nut on the face wider than its column runs over the far face\'s edge', () => {
+    expect(codes(throughNotes(plain({ nut: { place: 'surface', af: 14 } })))).toContain('warn.nutOverEdge');
+    // recessed, the column grows with the pocket
+    expect(codes(throughNotes(plain({ nut: { place: 'recessed', af: 14 } })))).not.toContain('warn.nutOverEdge');
+    expect(codes(throughNotes(plain({ nut: { place: 'surface' } })))).not.toContain('warn.nutOverEdge');
+  });
+
+  it('a column runs into a floor board: a post only near the lid does not', () => {
+    // a board pushed into a corner, low on the floor: a screw post 8 mm under the lid misses it
+    const base = defaultState();
+    const withBoard = (fastening: string) => sanitizeState({
+      ...base,
+      shape: { ...base.shape, auto: false, size: { w: 110, d: 90, h: 60 }, margin: { ...base.shape.margin, side: 0 } },
+      boards: [{ ...base.boards[0], z: 3, walls: ['left', 'front'] }],
+      lid: { ...base.lid, fastening },
+    });
+    const hits = (state: AppState) => {
+      const { frame, plate, zp, spots, lid } = lidPosts(state);
+      return postCollisions(spots, frame, zp, plate, lid, caseLayout(state).boards).length;
+    };
+    expect(hits(withBoard('screws'))).toBe(0);
+    expect(hits(withBoard('through'))).toBeGreaterThan(0);
+  });
+
+  it('an opening low in a corner cuts a column, not a post', () => {
+    const cut = (fastening: string) => plain({ fastening }, {});
+    const inOpening = (state: AppState) => {
+      const { frame, plate, zp, spots, lid } = lidPosts(state);
+      const layout = caseLayout(state);
+      const spot = spots[0];
+      const p = applyAffine(frame.fromFace, [spot.centre[0], spot.centre[1], -frame.depth + plate + 3]);
+      // a 6 mm round cut on the wall nearest the column, 3 mm over the floor
+      const face = p[0] < layout.dims.w / 2 ? 'left' : 'right';
+      const u = face === 'left' ? p[1] : layout.dims.d - p[1];
+      const withCut = sanitizeState({ ...state, extraCuts: [{ face, shape: 'round', x: u, y: p[2], w: 6, h: 6 }] });
+      const shape = { ...withCut.shape, console: layout.console };
+      const cutters = extraCutters(withCut.extraCuts, shape, layout.dims, () => layout.dims.h);
+      return postsInOpenings(spots, frame, zp, plate, lid, cutters).length;
+    };
+    expect(inOpening(cut('screws'))).toBe(0);
+    expect(inOpening(cut('through'))).toBeGreaterThan(0);
+  });
+
+  it('vents keep clear of the columns on the walls and the far face', () => {
+    const vents = { on: true, faces: ['left', 'right', 'front', 'bottom'], pattern: 'round', size: 3, pitch: 5, margin: 2 };
+    const cuttersOf = (fastening: string) => {
+      const state = sanitizeState({ ...plain({ fastening }), vents });
+      const layout = caseLayout(state);
+      const shape = { ...state.shape, console: layout.console };
+      const lid = effectiveLid(shape, state.lid, layout.dims);
+      return { state, cutters: extrasCutters(state, shape, layout, lid, () => layout.dims.h, []), shape, layout, lid };
+    };
+    const screws = cuttersOf('screws');
+    const through = cuttersOf('through');
+    expect(through.cutters.length).toBeLessThan(screws.cutters.length);
+    const columns = throughColumns(through.shape, through.layout.dims, through.lid);
+    expect(columns).toHaveLength(4);
+    for (const cutter of through.cutters) {
+      for (const column of columns) {
+        expect(Math.hypot(cutter.origin[0] - column.x, cutter.origin[1] - column.y)).toBeGreaterThan(column.r);
+      }
+    }
+  });
+
+  it('a label on the far face over a nut is warned', () => {
+    const state = sanitizeState({ ...plain({}), labels: [{ face: 'bottom', text: 'x', anchor: 'bottomLeft', margin: 2 }] });
+    const layout = caseLayout(state);
+    const shape = { ...state.shape, console: layout.console };
+    const lid = effectiveLid(shape, state.lid, layout.dims);
+    const raster: LabelRaster = { w: 40, h: 40, pixels: new Uint8Array(40 * 40).fill(255), mmPerPx: 0.25 };
+    const heads = nutHeads(state);
+    expect(heads).toHaveLength(4);
+    expect(codes(labelWarnings(state.labels, [raster], shape, layout.dims, lid, [], heads))).toContain('warn.labelOverNut');
+    expect(codes(labelWarnings(state.labels, [raster], shape, layout.dims, lid, [], []))).not.toContain('warn.labelOverNut');
+  });
+
+  it('a hinged half: a flat head on its inner face widens the gap, a countersunk one does not', () => {
+    const base = defaultState();
+    const hinged = (head: string) => sanitizeState({
+      ...base, boards: [],
+      shape: { ...base.shape, kind: 'hinged' },
+      lid: { ...base.lid, face: 'top', fastening: 'through', screw: { size: 'M3', head } },
+    });
+    expect(innerProtrusion(hinged('none'), 'a')).toBeGreaterThanOrEqual(SCREWS.M3.headH - 1e-9);
+    expect(innerProtrusion(hinged('countersunk'), 'a')).toBeLessThan(SCREWS.M3.headH);
   });
 });

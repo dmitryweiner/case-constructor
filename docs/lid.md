@@ -131,6 +131,18 @@ The nut:
   sticks out past it a little. The column is as thick as the hole + 2 ×
   1.6 mm.
 
+The panel names what to buy — "4 × M3 × 30 mm, M3 nuts — 4", how deep the
+nuts sit or how far the bolts' ends stand out past them — and says when the
+case stands on its nuts (nuts on the face, the lid on top), when no
+standard bolt is long enough (past 100 mm: a threaded rod with two nuts),
+and when the nuts run past the far face's edge (a nut on the face wider
+than its column). A column runs the walls' whole height, so the checks
+look at all of it: a board it runs into, an opening (a port, your cut, the
+fan, a keyhole) that cuts it. Vents step aside for the columns on the walls
+and around the nuts on the far face, and a label there is warned when it
+runs over a nut. On a hinged half a flat head or a nut on the face standing
+out of its inner face widens the automatic gap between the halves.
+
 Standard lengths are ISO 4762's preferred ones up to 100 mm (5, 6, 8, 10,
 12, 16, 20, 25 … 70, 80, 90, 100); the length is under the head, or overall
 for a countersunk head (ISO 10642).

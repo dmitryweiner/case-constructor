@@ -200,3 +200,14 @@ T1 (state and card first: the files and fixtures move once), T2, T3, T4,
 T5 with each item's docs as it lands, T6 grows with each item.
 
 ## Deviations
+
+- **T3, the nut's limit.** Planned: the nut's across-flats slider stops
+  where the nut would reach the far face's edge, and the worker clamps a
+  file, as for the head seat. A recessed nut's column grows with its
+  pocket, so the post slides further in and the limit never binds; only a
+  nut on the face, wider than its column, can run over the edge. So no
+  limit and no clamp: a warning (`warn.nutOverEdge`, `nutOverEdge`) instead.
+- **T3, keyholes.** No check of their own: a column now looks for openings
+  along its whole height, the extras' included, so a keyhole or the fan
+  that cuts a column or its nut is reported as a post in an opening.
+
