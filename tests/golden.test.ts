@@ -409,6 +409,16 @@ const STATES: Record<string, AppState> = {
     lid: { ...defaultState().lid, face: 'front', fastening: 'screws' },
     wallMount: { kind: 'ears', face: 'left', ears: { count: 2, walls: 'topBottom' } },
   }),
+  // T2: through bolts (plans/PLAN-THROUGH-BOLTS.md)
+  'through-bolts-recessed': sanitizeState({
+    ...defaultState(),
+    lid: { ...defaultState().lid, fastening: 'through', screw: { size: 'M3', hole: 'tap', head: 'countersunk' }, nut: { place: 'recessed' } },
+  }),
+  'through-bolts-cylinder-surface': sanitizeState({
+    ...defaultState(),
+    shape: { ...defaultState().shape, kind: 'cylinder' },
+    lid: { ...defaultState().lid, face: 'bottom', fastening: 'through', screw: { size: 'M4', hole: 'tap', head: 'counterbore' }, nut: { kind: 'nyloc', place: 'surface' } },
+  }),
 };
 
 function part(mesh: SurfaceMesh): PartEntry {

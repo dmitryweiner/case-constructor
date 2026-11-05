@@ -379,6 +379,13 @@ freely; a temporary script that turns out useful becomes a permanent one.
   (`magnetPockets`); a magnet post stops a fit below the lid's boss, and its
   corner fill stops `POST_STEP` below its top — reaching it, the top face met
   the outer corner's edge on the diagonal: slivers.
+  Through bolts (`lid.fastening: 'through'`, `throughAllowed`: a top or
+  bottom lid, not a console; elsewhere `effectiveLid` builds screws) turn
+  the posts into columns from the far plate's middle to the lid plate, no
+  taper; a hole through everything, the screws' head seat in the lid, a
+  recessed nut's hex pocket from the far face as deep as `throughBolt`
+  (`bolts.ts`, pure) says: the longest standard bolt that does not stick
+  out, its end flush with the nut's outer face.
   The lid's holes are cut after the skirt is added: the skirt reaches up
   into the plate and filled a deep counterbore back in (a crescent at the
   corner). A head's seat stays `SEAT_WALL` inside the lid's face
@@ -522,6 +529,8 @@ browser is within ~10 % of it):
 | CardKB with printed caps — preview | 12 | 135 ms | 12.5k + 9.6k of caps |
 | CardKB with printed caps — finest export | 64 | 0.75 s | 64k + the caps |
 | KeebDeck Basic, a hole per key — preview | 12 | 260 ms | 19k |
+| `pi4-desktop` on M3 through bolts, recessed nuts — preview | 12 | 140 ms | 8k |
+| `pi4-desktop` on M3 through bolts — finest export | 64 | 0.77 s | 33k |
 | `repair-station-clamshell` (two halves, a printed hinge; the caps not counted) — preview | 12 | 260 + 130 ms (a half's build is reused while the other is edited) | 18k + 9.6k + 2k of leaves |
 | `repair-station-clamshell` — finest export | 64 | 2.1 + 0.76 s | 94k + 46k + 10k of leaves |
 

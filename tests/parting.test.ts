@@ -5,7 +5,7 @@ import { initCSG, toManifold } from '../src/geo/csg';
 import type { CsgApi } from '../src/geo/csg';
 import { buildCase } from '../src/geo/build';
 import { faceFrame } from '../src/geo/face';
-import { lidFaces } from '../src/geo/lidSpec';
+import { lidFaces, throughAllowed } from '../src/geo/lidSpec';
 import { caseDims, caseLayout, effectiveLid } from '../src/geo/layout';
 import { applyAffine, meshBounds } from '../src/geo/surface';
 import { defaultState, sanitizeState } from '../src/state/schema';
@@ -103,7 +103,8 @@ describe('parting', () => {
 const LOW: [ShapeKind, string, string, number][] = [];
 for (const kind of ['box', 'cylinder'] as const) {
   for (const face of lidFaces(kind)) {
-    for (const fastening of ['snaps', 'screws', 'magnets', 'printed']) for (const h of [10, 12]) LOW.push([kind, face, fastening, h]);
+    const fastenings = ['snaps', 'screws', 'magnets', 'printed', ...(throughAllowed(kind, face) ? ['through'] : [])];
+    for (const fastening of fastenings) for (const h of [10, 12]) LOW.push([kind, face, fastening, h]);
   }
 }
 

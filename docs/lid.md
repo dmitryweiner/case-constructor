@@ -99,3 +99,38 @@ twice the resolution's segments (48 at the default 24, at most 64) — four
 threaded holes make the body several times heavier, so a printed-screw case
 takes about a second to export.
 
+
+## Through bolts
+
+Bought bolts run through the whole case, from the lid's face to the
+opposite one, with a nut there: the lid and the body are clamped between
+the head and the nut, and nothing is threaded into plastic. Offered with a
+top or bottom lid on a box, a cylinder or a hinged half; a console (the far
+face of its bottom lid is the slope) and a side lid cannot have them — the
+option is disabled, and a project that has them is built on screws with a
+note until the shape and the lid allow them again.
+
+A column stands in every corner of the opening from the far plate up to the
+lid plate (with a deep lid it rises inside the lid, as the screws' posts
+do), filled out to the walls; it stands on the plate, so it needs no taper.
+A clearance hole (bolt + 0.4 mm) runs through the lid, the column and the
+far plate. The lid gets the head seat as for screws: flat, counterbore or
+countersunk, with the same diameter and depth settings and limits.
+
+The nut:
+
+- **Recessed** — a hex pocket in the far face (across flats + 0.4 mm), a
+  flat towards the corner, so the nut cannot turn: tighten the bolt from
+  the lid's side alone. The pocket is as deep as the longest standard bolt
+  that does not stick out of the far face needs: its end is flush with the
+  nut's outer face. It is never shallower than the nut + 0.4 mm, so the far
+  face stays flat and the case stands level. The column is as thick as the
+  pocket + 2 × 1.6 mm.
+- **On the face** — a plain hole: the nut (and a washer, if you like)
+  stands on the far face; the shortest standard bolt that goes through it
+  sticks out past it a little. The column is as thick as the hole + 2 ×
+  1.6 mm.
+
+Standard lengths are ISO 4762's preferred ones up to 100 mm (5, 6, 8, 10,
+12, 16, 20, 25 … 70, 80, 90, 100); the length is under the head, or overall
+for a countersunk head (ISO 10642).
