@@ -37,6 +37,7 @@ import { extraCutters, MAX_EXTRA_CUTS } from './geo/cutters';
 import { effectiveLid } from './geo/layout';
 import { HEAD_FLOOR, hasHead, headSeat, lidFaces } from './geo/lidSpec';
 import { headLimitsOf, lidPosts, nutHeads, throughNotes } from './geo/lidPosts';
+import { throughHardware } from './geo/hardware';
 import { postCollisions, postsInOpenings, printedScrewWarnings } from './geo/fastening';
 import { setupAdjustmentButtons } from './ui/adjust';
 import { createProgress } from './ui/progress';
@@ -800,6 +801,12 @@ function drawParts(): void {
       const posts = one.screw ? lidPosts(own).spots.map((spot) => spot.centre) : [];
       const screws = one.screw ? screwsInCase(one.screw, posts, own.lid.face, dims, 2 * lidLift) : null;
       if (screws) local.push({ role: 'screw', mesh: screws });
+      // through bolts in their columns, nuts on the far face, with the boards; exploded, the bolts over the lifted lid
+      const hardware = withBoards ? throughHardware(own) : null;
+      if (hardware) {
+        local.push({ role: 'hardware', mesh: hardware.bolts, offset: lifted(true, 2) });
+        local.push({ role: 'hardware', mesh: hardware.nuts });
+      }
       // printed caps in the lid's holes; exploded, over the lifted lid
       const caps = capsWithLid(own.lid.face) ? capsInCase(keyCaps(layout, { ...own.shape, console: layout.console }), n, 2 * lidLift) : null;
       if (caps) local.push({ role: 'cap', mesh: caps });

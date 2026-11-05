@@ -6,7 +6,7 @@
 // A recessed nut sits as deep as the longest standard bolt that does not
 // stick out of the far face needs: the bolt's end is flush with the nut's
 // outer face, and the pocket is never shallower than the nut and its
-// clearance. A nut on the face takes the shortest standard bolt through it.
+// clearance (there the end stays just past the nut, inside the face). A nut on the face takes the shortest standard bolt through it.
 
 import { NUT_CLEARANCE, SCREWS } from './fasteners';
 import type { LidState } from './lidSpec';

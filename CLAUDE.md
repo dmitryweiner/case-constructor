@@ -385,7 +385,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   taper; a hole through everything, the screws' head seat in the lid, a
   recessed nut's hex pocket from the far face as deep as `throughBolt`
   (`bolts.ts`, pure) says: the longest standard bolt that does not stick
-  out, its end flush with the nut's outer face.
+  out, its end flush with the nut's outer face. The bolts and nuts are
+  drawn, not built: `hardware.ts` (pure meshes, role `hardware`), with the
+  boards in Both, never in the print layout or an STL.
   The lid's holes are cut after the skirt is added: the skirt reaches up
   into the plate and filled a deep counterbore back in (a crescent at the
   corner). A head's seat stays `SEAT_WALL` inside the lid's face

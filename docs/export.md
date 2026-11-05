@@ -44,7 +44,9 @@ broken mesh, an empty part or a part larger than 400 mm.
 
 *Boards* — show the boards, see-through: the PCB green with its mounting
 holes and their pads, connectors and parts amber (off in the print layout:
-they are not printed; hidden for the lid alone); *Connector names* — a
+they are not printed; hidden for the lid alone); with Both, through bolts
+and their nuts in steel grey too (exploded, the bolts hover over the lifted
+lid; never in an STL); *Connector names* — a
 caption over every connector and part of the boards, the names from the
 board card (on by default, only with *Boards*; a click on a name turns its
 opening on or off, see [Openings](openings.md)); *Warnings on the model* —

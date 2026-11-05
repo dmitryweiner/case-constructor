@@ -15,7 +15,8 @@ import { extraCutters } from '../src/geo/cutters';
 import type { LabelRaster } from '../src/geo/label';
 import { labelWarnings } from '../src/geo/label';
 import { innerProtrusion } from '../src/state/hinged';
-import { applyAffine } from '../src/geo/surface';
+import { applyAffine, meshBounds } from '../src/geo/surface';
+import { throughHardware } from '../src/geo/hardware';
 import { validateMesh } from '../src/geo/validate';
 import { NUT_AF_MAX, NUT_AF_MIN, NUT_H_MAX, NUT_H_MIN, defaultLid, nutSize, postDiameter, sanitizeLid, throughAllowed } from '../src/geo/lidSpec';
 import { BOSS_WALL, NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE } from '../src/geo/fasteners';
@@ -362,5 +363,50 @@ describe('the notes and checks', () => {
     });
     expect(innerProtrusion(hinged('none'), 'a')).toBeGreaterThanOrEqual(SCREWS.M3.headH - 1e-9);
     expect(innerProtrusion(hinged('countersunk'), 'a')).toBeLessThan(SCREWS.M3.headH);
+  });
+});
+
+describe('the hardware in the view', () => {
+  const state = (lid: Record<string, unknown>) => {
+    const base = defaultState();
+    return sanitizeState({
+      ...base, boards: [],
+      shape: { ...base.shape, auto: false, size: { w: 90, d: 70, h: 40 } },
+      lid: { ...base.lid, fastening: 'through', screw: { size: 'M3', head: 'countersunk' }, ...lid },
+    });
+  };
+
+  it('none for other fastenings', () => {
+    expect(throughHardware(state({ fastening: 'screws' }))).toBeNull();
+  });
+
+  it.each([['recessed'], ['surface']] as const)('nut %s: closed meshes, a bolt per column from the lid’s face, its nut on it', (place) => {
+    const s = state({ nut: { place } });
+    const hardware = throughHardware(s);
+    if (!hardware) throw new Error('no hardware');
+    for (const mesh of [hardware.bolts, hardware.nuts]) {
+      const report = validateMesh(mesh);
+      expect(report.watertight).toBe(true);
+      expect(report.degenerateTriangles).toBe(0);
+    }
+    const { frame, plate, lid } = lidPosts(s);
+    const bolt = throughBolt(lid, plate, frame.depth);
+    const h = caseLayout(s).dims.h;
+    const bolts = meshBounds(hardware.bolts);
+    const nuts = meshBounds(hardware.nuts);
+    // a countersunk head flush with the top lid's face, the shank down by the bolt's length
+    expect(bolts.max[2]).toBeCloseTo(h, 4);
+    expect(bolts.min[2]).toBeCloseTo(h - bolt.length, 4);
+    if (place === 'recessed') {
+      // inside the far face; the bolt goes through the whole nut and never out of the face
+      expect(nuts.min[2]).toBeGreaterThanOrEqual(-1e-6);
+      expect(bolts.min[2]).toBeLessThanOrEqual(nuts.min[2] + 1e-4);
+      expect(bolts.min[2]).toBeGreaterThanOrEqual(-1e-4);
+      expect(nuts.max[2]).toBeCloseTo(bolt.pocket, 4);
+    } else {
+      expect(nuts.max[2]).toBeCloseTo(0, 4);
+      expect(nuts.min[2]).toBeCloseTo(-nutSize(lid).h, 4);
+      expect(bolts.min[2]).toBeCloseTo(-nutSize(lid).h - bolt.out, 4);
+    }
   });
 });
