@@ -28,6 +28,10 @@ printed hinge on screws, cable slots, magnets inside (the branch
 `plans/PLAN-MOUNT-LABELS.md` — the wall mount on the face the user chooses
 (keyholes through it, ears flush with it), several labels on any flat face
 (W1…W3, L1…L4; the branch `mount-labels`): done.
+`plans/PLAN-THROUGH-BOLTS.md` — a lid on through bolts (T1…T6): a column
+in each corner plate to plate, the bolt's head in the lid, a nut recessed
+in the far face or standing on it, the bolt's standard length, hardware
+ghosts (the branch `through-bolts`).
 
 ## Node
 
