@@ -18,6 +18,11 @@ Decided on purpose, so nobody wonders:
 
 - A display on a wall of the case (a 1602 on the front of a box): displays
   hang from the top or the console's slope only. Keyboards likewise.
+- Through bolts with a side lid (they would run along the floor's corners,
+  through the boards' supports) or on a console (the far face of its bottom
+  lid is the slope, and a nut would sit askew on it): there the lid holds on
+  screws. Washers are not modelled, nor a sacrificial bridge over a
+  recessed nut's pocket (the slicer bridges it, as a counterbore).
 - Switch plate clips: an MX switch clips into a 1.5 mm plate, and the lid's
   plate is the case's **Floor and ceiling** setting (2 mm by default); hot-swap
   sockets hold the switches anyway. Keycaps are not modelled: the key tops
@@ -39,8 +44,10 @@ Known limits of the current version:
   gripped edges (an ESP32-DevKitC as shipped, a Nano with headers) collide
   with the lower lip — remove the headers or use a custom board on standoffs.
 - Vents are left out wherever they would hit something (the skirt band, a
-  standoff, a rail, a port opening); a dense board can leave a face with few
-  vents.
+  standoff, a rail, a port opening, a through bolt's column or its nut); a
+  dense board can leave a face with few vents.
+- Through bolts' recessed pockets (the nut + 0.4 mm) wait for a printed
+  test, like the other fits.
 - A fan larger than the flat part of its face still cuts through the rim; the
   panel warns.
 - Printed screws and their threads, magnet pockets and closed keyholes wait

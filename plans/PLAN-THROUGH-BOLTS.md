@@ -1,6 +1,6 @@
 # Case Constructor — a lid on through bolts
 
-**Status: plan, decisions taken (2026-11-05).**
+**Status: done (2026-11-05), the branch `through-bolts`, PR #10.**
 
 Written on 2026-11-05 from the user's request. Items T1…T6; the order is at
 the end.
@@ -210,4 +210,10 @@ T5 with each item's docs as it lands, T6 grows with each item.
 - **T3, keyholes.** No check of their own: a column now looks for openings
   along its whole height, the extras' included, so a keyhole or the fan
   that cuts a column or its nut is reported as a post in an opening.
+- **T4, the bolt's end.** Where a recessed pocket is at its shallowest
+  (the nut + 0.4 mm), the longest standard bolt ends up to 0.4 mm past the
+  nut's outer face, still inside the far face — not exactly flush.
+- **Order of checks.** `npm run check` ran before every commit; the smoke
+  ran once, with its through-bolt steps, before the T5/T6 commit (T1–T4
+  were checked in the browser with `snap.mjs`).
 
