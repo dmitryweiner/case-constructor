@@ -2,7 +2,16 @@
 // default opening, parts through the plate, the placement's choice.
 
 import { KEYS_OPEN, PORT_TYPES, keyFields, keysOf, onFace, sanitizeBoard, sanitizePort } from '../src/boards/schema';
-import { boardOf, defaultPlacement, frontHeight, hangsByDefault, holdChoices, holesAmongKeys, keysOpen, sanitizePlacement } from '../src/boards/placement';
+import {
+  boardOf,
+  defaultPlacement,
+  frontHeight,
+  hangsByDefault,
+  holdChoices,
+  holesAmongKeys,
+  keysOpen,
+  sanitizePlacement,
+} from '../src/boards/placement';
 import { CEILING_GAP } from '../src/boards/placement';
 import { RAW_BOARDS, catalogBoard } from '../src/boards/catalog';
 import { initCSG, toManifold } from '../src/geo/csg';
@@ -15,7 +24,18 @@ import { validateMesh } from '../src/geo/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import { garbageLike, KEYPAD, boxMesh, rng } from './helpers';
-import { CAP_FIT, CAP_FLANGE_T, CAP_HOLD, CAP_R_MIN, capSizeRange, CAP_GAP, CAP_GROW, CAP_LIP, CAP_PROUD, capSizes } from '../src/geo/capSize';
+import {
+  CAP_FIT,
+  CAP_FLANGE_T,
+  CAP_HOLD,
+  CAP_R_MIN,
+  capSizeRange,
+  CAP_GAP,
+  CAP_GROW,
+  CAP_LIP,
+  CAP_PROUD,
+  capSizes,
+} from '../src/geo/capSize';
 import { capMesh, capsInCase, keyCaps, withCaps } from '../src/geo/caps';
 import { rimsOf } from '../src/geo/rim';
 import { clampHold, clampPads } from '../src/geo/clamp';
@@ -103,7 +123,9 @@ describe('a keyboard entry', () => {
     const random = rng(22);
     const custom = { ...keypad, id: 'custom' };
     for (let i = 0; i < 300; i++) {
-      const once = sanitizePlacement(garbageLike({ ...defaultPlacement(custom), board: 'custom', custom, keys: 'window', keyFit: 1 }, random));
+      const once = sanitizePlacement(
+        garbageLike({ ...defaultPlacement(custom), board: 'custom', custom, keys: 'window', keyFit: 1 }, random),
+      );
       expect(sanitizePlacement(once)).toEqual(once);
       expect(sanitizePlacement(JSON.parse(JSON.stringify(once)))).toEqual(once);
     }
@@ -126,10 +148,12 @@ function checkKeyboard(raw: unknown): void {
     const p = rec(rawPort);
     const port = board.ports[i];
     const where = `${board.id}: ${port.id}`;
-    if (p.rows !== undefined) expect('rows' in port ? port.rows?.length : 0, `${where} rows`).toBe(Array.isArray(p.rows) ? p.rows.length : 0);
+    if (p.rows !== undefined)
+      expect('rows' in port ? port.rows?.length : 0, `${where} rows`).toBe(Array.isArray(p.rows) ? p.rows.length : 0);
     if (p.open !== undefined) expect('open' in port ? port.open : undefined, `${where} open`).toBe(p.open);
     // a key field stands out of the plate; anything else stays under it, a part through it with its base
-    if (port.edge === 'top' && port.type !== 'keys') expect(port.base ?? port.h, `${where} under the plate`).toBeLessThanOrEqual(board.topHeight);
+    if (port.edge === 'top' && port.type !== 'keys')
+      expect(port.base ?? port.h, `${where} under the plate`).toBeLessThanOrEqual(board.topHeight);
   }
 }
 
@@ -142,7 +166,8 @@ describe('a keyboard hung from the lid (K2)', () => {
   const keypad = { ...sanitizeBoard(KEYPAD), id: 'custom' };
   function state(board: Record<string, unknown> = {}, patch: Partial<AppState> = {}): AppState {
     return sanitizeState({
-      ...defaultState(), ...patch,
+      ...defaultState(),
+      ...patch,
       boards: [{ ...defaultPlacement(keypad), board: 'custom', custom: keypad, mount: { size: 'M3', hole: 'tap' }, ...board }],
     });
   }
@@ -167,10 +192,15 @@ describe('a keyboard hung from the lid (K2)', () => {
 
   it('the key tops stand out of the plate by h − front − gap − plate', () => {
     const s = state();
-    expect(keysProud(caseLayout(s).boards[0], keyFields(keypad)[0], s.shape, caseLayout(s).dims, 0, 0))
-      .toBeCloseTo(11.6 - 5 - CEILING_GAP - s.shape.floor, 6);
+    expect(keysProud(caseLayout(s).boards[0], keyFields(keypad)[0], s.shape, caseLayout(s).dims, 0, 0)).toBeCloseTo(
+      11.6 - 5 - CEILING_GAP - s.shape.floor,
+      6,
+    );
     const [note] = notes(s);
-    expect(note).toMatchObject({ code: 'info.keysProud', params: { port: 'keys', mm: (11.6 - 5 - CEILING_GAP - s.shape.floor).toFixed(1) } });
+    expect(note).toMatchObject({
+      code: 'info.keysProud',
+      params: { port: 'keys', mm: (11.6 - 5 - CEILING_GAP - s.shape.floor).toFixed(1) },
+    });
     expect(note.spot?.holder).toEqual({ board: 0 });
   });
 
@@ -211,13 +241,16 @@ describe('openings over the keys (K3)', () => {
   const keypad = { ...sanitizeBoard(KEYPAD), id: 'custom' };
   function state(board: Record<string, unknown> = {}, patch: Partial<AppState> = {}): AppState {
     return sanitizeState({
-      ...defaultState(), ...patch,
+      ...defaultState(),
+      ...patch,
       boards: [{ ...defaultPlacement(keypad), board: 'custom', custom: keypad, mount: { size: 'M3', hole: 'tap' }, ...board }],
     });
   }
   const keyCutters = (s: AppState) => {
     const layout = caseLayout(s);
-    return portCutters(layout, { ...s.shape, console: layout.console }).filter((cutter) => cutter.source.kind === 'port' && cutter.source.port === 'keys');
+    return portCutters(layout, { ...s.shape, console: layout.console }).filter(
+      (cutter) => cutter.source.kind === 'port' && cutter.source.port === 'keys',
+    );
   };
 
   it('a hole per key, the key grown by the fit, straight; or one chamfered window', () => {
@@ -251,10 +284,15 @@ describe('openings over the keys (K3)', () => {
     expect(notes(state({ keyFit: 2.25, keys: 'window' }))).not.toContain('warn.keyWebThin');
   });
 
-  it.each([['holes', {}], ['window', { keys: 'window' }], ['slope', { shape: 'console' }]])('builds closed and sliver-free: %s', (_name, patch) => {
-    const s = 'shape' in patch
-      ? state({}, { shape: { ...defaultState().shape, kind: 'console' }, lid: { ...defaultState().lid, face: 'bottom' } })
-      : state(patch);
+  it.each([
+    ['holes', {}],
+    ['window', { keys: 'window' }],
+    ['slope', { shape: 'console' }],
+  ])('builds closed and sliver-free: %s', (_name, patch) => {
+    const s =
+      'shape' in patch
+        ? state({}, { shape: { ...defaultState().shape, kind: 'console' }, lid: { ...defaultState().lid, face: 'bottom' } })
+        : state(patch);
     const built = buildCase(csg, s, 8);
     for (const mesh of [built.body, built.lid]) {
       const report = validateMesh(mesh);
@@ -285,7 +323,10 @@ describe('the catalog keyboards (K6a)', () => {
     // the keys sit just under the face in their window: a word, no warning
     expect(keyNotes(layout, shape).map((note) => note.code)).toEqual(['info.keysSunk']);
     // and its socket stands up out of the window: a word on the gap that sinks it
-    expect(cutWarnings(layout, shape, s.lid, portCutters(layout, shape), []).map((note) => note.code)).toEqual(['info.keysSunk', 'info.plugProud']);
+    expect(cutWarnings(layout, shape, s.lid, portCutters(layout, shape), []).map((note) => note.code)).toEqual([
+      'info.keysSunk',
+      'info.plugProud',
+    ]);
     // the slot stays inside the case: the wall stands beyond it
     expect(layout.boards[0].footprint.x0).toBeLessThanOrEqual(layout.boards[0].outline.x0 - 12);
   });
@@ -350,7 +391,11 @@ describe('a plug’s slot through the lid', () => {
     const built = buildCase(csg, s, 8);
     const lid = toManifold(csg, built.lid);
     const at = (s1: number): boolean => {
-      const probe = csg.Manifold.cube([0.1, 0.1, 0.1], true).translate([face[0] + dir[0] * s1, face[1] + dir[1] * s1, layout.dims.h - s.shape.floor / 2]);
+      const probe = csg.Manifold.cube([0.1, 0.1, 0.1], true).translate([
+        face[0] + dir[0] * s1,
+        face[1] + dir[1] * s1,
+        layout.dims.h - s.shape.floor / 2,
+      ]);
       const common = lid.intersect(probe);
       const solid = common.volume() > 0.0009;
       probe.delete();
@@ -368,9 +413,12 @@ describe('printed caps over the keys (K3b)', () => {
   beforeAll(async () => {
     csg = await initCSG();
   });
-  const cardkb = (extra: Record<string, unknown> = {}, patch: Partial<AppState> = {}): AppState => sanitizeState({
-    ...defaultState(), ...patch, boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: CEILING_GAP, keys: 'caps', ...extra }],
-  });
+  const cardkb = (extra: Record<string, unknown> = {}, patch: Partial<AppState> = {}): AppState =>
+    sanitizeState({
+      ...defaultState(),
+      ...patch,
+      boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: CEILING_GAP, keys: 'caps', ...extra }],
+    });
 
   it('a stem over each key, a flange as wide as the neighbours leave room for', () => {
     const entry = catalogBoard('m5stack-cardkb-v1.1');
@@ -410,7 +458,10 @@ describe('printed caps over the keys (K3b)', () => {
   });
 
   it('square caps: rounded corners never under CAP_R_MIN, their holes rounded alike', () => {
-    expect(sanitizePlacement({ ...cardkb().boards[0], capShape: 'square', capR: 0 })).toMatchObject({ capShape: 'square', capR: CAP_R_MIN });
+    expect(sanitizePlacement({ ...cardkb().boards[0], capShape: 'square', capR: 0 })).toMatchObject({
+      capShape: 'square',
+      capR: CAP_R_MIN,
+    });
     expect(sanitizePlacement({ ...cardkb().boards[0], capShape: 'round' })).not.toHaveProperty('capShape');
     const s = cardkb({ capShape: 'square', capR: 0.5 });
     const layout = caseLayout(s);
@@ -523,7 +574,10 @@ describe('rests under a keyboard that rocks (K5)', () => {
     const s = bbq();
     const layout = caseLayout(s);
     const rests = restsOf(layout.boards[0], layout, s.shape.floor);
-    expect(rests.map((rest) => [Math.round(rest.x), Math.round(rest.y)])).toEqual([[71, 3], [3, 50]]);
+    expect(rests.map((rest) => [Math.round(rest.x), Math.round(rest.y)])).toEqual([
+      [71, 3],
+      [3, 50],
+    ]);
     expect(rests.every((rest) => rest.problem === undefined)).toBe(true);
     // on the floor a rest touches the PCB
     expect(rests[0].top).toBeCloseTo(layout.boards[0].z0, 6);
@@ -585,7 +639,9 @@ describe('a keypad’s flange under the plate (K4) and the last two keyboards', 
   it('its USB-C stands taller than the flange: its opening starts behind its body, through the plate', () => {
     const s = add('solderparty-keebdeck-basic');
     const layout = caseLayout(s);
-    const usb = portCutters(layout, { ...s.shape, console: layout.console }).find((cutter) => cutter.source.kind === 'port' && cutter.source.port === 'usb-c');
+    const usb = portCutters(layout, { ...s.shape, console: layout.console }).find(
+      (cutter) => cutter.source.kind === 'port' && cutter.source.port === 'usb-c',
+    );
     expect(usb?.s0).toBeLessThan(-7);
   });
 
@@ -593,21 +649,26 @@ describe('a keypad’s flange under the plate (K4) and the last two keyboards', 
     const s = add('solderparty-keyboard-featherwing');
     expect(s.boards[0]).not.toHaveProperty('on');
     const layout = caseLayout(s);
-    const openings = portCutters(layout, { ...s.shape, console: layout.console }).filter((cutter) => cutter.source.kind === 'port' && cutter.ez[2] === 1);
+    const openings = portCutters(layout, { ...s.shape, console: layout.console }).filter(
+      (cutter) => cutter.source.kind === 'port' && cutter.ez[2] === 1,
+    );
     // oxlint-disable-next-line typescript/require-array-sort-compare -- port ids (and false), any string order does
     expect(openings.map((cutter) => cutter.source.kind === 'port' && cutter.source.port).sort()).toEqual(['display', 'keys']);
   });
 
-  it.each(['solderparty-bbq20kbd', 'solderparty-keebdeck-basic', 'solderparty-keyboard-featherwing'])('%s builds closed and sliver-free, no layout warnings', (board) => {
-    const s = add(board);
-    expect(collisions(caseLayout(s))).toEqual([]);
-    const built = buildCase(csg, s, 8);
-    for (const mesh of [built.body, built.lid]) {
-      const report = validateMesh(mesh);
-      expect(report.watertight).toBe(true);
-      expect(report.degenerateTriangles).toBe(0);
-    }
-  });
+  it.each(['solderparty-bbq20kbd', 'solderparty-keebdeck-basic', 'solderparty-keyboard-featherwing'])(
+    '%s builds closed and sliver-free, no layout warnings',
+    (board) => {
+      const s = add(board);
+      expect(collisions(caseLayout(s))).toEqual([]);
+      const built = buildCase(csg, s, 8);
+      for (const mesh of [built.body, built.lid]) {
+        const report = validateMesh(mesh);
+        expect(report.watertight).toBe(true);
+        expect(report.degenerateTriangles).toBe(0);
+      }
+    },
+  );
 });
 
 describe('the CardKB2', () => {
@@ -624,20 +685,23 @@ describe('the CardKB2', () => {
     expect(defaultPlacement(entry).on).toBe('ceiling');
   });
 
-  it.each([['window', {}], ['holes', { keys: 'holes' }], ['round caps', { keys: 'caps' }], ['square caps', { keys: 'caps', capShape: 'square', capR: 0.6 }]])(
-    'builds closed and sliver-free, no layout warnings: %s', (_name, extra) => {
-      const entry = catalogBoard('m5stack-cardkb2');
-      if (!entry) throw new Error('cardkb2');
-      const s = sanitizeState({ ...defaultState(), boards: [{ ...defaultPlacement(entry), ...extra }] });
-      expect(collisions(caseLayout(s))).toEqual([]);
-      const built = buildCase(csg, s, 8);
-      for (const mesh of [built.body, built.lid]) {
-        const report = validateMesh(mesh);
-        expect(report.watertight).toBe(true);
-        expect(report.degenerateTriangles).toBe(0);
-      }
-    },
-  );
+  it.each([
+    ['window', {}],
+    ['holes', { keys: 'holes' }],
+    ['round caps', { keys: 'caps' }],
+    ['square caps', { keys: 'caps', capShape: 'square', capR: 0.6 }],
+  ])('builds closed and sliver-free, no layout warnings: %s', (_name, extra) => {
+    const entry = catalogBoard('m5stack-cardkb2');
+    if (!entry) throw new Error('cardkb2');
+    const s = sanitizeState({ ...defaultState(), boards: [{ ...defaultPlacement(entry), ...extra }] });
+    expect(collisions(caseLayout(s))).toEqual([]);
+    const built = buildCase(csg, s, 8);
+    for (const mesh of [built.body, built.lid]) {
+      const report = validateMesh(mesh);
+      expect(report.watertight).toBe(true);
+      expect(report.degenerateTriangles).toBe(0);
+    }
+  });
 });
 
 describe('holding a keyboard: screws, rails or clamp bars (review)', () => {
@@ -670,14 +734,21 @@ describe('holding a keyboard: screws, rails or clamp bars (review)', () => {
     const clamped = sanitizePlacement({ board: 'm5stack-cardkb2', on: 'ceiling', hold: 'clamp' });
     expect(clamped).toMatchObject({ hold: 'clamp', on: 'ceiling', z: 0 });
     expect(boardOf(clamped).mount).toMatchObject({ kind: 'clamp', holes: [] });
-    expect(boardOf(sanitizePlacement({ board: 'm5stack-cardkb2', on: 'ceiling', hold: 'rails' })).mount).toMatchObject({ kind: 'rails', holes: [], rails: 'long' });
+    expect(boardOf(sanitizePlacement({ board: 'm5stack-cardkb2', on: 'ceiling', hold: 'rails' })).mount).toMatchObject({
+      kind: 'rails',
+      holes: [],
+      rails: 'long',
+    });
     const once = sanitizePlacement({ board: 'm5stack-cardkb-v1.1', on: 'ceiling', hold: 'clamp', press: -0.5 });
     expect(sanitizePlacement(once)).toEqual(once);
   });
 
   it.each([
-    ['m5stack-cardkb-v1.1', 'rails'], ['m5stack-cardkb-v1.1', 'clamp'],
-    ['m5stack-cardkb2', 'holes'], ['m5stack-cardkb2', 'rails'], ['m5stack-cardkb2', 'clamp'],
+    ['m5stack-cardkb-v1.1', 'rails'],
+    ['m5stack-cardkb-v1.1', 'clamp'],
+    ['m5stack-cardkb2', 'holes'],
+    ['m5stack-cardkb2', 'rails'],
+    ['m5stack-cardkb2', 'clamp'],
   ])('%s on %s: closed, sliver-free, no layout warnings', (board, hold) => {
     const s = add(board, { hold, ...(hold === 'clamp' ? { z: 0 } : {}) });
     expect(collisions(caseLayout(s))).toEqual([]);
@@ -748,7 +819,8 @@ describe('a plug’s socket out of the lid (review)', () => {
   it('says how far it stands out, and the gap that sinks it', () => {
     const entry = catalogBoard('m5stack-cardkb-v1.1');
     if (!entry) throw new Error('cardkb');
-    const notes = (extra: Record<string, unknown>): Message[] => plugNotes(caseLayout(sanitizeState({ ...defaultState(), boards: [{ ...defaultPlacement(entry), ...extra }] })));
+    const notes = (extra: Record<string, unknown>): Message[] =>
+      plugNotes(caseLayout(sanitizeState({ ...defaultState(), boards: [{ ...defaultPlacement(entry), ...extra }] })));
     const [note] = notes({ hold: 'clamp', keys: 'caps', z: 0 });
     expect(note).toMatchObject({ code: 'info.plugProud', params: { port: 'grove' } });
     expect(notes({ hold: 'clamp', keys: 'caps', z: Number(note.params?.gap) })).toEqual([]);

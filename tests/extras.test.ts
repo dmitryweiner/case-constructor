@@ -7,9 +7,29 @@ import { buildCase } from '../src/geo/build';
 import { caseLayout, effectiveLid, standoffColumns } from '../src/geo/layout';
 import { portCutters, outerTopAt } from '../src/geo/ports';
 import {
-  EAR_LENGTH, EAR_WIDTH, FAN_SCREWS, closedKeyholes, earSpecs, extrasCutters, extrasWarnings, fanCuts, flatRegion, keyholeCuts, mountFace, mountFaces,
-  earChoice, earSideFaces, earWallChoices, earWalls,
-  LABELS_MAX, labelFaces, sanitizeLabel, sanitizeLabels, sanitizeVents, sanitizeWallMount, ventCuts,
+  EAR_LENGTH,
+  EAR_WIDTH,
+  FAN_SCREWS,
+  closedKeyholes,
+  earSpecs,
+  extrasCutters,
+  extrasWarnings,
+  fanCuts,
+  flatRegion,
+  keyholeCuts,
+  mountFace,
+  mountFaces,
+  earChoice,
+  earSideFaces,
+  earWallChoices,
+  earWalls,
+  LABELS_MAX,
+  labelFaces,
+  sanitizeLabel,
+  sanitizeLabels,
+  sanitizeVents,
+  sanitizeWallMount,
+  ventCuts,
 } from '../src/geo/extras';
 import { faceFrame } from '../src/geo/face';
 import { applyAffine } from '../src/geo/surface';
@@ -47,7 +67,11 @@ function blocks(): LabelRaster {
 
 describe('vents', () => {
   it('stay inside the flat region of every chosen face', () => {
-    const state = sanitizeState({ ...defaultState(), shape: { ...defaultState().shape, edgeR: 3 }, vents: { on: true, faces: ['left', 'top', 'bottom'], pattern: 'round', size: 3, pitch: 5 } });
+    const state = sanitizeState({
+      ...defaultState(),
+      shape: { ...defaultState().shape, edgeR: 3 },
+      vents: { on: true, faces: ['left', 'top', 'bottom'], pattern: 'round', size: 3, pitch: 5 },
+    });
     const { layout, shape } = context(state);
     const cuts = ventCuts(state.vents, shape, layout.dims, state.lid.face);
     expect(cuts.length).toBeGreaterThan(10);
@@ -117,7 +141,7 @@ describe('fan, keyholes, ears', () => {
     expect(left.every((cut) => cut.face === 'left')).toBe(true);
   });
 
-  it('every face but the console\'s slope can hang on the wall; a stale choice builds on the bottom', () => {
+  it("every face but the console's slope can hang on the wall; a stale choice builds on the bottom", () => {
     expect(mountFaces('box')).toHaveLength(6);
     expect(mountFaces('cylinder')).toHaveLength(6);
     expect(mountFaces('console')).not.toContain('top');
@@ -137,10 +161,11 @@ describe('fan, keyholes, ears', () => {
     expect(sanitizeWallMount({ face: 'sideways' }).face).toBe('bottom');
   });
 
-  it('keyholes on every face of every shape stay on that face\'s flat part, their slots up', () => {
+  it("keyholes on every face of every shape stay on that face's flat part, their slots up", () => {
     for (const kind of ['box', 'console', 'cylinder'] as const) {
       const state = sanitizeState({
-        ...defaultState(), boards: [],
+        ...defaultState(),
+        boards: [],
         shape: { ...defaultState().shape, kind, edgeR: 2, cornerR: 4, auto: false, size: { w: 120, d: 90, h: 50 } },
         wallMount: { kind: 'keyholes', spacing: 40, screwD: 4 },
       });
@@ -214,12 +239,16 @@ describe('fan, keyholes, ears', () => {
     expect(codes).toContain('warn.keyholePadsOnBed');
     const side = sanitizeState({ ...state, lid: { ...state.lid, face: 'left' } });
     const sideContext = context(side);
-    expect(extrasWarnings(side, sideContext.shape, sideContext.layout, sideContext.lid).map((m) => m.code)).not.toContain('warn.keyholePadsOnBed');
+    expect(extrasWarnings(side, sideContext.shape, sideContext.layout, sideContext.lid).map((m) => m.code)).not.toContain(
+      'warn.keyholePadsOnBed',
+    );
   });
 
   it('a case too short for pads and feet gets one strip per keyhole', () => {
     const state = sanitizeState({
-      ...defaultState(), boards: [], shape: { ...defaultState().shape, auto: false, size: { w: 90, d: 40, h: 30 } },
+      ...defaultState(),
+      boards: [],
+      shape: { ...defaultState().shape, auto: false, size: { w: 90, d: 40, h: 30 } },
       wallMount: { kind: 'keyholes', keyhole: 'closed', spacing: 40, screwD: 4 },
     });
     const { layout, shape } = context(state);
@@ -230,7 +259,8 @@ describe('fan, keyholes, ears', () => {
 
   it('with the floor as the lid, closed keyholes stand out of the back wall, no feet', () => {
     const state = sanitizeState({
-      ...defaultState(), lid: { ...defaultState().lid, face: 'bottom' },
+      ...defaultState(),
+      lid: { ...defaultState().lid, face: 'bottom' },
       wallMount: { kind: 'keyholes', keyhole: 'closed', spacing: 40, screwD: 4 },
     });
     const { layout, shape } = context(state);
@@ -241,7 +271,9 @@ describe('fan, keyholes, ears', () => {
 
   it('closed keyholes keep the case closed: blind pockets in pads under the floor', () => {
     const base = sanitizeState({
-      ...defaultState(), boards: [], shape: { ...defaultState().shape, auto: false, size: { w: 100, d: 70, h: 35 } },
+      ...defaultState(),
+      boards: [],
+      shape: { ...defaultState().shape, auto: false, size: { w: 100, d: 70, h: 35 } },
       wallMount: { kind: 'none', spacing: 40, screwD: 4 },
     });
     const through = sanitizeState({ ...base, wallMount: { ...base.wallMount, kind: 'keyholes' } });
@@ -265,10 +297,17 @@ describe('fan, keyholes, ears', () => {
   });
 
   it('closed keyholes build clean on every shape, on the bottom and on the back wall', () => {
-    const cases: [string, string][] = [['box', 'top'], ['box', 'bottom'], ['console', 'left'], ['console', 'bottom'], ['cylinder', 'top']];
+    const cases: [string, string][] = [
+      ['box', 'top'],
+      ['box', 'bottom'],
+      ['console', 'left'],
+      ['console', 'bottom'],
+      ['cylinder', 'top'],
+    ];
     for (const [kind, face] of cases) {
       const state = sanitizeState({
-        ...defaultState(), boards: [],
+        ...defaultState(),
+        boards: [],
         shape: { ...defaultState().shape, kind, edgeR: kind === 'console' ? 0 : 3, auto: false, size: { w: 110, d: 80, h: 45 } },
         lid: { ...defaultState().lid, face },
         wallMount: { kind: 'keyholes', keyhole: 'closed', spacing: 50, screwD: 4 },
@@ -281,19 +320,27 @@ describe('fan, keyholes, ears', () => {
       }
       const { layout, shape, lid } = context(state);
       const expected = face === 'top' ? ['warn.keyholePadsOnBed'] : [];
-      expect(extrasWarnings(state, shape, layout, lid).map((m) => m.code), `${kind}/${face}`).toEqual(expected);
+      expect(
+        extrasWarnings(state, shape, layout, lid).map((m) => m.code),
+        `${kind}/${face}`,
+      ).toEqual(expected);
     }
   });
 
-  it('closed keyholes build clean on a chosen face: a wall, the lid, a cylinder\'s top', () => {
+  it("closed keyholes build clean on a chosen face: a wall, the lid, a cylinder's top", () => {
     const cases: [string, string, string, string[]][] = [
-      ['box', 'top', 'back', []], ['box', 'top', 'left', []], ['box', 'top', 'top', ['warn.mountOnSnaps']],
-      ['box', 'bottom', 'top', ['warn.keyholePadsOnBed']], ['console', 'bottom', 'front', []],
-      ['cylinder', 'top', 'top', ['warn.mountOnSnaps']], ['cylinder', 'bottom', 'back', ['warn.keyholeClosedRound']],
+      ['box', 'top', 'back', []],
+      ['box', 'top', 'left', []],
+      ['box', 'top', 'top', ['warn.mountOnSnaps']],
+      ['box', 'bottom', 'top', ['warn.keyholePadsOnBed']],
+      ['console', 'bottom', 'front', []],
+      ['cylinder', 'top', 'top', ['warn.mountOnSnaps']],
+      ['cylinder', 'bottom', 'back', ['warn.keyholeClosedRound']],
     ];
     for (const [kind, lidFace, face, expected] of cases) {
       const state = sanitizeState({
-        ...defaultState(), boards: [],
+        ...defaultState(),
+        boards: [],
         shape: { ...defaultState().shape, kind, edgeR: kind === 'console' ? 0 : 3, auto: false, size: { w: 110, d: 80, h: 45 } },
         lid: { ...defaultState().lid, face: lidFace },
         wallMount: { kind: 'keyholes', keyhole: 'closed', face, spacing: 50, screwD: 4 },
@@ -305,7 +352,10 @@ describe('fan, keyholes, ears', () => {
         expect(report.degenerateTriangles, `${kind}/${lidFace}/${face}`).toBe(0);
       }
       const { layout, shape, lid } = context(state);
-      expect(extrasWarnings(state, shape, layout, lid).map((m) => m.code), `${kind}/${lidFace}/${face}`).toEqual(expected);
+      expect(
+        extrasWarnings(state, shape, layout, lid).map((m) => m.code),
+        `${kind}/${lidFace}/${face}`,
+      ).toEqual(expected);
     }
   });
 
@@ -344,7 +394,10 @@ describe('fan, keyholes, ears', () => {
     expect(ears).toHaveLength(2);
     // an old file: two ears, left and right, in the middle of the walls
     expect(state.wallMount.ears).toEqual({ count: 2, walls: 'leftRight', wall: 'back', along: 'centre' });
-    expect(ears.map((ear) => [ear.hole[0], ear.hole[1]])).toEqual([[-EAR_LENGTH / 2, layout.dims.d / 2], [layout.dims.w + EAR_LENGTH / 2, layout.dims.d / 2]]);
+    expect(ears.map((ear) => [ear.hole[0], ear.hole[1]])).toEqual([
+      [-EAR_LENGTH / 2, layout.dims.d / 2],
+      [layout.dims.w + EAR_LENGTH / 2, layout.dims.d / 2],
+    ]);
     const built = buildCase(csg, state, 8);
     const report = validateMesh(built.body);
     expect(report.watertight).toBe(true);
@@ -352,10 +405,18 @@ describe('fan, keyholes, ears', () => {
   });
 
   it('the ears sanitizer: 1…4 ears, known walls and placements', () => {
-    expect(sanitizeWallMount({ kind: 'ears', ears: { count: 7, walls: 'up', wall: 'roof', along: 'x' } }).ears)
-      .toEqual({ count: 4, walls: 'leftRight', wall: 'back', along: 'centre' });
-    expect(sanitizeWallMount({ kind: 'ears', ears: { count: 0.6, walls: 'one', wall: 'left', along: 'ends' } }).ears)
-      .toEqual({ count: 1, walls: 'one', wall: 'left', along: 'ends' });
+    expect(sanitizeWallMount({ kind: 'ears', ears: { count: 7, walls: 'up', wall: 'roof', along: 'x' } }).ears).toEqual({
+      count: 4,
+      walls: 'leftRight',
+      wall: 'back',
+      along: 'centre',
+    });
+    expect(sanitizeWallMount({ kind: 'ears', ears: { count: 0.6, walls: 'one', wall: 'left', along: 'ends' } }).ears).toEqual({
+      count: 1,
+      walls: 'one',
+      wall: 'left',
+      along: 'ends',
+    });
   });
 
   /** Which wall an ear stands on: its hole beyond the case's box on that side. */
@@ -373,7 +434,8 @@ describe('fan, keyholes, ears', () => {
     [3, 'one', 'centre', ['back', 'back', 'back']],
   ] as const)('%i ears, %s, %s: on the walls asked for, apart, on the flat part of the wall', (count, walls, along, expected) => {
     const state = sanitizeState({
-      ...defaultState(), shape: { ...defaultState().shape, cornerR: 6 },
+      ...defaultState(),
+      shape: { ...defaultState().shape, cornerR: 6 },
       wallMount: { kind: 'ears', spacing: 25, screwD: 4, ears: { count, walls, wall: 'back', along } },
     });
     const { layout, shape, lid } = context(state);
@@ -390,7 +452,8 @@ describe('fan, keyholes, ears', () => {
     // ears on one wall never overlap
     for (let i = 0; i < ears.length; i++) {
       for (let j = i + 1; j < ears.length; j++) {
-        if (wallOf(ears[i], dims) === wallOf(ears[j], dims)) expect(Math.hypot(ears[i].hole[0] - ears[j].hole[0], ears[i].hole[1] - ears[j].hole[1])).toBeGreaterThan(EAR_WIDTH);
+        if (wallOf(ears[i], dims) === wallOf(ears[j], dims))
+          expect(Math.hypot(ears[i].hole[0] - ears[j].hole[0], ears[i].hole[1] - ears[j].hole[1])).toBeGreaterThan(EAR_WIDTH);
       }
     }
     if (along === 'ends') {
@@ -405,7 +468,8 @@ describe('fan, keyholes, ears', () => {
 
   it('a cylinder: the ears go evenly around, each fused with the round wall', () => {
     const state = sanitizeState({
-      ...defaultState(), shape: { ...defaultState().shape, kind: 'cylinder' },
+      ...defaultState(),
+      shape: { ...defaultState().shape, kind: 'cylinder' },
       wallMount: { kind: 'ears', screwD: 4, ears: { count: 3, walls: 'leftRight', wall: 'back', along: 'centre' } },
     });
     const { layout, shape, lid } = context(state);
@@ -448,13 +512,25 @@ describe('fan, keyholes, ears', () => {
 
   it('ears on every face of a box, every wall choice: out of their walls, flush with the face, clean', () => {
     const base = sanitizeState({
-      ...defaultState(), boards: [], shape: { ...defaultState().shape, cornerR: 5, edgeR: 2, auto: false, size: { w: 110, d: 80, h: 60 } },
+      ...defaultState(),
+      boards: [],
+      shape: { ...defaultState().shape, cornerR: 5, edgeR: 2, auto: false, size: { w: 110, d: 80, h: 60 } },
       lid: { ...defaultState().lid, fastening: 'screws' },
     });
-    const axisOf: Record<string, [number, number]> = { left: [0, -1], right: [0, 1], front: [1, -1], back: [1, 1], bottom: [2, -1], top: [2, 1] };
+    const axisOf: Record<string, [number, number]> = {
+      left: [0, -1],
+      right: [0, 1],
+      front: [1, -1],
+      back: [1, 1],
+      bottom: [2, -1],
+      top: [2, 1],
+    };
     for (const face of mountFaces('box', 'ears')) {
       for (const walls of earWallChoices(face, 'box')) {
-        const state = sanitizeState({ ...base, wallMount: { kind: 'ears', face, screwD: 4, ears: { count: 2, walls, wall: 'top', along: 'centre' } } });
+        const state = sanitizeState({
+          ...base,
+          wallMount: { kind: 'ears', face, screwD: 4, ears: { count: 2, walls, wall: 'top', along: 'centre' } },
+        });
         const name = `${face}/${walls}`;
         const { layout, shape, lid } = context(state);
         const { dims } = layout;
@@ -513,18 +589,25 @@ describe('fan, keyholes, ears', () => {
       return extrasWarnings(state, shape, layout, lid).map((m) => m.code);
     };
     const base = sanitizeState({
-      ...defaultState(), boards: [], shape: { ...defaultState().shape, auto: false, size: { w: 100, d: 70, h: 40 } },
+      ...defaultState(),
+      boards: [],
+      shape: { ...defaultState().shape, auto: false, size: { w: 100, d: 70, h: 40 } },
       lid: { ...defaultState().lid, fastening: 'screws' },
     });
     // the lid on the left: the left ear's root is in the lid's wall, and the body prints on its right wall, the right ear under it
-    expect(codes(sanitizeState({ ...base, lid: { ...base.lid, face: 'left' }, wallMount: { kind: 'ears' } }))).toEqual(['warn.mountOnLid', 'warn.earOnBed']);
+    expect(codes(sanitizeState({ ...base, lid: { ...base.lid, face: 'left' }, wallMount: { kind: 'ears' } }))).toEqual([
+      'warn.mountOnLid',
+      'warn.earOnBed',
+    ]);
     // the back against the wall, ears on the top and bottom: the top one is the lid's
     const topBottom = sanitizeState({ ...base, wallMount: { kind: 'ears', face: 'back', ears: { count: 2, walls: 'topBottom' } } });
     expect(codes(topBottom)).toContain('warn.mountOnLid');
     expect(codes(topBottom)).toContain('warn.earOnBed');
     // a deep lid leaves the side walls no room for an ear under it
     const deep = sanitizeState({
-      ...base, shape: { ...base.shape, auto: false, size: { w: 100, d: 70, h: 24 } }, lid: { ...base.lid, depth: 14 },
+      ...base,
+      shape: { ...base.shape, auto: false, size: { w: 100, d: 70, h: 24 } },
+      lid: { ...base.lid, depth: 14 },
       wallMount: { kind: 'ears', face: 'back' },
     });
     expect(codes(deep)).toContain('warn.earsOnParting');
@@ -533,7 +616,10 @@ describe('fan, keyholes, ears', () => {
 
   it('a cylinder hung by its top: the ears go around the top, flush with it', () => {
     const state = sanitizeState({
-      ...defaultState(), boards: [], shape: { ...defaultState().shape, kind: 'cylinder' }, lid: { ...defaultState().lid, face: 'bottom', fastening: 'screws' },
+      ...defaultState(),
+      boards: [],
+      shape: { ...defaultState().shape, kind: 'cylinder' },
+      lid: { ...defaultState().lid, face: 'bottom', fastening: 'screws' },
       wallMount: { kind: 'ears', face: 'top', screwD: 4, ears: { count: 3, walls: 'leftRight', wall: 'back', along: 'centre' } },
     });
     const { layout, shape, lid } = context(state);
@@ -546,7 +632,6 @@ describe('fan, keyholes, ears', () => {
     const box = builtBox(state, 'cylinder/top');
     expect(box.max[2]).toBeCloseTo(layout.dims.h, 3);
   });
-
 });
 
 describe('label', () => {
@@ -617,7 +702,7 @@ describe('label', () => {
     lid.delete();
   });
 
-  it('an old file\'s one label becomes a list of one on its lid; an off one, none', () => {
+  it("an old file's one label becomes a list of one on its lid; an off one, none", () => {
     const lid = { ...defaultState().lid, face: 'left' };
     // a file from before the list: no `labels`
     const before = Object.fromEntries(Object.entries(defaultState()).filter(([key]) => key !== 'labels'));
@@ -633,10 +718,11 @@ describe('label', () => {
     expect(sanitizeLabel({ face: 'roof' }, 'back').face).toBe('back');
   });
 
-  it('labels on every face of every shape: placed on that face\'s flat part, built clean on both parts', () => {
+  it("labels on every face of every shape: placed on that face's flat part, built clean on both parts", () => {
     for (const kind of ['box', 'console', 'cylinder'] as const) {
       const base = sanitizeState({
-        ...defaultState(), boards: [],
+        ...defaultState(),
+        boards: [],
         shape: { ...defaultState().shape, kind, edgeR: kind === 'console' ? 0 : 2, auto: false, size: { w: 110, d: 80, h: 50 } },
         lid: { ...defaultState().lid, face: 'bottom' },
       });
@@ -655,7 +741,10 @@ describe('label', () => {
         // the face's centre is on the case's outer surface
         const centre = applyAffine(surface.fromFace, [surface.extent.w / 2, surface.extent.h / 2, 0]);
         const inside = [centre[0] / layout.dims.w, centre[1] / layout.dims.d, centre[2] / layout.dims.h];
-        expect(inside.every((x) => x > -1e-6 && x < 1 + 1e-6), `${kind}/${label.face}`).toBe(true);
+        expect(
+          inside.every((x) => x > -1e-6 && x < 1 + 1e-6),
+          `${kind}/${label.face}`,
+        ).toBe(true);
       }
       const built = buildCase(csg, state, 8, () => {}, rasters);
       for (const mesh of [built.body, built.lid]) {
@@ -667,14 +756,19 @@ describe('label', () => {
       expect(validateMesh(built.body).volume, kind).not.toBeCloseTo(validateMesh(plain.body).volume, 1);
       // nothing but the labels' own warnings about the lid's bed
       const codes = labelWarnings(state.labels, rasters, shape, layout.dims, lid, [], []).map((m) => m.code);
-      expect(codes.filter((code) => code !== 'warn.labelOnBed'), kind).toEqual([]);
+      expect(
+        codes.filter((code) => code !== 'warn.labelOnBed'),
+        kind,
+      ).toEqual([]);
     }
   });
 
   it('a raised label across the parting: each part takes its piece, apart, and the panel says so', () => {
     // a 10 mm deep top lid: the front wall's top 12 mm are the lid's
     const state = sanitizeState({
-      ...defaultState(), boards: [], shape: { ...defaultState().shape, auto: false, size: { w: 100, d: 70, h: 40 } },
+      ...defaultState(),
+      boards: [],
+      shape: { ...defaultState().shape, auto: false, size: { w: 100, d: 70, h: 40 } },
       lid: { ...defaultState().lid, depth: 10 },
       labels: [{ face: 'front', text: 'x', raised: true, anchor: 'top', margin: 9 }],
     });
@@ -689,10 +783,17 @@ describe('label', () => {
     expect(labelWarnings(state.labels, [raster], shape, layout.dims, lid, [], []).map((m) => m.code)).toEqual(['warn.labelOnParting']);
   });
 
-  it('the labels\' warnings: too big, over an opening, raised on the bed, two over each other', () => {
+  it("the labels' warnings: too big, over an opening, raised on the bed, two over each other", () => {
     const state = sanitizeState({
-      ...defaultState(), boards: [], shape: { ...defaultState().shape, auto: false, size: { w: 100, d: 70, h: 40 } },
-      labels: [{ face: 'top', text: 'a', raised: true }, { face: 'top', text: 'b', x: 2 }, { face: 'bottom', text: 'c', raised: true }, { face: 'left', text: 'd', sizeMm: 30 }],
+      ...defaultState(),
+      boards: [],
+      shape: { ...defaultState().shape, auto: false, size: { w: 100, d: 70, h: 40 } },
+      labels: [
+        { face: 'top', text: 'a', raised: true },
+        { face: 'top', text: 'b', x: 2 },
+        { face: 'bottom', text: 'c', raised: true },
+        { face: 'left', text: 'd', sizeMm: 30 },
+      ],
     });
     const { layout, shape, lid } = context(state);
     const huge: LabelRaster = { w: 1200, h: 100, pixels: new Uint8Array(1200 * 100).fill(255), mmPerPx: 0.1 };
@@ -709,7 +810,10 @@ describe('label', () => {
   });
 
   it('a new label says the name of the first board no label names yet', () => {
-    const state = sanitizeState({ ...defaultState(), boards: [{ board: 'battery', battery: { kind: '18650' } }, { board: 'raspberry-pi-4b' }, { board: 'esp32-devkitc-v4' }] });
+    const state = sanitizeState({
+      ...defaultState(),
+      boards: [{ board: 'battery', battery: { kind: '18650' } }, { board: 'raspberry-pi-4b' }, { board: 'esp32-devkitc-v4' }],
+    });
     const one = addLabel(state);
     expect(one.labels[0]).toMatchObject({ face: state.lid.face, text: 'Raspberry Pi 4 Model B' });
     const two = addLabel(one);

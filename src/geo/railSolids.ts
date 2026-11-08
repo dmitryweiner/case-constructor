@@ -39,10 +39,21 @@ export function screwedRails(csg: CsgApi, scope: CsgScope, board: PlacedBoard, f
     const { local: bar, length } = railLocal(csg, scope, board, edge, -height + RAIL_SEAT);
     const spots = earCentres(ears, length, r);
     const toCase = composeAffine(board.toCase, railToBoard(edge, w, d));
-    let earSolids = unionAll(csg, scope, spots.map((spot) => {
-      const outline = earOutline(ears, spot, length, r, n);
-      return hullOf(csg, scope, outline.flatMap(([u, s]): Vec3[] => [[u, s, level.bottom], [u, s, level.top]]));
-    }));
+    let earSolids = unionAll(
+      csg,
+      scope,
+      spots.map((spot) => {
+        const outline = earOutline(ears, spot, length, r, n);
+        return hullOf(
+          csg,
+          scope,
+          outline.flatMap(([u, s]): Vec3[] => [
+            [u, s, level.bottom],
+            [u, s, level.top],
+          ]),
+        );
+      }),
+    );
     if (ears === 'along') {
       // nothing over the board's ends: the ear meets the rail outside the board's edge
       const keep = railKeepOut(length);
@@ -81,4 +92,3 @@ export function railsForPrint(csg: CsgApi, scope: CsgScope, locals: readonly Man
   });
   return unionAll(csg, scope, placed);
 }
-

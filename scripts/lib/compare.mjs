@@ -20,7 +20,9 @@ export function compareHoles(entry, found, { minD = 1.5, maxD = 6, tol = 0.3, si
   if (size) {
     const dw = size.w - entry.size.w;
     const dd = size.d - entry.size.d;
-    lines.push(`size  entry ${entry.size.w} × ${entry.size.d}, drawing ${r(size.w)} × ${r(size.d)}  (Δ ${r(dw)}, ${r(dd)})${Math.abs(dw) > tol || Math.abs(dd) > tol ? '  ← check' : ''}`);
+    lines.push(
+      `size  entry ${entry.size.w} × ${entry.size.d}, drawing ${r(size.w)} × ${r(size.d)}  (Δ ${r(dw)}, ${r(dd)})${Math.abs(dw) > tol || Math.abs(dd) > tol ? '  ← check' : ''}`,
+    );
   }
   const holes = entry.mount?.holes ?? [];
   const used = new Set();
@@ -40,7 +42,9 @@ export function compareHoles(entry, found, { minD = 1.5, maxD = 6, tol = 0.3, si
     }
     used.add(best);
     const f = found[best];
-    lines.push(`hole  entry ${h.x}, ${h.y} Ø${h.d}  drawing ${r(f.x)}, ${r(f.y)} Ø${r(f.d)}  (Δ ${r(f.x - h.x)}, ${r(f.y - h.y)}, Ø ${r(f.d - h.d)})${dist > tol ? '  ← check' : ''}`);
+    lines.push(
+      `hole  entry ${h.x}, ${h.y} Ø${h.d}  drawing ${r(f.x)}, ${r(f.y)} Ø${r(f.d)}  (Δ ${r(f.x - h.x)}, ${r(f.y - h.y)}, Ø ${r(f.d - h.d)})${dist > tol ? '  ← check' : ''}`,
+    );
   }
   // circles sharing a used hole's centre are its pad rings, not extra holes
   const centres = [...used].map((i) => found[i]);

@@ -21,8 +21,27 @@ import { lidPosts } from '../geo/lidPosts';
 import { HINGED_H_MIN, SIZE_MAX, clampNum, plateOf, shapeSpec } from '../geo/shape';
 import type { CableSlot, CableThrough, Fold, HalfHinge, HingeSpec } from '../geo/hinge';
 import {
-  CABLE_KEEP, CABLE_TOP_GAP, GAP_DEFAULT, gapFor, magnetBosses, upperPose, axisOffset, axisSplit, axleHoles, bodyRange, cableSlot, defaultHingeSpec, foldOf, hingeScrews, knuckleRuns,
-  knuckleStrip, leafLayout, leafScrews, pivotLayout, pivotThickness, sanitizeHingeSpec,
+  CABLE_KEEP,
+  CABLE_TOP_GAP,
+  GAP_DEFAULT,
+  gapFor,
+  magnetBosses,
+  upperPose,
+  axisOffset,
+  axisSplit,
+  axleHoles,
+  bodyRange,
+  cableSlot,
+  defaultHingeSpec,
+  foldOf,
+  hingeScrews,
+  knuckleRuns,
+  knuckleStrip,
+  leafLayout,
+  leafScrews,
+  pivotLayout,
+  pivotThickness,
+  sanitizeHingeSpec,
 } from '../geo/hinge';
 import { SCREWS, bossDiameter } from '../geo/fasteners';
 import type { Message, SpotBox } from '../geo/message';
@@ -148,7 +167,12 @@ export function casesOf(state: AppState): { half: Half | null; state: AppState }
 export function innerProtrusion(state: AppState, half: Half): number {
   const one = halfState(state, half);
   const layout = caseLayout(one);
-  const label = Math.max(0, ...one.labels.filter((each) => each.raised && each.text.trim() !== '' && labelFace(each, one.shape.kind) === 'top').map((each) => each.depth));
+  const label = Math.max(
+    0,
+    ...one.labels
+      .filter((each) => each.raised && each.text.trim() !== '' && labelFace(each, one.shape.kind) === 'top')
+      .map((each) => each.depth),
+  );
   const { lid, plate, frame } = lidPosts(one);
   const proud = lid.fastening === 'through' ? hardwareProud(lid, plate, frame.depth) : null;
   const bolts = proud ? (lid.face === 'top' ? proud.lid : proud.far) : 0;
@@ -215,20 +239,47 @@ export function halfHinge(state: AppState, half: Half): HalfHinge | null {
     }),
     kind: hinge.kind,
     magnets: hinge.magnets
-      // one clearance for both halves: closed, their magnets meet
-      ? magnetBosses(hinge.magnet, dims.w, dims.d, dims.h, one.shape.wall, half === 'a' ? 'front' : 'back',
-        Math.max(magnetClear(halfState(state, 'a')), magnetClear(halfState(state, 'b'))))
+      ? // one clearance for both halves: closed, their magnets meet
+        magnetBosses(
+          hinge.magnet,
+          dims.w,
+          dims.d,
+          dims.h,
+          one.shape.wall,
+          half === 'a' ? 'front' : 'back',
+          Math.max(magnetClear(halfState(state, 'a')), magnetClear(halfState(state, 'b'))),
+        )
       : null,
     place: hinge.place,
     leafScrew: { size: hinge.leafScrew, hole: hinge.leafHole },
-    pivot: sides ? pivotLayout({
-      upper: half === 'b', leaves: hinge.kind === 'leaves', t: pivotThickness(hinge), gap: hinge.clearance, r: hinge.barrelD / 2,
-      c: hinge.clearance, e: axisOffset(hinge), zAxis, d: dims.d, cornerR, head: SCREWS[hinge.leafScrew].headD,
-      padR: bossDiameter({ size: hinge.leafScrew, hole: hinge.leafHole, head: 'none' }) / 2, ...wallOf(one),
-    }) : null,
-    leaf: hinge.kind === 'leaves' && !sides ? leafLayout({
-      zAxis, e: axisOffset(hinge), blocks, screw: hinge.leafScrew, hole: hinge.leafHole, ...wallOf(one),
-    }) : null,
+    pivot: sides
+      ? pivotLayout({
+          upper: half === 'b',
+          leaves: hinge.kind === 'leaves',
+          t: pivotThickness(hinge),
+          gap: hinge.clearance,
+          r: hinge.barrelD / 2,
+          c: hinge.clearance,
+          e: axisOffset(hinge),
+          zAxis,
+          d: dims.d,
+          cornerR,
+          head: SCREWS[hinge.leafScrew].headD,
+          padR: bossDiameter({ size: hinge.leafScrew, hole: hinge.leafHole, head: 'none' }) / 2,
+          ...wallOf(one),
+        })
+      : null,
+    leaf:
+      hinge.kind === 'leaves' && !sides
+        ? leafLayout({
+            zAxis,
+            e: axisOffset(hinge),
+            blocks,
+            screw: hinge.leafScrew,
+            hole: hinge.leafHole,
+            ...wallOf(one),
+          })
+        : null,
   };
 }
 
@@ -248,9 +299,7 @@ function wallOf(one: AppState): { body: [number, number]; flat: [number, number]
   const { edgeR } = effectiveRadii(shapeSpec(one.shape, dims).outer);
   const body = bodyRange(dims.h, lid.face, plateOf(one.shape, lid.face), lid.depth);
   const skirt = lid.lip.h + 0.5;
-  const pads: [number, number] = lid.face === 'top'
-    ? [one.shape.floor, body[1] - skirt]
-    : [body[0] + skirt, dims.h - one.shape.floor];
+  const pads: [number, number] = lid.face === 'top' ? [one.shape.floor, body[1] - skirt] : [body[0] + skirt, dims.h - one.shape.floor];
   return { body, flat: [edgeR, dims.h - edgeR], pads };
 }
 
@@ -277,13 +326,19 @@ export function hingeNotes(state: AppState): Message[] {
   if (!printable) out.push({ code: 'warn.hingeUnprintable' });
   const hinge = halfHinge(state, 'a');
   // a screw axle across a side pivot spans both cheeks
-  const span = hinge?.pivot ? [{ x0: hinge.pivot.span[0], x1: hinge.pivot.span[1] }, { x0: hinge.pivot.span[0], x1: hinge.pivot.span[1] }] : null;
+  const span = hinge?.pivot
+    ? [
+        { x0: hinge.pivot.span[0], x1: hinge.pivot.span[1] },
+        { x0: hinge.pivot.span[0], x1: hinge.pivot.span[1] },
+      ]
+    : null;
   const screws = hinge ? hingeScrews(state.hinge, span ?? hinge.blocks) : null;
   if (screws) out.push({ code: 'info.hingeScrews', params: { n: screws.count, size: state.hinge.screw, len: screws.length } });
   if (state.hinge.axle === 'snap') out.push({ code: 'info.hingeSnap' });
   const proud = innerProtrusion(state, 'a') + innerProtrusion(state, 'b');
   const need = gapFor(innerProtrusion(state, 'a'), innerProtrusion(state, 'b'));
-  if (!state.hinge.gapAuto && state.hinge.gap < proud) out.push({ code: 'warn.gapSmall', params: { gap: state.hinge.gap.toFixed(1), need: need.toFixed(1) } });
+  if (!state.hinge.gapAuto && state.hinge.gap < proud)
+    out.push({ code: 'warn.gapSmall', params: { gap: state.hinge.gap.toFixed(1), need: need.toFixed(1) } });
   if (state.hinge.gapAuto && need > GAP_DEFAULT) out.push({ code: 'info.gapAuto', params: { gap: need.toFixed(1) } });
   if (state.hinge.kind === 'leaves') {
     const leaves = HALVES.flatMap((half) => {
@@ -293,12 +348,23 @@ export function hingeNotes(state: AppState): Message[] {
       if (pivot) {
         const t = pivot.spacer ? pivot.spacer.q1 : pivot.q1;
         // on both sides
-        return [{ t, screw: state.hinge.leafScrew, hole: state.hinge.leafHole, screws: Array.from({ length: 2 * pivot.screws.length }, () => ({ x: 0 })) }];
+        return [
+          {
+            t,
+            screw: state.hinge.leafScrew,
+            hole: state.hinge.leafHole,
+            screws: Array.from({ length: 2 * pivot.screws.length }, () => ({ x: 0 })),
+          },
+        ];
       }
       return one?.leaf ? [one.leaf] : [];
     });
     const screws = leafScrews(leaves, state.shape.wall);
-    if (screws) out.push({ code: `info.leafScrews.${state.hinge.leafHole}`, params: { n: screws.count, size: state.hinge.leafScrew, len: screws.length } });
+    if (screws)
+      out.push({
+        code: `info.leafScrews.${state.hinge.leafHole}`,
+        params: { n: screws.count, size: state.hinge.leafScrew, len: screws.length },
+      });
   }
   out.push(...cableNotes(state));
   return out;
@@ -319,11 +385,19 @@ function cableNotes(state: AppState): Message[] {
   const out: Message[] = [];
   lower.slots.forEach((slot, i) => {
     const n = i + 1;
-    const box: SpotBox = slot.through === 'face'
-      ? { min: [slot.x - slot.w / 2, slot.y - slot.h / 2, dims.h - state.shape.floor], max: [slot.x + slot.w / 2, slot.y + slot.h / 2, dims.h] }
-      : { min: [slot.x - slot.w / 2, dims.d - state.shape.wall, slot.z - slot.h / 2], max: [slot.x + slot.w / 2, dims.d, slot.z + slot.h / 2] };
+    const box: SpotBox =
+      slot.through === 'face'
+        ? {
+            min: [slot.x - slot.w / 2, slot.y - slot.h / 2, dims.h - state.shape.floor],
+            max: [slot.x + slot.w / 2, slot.y + slot.h / 2, dims.h],
+          }
+        : {
+            min: [slot.x - slot.w / 2, dims.d - state.shape.wall, slot.z - slot.h / 2],
+            max: [slot.x + slot.w / 2, dims.d, slot.z + slot.h / 2],
+          };
     const spot = boxSpot(box, 'body');
-    if (slot.x - slot.w / 2 < cornerR || slot.x + slot.w / 2 > dims.w - cornerR) out.push({ code: 'warn.cableAtCorner', params: { n }, spot });
+    if (slot.x - slot.w / 2 < cornerR || slot.x + slot.w / 2 > dims.w - cornerR)
+      out.push({ code: 'warn.cableAtCorner', params: { n }, spot });
     const other = lower.slots.findIndex((one, j) => j > i && Math.abs(one.x - slot.x) < (one.w + slot.w) / 2);
     if (other >= 0) out.push({ code: 'warn.cablesOverlap', params: { n, m: other + 1 }, spot });
     // from the lower half's slot mouth to the upper half's, as the upper half turns
@@ -336,4 +410,3 @@ function cableNotes(state: AppState): Message[] {
   });
   return out;
 }
-

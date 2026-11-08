@@ -36,7 +36,11 @@ describe('buildCase', () => {
   it('every lid face and depth builds watertight parts', () => {
     for (const face of ['top', 'bottom', 'front', 'back', 'left', 'right']) {
       for (const depth of [0, 8]) {
-        const state = sanitizeState({ ...defaultState(), shape: { ...defaultState().shape, edgeR: 3 }, lid: { ...defaultState().lid, face, depth } });
+        const state = sanitizeState({
+          ...defaultState(),
+          shape: { ...defaultState().shape, edgeR: 3 },
+          lid: { ...defaultState().lid, face, depth },
+        });
         const { body, lid } = check(state);
         expect(body.watertight, `${face}/${depth} body`).toBe(true);
         expect(lid.watertight, `${face}/${depth} lid`).toBe(true);

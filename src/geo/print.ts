@@ -89,13 +89,23 @@ export function lidForPrint(lid: SurfaceMesh, face: Face, dims: Dims, x0 = 0): S
  * pair's footprint shorter (a long case: side by side it outgrows the bed).
  */
 export function printLayout(
-  body: SurfaceMesh, lid: SurfaceMesh, face: Face, dims: Dims, shape?: PrintShape, arrange: PrintArrange = { lid: 'right', gap: PRINT_GAP_MM },
+  body: SurfaceMesh,
+  lid: SurfaceMesh,
+  face: Face,
+  dims: Dims,
+  shape?: PrintShape,
+  arrange: PrintArrange = { lid: 'right', gap: PRINT_GAP_MM },
 ): SurfaceMesh[] {
   return placeLid(body, lid, face, dims, shape, arrange).parts;
 }
 
 function placeLid(
-  body: SurfaceMesh, lid: SurfaceMesh, face: Face, dims: Dims, shape: PrintShape | undefined, arrange: PrintArrange,
+  body: SurfaceMesh,
+  lid: SurfaceMesh,
+  face: Face,
+  dims: Dims,
+  shape: PrintShape | undefined,
+  arrange: PrintArrange,
 ): { parts: SurfaceMesh[]; place: 'right' | 'behind' } {
   const placedBody = bodyForPrint(body, face, dims, shape);
   const flatLid = lidForPrint(lid, face, dims);
@@ -105,7 +115,10 @@ function placeLid(
   const right = Math.max(b[0] + gap + l[0], b[1], l[1]);
   const behind = Math.max(b[0], l[0], b[1] + gap + l[1]);
   const place = arrange.lid === 'auto' ? (behind < right - 1e-6 ? 'behind' : 'right') : arrange.lid;
-  return { parts: [placedBody, transformMesh(flatLid, place === 'right' ? translation(b[0] + gap, 0, 0) : translation(0, b[1] + gap, 0))], place };
+  return {
+    parts: [placedBody, transformMesh(flatLid, place === 'right' ? translation(b[0] + gap, 0, 0) : translation(0, b[1] + gap, 0))],
+    place,
+  };
 }
 
 /**
@@ -114,14 +127,21 @@ function placeLid(
  * put the lid (the caption names it).
  */
 export function bothForPrint(
-  body: SurfaceMesh, lid: SurfaceMesh, screw: SurfaceMesh | null, count: number, face: Face, dims: Dims, shape?: PrintShape,
+  body: SurfaceMesh,
+  lid: SurfaceMesh,
+  screw: SurfaceMesh | null,
+  count: number,
+  face: Face,
+  dims: Dims,
+  shape?: PrintShape,
   arrange: PrintArrange = { lid: 'right', gap: PRINT_GAP_MM },
 ): { parts: SurfaceMesh[]; place: 'right' | 'behind' } {
   const { parts, place } = placeLid(body, lid, face, dims, shape, arrange);
   const lidBox = meshBounds(parts[1]);
   const behind = place === 'behind';
   const screws = screw
-    ? screwsForPrint(screw, count, behind ? 0 : lidBox.max[0] + arrange.gap, behind ? lidBox.max[1] + arrange.gap : 0) : null;
+    ? screwsForPrint(screw, count, behind ? 0 : lidBox.max[0] + arrange.gap, behind ? lidBox.max[1] + arrange.gap : 0)
+    : null;
   return { parts: screws ? [...parts, screws] : parts, place };
 }
 
@@ -136,7 +156,9 @@ const SHANK_DOWN: Affine = [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0];
 export function screwsInCase(screw: SurfaceMesh, centres: readonly Vec2[], face: Face, dims: Dims, lift = 0): SurfaceMesh | null {
   if (centres.length === 0) return null;
   const { fromFace } = faceFrame(face, dims);
-  return mergeMeshes(centres.map((c) => transformMesh(screw, composeAffine(fromFace, composeAffine(translation(c[0], c[1], lift), SHANK_DOWN)))));
+  return mergeMeshes(
+    centres.map((c) => transformMesh(screw, composeAffine(fromFace, composeAffine(translation(c[0], c[1], lift), SHANK_DOWN)))),
+  );
 }
 
 /** Printed screws as they print: standing on their heads in a row along x from (x0, y0), `SCREW_GAP` apart. */
@@ -144,7 +166,9 @@ export function screwsForPrint(screw: SurfaceMesh, count: number, x0: number, y0
   if (count === 0) return null;
   const { min, max } = meshBounds(screw);
   const step = max[0] - min[0] + SCREW_GAP;
-  return mergeMeshes(Array.from({ length: count }, (_, i) => transformMesh(screw, translation(x0 - min[0] + i * step, y0 - min[1], -min[2]))));
+  return mergeMeshes(
+    Array.from({ length: count }, (_, i) => transformMesh(screw, translation(x0 - min[0] + i * step, y0 - min[1], -min[2]))),
+  );
 }
 
 /** The lid and its screws on the bed: the lid from x0, the screws to its right. */
@@ -224,15 +248,25 @@ export function meshPart(mesh: SurfaceMesh, keep: (p: readonly [number, number, 
  * upper half's on its outer face (its spacer stands on the cheek) — in a
  * row from (x0, y0).
  */
-export function sideCheeksForPrint(lower: SurfaceMesh | null, upper: SurfaceMesh | null, w: number, x0: number, y0: number, gap: number): SurfaceMesh[] {
+export function sideCheeksForPrint(
+  lower: SurfaceMesh | null,
+  upper: SurfaceMesh | null,
+  w: number,
+  x0: number,
+  y0: number,
+  gap: number,
+): SurfaceMesh[] {
   // +x down, or −x down
   const plusDown: Affine = [0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, 0];
   const minusDown: Affine = [0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0];
   const pieces: SurfaceMesh[] = [];
-  for (const [mesh, isUpper] of [[lower, false], [upper, true]] as const) {
+  for (const [mesh, isUpper] of [
+    [lower, false],
+    [upper, true],
+  ] as const) {
     if (!mesh) continue;
     for (const left of [true, false]) {
-      const part = meshPart(mesh, (p) => (p[0] < w / 2) === left);
+      const part = meshPart(mesh, (p) => p[0] < w / 2 === left);
       if (part.indices.length === 0) continue;
       // the lower left cheek's wall face looks to +x; the upper left one's outer face to −x
       pieces.push(transformMesh(part, left !== isUpper ? plusDown : minusDown));
@@ -246,4 +280,3 @@ export function sideCheeksForPrint(lower: SurfaceMesh | null, upper: SurfaceMesh
     return placed;
   });
 }
-

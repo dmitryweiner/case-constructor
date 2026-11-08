@@ -46,9 +46,8 @@ function hingeFrame(csg: CsgApi, scope: CsgScope, hinge: HalfHinge, dims: Dims, 
     at: (x, u, z) => [x, y(u), z],
     along: (solid) => transformSolid(scope, solid, turn),
     // local z → case −u: on the back wall that is −y, on the front wall +y
-    across: (solid, x, z) => transformSolid(scope, solid, back
-      ? [1, 0, 0, x, 0, 0, -1, dims.d, 0, 1, 0, z]
-      : [1, 0, 0, x, 0, 0, 1, 0, 0, -1, 0, z]),
+    across: (solid, x, z) =>
+      transformSolid(scope, solid, back ? [1, 0, 0, x, 0, 0, -1, dims.d, 0, 1, 0, z] : [1, 0, 0, x, 0, 0, 1, 0, 0, -1, 0, z]),
     box: (x0, x1, u0, u1, z0, z1) => {
       const [ya, yb] = back ? [y(u0), y(u1)] : [y(u1), y(u0)];
       return box(csg, scope, x0, ya, z0, x1, yb, z1);
@@ -62,7 +61,8 @@ function axleSolids(csg: CsgApi, scope: CsgScope, hinge: HalfHinge, frame: Hinge
   const { holes } = hinge;
   const { along, n } = frame;
   const lower = hinge.wall === 'back';
-  const rod = (x0: number, x1: number, r0: number, r1 = r0, sides = n): Manifold => along(cylinder(csg, scope, 0, 0, x0, x1, r0, sides, r1));
+  const rod = (x0: number, x1: number, r0: number, r1 = r0, sides = n): Manifold =>
+    along(cylinder(csg, scope, 0, 0, x0, x1, r0, sides, r1));
   if (holes.snap) {
     const { snap } = holes;
     // the lower half's bars between its neighbouring knuckles; the upper half's rings, split outwards from its wall
@@ -86,11 +86,13 @@ function axleSolids(csg: CsgApi, scope: CsgScope, hinge: HalfHinge, frame: Hinge
   if (holes.cones) {
     // the upper half's knuckles carry a cone on each end face; the lower half's knuckles take each in a socket
     const { r, reach } = holes.cones;
-    const faces = (lower ? hinge.others : hinge.runs).flatMap((run) => [{ x: run.x0, dir: -1 }, { x: run.x1, dir: 1 }]);
+    const faces = (lower ? hinge.others : hinge.runs).flatMap((run) => [
+      { x: run.x0, dir: -1 },
+      { x: run.x1, dir: 1 },
+    ]);
     const len = hinge.clearance + reach;
-    const cone = (x: number, dir: number, base: number, length: number, sink: number): Manifold => (dir > 0
-      ? rod(x - sink, x + length, base + sink, base - length)
-      : rod(x - length, x + sink, base - length, base + sink));
+    const cone = (x: number, dir: number, base: number, length: number, sink: number): Manifold =>
+      dir > 0 ? rod(x - sink, x + length, base + sink, base - length) : rod(x - length, x + sink, base - length, base + sink);
     if (!lower) return { add: faces.map((face) => cone(face.x, face.dir, r, len, 0.05)), cut: [] };
     const grow = CONE_FIT * Math.SQRT2;
     return { add: [], cut: faces.map((face) => cone(face.x, face.dir, r + grow, len + grow, 0)) };
@@ -103,7 +105,11 @@ function axleSolids(csg: CsgApi, scope: CsgScope, hinge: HalfHinge, frame: Hinge
       const { headR, headDepth, nutAF, nutDepth } = holes.screw;
       // the head sunk into the block's first knuckle, the nut into its last; a corner of the hex
       // up (along −x before the turn), so the pocket's roof prints as a 60° peak
-      return [through, rod(block.x0 - 1, block.x0 + headDepth, headR), rod(block.x1 - nutDepth, block.x1 + 1, nutAF / Math.sqrt(3), nutAF / Math.sqrt(3), 6)];
+      return [
+        through,
+        rod(block.x0 - 1, block.x0 + headDepth, headR),
+        rod(block.x1 - nutDepth, block.x1 + 1, nutAF / Math.sqrt(3), nutAF / Math.sqrt(3), 6),
+      ];
     }),
   };
 }
@@ -118,16 +124,25 @@ function barrel(frame: HingeFrame, hinge: HalfHinge, x: number): Vec3[] {
 }
 
 export function knuckleSolids(
-  csg: CsgApi, scope: CsgScope, hinge: HalfHinge, dims: Dims, edgeR: number, body: readonly [number, number], segments: number,
+  csg: CsgApi,
+  scope: CsgScope,
+  hinge: HalfHinge,
+  dims: Dims,
+  edgeR: number,
+  body: readonly [number, number],
+  segments: number,
 ): { material: Manifold; holes: Manifold | null } | null {
   const { r, e, zAxis } = hinge;
   const strip = knuckleStrip({ h: dims.h, edgeR, zAxis, r, e, body });
   if (!strip || hinge.runs.length === 0) return null;
   const frame = hingeFrame(csg, scope, hinge, dims, segments);
-  const knuckles = hinge.runs.map((run) => hullOf(csg, scope, [run.x0, run.x1].flatMap((x) => [
-    ...barrel(frame, hinge, x),
-    ...strip.map((z) => frame.at(x, -KNUCKLE_SINK, z)),
-  ])));
+  const knuckles = hinge.runs.map((run) =>
+    hullOf(
+      csg,
+      scope,
+      [run.x0, run.x1].flatMap((x) => [...barrel(frame, hinge, x), ...strip.map((z) => frame.at(x, -KNUCKLE_SINK, z))]),
+    ),
+  );
   // beyond the strip the web keeps off the wall: there is the lid, or the fillet
   const x0 = Math.min(...hinge.runs.map((run) => run.x0)) - 1;
   const x1 = Math.max(...hinge.runs.map((run) => run.x1)) + 1;
@@ -150,17 +165,30 @@ function leafFastener(leaf: LeafLayout): FastenerSpec {
  * screws go into (a tapped hole, an insert's, a nut's pocket open inwards).
  */
 export function leafSolids(
-  csg: CsgApi, scope: CsgScope, hinge: HalfHinge, dims: Dims, wall: number, segments: number,
+  csg: CsgApi,
+  scope: CsgScope,
+  hinge: HalfHinge,
+  dims: Dims,
+  wall: number,
+  segments: number,
 ): { leaf: Manifold; pads: Manifold; holes: Manifold } | null {
   const { leaf } = hinge;
   if (!leaf || hinge.runs.length === 0) return null;
   const frame = hingeFrame(csg, scope, hinge, dims, segments);
   const { across, n } = frame;
-  const knuckles = hinge.runs.map((run) => hullOf(csg, scope, [run.x0, run.x1].flatMap((x) => [
-    ...barrel(frame, hinge, x),
-    // on a pedestal past the axis, overlapping the plate a millimetre
-    frame.at(x, 0, leaf.pedestal), frame.at(x, 0, leaf.z1 - 1), frame.at(x, leaf.t, leaf.z1 - 1),
-  ])));
+  const knuckles = hinge.runs.map((run) =>
+    hullOf(
+      csg,
+      scope,
+      [run.x0, run.x1].flatMap((x) => [
+        ...barrel(frame, hinge, x),
+        // on a pedestal past the axis, overlapping the plate a millimetre
+        frame.at(x, 0, leaf.pedestal),
+        frame.at(x, 0, leaf.z1 - 1),
+        frame.at(x, leaf.t, leaf.z1 - 1),
+      ]),
+    ),
+  );
   const plates = hinge.blocks.map((block) => frame.box(block.x0, block.x1, 0, leaf.t, leaf.z0, leaf.z1));
   const axle = axleSolids(csg, scope, hinge, frame);
   const fastener = leafFastener(leaf);
@@ -174,13 +202,15 @@ export function leafSolids(
   // inside the wall: a pad per screw, a wedge on the wall (45° above and below, printable either way up)
   const length = padLength(leaf);
   const padR = bossDiameter(fastener) / 2;
-  const pads = leaf.screws.map((screw) => hullOf(csg, scope, [
-    ...Array.from({ length: n }, (_, i): Vec3 => {
-      const a = (2 * Math.PI * i) / n;
-      return frame.at(screw.x + padR * Math.cos(a), -wall - length, leaf.z + padR * Math.sin(a));
-    }),
-    ...[-1, 1].flatMap((sx) => [-1, 1].map((sz) => frame.at(screw.x + sx * padR, -wall + 0.5, leaf.z + sz * (padR + length)))),
-  ]));
+  const pads = leaf.screws.map((screw) =>
+    hullOf(csg, scope, [
+      ...Array.from({ length: n }, (_, i): Vec3 => {
+        const a = (2 * Math.PI * i) / n;
+        return frame.at(screw.x + padR * Math.cos(a), -wall - length, leaf.z + padR * Math.sin(a));
+      }),
+      ...[-1, 1].flatMap((sx) => [-1, 1].map((sz) => frame.at(screw.x + sx * padR, -wall + 0.5, leaf.z + sz * (padR + length)))),
+    ]),
+  );
   // the holes: clearance through the wall, then what the screw goes into, open towards the cavity
   const holes = leaf.screws.flatMap((screw) => {
     const at = (solid: Manifold): Manifold => across(solid, screw.x, leaf.z);
@@ -209,7 +239,12 @@ export function leafSolids(
  * gets `pads` inside its side walls and the screws' `holes`.
  */
 export function pivotSolids(
-  csg: CsgApi, scope: CsgScope, hinge: HalfHinge, dims: Dims, wall: number, segments: number,
+  csg: CsgApi,
+  scope: CsgScope,
+  hinge: HalfHinge,
+  dims: Dims,
+  wall: number,
+  segments: number,
 ): { material: Manifold | null; leaf: Manifold | null; pads: Manifold | null; holes: Manifold | null } | null {
   const { pivot, r, e, zAxis, holes: axle } = hinge;
   if (!pivot) return null;
@@ -219,9 +254,8 @@ export function pivotSolids(
   const leafScrew: FastenerSpec = { ...hinge.leafScrew, head: 'none' };
   const yAxis = upper ? -e : dims.d + e;
   // z → x onto the axis (a cylinder along z becomes one along x); `x0`…`x1` in case x
-  const alongX = (x0: number, x1: number, radius: number, sides = n): Manifold => transformSolid(
-    scope, cylinder(csg, scope, 0, 0, x0, x1, radius, sides), [0, 0, 1, 0, 0, 1, 0, yAxis, -1, 0, 0, zAxis],
-  );
+  const alongX = (x0: number, x1: number, radius: number, sides = n): Manifold =>
+    transformSolid(scope, cylinder(csg, scope, 0, 0, x0, x1, radius, sides), [0, 0, 1, 0, 0, 1, 0, yAxis, -1, 0, 0, zAxis]);
   // and across a side wall at (y, z), from q = a to q = b
   const xq = (left: boolean, q: number): number => (left ? -q : dims.w + q);
   const across = (left: boolean, a: number, b: number, y: number, z: number, radius: number, sides = n): Manifold => {
@@ -278,18 +312,22 @@ export function pivotSolids(
       for (const screw of pivot.screws) {
         const y = pivot.screwY;
         screwHoles.push(across(left, -1, pivot.q1 + 1, y, screw.z, through));
-        pads.push(hullOf(csg, scope, [
-          ...Array.from({ length: n }, (_, i): Vec3 => {
-            const a = (2 * Math.PI * i) / n;
-            return at(-wall - length, y + padR * Math.cos(a), screw.z + padR * Math.sin(a));
-          }),
-          ...[-1, 1].flatMap((sy) => [-1, 1].map((sz) => at(-wall + 0.5, y + sy * padR, screw.z + sz * (padR + length)))),
-        ]));
+        pads.push(
+          hullOf(csg, scope, [
+            ...Array.from({ length: n }, (_, i): Vec3 => {
+              const a = (2 * Math.PI * i) / n;
+              return at(-wall - length, y + padR * Math.cos(a), screw.z + padR * Math.sin(a));
+            }),
+            ...[-1, 1].flatMap((sy) => [-1, 1].map((sz) => at(-wall + 0.5, y + sy * padR, screw.z + sz * (padR + length)))),
+          ]),
+        );
         padHoles.push(across(left, -1, wall + 0.5, y, screw.z, through));
         if (leafScrew.hole === 'nut') {
           padHoles.push(across(left, -wall, -wall - length - 1, y, screw.z, through));
           const pocket = size.nutH + NUT_CLEARANCE;
-          padHoles.push(across(left, -wall - length + pocket, -wall - length - 1, y, screw.z, (size.nutAF + NUT_CLEARANCE) / Math.sqrt(3), 6));
+          padHoles.push(
+            across(left, -wall - length + pocket, -wall - length - 1, y, screw.z, (size.nutAF + NUT_CLEARANCE) / Math.sqrt(3), 6),
+          );
         } else {
           padHoles.push(across(left, -wall, -wall - length - 1, y, screw.z, holeDiameter(leafScrew) / 2));
         }

@@ -3,19 +3,34 @@
   "name": "KlipperScreen console",
   "state": {
     "shape": { "kind": "console", "cornerR": 4, "console": { "frontH": 25, "backH": 55 } },
-    "lid": { "face": "bottom", "chosen": "bottom", "fastening": "screws", "screw": { "size": "M3", "hole": "insert", "head": "counterbore" } },
+    "lid": {
+      "face": "bottom",
+      "chosen": "bottom",
+      "fastening": "screws",
+      "screw": { "size": "M3", "hole": "insert", "head": "counterbore" }
+    },
     "boards": [
       {
-        "board": "btt-pi-tft50-v2", "on": "ceiling", "z": 0, "mount": { "size": "M3", "hole": "insert" },
+        "board": "btt-pi-tft50-v2",
+        "on": "ceiling",
+        "z": 0,
+        "mount": { "size": "M3", "hole": "insert" },
         "back": {
           "board": "raspberry-pi-4b",
-          "cuts": { "usb-c": false, "hdmi-0": false, "hdmi-1": false, "audio": false, "usb-2": false, "usb-3": false, "ethernet": false, "microsd": false }
+          "cuts": {
+            "usb-c": false,
+            "hdmi-0": false,
+            "hdmi-1": false,
+            "audio": false,
+            "usb-2": false,
+            "usb-3": false,
+            "ethernet": false,
+            "microsd": false
+          }
         }
       }
     ],
-    "extraCuts": [
-      { "face": "back", "shape": "round", "x": 30, "y": 22, "w": 12, "h": 12, "r": 0 }
-    ],
+    "extraCuts": [{ "face": "back", "shape": "round", "x": 30, "y": 22, "w": 12, "h": 12, "r": 0 }],
     "vents": { "on": true, "faces": ["back"], "pattern": "slots", "size": 3, "pitch": 10, "margin": 10, "along": "x" }
   }
 }

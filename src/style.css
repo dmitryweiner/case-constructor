@@ -24,7 +24,11 @@
 
 body {
   margin: 0;
-  font: 14px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font:
+    14px/1.45 system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
   background: var(--bg);
   color: var(--text);
 }
@@ -479,8 +483,12 @@ input[type='text'] {
 }
 
 @keyframes progress-run {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(340%); }
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
 }
 
 #progressLabel {

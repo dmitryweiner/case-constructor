@@ -11,15 +11,32 @@
     <div id="app">
       <header id="topbar">
         <span id="brand">Case Constructor</span>
-        <button id="presetBtn" class="tb-btn preset-btn" data-i18n="topbar.presets" data-i18n-title="topbar.presets.title" title="Built-in and saved presets">Presets…</button>
+        <button
+          id="presetBtn"
+          class="tb-btn preset-btn"
+          data-i18n="topbar.presets"
+          data-i18n-title="topbar.presets.title"
+          title="Built-in and saved presets"
+        >
+          Presets…
+        </button>
         <button id="saveBtn" class="tb-btn" data-i18n-title="topbar.save.title" title="Save as a preset">💾</button>
-        <button id="fileOpenBtn" class="tb-btn" data-i18n-title="topbar.fileOpen.title" title="Open a project file (or drop the file onto the window)">📂</button>
+        <button
+          id="fileOpenBtn"
+          class="tb-btn"
+          data-i18n-title="topbar.fileOpen.title"
+          title="Open a project file (or drop the file onto the window)"
+        >
+          📂
+        </button>
         <button id="fileSaveBtn" class="tb-btn" data-i18n-title="topbar.fileSave.title" title="Save the project to a file">⬇️</button>
         <input type="file" id="fileInput" accept=".json,application/json" hidden />
         <button id="undoBtn" class="tb-btn" data-i18n-title="topbar.undo.title" title="Undo (Ctrl/Cmd+Z)" disabled>↩️</button>
         <button id="redoBtn" class="tb-btn" data-i18n-title="topbar.redo.title" title="Redo (Ctrl/Cmd+Shift+Z)" disabled>↪️</button>
         <span class="tb-spacer"></span>
-        <button id="panelBtn" class="tb-btn" data-i18n="topbar.panel" data-i18n-title="topbar.panel.title" title="Settings" hidden>⚙ Settings</button>
+        <button id="panelBtn" class="tb-btn" data-i18n="topbar.panel" data-i18n-title="topbar.panel.title" title="Settings" hidden>
+          ⚙ Settings
+        </button>
         <label class="tb-field" id="langField" data-i18n-title="lang.label" title="Language">
           <span class="lang-globe" aria-hidden="true">🌐</span>
           <select id="langSel" data-i18n-aria="lang.label" aria-label="Language"></select>
@@ -40,7 +57,6 @@
             <div id="cableCards"></div>
             <button id="cableAdd" class="tb-btn wide" type="button" data-i18n="cable.add">+ Add cable</button>
           </section>
-
 
           <!-- a hinged case: the cards that edit one half, under one switch -->
           <div class="half-group" id="halfGroup">
@@ -84,25 +100,87 @@
             <h2 data-i18n="panel.export">View and export</h2>
             <p class="tabs-caption" data-i18n="show.what">Parts</p>
             <div class="tabs" role="tablist">
-              <button class="tab" id="tabBoth" role="tab" aria-selected="true" data-i18n="export.tab.both" data-i18n-title="export.tab.both.title">Both</button>
-              <button class="tab" id="tabBody" role="tab" aria-selected="false" data-i18n="export.tab.body" data-i18n-title="export.tab.body.title">Body</button>
-              <button class="tab" id="tabLid" role="tab" aria-selected="false" data-i18n="export.tab.lid" data-i18n-title="export.tab.lid.title">Lid</button>
+              <button
+                class="tab"
+                id="tabBoth"
+                role="tab"
+                aria-selected="true"
+                data-i18n="export.tab.both"
+                data-i18n-title="export.tab.both.title"
+              >
+                Both
+              </button>
+              <button
+                class="tab"
+                id="tabBody"
+                role="tab"
+                aria-selected="false"
+                data-i18n="export.tab.body"
+                data-i18n-title="export.tab.body.title"
+              >
+                Body
+              </button>
+              <button
+                class="tab"
+                id="tabLid"
+                role="tab"
+                aria-selected="false"
+                data-i18n="export.tab.lid"
+                data-i18n-title="export.tab.lid.title"
+              >
+                Lid
+              </button>
             </div>
             <div id="viewRow">
-            <p class="tabs-caption" data-i18n="show.how">View</p>
-            <div class="tabs" role="radiogroup" data-i18n-title="view.mode.title">
-              <button class="tab" id="viewExploded" role="radio" aria-checked="true" data-i18n="view.exploded" data-i18n-title="view.exploded.title">exploded</button>
-              <button class="tab" id="viewAssembled" role="radio" aria-checked="false" data-i18n="view.assembled" data-i18n-title="view.assembled.title">assembled</button>
-              <button class="tab" id="viewPrint" role="radio" aria-checked="false" data-i18n="view.print" data-i18n-title="view.print.title">print layout</button>
-            </div>
+              <p class="tabs-caption" data-i18n="show.how">View</p>
+              <div class="tabs" role="radiogroup" data-i18n-title="view.mode.title">
+                <button
+                  class="tab"
+                  id="viewExploded"
+                  role="radio"
+                  aria-checked="true"
+                  data-i18n="view.exploded"
+                  data-i18n-title="view.exploded.title"
+                >
+                  exploded
+                </button>
+                <button
+                  class="tab"
+                  id="viewAssembled"
+                  role="radio"
+                  aria-checked="false"
+                  data-i18n="view.assembled"
+                  data-i18n-title="view.assembled.title"
+                >
+                  assembled
+                </button>
+                <button
+                  class="tab"
+                  id="viewPrint"
+                  role="radio"
+                  aria-checked="false"
+                  data-i18n="view.print"
+                  data-i18n-title="view.print.title"
+                >
+                  print layout
+                </button>
+              </div>
             </div>
             <div id="angleParams" hidden></div>
             <div id="printParams"></div>
             <div class="view-checks">
-              <label class="check-inline" id="viewBoardsLabel" data-i18n-title="view.boards.title"><input type="checkbox" id="viewBoards" checked /> <span data-i18n="view.boards">Boards</span></label>
-              <label class="check-inline" id="viewPortNamesLabel" data-i18n-title="view.portNames.title"><input type="checkbox" id="viewPortNames" checked /> <span data-i18n="view.portNames">Connector names</span></label>
-              <label class="check-inline" id="viewWarningsLabel" data-i18n-title="view.warnings.title"><input type="checkbox" id="viewWarnings" checked /> <span data-i18n="view.warnings">Warnings on the model</span></label>
-              <label class="check-inline" data-i18n-title="view.xray.title"><input type="checkbox" id="viewXray" /> <span data-i18n="view.xray">X-ray</span></label>
+              <label class="check-inline" id="viewBoardsLabel" data-i18n-title="view.boards.title"
+                ><input type="checkbox" id="viewBoards" checked /> <span data-i18n="view.boards">Boards</span></label
+              >
+              <label class="check-inline" id="viewPortNamesLabel" data-i18n-title="view.portNames.title"
+                ><input type="checkbox" id="viewPortNames" checked /> <span data-i18n="view.portNames">Connector names</span></label
+              >
+              <label class="check-inline" id="viewWarningsLabel" data-i18n-title="view.warnings.title"
+                ><input type="checkbox" id="viewWarnings" checked /> <span data-i18n="view.warnings">Warnings on the model</span></label
+              >
+              <label class="check-inline" data-i18n-title="view.xray.title"
+                ><input type="checkbox" id="viewXray" /> <span data-i18n="view.xray">X-ray</span></label
+              >
             </div>
             <label class="row">
               <span class="row-label" data-i18n="panel.resolution" data-i18n-title="panel.resolution.hint">Resolution</span>
@@ -122,14 +200,34 @@
           <button id="viewCaption" type="button" aria-live="polite" data-i18n-title="caption.title"></button>
           <div id="presets" hidden>
             <div id="presetsBox" role="dialog" aria-labelledby="presetsTitle">
-              <button id="presetsClose" class="panel-close" type="button" data-i18n-title="presets.close.title" data-i18n-aria="presets.close" title="Close (Esc)" aria-label="Close">✕</button>
+              <button
+                id="presetsClose"
+                class="panel-close"
+                type="button"
+                data-i18n-title="presets.close.title"
+                data-i18n-aria="presets.close"
+                title="Close (Esc)"
+                aria-label="Close"
+              >
+                ✕
+              </button>
               <h2 id="presetsTitle" data-i18n="presets.title">Presets</h2>
               <div id="presetList"></div>
             </div>
           </div>
           <div id="boardPicker" class="modal" hidden>
             <div class="modal-box" role="dialog" aria-labelledby="boardPickerTitle">
-              <button id="boardPickerClose" class="panel-close" type="button" data-i18n-title="presets.close.title" data-i18n-aria="presets.close" title="Close (Esc)" aria-label="Close">✕</button>
+              <button
+                id="boardPickerClose"
+                class="panel-close"
+                type="button"
+                data-i18n-title="presets.close.title"
+                data-i18n-aria="presets.close"
+                title="Close (Esc)"
+                aria-label="Close"
+              >
+                ✕
+              </button>
               <h2 id="boardPickerTitle" data-i18n="picker.title">Add a board</h2>
               <input type="search" id="boardSearch" data-i18n-aria="picker.search" aria-label="Search" />
               <div id="boardList"></div>

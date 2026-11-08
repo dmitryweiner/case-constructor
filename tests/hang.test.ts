@@ -32,7 +32,11 @@ function solidAt(part: Manifold, x: number, y: number, z: number): boolean {
 const msp = catalogBoard('lcdwiki-msp2807') ?? CATALOG[0];
 
 function hung(patch: Partial<AppState> = {}, board: Record<string, unknown> = {}): AppState {
-  return sanitizeState({ ...defaultState(), ...patch, boards: [{ board: 'lcdwiki-msp2807', on: 'ceiling', z: CEILING_GAP, mount: { size: 'M3', hole: 'tap' }, ...board }] });
+  return sanitizeState({
+    ...defaultState(),
+    ...patch,
+    boards: [{ board: 'lcdwiki-msp2807', on: 'ceiling', z: CEILING_GAP, mount: { size: 'M3', hole: 'tap' }, ...board }],
+  });
 }
 
 describe('the placement', () => {
@@ -78,7 +82,8 @@ describe('the layout', () => {
     const both = caseLayout(stacked);
     const [display, pi] = both.boards;
     expect(both.dims.h).toBeCloseTo(
-      2 * shape.floor + (pi.zTop - shape.floor) + shape.margin.top + CEILING_GAP + display.zTop - display.zBottom, 6,
+      2 * shape.floor + (pi.zTop - shape.floor) + shape.margin.top + CEILING_GAP + display.zTop - display.zBottom,
+      6,
     );
     expect(collisions(both).filter((m) => m.code === 'warn.boardsOverlap')).toEqual([]);
   });
@@ -150,7 +155,7 @@ describe('standoffs from the ceiling', () => {
 });
 
 describe('the skirt band', () => {
-  it('a hung board\'s bosses overhanging its edge stay off a top lid\'s skirt', () => {
+  it("a hung board's bosses overhanging its edge stay off a top lid's skirt", () => {
     // M3 inserts: the boss reaches 0.6 mm past the MSP2807's edge
     const state = hung({}, { mount: { size: 'M3', hole: 'insert' } });
     const board = caseLayout(state).boards[0];

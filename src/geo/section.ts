@@ -38,7 +38,7 @@ export function clipHalfPlane(poly: readonly Vec2[], a: number, b: number, c: nu
     const sp = side(p);
     const sq = side(q);
     if (sp >= 0) out.push(p);
-    if ((sp >= 0) !== (sq >= 0)) {
+    if (sp >= 0 !== sq >= 0) {
       const t = sp / (sp - sq);
       out.push([p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])]);
     }

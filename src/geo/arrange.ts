@@ -86,9 +86,8 @@ export function arrangeBoards(input: LayoutInput, mode: ArrangeMode, gap: number
   if (input.boards.length < 2) return [...input.boards];
   const extents = placeBoards(input).map(extentOf);
   const around = 2 * (sideMargin(input.shape, input.lid) + input.shape.wall);
-  const cost = (w: number, d: number): number => (input.shape.kind === 'cylinder'
-    ? Math.hypot(w + around, d + around)
-    : (w + around) * (d + around));
+  const cost = (w: number, d: number): number =>
+    input.shape.kind === 'cylinder' ? Math.hypot(w + around, d + around) : (w + around) * (d + around);
   let at: [number, number][];
   if (mode === 'row') {
     at = packRow(extents, 0, gap).at;
@@ -135,14 +134,30 @@ export function alignBoard(input: LayoutInput, index: number, ref: number, how: 
   const me = extentOf(placed[index]);
   let { x, y } = boards[index];
   switch (how) {
-    case 'left': x = r.outline.x0; break;
-    case 'right': x = r.outline.x1 - me.w; break;
-    case 'centreX': x = (r.outline.x0 + r.outline.x1 - me.w) / 2; break;
-    case 'nextX': x = r.footprint.x1 + gap + me.left; break;
-    case 'front': y = r.outline.y0; break;
-    case 'back': y = r.outline.y1 - me.d; break;
-    case 'centreY': y = (r.outline.y0 + r.outline.y1 - me.d) / 2; break;
-    case 'nextY': y = r.footprint.y1 + gap + me.front; break;
+    case 'left':
+      x = r.outline.x0;
+      break;
+    case 'right':
+      x = r.outline.x1 - me.w;
+      break;
+    case 'centreX':
+      x = (r.outline.x0 + r.outline.x1 - me.w) / 2;
+      break;
+    case 'nextX':
+      x = r.footprint.x1 + gap + me.left;
+      break;
+    case 'front':
+      y = r.outline.y0;
+      break;
+    case 'back':
+      y = r.outline.y1 - me.d;
+      break;
+    case 'centreY':
+      y = (r.outline.y0 + r.outline.y1 - me.d) / 2;
+      break;
+    case 'nextY':
+      y = r.footprint.y1 + gap + me.front;
+      break;
   }
   boards[index] = { ...boards[index], x: micron(x), y: micron(y) };
   const dx = Math.max(0, -Math.min(...boards.map((board) => board.x)));

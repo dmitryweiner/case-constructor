@@ -31,10 +31,13 @@ export function arcSweep(a, b, sweepDeg) {
   if (Math.abs(s) < 1e-9 || half < 1e-12) return [b];
   const r = half / Math.sin(Math.abs(s) / 2);
   // the centre lies to the left of a→b for a counter-clockwise sweep below 180°
-  const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
-  const ux = (b[0] - a[0]) / (2 * half), uy = (b[1] - a[1]) / (2 * half);
+  const mx = (a[0] + b[0]) / 2,
+    my = (a[1] + b[1]) / 2;
+  const ux = (b[0] - a[0]) / (2 * half),
+    uy = (b[1] - a[1]) / (2 * half);
   const h = Math.sqrt(Math.max(0, r * r - half * half)) * (Math.abs(s) > Math.PI ? -1 : 1) * Math.sign(s);
-  const cx = mx - uy * h, cy = my + ux * h;
+  const cx = mx - uy * h,
+    cy = my + ux * h;
   const a0 = Math.atan2(a[1] - cy, a[0] - cx);
   const n = Math.max(2, Math.ceil(Math.abs(s) / (Math.PI / 16)));
   return Array.from({ length: n }, (_, i) => {
@@ -63,7 +66,9 @@ export function chainLoops(polylines, tol = 0.02, { starts = 12, budget = 50000 
     } else if (closed) {
       // a line drawn there and back (some PDFs close every stroke with Z): the piece out to its far end
       let far = 0;
-      for (let i = 1; i < pts.length; i++) if (Math.hypot(pts[i][0] - pts[0][0], pts[i][1] - pts[0][1]) > Math.hypot(pts[far][0] - pts[0][0], pts[far][1] - pts[0][1])) far = i;
+      for (let i = 1; i < pts.length; i++)
+        if (Math.hypot(pts[i][0] - pts[0][0], pts[i][1] - pts[0][1]) > Math.hypot(pts[far][0] - pts[0][0], pts[far][1] - pts[0][1]))
+          far = i;
       if (far > 0) pieces.push(pts.slice(0, far + 1));
     } else {
       pieces.push(pts);
@@ -74,7 +79,8 @@ export function chainLoops(polylines, tol = 0.02, { starts = 12, budget = 50000 
   const grid = new Map();
   const nodes = [];
   const nodeOf = (p) => {
-    const gx = Math.round(p[0] / cell), gy = Math.round(p[1] / cell);
+    const gx = Math.round(p[0] / cell),
+      gy = Math.round(p[1] / cell);
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
         for (const id of grid.get(`${gx + dx},${gy + dy}`) ?? []) if (close(nodes[id], p, tol)) return id;
@@ -92,7 +98,11 @@ export function chainLoops(polylines, tol = 0.02, { starts = 12, budget = 50000 
     for (const n of [e.a, e.b]) adjacent.set(n, [...(adjacent.get(n) ?? []), i]);
   });
   const length = (pts) => pts.reduce((sum, p, i) => (i ? sum + Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) : 0), 0);
-  const order = edges.map((e, i) => [i, length(e.pts)]).sort((x, y) => y[1] - x[1]).slice(0, starts).map(([i]) => i);
+  const order = edges
+    .map((e, i) => [i, length(e.pts)])
+    .sort((x, y) => y[1] - x[1])
+    .slice(0, starts)
+    .map(([i]) => i);
   const seen = new Set();
   for (const first of order) {
     let steps = 0;
@@ -168,15 +178,20 @@ export function simplifyLoop(pts, eps) {
   if (pts.length <= 4) return pts;
   // split at the two points farthest apart so both halves are open polylines
   let far = 0;
-  for (let i = 1; i < pts.length; i++) if (Math.hypot(pts[i][0] - pts[0][0], pts[i][1] - pts[0][1]) > Math.hypot(pts[far][0] - pts[0][0], pts[far][1] - pts[0][1])) far = i;
+  for (let i = 1; i < pts.length; i++)
+    if (Math.hypot(pts[i][0] - pts[0][0], pts[i][1] - pts[0][1]) > Math.hypot(pts[far][0] - pts[0][0], pts[far][1] - pts[0][1])) far = i;
   const rdp = (line) => {
     if (line.length < 3) return line;
     const [a, b] = [line[0], line[line.length - 1]];
     const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1e-12;
-    let worst = 0, at = 0;
+    let worst = 0,
+      at = 0;
     for (let i = 1; i < line.length - 1; i++) {
       const dist = Math.abs((b[0] - a[0]) * (a[1] - line[i][1]) - (a[0] - line[i][0]) * (b[1] - a[1])) / len;
-      if (dist > worst) { worst = dist; at = i; }
+      if (dist > worst) {
+        worst = dist;
+        at = i;
+      }
     }
     if (worst <= eps) return [a, b];
     return [...rdp(line.slice(0, at + 1)).slice(0, -1), ...rdp(line.slice(at))];

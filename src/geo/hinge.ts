@@ -196,8 +196,23 @@ export const LEAF_SCREW_INSET = 4;
 
 export function defaultHingeSpec(): HingeSpec {
   return {
-    kind: 'knuckles', place: 'back', axle: 'pin', layout: 'ends', barrelD: 8, knuckles: 3, length: 10, clearance: 0.4, pinD: 1.75, pinFit: 0.15, screw: 'M2.5', cables: [],
-    leafScrew: 'M2.5', leafHole: 'insert', gapAuto: true, magnets: false, magnet: '6x3',
+    kind: 'knuckles',
+    place: 'back',
+    axle: 'pin',
+    layout: 'ends',
+    barrelD: 8,
+    knuckles: 3,
+    length: 10,
+    clearance: 0.4,
+    pinD: 1.75,
+    pinFit: 0.15,
+    screw: 'M2.5',
+    cables: [],
+    leafScrew: 'M2.5',
+    leafHole: 'insert',
+    gapAuto: true,
+    magnets: false,
+    magnet: '6x3',
   };
 }
 
@@ -323,7 +338,10 @@ export function axisOffset(spec: Pick<HingeSpec, 'barrelD' | 'clearance'> & { pl
  * print knuckles with the halves (`printable` false; split in the middle).
  */
 export function axisSplit(
-  spec: Pick<HingeSpec, 'barrelD' | 'kind'>, gap: number, lidA: string, lidB: string,
+  spec: Pick<HingeSpec, 'barrelD' | 'kind'>,
+  gap: number,
+  lidA: string,
+  lidB: string,
 ): { zA: number; printable: boolean } {
   const r = spec.barrelD / 2;
   // a printed hinge prints on its own: the axis in the gap's middle
@@ -338,7 +356,14 @@ export function axisSplit(
  * The axis of two halves of depth `d`, heights `hA` and `hB`, closed with
  * `gap` between their inner faces, the axis `zA` over the lower one's.
  */
-export function foldOf(spec: Pick<HingeSpec, 'barrelD' | 'clearance'> & { place?: HingePlace }, d: number, hA: number, hB: number, gap: number, zA = gap / 2): Fold {
+export function foldOf(
+  spec: Pick<HingeSpec, 'barrelD' | 'clearance'> & { place?: HingePlace },
+  d: number,
+  hA: number,
+  hB: number,
+  gap: number,
+  zA = gap / 2,
+): Fold {
   const e = axisOffset(spec);
   return { y: d + e, z: hA + zA, yB: -e, zB: hB + gap - zA };
 }
@@ -354,10 +379,12 @@ export interface KnuckleRun {
 function freeSpans(lo: number, hi: number, out: readonly { x0: number; x1: number }[]): { x0: number; x1: number }[] {
   let spans = [{ x0: lo, x1: hi }];
   for (const cut of out) {
-    spans = spans.flatMap((span) => [
-      ...(cut.x0 > span.x0 ? [{ x0: span.x0, x1: Math.min(span.x1, cut.x0) }] : []),
-      ...(cut.x1 < span.x1 ? [{ x0: Math.max(span.x0, cut.x1), x1: span.x1 }] : []),
-    ]).filter((span) => span.x1 - span.x0 > 1e-6);
+    spans = spans
+      .flatMap((span) => [
+        ...(cut.x0 > span.x0 ? [{ x0: span.x0, x1: Math.min(span.x1, cut.x0) }] : []),
+        ...(cut.x1 < span.x1 ? [{ x0: Math.max(span.x0, cut.x1), x1: span.x1 }] : []),
+      ])
+      .filter((span) => span.x1 - span.x0 > 1e-6);
   }
   return spans;
 }
@@ -370,7 +397,10 @@ function freeSpans(lo: number, hi: number, out: readonly { x0: number; x1: numbe
  * cables. Each block has its own axle.
  */
 export function knuckleRuns(
-  spec: HingeSpec, w: number, cornerR: number, keepOut: readonly { x0: number; x1: number }[] = [],
+  spec: HingeSpec,
+  w: number,
+  cornerR: number,
+  keepOut: readonly { x0: number; x1: number }[] = [],
 ): { blocks: { x0: number; x1: number }[]; runs: KnuckleRun[] } {
   const n = spec.knuckles;
   const g = spec.clearance;
@@ -416,7 +446,12 @@ function blockRuns(x0: number, length: number, n: number, g: number): KnuckleRun
  * no wall there to hold on to.
  */
 export function knuckleStrip(input: {
-  h: number; edgeR: number; zAxis: number; r: number; e: number; body: readonly [number, number];
+  h: number;
+  edgeR: number;
+  zAxis: number;
+  r: number;
+  e: number;
+  body: readonly [number, number];
 }): [number, number] | null {
   const { h, edgeR, zAxis, r, e, body } = input;
   const z0 = Math.max(body[0] + KNUCKLE_PART_GAP, edgeR, zAxis - e - Math.SQRT2 * r);
@@ -512,8 +547,21 @@ export interface PivotLayout {
  * 0), integral ones a hair off it beyond the strip, sunk into it on it.
  */
 export function pivotLayout(input: {
-  upper: boolean; leaves: boolean; t: number; gap: number; r: number; c: number; e: number; zAxis: number; d: number; cornerR: number;
-  body: readonly [number, number]; flat: readonly [number, number]; pads: readonly [number, number]; head: number; padR: number;
+  upper: boolean;
+  leaves: boolean;
+  t: number;
+  gap: number;
+  r: number;
+  c: number;
+  e: number;
+  zAxis: number;
+  d: number;
+  cornerR: number;
+  body: readonly [number, number];
+  flat: readonly [number, number];
+  pads: readonly [number, number];
+  head: number;
+  padR: number;
 }): PivotLayout | null {
   const { upper, leaves, t, gap, r, c, e, zAxis, d, cornerR, head, padR } = input;
   const base = leaves ? 0 : KNUCKLE_LID_GAP;
@@ -537,8 +585,18 @@ export function pivotLayout(input: {
   const screwY = upper ? y1 - head / 2 - 1 : (y0 + y1) / 2;
   const cheekY: [number, number] = upper ? [y0, y0 + PIVOT_STRIP] : [y0, y1];
   return {
-    q0, q1, spacer: upper ? { q0: leaves ? 0 : -KNUCKLE_SINK, q1: q0 + 0.1 } : null, y0, y1, z0, z1, screws, screwY, cheekY,
-    span: [base, base + 2 * t + gap], padZ: [input.pads[0], input.pads[1]],
+    q0,
+    q1,
+    spacer: upper ? { q0: leaves ? 0 : -KNUCKLE_SINK, q1: q0 + 0.1 } : null,
+    y0,
+    y1,
+    z0,
+    z1,
+    screws,
+    screwY,
+    cheekY,
+    span: [base, base + 2 * t + gap],
+    padZ: [input.pads[0], input.pads[1]],
   };
 }
 
@@ -569,8 +627,14 @@ export interface LeafLayout {
  * part of the wall's flat (`body`, `flat`).
  */
 export function leafLayout(input: {
-  zAxis: number; e: number; blocks: readonly { x0: number; x1: number }[]; screw: HingeScrew; hole: HoleKind;
-  body: readonly [number, number]; flat: readonly [number, number]; pads: readonly [number, number];
+  zAxis: number;
+  e: number;
+  blocks: readonly { x0: number; x1: number }[];
+  screw: HingeScrew;
+  hole: HoleKind;
+  body: readonly [number, number];
+  flat: readonly [number, number];
+  pads: readonly [number, number];
 }): LeafLayout | null {
   const { zAxis, e, blocks, screw, hole } = input;
   const head = SCREWS[screw].headD;
@@ -584,8 +648,9 @@ export function leafLayout(input: {
   const z = Math.max(lo, Math.min(hi, z1 - LEAF_PLATE_MIN / 2));
   const z0 = Math.min(z1 - LEAF_PLATE_MIN, z - head / 2 - 1.5);
   const inset = Math.max(LEAF_SCREW_INSET, head / 2 + 1);
-  const screws = blocks.flatMap((block) => (block.x1 - block.x0 >= 2 * inset + head + 2
-    ? [{ x: block.x0 + inset }, { x: block.x1 - inset }] : [{ x: (block.x0 + block.x1) / 2 }]));
+  const screws = blocks.flatMap((block) =>
+    block.x1 - block.x0 >= 2 * inset + head + 2 ? [{ x: block.x0 + inset }, { x: block.x1 - inset }] : [{ x: (block.x0 + block.x1) / 2 }],
+  );
   return { t: LEAF_T, z0, z1, pedestal: zAxis, screws, z, screw, hole, padZ: [input.pads[0], input.pads[1]] };
 }
 
@@ -616,9 +681,19 @@ export interface CableSlot {
 /** The cables' slots of a half as openings through its hinge wall (the face's u runs right to left on the back) or its top. */
 export function cableCutters(hinge: HalfHinge, shape: ShapeState, dims: Dims, slopeTop: (x: number, y: number) => number): CutterSpec[] {
   const face = hinge.wall;
-  const cuts = hinge.slots.map((slot) => (slot.through === 'face'
-    ? { face: 'top' as const, shape: 'rect' as const, x: slot.x, y: slot.y, w: slot.w, h: slot.h, r: Math.min(slot.w, slot.h) / 2 }
-    : { face, shape: 'rect' as const, x: face === 'back' ? dims.w - slot.x : slot.x, y: slot.z, w: slot.w, h: slot.h, r: Math.min(slot.w, slot.h) / 2 }));
+  const cuts = hinge.slots.map((slot) =>
+    slot.through === 'face'
+      ? { face: 'top' as const, shape: 'rect' as const, x: slot.x, y: slot.y, w: slot.w, h: slot.h, r: Math.min(slot.w, slot.h) / 2 }
+      : {
+          face,
+          shape: 'rect' as const,
+          x: face === 'back' ? dims.w - slot.x : slot.x,
+          y: slot.z,
+          w: slot.w,
+          h: slot.h,
+          r: Math.min(slot.w, slot.h) / 2,
+        },
+  );
   return extraCutters(cuts, shape, dims, slopeTop).map((cutter, index): CutterSpec => ({ ...cutter, source: { kind: 'cable', index } }));
 }
 
@@ -632,7 +707,8 @@ export function padLength(leaf: Pick<LeafLayout, 'screw' | 'hole'>): number {
 
 /** A printed hinge's screws: how many, and how long — through the leaf and the wall into the pad, the nearest shorter. */
 export function leafScrews(
-  leaves: readonly Pick<LeafLayout, 't' | 'screw' | 'hole' | 'screws'>[], wall: number,
+  leaves: readonly Pick<LeafLayout, 't' | 'screw' | 'hole' | 'screws'>[],
+  wall: number,
 ): { count: number; length: number } | null {
   if (leaves.length === 0) return null;
   // one length for all: the shortest any leaf takes (the nearest shorter will do)
@@ -672,7 +748,13 @@ export interface MagnetBosses {
  * pocket open into the cavity, `MAGNET_SKIN` of plate left outside.
  */
 export function magnetBosses(
-  size: MagnetSize, w: number, d: number, h: number, wall: number, side: 'front' | 'back', clear: number,
+  size: MagnetSize,
+  w: number,
+  d: number,
+  h: number,
+  wall: number,
+  side: 'front' | 'back',
+  clear: number,
 ): MagnetBosses {
   const magnet = MAGNETS[size];
   const pocketR = (magnet.d + MAGNET_POCKET_FIT) / 2;
@@ -680,7 +762,16 @@ export function magnetBosses(
   const inset = wall + clear + bossR;
   const y = side === 'front' ? inset : d - inset;
   const top = h - MAGNET_SKIN;
-  return { spots: [{ x: w / 4, y }, { x: (3 * w) / 4, y }], pocketR, top, bottom: top - magnet.h - 0.2, bossR };
+  return {
+    spots: [
+      { x: w / 4, y },
+      { x: (3 * w) / 4, y },
+    ],
+    pocketR,
+    top,
+    bottom: top - magnet.h - 0.2,
+    bossR,
+  };
 }
 
 /** A side pivot's cheek thickness: enough for a screw axle's head seat and nut pocket. */
@@ -688,4 +779,3 @@ export function pivotThickness(spec: Pick<HingeSpec, 'axle' | 'pinD' | 'pinFit' 
   const holes = axleHoles(spec);
   return holes.screw ? Math.max(PIVOT_T, holes.screw.headDepth + 1, holes.screw.nutDepth + 1) : PIVOT_T;
 }
-

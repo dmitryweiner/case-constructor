@@ -29,14 +29,16 @@ export function clampPosts(csg: CsgApi, scope: CsgScope, board: PlacedBoard, flo
   // turned upside down, a height above the panel's back is measured down from its front
   const top = board.z0 + board.def.size.t - hold.face;
   const centre = applyAffine(board.toCase, [board.def.size.w / 2, board.def.size.d / 2, 0]);
-  const posts = hold.bars.flatMap((bar) => bar.posts.map((side): Support => {
-    const [x, y] = applyAffine(board.toCase, [...spot(hold.across, side, bar.at), 0]);
-    return {
-      base: [x, y, floor / 2],
-      material: cylinder(csg, scope, x, y, floor - SINK, top, r, n),
-      holes: postHole(csg, scope, spec, x, y, floor, top, [centre[0], centre[1]], n),
-    };
-  }));
+  const posts = hold.bars.flatMap((bar) =>
+    bar.posts.map((side): Support => {
+      const [x, y] = applyAffine(board.toCase, [...spot(hold.across, side, bar.at), 0]);
+      return {
+        base: [x, y, floor / 2],
+        material: cylinder(csg, scope, x, y, floor - SINK, top, r, n),
+        holes: postHole(csg, scope, spec, x, y, floor, top, [centre[0], centre[1]], n),
+      };
+    }),
+  );
   return [...posts, ...clampPadSolids(csg, scope, board, floor)];
 }
 

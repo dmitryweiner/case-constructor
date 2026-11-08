@@ -9,10 +9,7 @@ export interface StlOptions {
   name?: string;
 }
 
-export function encodeSTL(
-  mesh: Pick<SurfaceMesh, 'positions' | 'indices'>,
-  o: StlOptions = {},
-): ArrayBuffer {
+export function encodeSTL(mesh: Pick<SurfaceMesh, 'positions' | 'indices'>, o: StlOptions = {}): ArrayBuffer {
   const { positions, indices } = mesh;
   const triCount = indices.length / 3;
   const buf = new ArrayBuffer(84 + triCount * 50);

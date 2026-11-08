@@ -116,7 +116,12 @@ function rod(frame: FaceFrame, centre: Vec3, normal: Vec2, tangent: Vec2, diamet
  * the skirt and the wall) is left out: it would hold nothing.
  */
 export function snapSpots(
-  opening: readonly Vec2[], frame: FaceFrame, zp: number, lid: LidState, round: boolean, cutters: readonly CutterSpec[] = [],
+  opening: readonly Vec2[],
+  frame: FaceFrame,
+  zp: number,
+  lid: LidState,
+  round: boolean,
+  cutters: readonly CutterSpec[] = [],
 ): SnapSpot[] {
   if (opening.length < 3) return [];
   const box = bounds2(opening);
@@ -125,7 +130,10 @@ export function snapSpots(
   const z = Math.min(zp - SNAP_R - 0.2, Math.max(zp - lid.lip.h + SNAP_R + 0.2, zp - lid.lip.h + SNAP_FROM_END));
   const spots: SnapSpot[] = [];
   const sides: { axis: 0 | 1; dir: 1 | -1 }[] = [
-    { axis: 1, dir: 1 }, { axis: 1, dir: -1 }, { axis: 0, dir: 1 }, { axis: 0, dir: -1 },
+    { axis: 1, dir: 1 },
+    { axis: 1, dir: -1 },
+    { axis: 0, dir: 1 },
+    { axis: 0, dir: -1 },
   ];
   for (const { axis, dir } of sides) {
     // a side lid's frame has v = case z: v−side is the floor, no skirt there
@@ -144,8 +152,9 @@ export function snapSpots(
       const inset = lid.fit + SNAP_SINK;
       const centre: Vec3 = [hit.point[0] - normal[0] * inset, hit.point[1] - normal[1] * inset, z];
       const radius = SNAP_R + SNAP_SINK;
-      const ends = [-rodLength / 2, 0, rodLength / 2].map((t): Vec3 => applyAffine(frame.fromFace,
-        [centre[0] + hit.tangent[0] * t, centre[1] + hit.tangent[1] * t, centre[2]]));
+      const ends = [-rodLength / 2, 0, rodLength / 2].map((t): Vec3 =>
+        applyAffine(frame.fromFace, [centre[0] + hit.tangent[0] * t, centre[1] + hit.tangent[1] * t, centre[2]]),
+      );
       if (cutters.some((cutter) => ends.some((end) => cutterContains(cutter, end, radius + lid.fit)))) continue;
       spots.push({
         bump: rod(frame, centre, normal, hit.tangent, 2 * radius, rodLength, spots.length),
@@ -193,7 +202,12 @@ export function postSpots(opening: readonly Vec2[], lid: LidState, wall: number)
   const cx = (box.u0 + box.u1) / 2;
   const cy = (box.v0 + box.v1) / 2;
   const spots: PostSpot[] = [];
-  for (const [su, sv] of [[1, 1], [-1, 1], [-1, -1], [1, -1]]) {
+  for (const [su, sv] of [
+    [1, 1],
+    [-1, 1],
+    [-1, -1],
+    [1, -1],
+  ]) {
     const corner: Vec2 = [su > 0 ? box.u1 : box.u0, sv > 0 ? box.v1 : box.v0];
     const diag = Math.hypot(corner[0] - cx, corner[1] - cy);
     const du = (cx - corner[0]) / diag;
@@ -216,7 +230,7 @@ export function postSpots(opening: readonly Vec2[], lid: LidState, wall: number)
       else outside = t;
     }
     const edge: Vec2 = [corner[0] + (cx - corner[0]) * inside, corner[1] + (cy - corner[1]) * inside];
-    spots.push({ centre, anchor: [edge[0] - du * wall / 2, edge[1] - dv * wall / 2], r });
+    spots.push({ centre, anchor: [edge[0] - (du * wall) / 2, edge[1] - (dv * wall) / 2], r });
   }
   return spots;
 }
@@ -230,7 +244,14 @@ function postSpot(points: readonly Vec3[]): MessageSpot {
   return boxSpot(boxAround(points), 'body');
 }
 
-export function postCollisions(spots: readonly PostSpot[], frame: FaceFrame, zp: number, plate: number, lid: LidState, boards: readonly PlacedBoard[]): Message[] {
+export function postCollisions(
+  spots: readonly PostSpot[],
+  frame: FaceFrame,
+  zp: number,
+  plate: number,
+  lid: LidState,
+  boards: readonly PlacedBoard[],
+): Message[] {
   const out: Message[] = [];
   const hit = new Set<number>();
   for (const spot of spots) {
@@ -238,7 +259,10 @@ export function postCollisions(spots: readonly PostSpot[], frame: FaceFrame, zp:
     const us = [spot.centre[0] - spot.r, spot.centre[0] + spot.r];
     const vs = [spot.centre[1] - spot.r, spot.centre[1] + spot.r];
     // a column stands on the far plate; a post's taper reaches half its reach below it
-    const zs = [lid.fastening === 'through' ? postFoot(lid, frame, zp, plate) : postFoot(lid, frame, zp, plate) - reach * 0.5, -plate - lid.fit];
+    const zs = [
+      lid.fastening === 'through' ? postFoot(lid, frame, zp, plate) : postFoot(lid, frame, zp, plate) - reach * 0.5,
+      -plate - lid.fit,
+    ];
     const pts: Vec3[] = [];
     for (const u of us) for (const v of vs) for (const z of zs) pts.push(applyAffine(frame.fromFace, [u, v, z]));
     const lo = [0, 1, 2].map((k) => Math.min(...pts.map((p) => p[k])));
@@ -256,14 +280,24 @@ export function postCollisions(spots: readonly PostSpot[], frame: FaceFrame, zp:
 }
 
 /** Posts standing in the way of an opening: the cut would take the post away. */
-export function postsInOpenings(spots: readonly PostSpot[], frame: FaceFrame, zp: number, plate: number, lid: LidState, cutters: readonly CutterSpec[]): Message[] {
+export function postsInOpenings(
+  spots: readonly PostSpot[],
+  frame: FaceFrame,
+  zp: number,
+  plate: number,
+  lid: LidState,
+  cutters: readonly CutterSpec[],
+): Message[] {
   const out: Message[] = [];
   spots.forEach((spot, index) => {
     const foot = postFoot(lid, frame, zp, plate);
     // a column all the way down, in 2 mm steps from inside the far plate; a post at three heights
-    const zs = lid.fastening === 'through'
-      ? Array.from({ length: Math.max(2, Math.ceil((-plate - lid.fit - foot) / 2) + 2) }, (_, i) => Math.min(foot - plate / 2 + i * 2, -plate - lid.fit - 0.5))
-      : [zp - (zp - foot) / 2, (foot - plate - lid.fit) / 2 + zp / 2, -plate - lid.fit - 0.5];
+    const zs =
+      lid.fastening === 'through'
+        ? Array.from({ length: Math.max(2, Math.ceil((-plate - lid.fit - foot) / 2) + 2) }, (_, i) =>
+            Math.min(foot - plate / 2 + i * 2, -plate - lid.fit - 0.5),
+          )
+        : [zp - (zp - foot) / 2, (foot - plate - lid.fit) / 2 + zp / 2, -plate - lid.fit - 0.5];
     const hit = zs.some((z) => {
       const p = applyAffine(frame.fromFace, [spot.centre[0], spot.centre[1], z]);
       return cutters.some((cutter) => cutterContains(cutter, p, spot.r));

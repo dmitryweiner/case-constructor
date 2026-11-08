@@ -78,9 +78,7 @@ export function createProgress({ wrap, fill, label }: ProgressElements): Progres
     wrap.hidden = false;
     const indeterminate = shown.indeterminate || shown.total === null || shown.step === null;
     wrap.classList.toggle('indeterminate', indeterminate);
-    fill.style.width = indeterminate
-      ? ''
-      : `${Math.round(((shown.step ?? 0) / Math.max(1, shown.total ?? 1)) * 100)}%`;
+    fill.style.width = indeterminate ? '' : `${Math.round(((shown.step ?? 0) / Math.max(1, shown.total ?? 1)) * 100)}%`;
     label.textContent = typeof shown.label === 'string' ? t(shown.label) : tm(shown.label);
   }
 

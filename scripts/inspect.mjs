@@ -26,7 +26,8 @@ const result = spawnSync('npx', ['vitest', 'run', '--config', 'scripts/vitest.in
   env: { ...process.env, INSPECT_ARGS: JSON.stringify(args) },
   encoding: 'utf8',
 });
-const lines = `${result.stdout}\n${result.stderr}`.split('\n')
+const lines = `${result.stdout}\n${result.stderr}`
+  .split('\n')
   .filter((line) => line.trim() && !/^(stdout \||\s*RUN|\s*Test Files|\s*Tests|\s*Start at|\s*Duration|·)/.test(line.trim()));
 console.log(lines.join('\n'));
 process.exit(result.status ?? 1);

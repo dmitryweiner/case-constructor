@@ -76,10 +76,7 @@
     "extraCuts": [],
     "vents": {
       "on": false,
-      "faces": [
-        "left",
-        "right"
-      ],
+      "faces": ["left", "right"],
       "pattern": "slots",
       "size": 2,
       "pitch": 4,
@@ -203,10 +200,7 @@
         ],
         "vents": {
           "on": false,
-          "faces": [
-            "left",
-            "right"
-          ],
+          "faces": ["left", "right"],
           "pattern": "slots",
           "size": 2,
           "pitch": 4,

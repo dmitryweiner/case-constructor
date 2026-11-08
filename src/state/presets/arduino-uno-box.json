@@ -37,9 +37,7 @@
           "head": "none"
         },
         "cuts": {},
-        "walls": [
-          "left"
-        ],
+        "walls": ["left"],
         "wallOffset": 0
       }
     ],
@@ -74,10 +72,7 @@
     "extraCuts": [],
     "vents": {
       "on": false,
-      "faces": [
-        "left",
-        "right"
-      ],
+      "faces": ["left", "right"],
       "pattern": "slots",
       "size": 2,
       "pitch": 4,
@@ -178,10 +173,7 @@
         "extraCuts": [],
         "vents": {
           "on": false,
-          "faces": [
-            "left",
-            "right"
-          ],
+          "faces": ["left", "right"],
           "pattern": "slots",
           "size": 2,
           "pitch": 4,

@@ -12,7 +12,21 @@ import { buildCase } from '../src/geo/build';
 import { validateMesh } from '../src/geo/validate';
 import { caseDims } from '../src/geo/layout';
 import { lidFaces } from '../src/geo/lidSpec';
-import { GAP_DEFAULT, MAGNET_SKIN, axleHoles, barrelMin, cableSlot, gapFor, defaultCable, defaultHingeSpec, foldOf, hingeScrews, knuckleRuns, sanitizeHingeSpec, upperPose } from '../src/geo/hinge';
+import {
+  GAP_DEFAULT,
+  MAGNET_SKIN,
+  axleHoles,
+  barrelMin,
+  cableSlot,
+  gapFor,
+  defaultCable,
+  defaultHingeSpec,
+  foldOf,
+  hingeScrews,
+  knuckleRuns,
+  sanitizeHingeSpec,
+  upperPose,
+} from '../src/geo/hinge';
 import { applyAffine, rotateVec } from '../src/geo/surface';
 import { catalogBoard } from '../src/boards/catalog';
 import { defaultPlacement } from '../src/boards/placement';
@@ -31,7 +45,7 @@ function board(id: string) {
 }
 
 describe('a hinged state', () => {
-  it('keeps the box\'s contents in the lower half and the upper half for later', () => {
+  it("keeps the box's contents in the lower half and the upper half for later", () => {
     const box = defaultState();
     const state = sanitizeState(withShapeKind(box, 'hinged'));
     expect(state.boards).toEqual(box.boards);
@@ -41,7 +55,7 @@ describe('a hinged state', () => {
     expect(back.hinge.b.boards).toHaveLength(1);
   });
 
-  it('a half\'s lid is on its top or its bottom', () => {
+  it("a half's lid is on its top or its bottom", () => {
     expect(lidFaces('hinged')).toEqual(['top', 'bottom']);
     const state = sanitizeState({ shape: { kind: 'hinged' }, lid: { face: 'front' }, hinge: { b: { lid: { face: 'left' } } } });
     expect(state.lid.face).toBe('top');
@@ -70,10 +84,12 @@ describe('halfState', () => {
     expect(b.h).toBeCloseTo(alone.h, 6);
   });
 
-  it('a manual size sets the footprint and each half\'s height, never below what the boards need', () => {
+  it("a manual size sets the footprint and each half's height, never below what the boards need", () => {
     const base = hinged();
     const manual = sanitizeState({
-      ...base, shape: { ...base.shape, auto: false, size: { w: 150, d: 100, h: 60 } }, hinge: { ...base.hinge, b: { ...base.hinge.b, h: 22 } },
+      ...base,
+      shape: { ...base.shape, auto: false, size: { w: 150, d: 100, h: 60 } },
+      hinge: { ...base.hinge, b: { ...base.hinge.b, h: 22 } },
     });
     expect(caseDims(halfState(manual, 'a'))).toEqual({ w: 150, d: 100, h: 60 });
     expect(caseDims(halfState(manual, 'b'))).toEqual({ w: 150, d: 100, h: 22 });
@@ -118,7 +134,12 @@ describe('the fold', () => {
   it('closed, the upper half lies on the lower one upside down, its inner face the gap above', () => {
     const pose = upperPose(fold, 0);
     // the upper half's inner face (its top) over the lower half's top
-    for (const [x, y] of [[0, 0], [100, 0], [0, d], [100, d]]) {
+    for (const [x, y] of [
+      [0, 0],
+      [100, 0],
+      [0, d],
+      [100, d],
+    ]) {
       const p = applyAffine(pose, [x, y, hB]);
       expect(p[2]).toBeCloseTo(hA + gap, 9);
       expect(p[0]).toBeCloseTo(x, 9);
@@ -131,7 +152,7 @@ describe('the fold', () => {
     expect(applyAffine(pose, [0, 0, 0])[2]).toBeCloseTo(hA + gap + hB, 9);
   });
 
-  it('open flat, it lies behind with its inner face up, level with the lower one\'s', () => {
+  it("open flat, it lies behind with its inner face up, level with the lower one's", () => {
     const pose = upperPose(fold, 180);
     expect(rotateVec(pose, [0, 0, 1])[2]).toBeCloseTo(1, 9);
     expect(applyAffine(pose, [0, 0, hB])).toEqual([0, d + 2 * e, hA].map((value) => expect.closeTo(value, 9)));
@@ -179,7 +200,11 @@ describe('the knuckles', () => {
 
   function withLids(a: string, b: string): AppState {
     const base = hinged();
-    return sanitizeState({ ...base, lid: { ...base.lid, face: a }, hinge: { ...base.hinge, b: { ...base.hinge.b, lid: { ...base.hinge.b.lid, face: b } } } });
+    return sanitizeState({
+      ...base,
+      lid: { ...base.lid, face: a },
+      hinge: { ...base.hinge, b: { ...base.hinge.b, lid: { ...base.hinge.b.lid, face: b } } },
+    });
   }
 
   function build(state: AppState): { a: CaseBuild; b: CaseBuild } {
@@ -198,7 +223,11 @@ describe('the knuckles', () => {
   }
 
   // P6: the upper half turns from closed to open flat without touching the lower one
-  for (const [lidA, lidB] of [['top', 'top'], ['bottom', 'top'], ['top', 'bottom']]) {
+  for (const [lidA, lidB] of [
+    ['top', 'top'],
+    ['bottom', 'top'],
+    ['top', 'bottom'],
+  ]) {
     it(`turn from closed to open flat without touching (lids ${lidA}/${lidB})`, () => {
       const state = withLids(lidA, lidB);
       const { a, b } = build(state);
@@ -223,8 +252,13 @@ describe('the knuckles', () => {
     // a pin a little thinner than its hole, along the axis through each block
     const pin = (x0: number, x1: number): SurfaceMesh => {
       const r = state.hinge.pinD / 2 - 0.05;
-      const points = [x0, x1].flatMap((x) => Array.from({ length: 24 }, (_, i): [number, number, number] => (
-        [x, fold.y + r * Math.cos((Math.PI * i) / 12), fold.z + r * Math.sin((Math.PI * i) / 12)])));
+      const points = [x0, x1].flatMap((x) =>
+        Array.from({ length: 24 }, (_, i): [number, number, number] => [
+          x,
+          fold.y + r * Math.cos((Math.PI * i) / 12),
+          fold.z + r * Math.sin((Math.PI * i) / 12),
+        ]),
+      );
       const scope = new CsgScope();
       try {
         return fromManifold(scope.keep(csg.Manifold.hull(points)));
@@ -243,7 +277,7 @@ describe('the knuckles', () => {
     }
   });
 
-  it('a screw axle: through every knuckle, its head and its nut sunk in the block\'s ends, and it still turns', () => {
+  it("a screw axle: through every knuckle, its head and its nut sunk in the block's ends, and it still turns", () => {
     const base = hinged();
     const state = sanitizeState({ ...base, hinge: { ...base.hinge, axle: 'screw', screw: 'M3' } });
     expect(state.hinge.barrelD).toBeGreaterThanOrEqual(barrelMin(state.hinge));
@@ -253,8 +287,13 @@ describe('the knuckles', () => {
     const holes = axleHoles(state.hinge);
     if (!hinge || !holes.screw) throw new Error('no screw');
     const rod = (x0: number, x1: number, r: number): SurfaceMesh => {
-      const points = [x0, x1].flatMap((x) => Array.from({ length: 24 }, (_, i): [number, number, number] => (
-        [x, fold.y + r * Math.cos((Math.PI * i) / 12), fold.z + r * Math.sin((Math.PI * i) / 12)])));
+      const points = [x0, x1].flatMap((x) =>
+        Array.from({ length: 24 }, (_, i): [number, number, number] => [
+          x,
+          fold.y + r * Math.cos((Math.PI * i) / 12),
+          fold.z + r * Math.sin((Math.PI * i) / 12),
+        ]),
+      );
       const scope = new CsgScope();
       try {
         return fromManifold(scope.keep(csg.Manifold.hull(points)));
@@ -284,11 +323,15 @@ describe('the knuckles', () => {
     expect(screws?.length).toBe(Math.floor(hinge.blocks[0].x1 - hinge.blocks[0].x0 - holes.screw.headDepth));
   });
 
-  it('a snap: the lower half\'s bar through the upper half\'s split rings, turning without touching', () => {
+  it("a snap: the lower half's bar through the upper half's split rings, turning without touching", () => {
     const base = hinged();
-    for (const lids of [['top', 'top'], ['bottom', 'top']] as const) {
+    for (const lids of [
+      ['top', 'top'],
+      ['bottom', 'top'],
+    ] as const) {
       const state = sanitizeState({
-        ...base, lid: { ...base.lid, face: lids[0] },
+        ...base,
+        lid: { ...base.lid, face: lids[0] },
         hinge: { ...base.hinge, axle: 'snap', b: { ...base.hinge.b, lid: { ...base.hinge.b.lid, face: lids[1] } } },
       });
       const holes = axleHoles(state.hinge);
@@ -308,8 +351,13 @@ describe('the knuckles', () => {
       const run = hinge.runs[0];
       const probe = (x: number): SurfaceMesh => {
         const r = holes.snap ? holes.snap.barR - 0.1 : 0;
-        const points = [x - 0.5, x + 0.5].flatMap((at) => Array.from({ length: 12 }, (_, i): [number, number, number] => (
-          [at, fold.y + r * Math.cos((Math.PI * i) / 6), fold.z + r * Math.sin((Math.PI * i) / 6)])));
+        const points = [x - 0.5, x + 0.5].flatMap((at) =>
+          Array.from({ length: 12 }, (_, i): [number, number, number] => [
+            at,
+            fold.y + r * Math.cos((Math.PI * i) / 6),
+            fold.z + r * Math.sin((Math.PI * i) / 6),
+          ]),
+        );
         const scope = new CsgScope();
         try {
           return fromManifold(scope.keep(csg.Manifold.hull(points)));
@@ -323,7 +371,9 @@ describe('the knuckles', () => {
   });
 
   it('a barrel never thinner than its axle needs', () => {
-    expect(sanitizeHingeSpec({ axle: 'screw', screw: 'M3', barrelD: 5 }).barrelD).toBeGreaterThanOrEqual(barrelMin({ ...defaultHingeSpec(), axle: 'screw', screw: 'M3' }));
+    expect(sanitizeHingeSpec({ axle: 'screw', screw: 'M3', barrelD: 5 }).barrelD).toBeGreaterThanOrEqual(
+      barrelMin({ ...defaultHingeSpec(), axle: 'screw', screw: 'M3' }),
+    );
     expect(sanitizeHingeSpec({ pinD: 4, pinFit: 0.5, barrelD: 5 }).barrelD).toBeGreaterThanOrEqual(4 + 1 + 2.4);
   });
 
@@ -345,7 +395,7 @@ describe('cables', () => {
     csg = await initCSG();
   });
 
-  it('the knuckles step aside from a cable\'s slot', () => {
+  it("the knuckles step aside from a cable's slot", () => {
     const spec = defaultHingeSpec();
     const zone = { x0: 40, x1: 60 };
     const ends = knuckleRuns(spec, 100, 4, [zone]);
@@ -360,16 +410,26 @@ describe('cables', () => {
     expect(Math.min(...near.runs.map((run) => run.x0))).toBeGreaterThanOrEqual(12);
   });
 
-  it('a slot through each half\'s hinge wall, and the halves still turn clear', () => {
+  it("a slot through each half's hinge wall, and the halves still turn clear", () => {
     const base = hinged();
     const cable = { ...defaultCable(49), plugH: 4 };
     const state = sanitizeState({ ...base, hinge: { ...base.hinge, cables: [cable] } });
     const slot = cableSlot(state.hinge.cables[0]);
     const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, [], halfHinge(state, half)));
-    const plainA = buildCase(csg, halfState(state, 'a'), 8, () => {}, [], halfHinge(sanitizeState({ ...state, hinge: { ...state.hinge, cables: [] } }), 'a'));
+    const plainA = buildCase(
+      csg,
+      halfState(state, 'a'),
+      8,
+      () => {},
+      [],
+      halfHinge(sanitizeState({ ...state, hinge: { ...state.hinge, cables: [] } }), 'a'),
+    );
     // the slot takes wall away (a little less than its full prism: the knuckles moved too)
     expect(validateMesh(a.body).volume).toBeLessThan(validateMesh(plainA.body).volume);
-    for (const [half, built] of [['a', a], ['b', b]] as const) {
+    for (const [half, built] of [
+      ['a', a],
+      ['b', b],
+    ] as const) {
       const hinge = halfHinge(state, half);
       if (!hinge) throw new Error('no hinge');
       const { z } = hinge.slots[0];
@@ -379,7 +439,9 @@ describe('cables', () => {
       const scope = new CsgScope();
       try {
         // inside the slot's straight part: its ends are half circles
-        const probe = fromManifold(scope.keep(csg.Manifold.cube([slot.w - slot.h - 1, state.shape.wall + 0.4, slot.h - 1], true).translate([49, y, z])));
+        const probe = fromManifold(
+          scope.keep(csg.Manifold.cube([slot.w - slot.h - 1, state.shape.wall + 0.4, slot.h - 1], true).translate([49, y, z])),
+        );
         expect(shared(probe, built.body), half).toBeLessThan(1e-6);
         expect(shared(probe, built.lid), half).toBeLessThan(1e-6);
       } finally {
@@ -392,13 +454,16 @@ describe('cables', () => {
     }
   });
 
-  it('a slot through each half\'s inner face, facing each other when closed', () => {
+  it("a slot through each half's inner face, facing each other when closed", () => {
     const base = hinged();
     const state = sanitizeState({ ...base, hinge: { ...base.hinge, cables: [{ ...defaultCable(49), through: 'face' }] } });
     const slot = cableSlot(state.hinge.cables[0]);
     const fold = foldOfState(state);
     const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, [], halfHinge(state, half)));
-    for (const [half, built] of [['a', a], ['b', b]] as const) {
+    for (const [half, built] of [
+      ['a', a],
+      ['b', b],
+    ] as const) {
       const hinge = halfHinge(state, half);
       if (!hinge) throw new Error('no hinge');
       const { y } = hinge.slots[0];
@@ -406,7 +471,15 @@ describe('cables', () => {
       const scope = new CsgScope();
       try {
         // a probe through the plate in the slot's straight part
-        const probe = fromManifold(scope.keep(csg.Manifold.cube([slot.w - slot.h - 1, slot.h - 1, state.shape.floor + 0.4], true).translate([49, y, h - state.shape.floor / 2])));
+        const probe = fromManifold(
+          scope.keep(
+            csg.Manifold.cube([slot.w - slot.h - 1, slot.h - 1, state.shape.floor + 0.4], true).translate([
+              49,
+              y,
+              h - state.shape.floor / 2,
+            ]),
+          ),
+        );
         expect(shared(probe, mergeMeshes([built.body, built.lid])), half).toBeLessThan(1e-6);
       } finally {
         scope.dispose();
@@ -461,7 +534,11 @@ describe('a printed hinge', () => {
     }
   }
 
-  for (const [lidA, lidB, axle] of [['bottom', 'bottom', 'cones'], ['top', 'bottom', 'pin'], ['top', 'top', 'screw']] as const) {
+  for (const [lidA, lidB, axle] of [
+    ['bottom', 'bottom', 'cones'],
+    ['top', 'bottom', 'pin'],
+    ['top', 'top', 'screw'],
+  ] as const) {
     it(`leaves on the walls turn clear, ${axle}, lids ${lidA}/${lidB}`, () => {
       const base = hinged();
       const state = sanitizeState({
@@ -525,7 +602,8 @@ describe('the gap and the magnets', () => {
   it('magnets inside, meeting through the inner faces when closed', () => {
     const base = hinged();
     const state = sanitizeState({
-      ...base, hinge: { ...base.hinge, magnets: true, magnet: '6x3', b: { ...base.hinge.b, lid: { ...base.hinge.b.lid, face: 'bottom' } } },
+      ...base,
+      hinge: { ...base.hinge, magnets: true, magnet: '6x3', b: { ...base.hinge.b, lid: { ...base.hinge.b.lid, face: 'bottom' } } },
     });
     const fold = foldOfState(state);
     const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, [], halfHinge(state, half)));
@@ -550,7 +628,10 @@ describe('the gap and the magnets', () => {
         scope.dispose();
       }
     };
-    for (const [m, built, h] of [[ma, a, hA], [mb, b, hB]] as const) {
+    for (const [m, built, h] of [
+      [ma, a, hA],
+      [mb, b, hB],
+    ] as const) {
       const parts = mergeMeshes([built.body, built.lid]);
       for (const spot of m.spots) {
         // the pocket is empty, the skin over it is there
@@ -586,8 +667,12 @@ describe('side pivots', () => {
   }
 
   const cases = [
-    ['knuckles', 'pin', 'top', 'top'], ['knuckles', 'screw', 'bottom', 'top'], ['knuckles', 'snap', 'top', 'bottom'],
-    ['leaves', 'pin', 'bottom', 'bottom'], ['leaves', 'screw', 'top', 'top'], ['leaves', 'snap', 'bottom', 'top'],
+    ['knuckles', 'pin', 'top', 'top'],
+    ['knuckles', 'screw', 'bottom', 'top'],
+    ['knuckles', 'snap', 'top', 'bottom'],
+    ['leaves', 'pin', 'bottom', 'bottom'],
+    ['leaves', 'screw', 'top', 'top'],
+    ['leaves', 'snap', 'bottom', 'top'],
   ] as const;
   for (const [kind, axle, lidA, lidB] of cases) {
     it(`${kind} on the sides, ${axle}, lids ${lidA}/${lidB}: the back wall stays free, and it turns clear`, () => {
@@ -595,7 +680,14 @@ describe('side pivots', () => {
       const state = sanitizeState({
         ...base,
         lid: { ...base.lid, face: lidA },
-        hinge: { ...base.hinge, place: 'sides', kind, axle, leafHole: 'nut', b: { ...base.hinge.b, lid: { ...base.hinge.b.lid, face: lidB } } },
+        hinge: {
+          ...base.hinge,
+          place: 'sides',
+          kind,
+          axle,
+          leafHole: 'nut',
+          b: { ...base.hinge.b, lid: { ...base.hinge.b.lid, face: lidB } },
+        },
       });
       const hinges = (['a', 'b'] as const).map((half) => halfHinge(state, half));
       for (const hinge of hinges) {
@@ -629,7 +721,7 @@ describe('side pivots', () => {
     expect(sanitizeHingeSpec({ kind: 'leaves', place: 'sides', axle: 'cones' }).axle).toBe('pin');
   });
 
-  it('a printed hinge\'s side cheeks print one by one, each on a flat face', () => {
+  it("a printed hinge's side cheeks print one by one, each on a flat face", () => {
     const base = hinged();
     const state = sanitizeState({ ...base, hinge: { ...base.hinge, place: 'sides', kind: 'leaves' } });
     const [a, b] = (['a', 'b'] as const).map((half) => buildCase(csg, halfState(state, half), 8, () => {}, [], halfHinge(state, half)));
@@ -649,4 +741,3 @@ describe('side pivots', () => {
     }
   });
 });
-

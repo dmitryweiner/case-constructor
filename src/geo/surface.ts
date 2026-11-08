@@ -12,11 +12,7 @@ export interface SurfaceMesh {
 export type Vec3 = [number, number, number];
 
 /** Row-major 3×4 affine transform: [r00 r01 r02 tx, r10 r11 r12 ty, r20 r21 r22 tz]. */
-export type Affine = readonly [
-  number, number, number, number,
-  number, number, number, number,
-  number, number, number, number,
-];
+export type Affine = readonly [number, number, number, number, number, number, number, number, number, number, number, number];
 
 export const IDENTITY: Affine = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0];
 
@@ -30,11 +26,7 @@ export function applyAffine(m: Affine, p: Readonly<Vec3>): Vec3 {
 
 /** Rotation part only — for directions and normals. */
 export function rotateVec(m: Affine, v: Readonly<Vec3>): Vec3 {
-  return [
-    m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
-    m[4] * v[0] + m[5] * v[1] + m[6] * v[2],
-    m[8] * v[0] + m[9] * v[1] + m[10] * v[2],
-  ];
+  return [m[0] * v[0] + m[1] * v[1] + m[2] * v[2], m[4] * v[0] + m[5] * v[1] + m[6] * v[2], m[8] * v[0] + m[9] * v[1] + m[10] * v[2]];
 }
 
 /** a ∘ b: first b, then a. */
@@ -53,11 +45,7 @@ export function composeAffine(a: Affine, b: Affine): Affine {
 /** Inverse of a rigid transform (rotation + translation). */
 export function invertRigid(m: Affine): Affine {
   // R⁻¹ = Rᵀ, t' = −Rᵀ t
-  const out = [
-    m[0], m[4], m[8], 0,
-    m[1], m[5], m[9], 0,
-    m[2], m[6], m[10], 0,
-  ];
+  const out = [m[0], m[4], m[8], 0, m[1], m[5], m[9], 0, m[2], m[6], m[10], 0];
   for (let r = 0; r < 3; r++) {
     out[r * 4 + 3] = -(out[r * 4] * m[3] + out[r * 4 + 1] * m[7] + out[r * 4 + 2] * m[11]);
   }
@@ -84,9 +72,7 @@ export function transformMesh(mesh: SurfaceMesh, m: Affine): SurfaceMesh {
       normals.set(rotateVec(m, [mesh.normals[i], mesh.normals[i + 1], mesh.normals[i + 2]]), i);
     }
   }
-  const det = m[0] * (m[5] * m[10] - m[6] * m[9])
-    - m[1] * (m[4] * m[10] - m[6] * m[8])
-    + m[2] * (m[4] * m[9] - m[5] * m[8]);
+  const det = m[0] * (m[5] * m[10] - m[6] * m[9]) - m[1] * (m[4] * m[10] - m[6] * m[8]) + m[2] * (m[4] * m[9] - m[5] * m[8]);
   let indices = mesh.indices;
   if (det < 0) {
     indices = new Uint32Array(mesh.indices.length);

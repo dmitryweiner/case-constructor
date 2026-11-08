@@ -42,37 +42,37 @@ export const PORT_TYPES = {
   'micro-usb': { w: 7.5, h: 2.6, d: 5, clearance: 1.8, shape: 'rect', cut: true, top: false },
   'mini-usb': { w: 7.7, h: 4, d: 9, clearance: 1.6, shape: 'rect', cut: true, top: false },
   'usb-b': { w: 12, h: 11, d: 16, clearance: 0.8, shape: 'rect', cut: true, top: false },
-  'hdmi': { w: 15, h: 5.6, d: 11, clearance: 1.5, shape: 'rect', cut: true, top: false },
+  hdmi: { w: 15, h: 5.6, d: 11, clearance: 1.5, shape: 'rect', cut: true, top: false },
   'mini-hdmi': { w: 10.5, h: 3.2, d: 7.5, clearance: 1.8, shape: 'rect', cut: true, top: false },
   'micro-hdmi': { w: 6.5, h: 3, d: 7.5, clearance: 2, shape: 'rect', cut: true, top: false },
-  'rj45': { w: 16, h: 13.5, d: 21, clearance: 0.5, shape: 'rect', cut: true, top: false },
+  rj45: { w: 16, h: 13.5, d: 21, clearance: 0.5, shape: 'rect', cut: true, top: false },
   'audio-3.5': { w: 6, h: 6, d: 12, clearance: 1, shape: 'round', cut: true, top: false },
   'dc-jack-5.5': { w: 9, h: 11, d: 14, clearance: 0.6, shape: 'rect', cut: true, top: false },
-  'microsd': { w: 12, h: 1.5, d: 15, clearance: 1, shape: 'rect', cut: true, top: false },
-  'sd': { w: 24, h: 2.5, d: 30, clearance: 1, shape: 'rect', cut: true, top: false },
-  'sma': { w: 6.5, h: 6.5, d: 8, clearance: 0.3, shape: 'round', cut: true, top: false },
-  'switch': { w: 8, h: 3, d: 4, clearance: 0.6, shape: 'rect', cut: true, top: false },
+  microsd: { w: 12, h: 1.5, d: 15, clearance: 1, shape: 'rect', cut: true, top: false },
+  sd: { w: 24, h: 2.5, d: 30, clearance: 1, shape: 'rect', cut: true, top: false },
+  sma: { w: 6.5, h: 6.5, d: 8, clearance: 0.3, shape: 'round', cut: true, top: false },
+  switch: { w: 8, h: 3, d: 4, clearance: 0.6, shape: 'rect', cut: true, top: false },
   // 5.08 mm screw terminal, two poles; the wires leave through a slot at the entries
-  'terminal': { w: 10.16, h: 10, d: 8, clearance: 0.5, shape: 'rect', cut: true, top: false, cutH: 5.5 },
+  terminal: { w: 10.16, h: 10, d: 8, clearance: 0.5, shape: 'rect', cut: true, top: false, cutH: 5.5 },
   // JST PH / SH (Qwiic, STEMMA QT) battery, speaker and I2C sockets
-  'jst': { w: 6, h: 4.5, d: 5, clearance: 0.5, shape: 'rect', cut: false, top: false },
-  'sim': { w: 12.5, h: 1.5, d: 14, clearance: 1, shape: 'rect', cut: true, top: false },
+  jst: { w: 6, h: 4.5, d: 5, clearance: 0.5, shape: 'rect', cut: false, top: false },
+  sim: { w: 12.5, h: 1.5, d: 14, clearance: 1, shape: 'rect', cut: true, top: false },
   'header-2x20': { w: 51, h: 8.5, d: 5, clearance: 0.6, shape: 'rect', cut: true, top: true },
   'header-1xN': { w: 25.4, h: 8.5, d: 2.5, clearance: 0.6, shape: 'rect', cut: false, top: true },
   // a 2-row header other than the Pi's GPIO: PoE 2x2, UEXT 2x5, 2x3
   'header-2xN': { w: 12.7, h: 8.5, d: 5.08, clearance: 0.6, shape: 'rect', cut: false, top: true },
-  'display': { w: 30, h: 3, d: 15, clearance: 0.3, shape: 'rect', cut: true, top: true },
-  'button': { w: 3.5, h: 1.5, d: 3.5, clearance: 0.6, shape: 'round', cut: true, top: true },
-  'led': { w: 1.6, h: 0.8, d: 1.6, clearance: 0.5, shape: 'round', cut: true, top: true },
-  'fpc': { w: 22, h: 3, d: 3, clearance: 1, shape: 'rect', cut: true, top: true },
-  'antenna': { w: 3, h: 1.3, d: 3, clearance: 0.5, shape: 'rect', cut: false, top: true },
-  'generic': { w: 5, h: 3, d: 5, clearance: 0.5, shape: 'rect', cut: false, top: true },
+  display: { w: 30, h: 3, d: 15, clearance: 0.3, shape: 'rect', cut: true, top: true },
+  button: { w: 3.5, h: 1.5, d: 3.5, clearance: 0.6, shape: 'round', cut: true, top: true },
+  led: { w: 1.6, h: 0.8, d: 1.6, clearance: 0.5, shape: 'round', cut: true, top: true },
+  fpc: { w: 22, h: 3, d: 3, clearance: 1, shape: 'rect', cut: true, top: true },
+  antenna: { w: 3, h: 1.3, d: 3, clearance: 0.5, shape: 'rect', cut: false, top: true },
+  generic: { w: 5, h: 3, d: 5, clearance: 0.5, shape: 'rect', cut: false, top: true },
   // a keyboard's key field: the rectangle the keys stand in, `h` their tops (plans/PLAN-KEYBOARDS.md)
-  'keys': { w: 60, h: 3, d: 30, clearance: 0.5, shape: 'rect', cut: true, top: true },
+  keys: { w: 60, h: 3, d: 30, clearance: 0.5, shape: 'rect', cut: true, top: true },
   // a rotary encoder's or a potentiometer's shaft through the plate
-  'knob': { w: 6, h: 15, d: 6, clearance: 0.5, shape: 'round', cut: true, top: true },
+  knob: { w: 6, h: 15, d: 6, clearance: 0.5, shape: 'round', cut: true, top: true },
   // a battery holder's wire leads where they leave it: room for the bend, no opening
-  'wires': { w: 4, h: 3, d: 2, clearance: 0.5, shape: 'rect', cut: false, top: false },
+  wires: { w: 4, h: 3, d: 2, clearance: 0.5, shape: 'rect', cut: false, top: false },
 } as const satisfies Record<string, PortType>;
 
 export type PortTypeId = keyof typeof PORT_TYPES;
@@ -181,9 +181,15 @@ export interface TopPort extends PortCommon {
 
 /** The keys of a field, row by row: none without rows. */
 export function keysOf(port: Pick<TopPort, 'rows'>): Key[] {
-  return (port.rows ?? []).flatMap((row) => Array.from({ length: row.n }, (_, i) => ({
-    x: row.x + i * row.pitch, y: row.y, w: row.w, d: row.shape === 'round' ? row.w : row.d, shape: row.shape,
-  })));
+  return (port.rows ?? []).flatMap((row) =>
+    Array.from({ length: row.n }, (_, i) => ({
+      x: row.x + i * row.pitch,
+      y: row.y,
+      w: row.w,
+      d: row.shape === 'round' ? row.w : row.d,
+      shape: row.shape,
+    })),
+  );
 }
 
 /** A board's key fields. */
@@ -412,9 +418,13 @@ function keyFieldOf(field: Pick<TopPort, 'x' | 'y' | 'w' | 'd'>, r: Record<strin
       d: shape === 'round' ? w : num(row.d, 0.5, 30, w),
       shape,
     };
-    const inside = keysOf({ rows: [kept] }).every((key) => key.x - key.w / 2 >= field.x - field.w / 2 - eps
-      && key.x + key.w / 2 <= field.x + field.w / 2 + eps && key.y - key.d / 2 >= field.y - field.d / 2 - eps
-      && key.y + key.d / 2 <= field.y + field.d / 2 + eps);
+    const inside = keysOf({ rows: [kept] }).every(
+      (key) =>
+        key.x - key.w / 2 >= field.x - field.w / 2 - eps &&
+        key.x + key.w / 2 <= field.x + field.w / 2 + eps &&
+        key.y - key.d / 2 >= field.y - field.d / 2 - eps &&
+        key.y + key.d / 2 <= field.y + field.d / 2 + eps,
+    );
     if (inside) rows.push(kept);
   }
   const open: KeysOpen = (r.open === 'holes' || r.open === 'caps') && rows.length > 0 ? r.open : 'window';
@@ -443,13 +453,18 @@ export function windowInGlass(port: Pick<TopPort, 'x' | 'y' | 'w' | 'd' | 'shape
   const hw = port.w / 2;
   const hd = (port.shape === 'round' ? port.w : port.d) / 2;
   if (glass.shape === 'round') {
-    const reach = port.shape === 'round'
-      ? Math.hypot(port.x - glass.x, port.y - glass.y) + hw
-      : Math.max(...[-1, 1].flatMap((sx) => [-1, 1].map((sy) => Math.hypot(port.x + sx * hw - glass.x, port.y + sy * hd - glass.y))));
+    const reach =
+      port.shape === 'round'
+        ? Math.hypot(port.x - glass.x, port.y - glass.y) + hw
+        : Math.max(...[-1, 1].flatMap((sx) => [-1, 1].map((sy) => Math.hypot(port.x + sx * hw - glass.x, port.y + sy * hd - glass.y))));
     return reach <= glass.w / 2 + eps;
   }
-  return port.x - hw >= glass.x - glass.w / 2 - eps && port.x + hw <= glass.x + glass.w / 2 + eps
-    && port.y - hd >= glass.y - glass.d / 2 - eps && port.y + hd <= glass.y + glass.d / 2 + eps;
+  return (
+    port.x - hw >= glass.x - glass.w / 2 - eps &&
+    port.x + hw <= glass.x + glass.w / 2 + eps &&
+    port.y - hd >= glass.y - glass.d / 2 - eps &&
+    port.y + hd <= glass.y + glass.d / 2 + eps
+  );
 }
 
 function withPins(pins: BoardPins | undefined): { pins?: BoardPins } {
@@ -556,12 +571,14 @@ export function sanitizeVariants(raw: unknown, size: { w: number; d: number }, p
 export function resolveVariant(def: BoardDef, variantId: string | undefined): BoardDef {
   const variant = def.variants?.find((item) => item.id === variantId) ?? def.variants?.[0];
   if (!variant) return def;
-  const ports = def.ports.filter((port) => !variant.remove.includes(port.id)).map((port) => {
-    const override = variant.ports[port.id];
-    if (!override) return port;
-    const merged = sanitizePort({ ...port, ...override }, def.size, 0);
-    return merged ? { ...merged, id: port.id } : port;
-  });
+  const ports = def.ports
+    .filter((port) => !variant.remove.includes(port.id))
+    .map((port) => {
+      const override = variant.ports[port.id];
+      if (!override) return port;
+      const merged = sanitizePort({ ...port, ...override }, def.size, 0);
+      return merged ? { ...merged, id: port.id } : port;
+    });
   return {
     ...def,
     topHeight: variant.topHeight ?? def.topHeight,
@@ -581,7 +598,12 @@ export function signedArea2(points: readonly (readonly [number, number])[]): num
   return sum;
 }
 
-function segmentsCross(a: readonly [number, number], b: readonly [number, number], c: readonly [number, number], d: readonly [number, number]): boolean {
+function segmentsCross(
+  a: readonly [number, number],
+  b: readonly [number, number],
+  c: readonly [number, number],
+  d: readonly [number, number],
+): boolean {
   const side = (p: readonly [number, number], q: readonly [number, number], r: readonly [number, number]): number =>
     Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]));
   return side(a, b, c) * side(a, b, d) < 0 && side(c, d, a) * side(c, d, b) < 0;

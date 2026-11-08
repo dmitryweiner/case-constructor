@@ -77,7 +77,12 @@ export function sectionAt(spec: LoftSpec, z: number): Section {
 export function ringPoints(cx: number, cy: number, section: Section, z: number, segments: number): Vec3[] {
   const points: Vec3[] = [];
   const { hw, hd, r } = section;
-  const corners: [number, number][] = [[1, 1], [-1, 1], [-1, -1], [1, -1]];
+  const corners: [number, number][] = [
+    [1, 1],
+    [-1, 1],
+    [-1, -1],
+    [1, -1],
+  ];
   for (let k = 0; k < 4; k++) {
     const [sx, sy] = corners[k];
     const ox = cx + sx * (hw - r);

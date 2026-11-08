@@ -4,7 +4,21 @@
 import type { Face } from './face';
 import { isFace } from './face';
 import type { FastenerSpec, MagnetSize } from './fasteners';
-import { BOSS_MIN_D, BOSS_WALL, COUNTERSUNK_HEAD_D, MAGNETS, NUT_CLEARANCE, NYLOC_NUT_H, SCREWS, THROUGH_CLEARANCE, bossDiameter, defaultFastener, isLidScrewSize, isMagnetSize, sanitizeFastener } from './fasteners';
+import {
+  BOSS_MIN_D,
+  BOSS_WALL,
+  COUNTERSUNK_HEAD_D,
+  MAGNETS,
+  NUT_CLEARANCE,
+  NYLOC_NUT_H,
+  SCREWS,
+  THROUGH_CLEARANCE,
+  bossDiameter,
+  defaultFastener,
+  isLidScrewSize,
+  isMagnetSize,
+  sanitizeFastener,
+} from './fasteners';
 import type { ShapeKind } from './shape';
 import type { ThreadSize } from './thread';
 import { THREADS, THREAD_WALL, isThreadSize } from './thread';

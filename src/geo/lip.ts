@@ -28,19 +28,37 @@ const EPS = 0.05;
 const POST_STEP = 0.3;
 
 export function snapSolids(
-  csg: CsgApi, scope: CsgScope, opening: readonly Vec2[], frame: FaceFrame, zp: number, lid: LidState, round: boolean,
-  cutters: readonly CutterSpec[], segments: number,
+  csg: CsgApi,
+  scope: CsgScope,
+  opening: readonly Vec2[],
+  frame: FaceFrame,
+  zp: number,
+  lid: LidState,
+  round: boolean,
+  cutters: readonly CutterSpec[],
+  segments: number,
 ): { bumps: Manifold | null; grooves: Manifold | null } {
   const spots = snapSpots(opening, frame, zp, lid, round, cutters);
   if (spots.length === 0) return { bumps: null, grooves: null };
   return {
-    bumps: unionAll(csg, scope, spots.map((spot) => cutterSolid(csg, scope, spot.bump, segments))),
-    grooves: unionAll(csg, scope, spots.map((spot) => cutterSolid(csg, scope, spot.groove, segments))),
+    bumps: unionAll(
+      csg,
+      scope,
+      spots.map((spot) => cutterSolid(csg, scope, spot.bump, segments)),
+    ),
+    grooves: unionAll(
+      csg,
+      scope,
+      spots.map((spot) => cutterSolid(csg, scope, spot.groove, segments)),
+    ),
   };
 }
 
 function circlePoints(c: Vec2, r: number, n: number): Vec2[] {
-  return Array.from({ length: n }, (_, i): Vec2 => [c[0] + r * Math.cos((2 * Math.PI * i) / n), c[1] + r * Math.sin((2 * Math.PI * i) / n)]);
+  return Array.from({ length: n }, (_, i): Vec2 => [
+    c[0] + r * Math.cos((2 * Math.PI * i) / n),
+    c[1] + r * Math.sin((2 * Math.PI * i) / n),
+  ]);
 }
 
 /** A cylinder along the face normal in the face frame, z' from z0 to z1. */
@@ -63,8 +81,16 @@ export interface PostParts {
 }
 
 export function postSolids(
-  csg: CsgApi, scope: CsgScope, spots: readonly PostSpot[], opening: readonly Vec2[], upperSection: readonly Vec2[],
-  frame: FaceFrame, zp: number, plate: number, lid: LidState, segments: number,
+  csg: CsgApi,
+  scope: CsgScope,
+  spots: readonly PostSpot[],
+  opening: readonly Vec2[],
+  upperSection: readonly Vec2[],
+  frame: FaceFrame,
+  zp: number,
+  plate: number,
+  lid: LidState,
+  segments: number,
 ): PostParts | null {
   if (spots.length === 0) return null;
   const n = Math.max(16, segments * 4);
@@ -105,7 +131,20 @@ export function postSolids(
     let post = extrude(csg, scope, footprint, bottom, top);
     if (top > lowerTop + EPS) {
       const box = bounds2(outline);
-      const below = extrude(csg, scope, [[[box.u0 - 1, box.v0 - 1], [box.u1 + 1, box.v0 - 1], [box.u1 + 1, box.v1 + 1], [box.u0 - 1, box.v1 + 1]]], bottom - 1, lowerTop);
+      const below = extrude(
+        csg,
+        scope,
+        [
+          [
+            [box.u0 - 1, box.v0 - 1],
+            [box.u1 + 1, box.v0 - 1],
+            [box.u1 + 1, box.v1 + 1],
+            [box.u0 - 1, box.v1 + 1],
+          ],
+        ],
+        bottom - 1,
+        lowerTop,
+      );
       const above = extrude(csg, scope, insideOpening, lowerTop - EPS, top + 1);
       post = scope.keep(post.intersect(scope.keep(below.add(above))));
     }
@@ -113,7 +152,10 @@ export function postSolids(
       posts.push(post);
     } else {
       // 45° taper down to the corner, so the post prints without support
-      const taperPoints: Vec3[] = [...outline.map((p): Vec3 => [p[0], p[1], bottom + EPS]), [spot.anchor[0], spot.anchor[1], bottom - reach]];
+      const taperPoints: Vec3[] = [
+        ...outline.map((p): Vec3 => [p[0], p[1], bottom + EPS]),
+        [spot.anchor[0], spot.anchor[1], bottom - reach],
+      ];
       const parts: Manifold[] = [post, hullOf(csg, scope, taperPoints)];
       // In a low case the post and its taper reach the far plate: they stop in
       // its middle. Clipped by the outer shell instead, they met the outer

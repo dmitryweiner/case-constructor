@@ -10,10 +10,26 @@ import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { CATALOG, RAW_BOARDS, catalogBoard } from '../src/boards/catalog';
 import { layersFor, writeReview } from './lib/review.mjs';
-import { OVERRIDE_NUMBERS, insidePolygon, isPortType, keyFields, keysOf, onFace, resolveVariant, sanitizeBoard } from '../src/boards/schema';
+import {
+  OVERRIDE_NUMBERS,
+  insidePolygon,
+  isPortType,
+  keyFields,
+  keysOf,
+  onFace,
+  resolveVariant,
+  sanitizeBoard,
+} from '../src/boards/schema';
 import type { BoardDef, Glass } from '../src/boards/schema';
 
-interface Args { check?: string; svg?: string; out?: string; variant?: string; review?: string; only?: string }
+interface Args {
+  check?: string;
+  svg?: string;
+  out?: string;
+  variant?: string;
+  review?: string;
+  only?: string;
+}
 
 function rec(x: unknown): Record<string, unknown> {
   return typeof x === 'object' && x !== null ? Object.fromEntries(Object.entries(x)) : {};
@@ -26,7 +42,8 @@ function problems(raw: unknown): string[] {
   if (typeof r.id !== 'string' || !/^[a-z0-9]+(-[a-z0-9.]+)*$/.test(r.id)) out.push('id must be kebab-case');
   if (typeof r.source !== 'string' || !/^https:\/\//.test(r.source)) out.push('source must be an https URL');
   if (typeof r.verified !== 'boolean') out.push('verified must be true or false');
-  if (JSON.stringify(board.size) !== JSON.stringify(r.size)) out.push(`size changed by the sanitizer: ${JSON.stringify(r.size)} → ${JSON.stringify(board.size)}`);
+  if (JSON.stringify(board.size) !== JSON.stringify(r.size))
+    out.push(`size changed by the sanitizer: ${JSON.stringify(r.size)} → ${JSON.stringify(board.size)}`);
   const mount = rec(r.mount);
   if (board.mount.kind !== mount.kind) out.push(`mount.kind ${String(mount.kind)} → ${board.mount.kind}`);
   const { w, d } = board.size;
@@ -38,9 +55,11 @@ function problems(raw: unknown): string[] {
   if (r.outline !== undefined) {
     const outline = board.outline;
     if (!outline) out.push('outline dropped: fewer than 3 points, crossing edges or no area');
-    else if (JSON.stringify(outline) !== JSON.stringify(r.outline)) out.push('outline changed by the sanitizer: outside the size, or clockwise');
+    else if (JSON.stringify(outline) !== JSON.stringify(r.outline))
+      out.push('outline changed by the sanitizer: outside the size, or clockwise');
     else {
-      for (const hole of board.mount.holes) if (!insidePolygon(outline, hole.x, hole.y)) out.push(`hole at ${hole.x},${hole.y} is outside the outline`);
+      for (const hole of board.mount.holes)
+        if (!insidePolygon(outline, hole.x, hole.y)) out.push(`hole at ${hole.x},${hole.y} is outside the outline`);
     }
   }
   const ports = Array.isArray(r.ports) ? r.ports : [];
@@ -53,8 +72,10 @@ function problems(raw: unknown): string[] {
     ids.add(String(p.id));
     const port = board.ports.find((one) => one.id === p.id);
     // a key field's rows outside the field, or holes without rows, are dropped
-    if (port && Array.isArray(p.rows) && p.rows.length !== ('rows' in port ? port.rows?.length ?? 0 : 0)) out.push(`port ${String(p.id)}: a row of keys leaves the field`);
-    if (port && p.open !== undefined && p.open !== ('open' in port ? port.open : undefined)) out.push(`port ${String(p.id)}: open ${String(p.open)} dropped (holes need rows)`);
+    if (port && Array.isArray(p.rows) && p.rows.length !== ('rows' in port ? (port.rows?.length ?? 0) : 0))
+      out.push(`port ${String(p.id)}: a row of keys leaves the field`);
+    if (port && p.open !== undefined && p.open !== ('open' in port ? port.open : undefined))
+      out.push(`port ${String(p.id)}: open ${String(p.open)} dropped (holes need rows)`);
     if (port && port.edge === 'top' && port.type !== 'keys' && board.kind === 'keyboard' && (port.base ?? port.h) > board.topHeight) {
       out.push(`port ${String(p.id)}: stands above topHeight under the plate (give it a base, or raise topHeight)`);
     }
@@ -67,7 +88,8 @@ function problems(raw: unknown): string[] {
     const v = rec(rawVariant);
     for (const [portId, override] of Object.entries(rec(v.ports))) {
       if (!portIds.has(portId)) out.push(`variant ${String(v.id)}: no port ${portId} to override`);
-      for (const key of Object.keys(rec(override))) if (!known.has(key)) out.push(`variant ${String(v.id)}: ${portId}.${key} cannot be overridden`);
+      for (const key of Object.keys(rec(override)))
+        if (!known.has(key)) out.push(`variant ${String(v.id)}: ${portId}.${key} cannot be overridden`);
     }
     for (const portId of Array.isArray(v.remove) ? v.remove : []) {
       if (!portIds.has(String(portId))) out.push(`variant ${String(v.id)}: no port ${String(portId)} to remove`);
@@ -116,21 +138,37 @@ function glassMarkup(glass: Glass, X: (x: number) => number, Y: (y: number) => n
 
 /** A board's keys as svg elements (a key field's rows), `X`/`Y` from the board frame. */
 function keysMarkup(def: BoardDef, X: (x: number) => number, Y: (y: number) => number, scale: number, attrs: string): string {
-  return keyFields(def).flatMap((field) => keysOf(field)).map((key) => (key.shape === 'round'
-    ? `<circle cx="${X(key.x)}" cy="${Y(key.y)}" r="${(key.w / 2) * scale}" ${attrs}><title>${key.x}, ${key.y}</title></circle>`
-    : `<rect x="${X(key.x - key.w / 2)}" y="${Math.min(Y(key.y + key.d / 2), Y(key.y - key.d / 2))}" width="${key.w * scale}" height="${key.d * scale}" ${attrs}><title>${key.x}, ${key.y}</title></rect>`)).join('');
+  return keyFields(def)
+    .flatMap((field) => keysOf(field))
+    .map((key) =>
+      key.shape === 'round'
+        ? `<circle cx="${X(key.x)}" cy="${Y(key.y)}" r="${(key.w / 2) * scale}" ${attrs}><title>${key.x}, ${key.y}</title></circle>`
+        : `<rect x="${X(key.x - key.w / 2)}" y="${Math.min(Y(key.y + key.d / 2), Y(key.y - key.d / 2))}" width="${key.w * scale}" height="${key.d * scale}" ${attrs}><title>${key.x}, ${key.y}</title></rect>`,
+    )
+    .join('');
 }
 
 /** Where a click on the scheme snaps when a drawing is aligned by hand: holes, outline corners, port corners and centres (display mm). */
 function snapPoints(def: BoardDef): [number, number][] {
   const out: [number, number][] = def.mount.holes.map((hole) => [hole.x, -hole.y]);
-  for (const [x, y] of def.outline ?? [[0, 0], [def.size.w, 0], [def.size.w, def.size.d], [0, def.size.d]]) out.push([x, -y]);
+  for (const [x, y] of def.outline ?? [
+    [0, 0],
+    [def.size.w, 0],
+    [def.size.w, def.size.d],
+    [0, def.size.d],
+  ])
+    out.push([x, -y]);
   for (const port of def.ports) {
     const [x0, y0, x1, y1] = portBox(def, port);
     out.push([x0, -y0], [x1, -y0], [x1, -y1], [x0, -y1], [(x0 + x1) / 2, -(y0 + y1) / 2]);
     if (onFace(port) && port.glass) {
       const g = port.glass;
-      out.push([g.x - g.w / 2, -(g.y - g.d / 2)], [g.x + g.w / 2, -(g.y - g.d / 2)], [g.x + g.w / 2, -(g.y + g.d / 2)], [g.x - g.w / 2, -(g.y + g.d / 2)]);
+      out.push(
+        [g.x - g.w / 2, -(g.y - g.d / 2)],
+        [g.x + g.w / 2, -(g.y - g.d / 2)],
+        [g.x + g.w / 2, -(g.y + g.d / 2)],
+        [g.x - g.w / 2, -(g.y + g.d / 2)],
+      );
     }
   }
   return out.map(([x, y]) => [Math.round(x * 100) / 100, Math.round(y * 100) / 100]);
@@ -140,7 +178,12 @@ function snapPoints(def: BoardDef): [number, number][] {
 function schemeMarkup(def: BoardDef): string {
   const n = (v: number): number => Math.round(v * 100) / 100;
   const parts: string[] = [];
-  const board = def.outline ?? [[0, 0], [def.size.w, 0], [def.size.w, def.size.d], [0, def.size.d]];
+  const board = def.outline ?? [
+    [0, 0],
+    [def.size.w, 0],
+    [def.size.w, def.size.d],
+    [0, def.size.d],
+  ];
   parts.push(`<polygon class="pcb" points="${board.map(([x, y]) => `${n(x)},${n(-y)}`).join(' ')}"/>`);
   if (def.outline) parts.push(`<rect class="box" x="0" y="${-def.size.d}" width="${def.size.w}" height="${def.size.d}"/>`);
   for (const port of def.ports) {
@@ -149,12 +192,16 @@ function schemeMarkup(def: BoardDef): string {
   for (const port of def.ports) {
     const [x0, y0, x1, y1] = portBox(def, port);
     const where = onFace(port) ? `${port.x}, ${port.y}` : `${port.edge} @${port.along}`;
-    parts.push(`<rect class="port ${port.edge}" x="${n(x0)}" y="${n(-y1)}" width="${n(x1 - x0)}" height="${n(y1 - y0)}"><title>${esc(port.id)} (${port.type}) ${where}</title></rect>`);
+    parts.push(
+      `<rect class="port ${port.edge}" x="${n(x0)}" y="${n(-y1)}" width="${n(x1 - x0)}" height="${n(y1 - y0)}"><title>${esc(port.id)} (${port.type}) ${where}</title></rect>`,
+    );
     parts.push(`<text class="label" x="${n((x0 + x1) / 2)}" y="${n(-(y0 + y1) / 2)}">${esc(port.id)}</text>`);
   }
   parts.push(keysMarkup(def, n, (y) => n(-y), 1, 'class="port top"'));
   for (const hole of def.mount.holes) {
-    parts.push(`<circle class="hole" cx="${n(hole.x)}" cy="${n(-hole.y)}" r="${n(hole.d / 2)}"><title>${hole.x}, ${hole.y} Ø${hole.d}</title></circle>`);
+    parts.push(
+      `<circle class="hole" cx="${n(hole.x)}" cy="${n(-hole.y)}" r="${n(hole.d / 2)}"><title>${hole.x}, ${hole.y} Ø${hole.d}</title></circle>`,
+    );
   }
   return parts.join('');
 }
@@ -171,10 +218,14 @@ function svg(def: BoardDef, variant?: string): string {
   const parts: string[] = [];
   if (def.outline) {
     // the rectangle the case is sized by, and the real outline in it
-    parts.push(`<rect x="${X(0)}" y="${Y(def.size.d)}" width="${def.size.w * s}" height="${def.size.d * s}" fill="none" stroke="#555" stroke-dasharray="4 3"/>`);
+    parts.push(
+      `<rect x="${X(0)}" y="${Y(def.size.d)}" width="${def.size.w * s}" height="${def.size.d * s}" fill="none" stroke="#555" stroke-dasharray="4 3"/>`,
+    );
     parts.push(`<polygon points="${def.outline.map(([x, y]) => `${X(x)},${Y(y)}`).join(' ')}" fill="#2f7d4a" stroke="#1d4d2e"/>`);
   } else {
-    parts.push(`<rect x="${X(0)}" y="${Y(def.size.d)}" width="${def.size.w * s}" height="${def.size.d * s}" fill="#2f7d4a" stroke="#1d4d2e"/>`);
+    parts.push(
+      `<rect x="${X(0)}" y="${Y(def.size.d)}" width="${def.size.w * s}" height="${def.size.d * s}" fill="#2f7d4a" stroke="#1d4d2e"/>`,
+    );
   }
   for (const hole of def.mount.holes) {
     parts.push(`<circle cx="${X(hole.x)}" cy="${Y(hole.y)}" r="${(hole.d / 2) * s}" fill="#fff" stroke="#000"/>`);
@@ -182,20 +233,27 @@ function svg(def: BoardDef, variant?: string): string {
   }
   for (const port of def.ports) {
     // a display's glass under its window: dark, dashed
-    if (onFace(port) && port.glass) parts.push(glassMarkup(port.glass, X, Y, s, 'fill="#1e2a36" fill-opacity="0.85" stroke="#7fa6c9" stroke-dasharray="6 3"'));
+    if (onFace(port) && port.glass)
+      parts.push(glassMarkup(port.glass, X, Y, s, 'fill="#1e2a36" fill-opacity="0.85" stroke="#7fa6c9" stroke-dasharray="6 3"'));
   }
   for (const port of def.ports) {
     const [x0, y0, x1, y1] = portBox(def, port);
     // a part on the underside is seen through the board: dashed, paler
     const fill = port.edge === 'top' ? '#d9b45a' : port.edge === 'bottom' ? '#c9a0dc' : '#9aa7b4';
     const dash = port.edge === 'bottom' ? ' stroke-dasharray="4 3"' : '';
-    parts.push(`<rect x="${X(x0)}" y="${Y(y1)}" width="${(x1 - x0) * s}" height="${(y1 - y0) * s}" fill="${fill}" fill-opacity="${port.edge === 'bottom' ? 0.5 : 0.8}" stroke="#333"${dash}/>`);
+    parts.push(
+      `<rect x="${X(x0)}" y="${Y(y1)}" width="${(x1 - x0) * s}" height="${(y1 - y0) * s}" fill="${fill}" fill-opacity="${port.edge === 'bottom' ? 0.5 : 0.8}" stroke="#333"${dash}/>`,
+    );
     const where = onFace(port) ? `${port.x}, ${port.y}${port.edge === 'bottom' ? ', under' : ''}` : `${port.edge} @${port.along}`;
-    parts.push(`<text x="${X((x0 + x1) / 2)}" y="${Y((y0 + y1) / 2) + 3}" font-size="9" text-anchor="middle" fill="#000">${port.id} (${where})</text>`);
+    parts.push(
+      `<text x="${X((x0 + x1) / 2)}" y="${Y((y0 + y1) / 2) + 3}" font-size="9" text-anchor="middle" fill="#000">${port.id} (${where})</text>`,
+    );
   }
   // a key field's keys over it, outlined
   parts.push(keysMarkup(def, X, Y, s, 'fill="#f3e2b0" fill-opacity="0.6" stroke="#333"'));
-  parts.push(`<text x="${X(def.size.w / 2)}" y="${Y(def.size.d) - 6 - reach * s + 20}" font-size="12" text-anchor="middle" fill="#ddd">${def.name}${variant ? ` · ${variant}` : ''}: ${def.size.w} × ${def.size.d} × ${def.size.t} mm${def.verified ? '' : ' (unverified)'}</text>`);
+  parts.push(
+    `<text x="${X(def.size.w / 2)}" y="${Y(def.size.d) - 6 - reach * s + 20}" font-size="12" text-anchor="middle" fill="#ddd">${def.name}${variant ? ` · ${variant}` : ''}: ${def.size.w} × ${def.size.d} × ${def.size.t} mm${def.verified ? '' : ' (unverified)'}</text>`,
+  );
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="#15181c"/>${parts.join('')}</svg>\n`;
 }
 
@@ -224,18 +282,34 @@ it('board', { timeout: 30 * 60_000 }, () => {
     const layers: Record<string, unknown[]> = {};
     for (const entry of CATALOG) {
       if (only && !only.has(entry.id)) continue;
-      const variants = entry.variants?.map((variant) => ({ id: variant.id, name: variant.name, markup: schemeMarkup(resolveVariant(entry, variant.id)) }));
+      const variants = entry.variants?.map((variant) => ({
+        id: variant.id,
+        name: variant.name,
+        markup: schemeMarkup(resolveVariant(entry, variant.id)),
+      }));
       boards.push({
-        id: entry.id, name: entry.name, vendor: entry.vendor, size: entry.size, verified: entry.verified, source: entry.source,
-        holes: entry.mount.holes, outline: entry.outline, snaps: snapPoints(resolveVariant(entry, undefined)),
+        id: entry.id,
+        name: entry.name,
+        vendor: entry.vendor,
+        size: entry.size,
+        verified: entry.verified,
+        source: entry.source,
+        holes: entry.mount.holes,
+        outline: entry.outline,
+        snaps: snapPoints(resolveVariant(entry, undefined)),
         schemes: variants ?? [{ id: '', name: '', markup: schemeMarkup(entry) }],
       });
       const def = resolveVariant(entry, undefined);
       // vitest holds a test's console until it ends: the progress goes to a file too
-      layers[entry.id] = layersFor(def, def.ports.map((port) => portBox(def, port)), out, (line: string) => {
-        console.log(line);
-        appendFileSync(`${out}/review.log`, `${line}\n`);
-      });
+      layers[entry.id] = layersFor(
+        def,
+        def.ports.map((port) => portBox(def, port)),
+        out,
+        (line: string) => {
+          console.log(line);
+          appendFileSync(`${out}/review.log`, `${line}\n`);
+        },
+      );
     }
     writeReview(out, boards, layers);
     console.log(`review → ${out}/index.html (${boards.length} boards)`);
@@ -244,7 +318,9 @@ it('board', { timeout: 30 * 60_000 }, () => {
     const entry = catalogBoard(args.svg);
     if (!entry) throw new Error(`no board ${args.svg}`);
     if (args.variant && !entry.variants?.some((variant) => variant.id === args.variant)) {
-      throw new Error(`${args.svg} has no variant ${args.variant}: ${(entry.variants ?? []).map((variant) => variant.id).join(', ') || 'none'}`);
+      throw new Error(
+        `${args.svg} has no variant ${args.variant}: ${(entry.variants ?? []).map((variant) => variant.id).join(', ') || 'none'}`,
+      );
     }
     const def = resolveVariant(entry, args.variant);
     const out = args.out ?? `shots/${def.id}.svg`;

@@ -22,10 +22,12 @@ export interface StorageNoteLine {
 
 export function storageNotes(status: StorageStatus): StorageNoteLine[] {
   const lines: StorageNoteLine[] = [];
-  if (status.project !== 'ok') lines.push({ key: status.project === 'full' ? 'storage.project.full' : 'storage.project.blocked', dismiss: false });
+  if (status.project !== 'ok')
+    lines.push({ key: status.project === 'full' ? 'storage.project.full' : 'storage.project.blocked', dismiss: false });
   const preset = status.preset;
   if (preset) {
-    const key: Key = preset.action === 'delete' ? 'error.presetDelete' : preset.result === 'full' ? 'error.presetSaveFull' : 'error.presetSave';
+    const key: Key =
+      preset.action === 'delete' ? 'error.presetDelete' : preset.result === 'full' ? 'error.presetSaveFull' : 'error.presetSave';
     lines.push({ key, dismiss: true });
   }
   return lines;
@@ -33,23 +35,25 @@ export function storageNotes(status: StorageStatus): StorageNoteLine[] {
 
 export function renderStorageNote(banner: HTMLElement, status: StorageStatus, onDismiss: () => void): void {
   const lines = storageNotes(status);
-  banner.replaceChildren(...lines.map((line) => {
-    const row = document.createElement('p');
-    row.className = 'storage-line';
-    const text = document.createElement('span');
-    text.textContent = t(line.key);
-    row.append(text);
-    if (line.dismiss) {
-      const close = document.createElement('button');
-      close.type = 'button';
-      close.className = 'storage-close';
-      close.textContent = '✕';
-      close.title = t('storage.dismiss');
-      close.setAttribute('aria-label', t('storage.dismiss'));
-      close.addEventListener('click', onDismiss);
-      row.append(close);
-    }
-    return row;
-  }));
+  banner.replaceChildren(
+    ...lines.map((line) => {
+      const row = document.createElement('p');
+      row.className = 'storage-line';
+      const text = document.createElement('span');
+      text.textContent = t(line.key);
+      row.append(text);
+      if (line.dismiss) {
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'storage-close';
+        close.textContent = '✕';
+        close.title = t('storage.dismiss');
+        close.setAttribute('aria-label', t('storage.dismiss'));
+        close.addEventListener('click', onDismiss);
+        row.append(close);
+      }
+      return row;
+    }),
+  );
   banner.hidden = lines.length === 0;
 }

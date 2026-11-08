@@ -129,7 +129,14 @@ export function defaultFan(): FanState {
 }
 
 export function defaultWallMount(): WallMountState {
-  return { kind: 'none', face: 'bottom', keyhole: 'through', ears: { count: 2, walls: 'leftRight', wall: 'back', along: 'centre' }, spacing: 40, screwD: 4 };
+  return {
+    kind: 'none',
+    face: 'bottom',
+    keyhole: 'through',
+    ears: { count: 2, walls: 'leftRight', wall: 'back', along: 'centre' },
+    spacing: 40,
+    screwD: 4,
+  };
 }
 
 /** A new label: on the face given (the lid's, when the user adds one). */
@@ -204,9 +211,13 @@ export function sanitizeLabel(raw: unknown, lidFace: Face = 'top'): LabelState {
   const d = defaultLabel(lidFace);
   const r = rec(raw);
   // one line, no control characters, at most LABEL_MAX_CHARS characters (not UTF-16 units)
-  const text = typeof r.text === 'string'
-    ? [...r.text].filter((ch) => ch.charCodeAt(0) >= 32).slice(0, LABEL_MAX_CHARS).join('')
-    : d.text;
+  const text =
+    typeof r.text === 'string'
+      ? [...r.text]
+          .filter((ch) => ch.charCodeAt(0) >= 32)
+          .slice(0, LABEL_MAX_CHARS)
+          .join('')
+      : d.text;
   return {
     face: isFace(r.face) ? r.face : d.face,
     text,
@@ -257,7 +268,7 @@ export function flatRegion(shape: ShapeState, dims: Dims, face: Face, margin: nu
   }
   if (shape.kind === 'cylinder') {
     // the part of the round wall that faces this side reasonably square-on
-    const half = dims.w / 2 * 0.55 - margin;
+    const half = (dims.w / 2) * 0.55 - margin;
     return { u0: extent.w / 2 - half, v0: edge + margin, u1: extent.w / 2 + half, v1: extent.h - edge - margin };
   }
   return { u0: corner + margin, v0: edge + margin, u1: extent.w - corner - margin, v1: extent.h - edge - margin };
@@ -289,16 +300,20 @@ export function ventCuts(vents: VentState, shape: ShapeState, dims: Dims, lidFac
           const b = -spanShort / 2 + j * stepShort;
           const [x, y] = alongU ? [a, b] : [b, a];
           cuts.push({
-            face, shape: 'rect',
-            x: (region.u0 + region.u1) / 2 + x, y: (region.v0 + region.v1) / 2 + y,
-            w: alongU ? long : vents.size, h: alongU ? vents.size : long, r: vents.size / 2,
+            face,
+            shape: 'rect',
+            x: (region.u0 + region.u1) / 2 + x,
+            y: (region.v0 + region.v1) / 2 + y,
+            w: alongU ? long : vents.size,
+            h: alongU ? vents.size : long,
+            r: vents.size / 2,
           });
         }
       }
     } else {
       // staggered grid of round or hexagonal holes
       const shapeOf: CutShape = vents.pattern === 'hex' ? 'hex' : 'round';
-      const dv = vents.pitch * Math.sqrt(3) / 2;
+      const dv = (vents.pitch * Math.sqrt(3)) / 2;
       const rows = Math.floor((h - vents.size) / dv) + 1;
       for (let j = 0; j < rows; j++) {
         const v = region.v0 + vents.size / 2 + j * dv + (h - vents.size - (rows - 1) * dv) / 2;
@@ -307,9 +322,13 @@ export function ventCuts(vents: VentState, shape: ShapeState, dims: Dims, lidFac
         const span = (cols - 1) * vents.pitch;
         for (let i = 0; i < cols; i++) {
           cuts.push({
-            face, shape: shapeOf,
-            x: (region.u0 + region.u1) / 2 - span / 2 + i * vents.pitch + shift / 2, y: v,
-            w: vents.size, h: vents.size, r: 0,
+            face,
+            shape: shapeOf,
+            x: (region.u0 + region.u1) / 2 - span / 2 + i * vents.pitch + shift / 2,
+            y: v,
+            w: vents.size,
+            h: vents.size,
+            r: 0,
           });
         }
       }
@@ -328,7 +347,10 @@ export function fanCuts(fan: FanState, dims: Dims): ExtraCut[] {
   const hole = (x: number, y: number): ExtraCut => ({ face: fan.face, shape: 'round', x, y, w: fan.screwD, h: fan.screwD, r: 0 });
   return [
     { face: fan.face, shape: 'round', x: cx, y: cy, w: fan.size - 2, h: fan.size - 2, r: 0 },
-    hole(cx - half, cy - half), hole(cx + half, cy - half), hole(cx - half, cy + half), hole(cx + half, cy + half),
+    hole(cx - half, cy - half),
+    hole(cx + half, cy - half),
+    hole(cx - half, cy + half),
+    hole(cx + half, cy + half),
   ];
 }
 
@@ -433,9 +455,13 @@ export function closedKeyholes(mount: WallMountState, shape: ShapeState, dims: D
   if (face === 'bottom') {
     keyAt = Math.max(extent.h / 2, flat.v1 - padL / 2 - 1);
     const footAt = extent.h - keyAt;
-    spans = keyAt - footAt >= padL + 2
-      ? [{ v0: keyAt - padL / 2, v1: keyAt + padL / 2, keyhole: true }, { v0: footAt - padL / 2, v1: footAt + padL / 2, keyhole: false }]
-      : [{ v0: footAt - padL / 2, v1: keyAt + padL / 2, keyhole: true }];
+    spans =
+      keyAt - footAt >= padL + 2
+        ? [
+            { v0: keyAt - padL / 2, v1: keyAt + padL / 2, keyhole: true },
+            { v0: footAt - padL / 2, v1: footAt + padL / 2, keyhole: false },
+          ]
+        : [{ v0: footAt - padL / 2, v1: keyAt + padL / 2, keyhole: true }];
   }
   const us = [-1, 1].map((sign) => extent.w / 2 + (sign * mount.spacing) / 2);
   const pads: KeyholePad[] = spans.flatMap((span) => us.map((u) => ({ u0: u - padW / 2, u1: u + padW / 2, ...span })));
@@ -452,10 +478,25 @@ export function closedKeyholes(mount: WallMountState, shape: ShapeState, dims: D
     return [
       // the head goes in a little deeper than the channel: no coplanar bottoms
       { ...common, origin: at(vHead), shape: 'round', w: head, h: head, r: 0, s0: floorOf - 0.2, s1: height + 1 },
-      { ...common, origin: at(vHead + KEYHOLE_SLIDE / 2), shape: 'rect', w: slot, h: KEYHOLE_SLIDE, r: slot / 2, s0: height - KEYHOLE_LIP - 0.1, s1: height + 1 },
       {
-        ...common, origin: at(vHead + KEYHOLE_SLIDE / 2), shape: 'rect', w: head, h: KEYHOLE_SLIDE + head, r: head / 2,
-        s0: floorOf, s1: height - KEYHOLE_LIP,
+        ...common,
+        origin: at(vHead + KEYHOLE_SLIDE / 2),
+        shape: 'rect',
+        w: slot,
+        h: KEYHOLE_SLIDE,
+        r: slot / 2,
+        s0: height - KEYHOLE_LIP - 0.1,
+        s1: height + 1,
+      },
+      {
+        ...common,
+        origin: at(vHead + KEYHOLE_SLIDE / 2),
+        shape: 'rect',
+        w: head,
+        h: KEYHOLE_SLIDE + head,
+        r: head / 2,
+        s0: floorOf,
+        s1: height - KEYHOLE_LIP,
       },
     ];
   });
@@ -485,7 +526,9 @@ export const EAR_LENGTH = 8;
 export const EAR_WIDTH = 10;
 
 const PAIRS: Readonly<Record<Exclude<EarWalls, 'one'>, [EarSide, EarSide]>> = {
-  leftRight: ['left', 'right'], frontBack: ['front', 'back'], topBottom: ['top', 'bottom'],
+  leftRight: ['left', 'right'],
+  frontBack: ['front', 'back'],
+  topBottom: ['top', 'bottom'],
 };
 
 /** The walls next to a face that ears may stand out of: its four neighbours, not the console's slope. */
@@ -575,7 +618,16 @@ export function earSpecs(mount: WallMountState, shape: ShapeState, dims: Dims, l
   const sides = earWalls(mount, shape.kind);
 
   /** The tab from `root` inside its wall to EAR_LENGTH out, `lo`…`hi` along `dir` (gusset widening included) at `base`. */
-  const ear = (base: Vec3, out: readonly number[], dir: readonly number[], root: number, lo: number, hi: number, onLid: boolean, crowded: boolean): EarSpec => {
+  const ear = (
+    base: Vec3,
+    out: readonly number[],
+    dir: readonly number[],
+    root: number,
+    lo: number,
+    hi: number,
+    onLid: boolean,
+    crowded: boolean,
+  ): EarSpec => {
     const at = (z: number, s: number): [number, number] => {
       const p = applyAffine(frame.toFace, along(along(base, out, z), dir, s));
       return [p[0], p[1]];
@@ -624,8 +676,14 @@ export function earSpecs(mount: WallMountState, shape: ShapeState, dims: Dims, l
       const k = [0, 1, 2].find((j) => Math.abs(faceFrame(f, dims).n[j]) > 0.5) ?? 0;
       base[k] = planeOf(f, dims);
     }
-    const length = axis === 0 ? dims.w : axis === 1 ? dims.d
-      : shape.kind === 'console' ? shape.console.frontH + ((shape.console.backH - shape.console.frontH) * base[1]) / dims.d : dims.h;
+    const length =
+      axis === 0
+        ? dims.w
+        : axis === 1
+          ? dims.d
+          : shape.kind === 'console'
+            ? shape.console.frontH + ((shape.console.backH - shape.console.frontH) * base[1]) / dims.d
+            : dims.h;
     const ends: Face[] = axis === 0 ? ['left', 'right'] : axis === 1 ? ['front', 'back'] : ['bottom', 'top'];
     const corner = Math.max(...ends.flatMap((end) => [edgeRadius(face, end, shape, dims), edgeRadius(side, end, shape, dims)]));
     const root = 2 + edgeRadius(face, side, shape, dims);
@@ -644,7 +702,7 @@ export function earSpecs(mount: WallMountState, shape: ShapeState, dims: Dims, l
       // along the wall the lid's z changes by ±1 per mm: keep 1 mm off the parting
       const z0 = lidZ(base);
       const rate = dot(dir, nLid);
-      const limit = rate > 0 ? (zp - 1 - z0) / rate : (z0 - zp + 1);
+      const limit = rate > 0 ? (zp - 1 - z0) / rate : z0 - zp + 1;
       if (rate > 0 && limit - half - gHi < hi) hi = limit - half - gHi;
       if (rate < 0 && limit + half + gLo > lo) lo = limit + half + gLo;
       if (hi < lo) {
@@ -653,8 +711,7 @@ export function earSpecs(mount: WallMountState, shape: ShapeState, dims: Dims, l
       }
     }
     const step = EAR_WIDTH + gLo + gHi + 2;
-    return alongRange(perWall[index], lo, hi, step, mount)
-      .map((t) => ear(along(base, dir, t), out, dir, root, gLo, gHi, onLid, crowded));
+    return alongRange(perWall[index], lo, hi, step, mount).map((t) => ear(along(base, dir, t), out, dir, root, gLo, gHi, onLid, crowded));
   });
 }
 
@@ -667,7 +724,11 @@ export function earSpecs(mount: WallMountState, shape: ShapeState, dims: Dims, l
  */
 export function extrasCutters(
   state: { vents: VentState; fan: FanState; wallMount: WallMountState },
-  shape: ShapeState, layout: CaseLayout, lid: LidState, slopeTop: (x: number, y: number) => number, portCutters: readonly CutterSpec[],
+  shape: ShapeState,
+  layout: CaseLayout,
+  lid: LidState,
+  slopeTop: (x: number, y: number) => number,
+  portCutters: readonly CutterSpec[],
 ): CutterSpec[] {
   const { dims } = layout;
   const vents = extraCutters(ventCuts(state.vents, shape, dims, lid.face), shape, dims, slopeTop);
@@ -680,10 +741,16 @@ export function extrasCutters(
     const centre = cutter.origin;
     const reach = Math.max(cutter.w, cutter.h) / 2;
     // the skirt band (vents on the lid plate itself are fine)
-    const zs = [cutter.s0, cutter.s1].flatMap((s) => [-1, 1].flatMap((a) => [-1, 1].map((b) => {
-      const p = [0, 1, 2].map((k) => centre[k] + cutter.ez[k] * s + cutter.ex[k] * a * cutter.w / 2 + cutter.ey[k] * b * cutter.h / 2);
-      return applyAffine(frame.toFace, [p[0], p[1], p[2]])[2];
-    })));
+    const zs = [cutter.s0, cutter.s1].flatMap((s) =>
+      [-1, 1].flatMap((a) =>
+        [-1, 1].map((b) => {
+          const p = [0, 1, 2].map(
+            (k) => centre[k] + cutter.ez[k] * s + (cutter.ex[k] * a * cutter.w) / 2 + (cutter.ey[k] * b * cutter.h) / 2,
+          );
+          return applyAffine(frame.toFace, [p[0], p[1], p[2]])[2];
+        }),
+      ),
+    );
     const lo = Math.min(...zs);
     const hi = Math.max(...zs);
     if (hi > zp - lid.lip.h - 1 && lo < zp + 0.5 && !(lo > zp - 0.01)) return false;
@@ -694,7 +761,8 @@ export function extrasCutters(
         if (Math.hypot(centre[0] - column.x, centre[1] - column.y) < column.r + reach + 1) return false;
       }
       for (const r of rails) {
-        if (centre[0] > r.x0 - reach - 1 && centre[0] < r.x1 + reach + 1 && centre[1] > r.y0 - reach - 1 && centre[1] < r.y1 + reach + 1) return false;
+        if (centre[0] > r.x0 - reach - 1 && centre[0] < r.x1 + reach + 1 && centre[1] > r.y0 - reach - 1 && centre[1] < r.y1 + reach + 1)
+          return false;
       }
     }
     return !portCutters.some((port) => cutterContains(port, centre, reach));
@@ -719,7 +787,16 @@ function underPad(cutter: CutterSpec, closed: ClosedKeyholes, dims: Dims): boole
 }
 
 /** A rectangle on a face (u, v as seen from outside) through its wall, as a message's spot. */
-export function faceSpot(face: Face, dims: Dims, shape: ShapeState, lid: LidState, u0: number, v0: number, u1: number, v1: number): MessageSpot {
+export function faceSpot(
+  face: Face,
+  dims: Dims,
+  shape: ShapeState,
+  lid: LidState,
+  u0: number,
+  v0: number,
+  u1: number,
+  v1: number,
+): MessageSpot {
   const { fromFace } = faceFrame(face, dims);
   const wall = plateOf(shape, face);
   const corners: Vec3[] = [];
@@ -736,7 +813,10 @@ export function faceSpot(face: Face, dims: Dims, shape: ShapeState, lid: LidStat
  * keyholes asked for on a round wall.
  */
 export function extrasWarnings(
-  state: { fan: FanState; wallMount: WallMountState }, shape: ShapeState, layout: CaseLayout, lid: LidState,
+  state: { fan: FanState; wallMount: WallMountState },
+  shape: ShapeState,
+  layout: CaseLayout,
+  lid: LidState,
 ): Message[] {
   const out: Message[] = [];
   const { dims } = layout;
@@ -770,8 +850,12 @@ export function extrasWarnings(
     const closed = closedKeyholes(mount, shape, dims);
     if (mount.keyhole === 'closed' && !closed) out.push({ code: 'warn.keyholeClosedRound' });
     // the supports standing on this face's plate: floor boards' on the bottom, hung ones' under a flat top
-    const onPlate = face === 'bottom' ? layout.boards.filter((board) => !board.hung)
-      : face === 'top' && shape.kind !== 'console' ? layout.boards.filter((board) => board.hung) : [];
+    const onPlate =
+      face === 'bottom'
+        ? layout.boards.filter((board) => !board.hung)
+        : face === 'top' && shape.kind !== 'console'
+          ? layout.boards.filter((board) => board.hung)
+          : [];
     const cutters = closed ? closed.cutters : extraCutters(keyholeCuts(mount, shape, dims), shape, dims, () => dims.h);
     const supports = onPlate.flatMap((board) => standoffColumns(board));
     // how far a standoff's centre is from a cutter's section, across the cutter
@@ -782,7 +866,8 @@ export function extrasWarnings(
       return Math.hypot(Math.max(0, Math.abs(a) - cutter.w / 2), Math.max(0, Math.abs(b) - cutter.h / 2));
     };
     const near = cutters.find((cutter) => supports.some((c) => gap(cutter, c.x, c.y) < c.r + 1));
-    if (near) out.push({ code: 'warn.keyholeNearStandoff', spot: boxSpot(boxAround(cutterCorners(near)), face === lid.face ? 'lid' : 'body') });
+    if (near)
+      out.push({ code: 'warn.keyholeNearStandoff', spot: boxSpot(boxAround(cutterCorners(near)), face === lid.face ? 'lid' : 'body') });
     if (closed) {
       // the body prints standing on the face opposite the lid: pads there
       // stand on the bed, and the plate between them hangs

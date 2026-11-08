@@ -45,14 +45,17 @@ export function lidPosts(state: AppState) {
 export function seatRoom(spots: readonly PostSpot[], shape: ShapeState, dims: Dims, face: Face): number {
   const { w, h } = faceFrame(face, dims).extent;
   const roundFace = face === 'top' || face === 'bottom';
-  return Math.min(Infinity, ...spots.map(({ centre: [u, v] }) => {
-    if (roundFace && shape.kind === 'cylinder') return dims.w / 2 - Math.hypot(u - w / 2, v - h / 2);
-    const r = roundFace && shape.kind !== 'cylinder' ? Math.min(shape.cornerR, w / 2, h / 2) : 0;
-    const cu = Math.min(Math.max(u, r), w - r);
-    const cv = Math.min(Math.max(v, r), h - r);
-    if (Math.abs(u - cu) < 1e-9 && Math.abs(v - cv) < 1e-9) return Math.min(u, w - u, v, h - v);
-    return r - Math.hypot(u - cu, v - cv);
-  }));
+  return Math.min(
+    Infinity,
+    ...spots.map(({ centre: [u, v] }) => {
+      if (roundFace && shape.kind === 'cylinder') return dims.w / 2 - Math.hypot(u - w / 2, v - h / 2);
+      const r = roundFace && shape.kind !== 'cylinder' ? Math.min(shape.cornerR, w / 2, h / 2) : 0;
+      const cu = Math.min(Math.max(u, r), w - r);
+      const cv = Math.min(Math.max(v, r), h - r);
+      if (Math.abs(u - cu) < 1e-9 && Math.abs(v - cv) < 1e-9) return Math.min(u, w - u, v, h - v);
+      return r - Math.hypot(u - cu, v - cv);
+    }),
+  );
 }
 
 /** The largest head seat the lid takes: its diameter (the screw head's, the seat adds the clearance) and depth. */
@@ -106,9 +109,11 @@ export function throughNotes(state: AppState): Message[] {
   const out: Message[] = [];
   const n = spots.length;
   const size = lid.screw.size;
-  out.push(lid.nut.place === 'recessed'
-    ? { code: 'info.boltsRecessed', params: { n, size, length: bolt.length, depth: bolt.pocket.toFixed(1) } }
-    : { code: 'info.boltsOnFace', params: { n, size, length: bolt.length, out: bolt.out.toFixed(1) } });
+  out.push(
+    lid.nut.place === 'recessed'
+      ? { code: 'info.boltsRecessed', params: { n, size, length: bolt.length, depth: bolt.pocket.toFixed(1) } }
+      : { code: 'info.boltsOnFace', params: { n, size, length: bolt.length, out: bolt.out.toFixed(1) } },
+  );
   if (!bolt.standard) out.push({ code: 'warn.boltTooLong', params: { length: bolt.length } });
   if (nutOverEdge(spots, shape, dims, lid)) out.push({ code: 'warn.nutOverEdge' });
   // a hinged half's far face may be its inner one: the gap takes the nuts there

@@ -14,7 +14,17 @@ import { NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE, bossDiameter } from './fasten
 import type { Edge } from '../boards/schema';
 import type { PlacedBoard } from './layout';
 import {
-  PIN_SLOT, PIN_SPACER, PIN_TIP_GAP, RAIL_GAP, RAIL_GRIP, RAIL_LIP, RAIL_SHORTEN, RAIL_THICK, pinEdges, railEdges, railReach,
+  PIN_SLOT,
+  PIN_SPACER,
+  PIN_TIP_GAP,
+  RAIL_GAP,
+  RAIL_GRIP,
+  RAIL_LIP,
+  RAIL_SHORTEN,
+  RAIL_THICK,
+  pinEdges,
+  railEdges,
+  railReach,
 } from './layout';
 import type { Affine } from './surface';
 import { applyAffine } from './surface';
@@ -36,7 +46,17 @@ export const NUT_LIFT = 2;
 export const SINK = 0.5;
 const EPS = 0.05;
 
-export function cylinder(csg: CsgApi, scope: CsgScope, x: number, y: number, z0: number, z1: number, r: number, segments: number, r1 = r): Manifold {
+export function cylinder(
+  csg: CsgApi,
+  scope: CsgScope,
+  x: number,
+  y: number,
+  z0: number,
+  z1: number,
+  r: number,
+  segments: number,
+  r1 = r,
+): Manifold {
   const solid = scope.keep(csg.Manifold.cylinder(z1 - z0, r, r1, segments));
   return scope.keep(solid.translate([x, y, z0]));
 }
@@ -96,7 +116,15 @@ export function standoffs(csg: CsgApi, scope: CsgScope, board: PlacedBoard, floo
  * whose slot points at `towards` (where there is room for the nut to go in).
  */
 export function postHole(
-  csg: CsgApi, scope: CsgScope, spec: FastenerSpec, x: number, y: number, floor: number, top: number, towards: [number, number], n: number,
+  csg: CsgApi,
+  scope: CsgScope,
+  spec: FastenerSpec,
+  x: number,
+  y: number,
+  floor: number,
+  top: number,
+  towards: [number, number],
+  n: number,
 ): Manifold {
   const dims = SCREWS[spec.size];
   const r = bossDiameter(spec) / 2;
@@ -104,12 +132,14 @@ export function postHole(
   if (spec.hole === 'insert') {
     const depth = Math.min(dims.insertLen, top - bottom);
     const ri = dims.insert / 2;
-    return scope.keep(csg.Manifold.union([
-      cylinder(csg, scope, x, y, top - depth, top + EPS, ri, n),
-      // a 0.5 mm chamfer guides the insert in
-      cylinder(csg, scope, x, y, top - 0.5, top + EPS, ri, n, ri + 0.5 + EPS),
-      cylinder(csg, scope, x, y, bottom, top - depth + EPS, dims.tap / 2, n),
-    ]));
+    return scope.keep(
+      csg.Manifold.union([
+        cylinder(csg, scope, x, y, top - depth, top + EPS, ri, n),
+        // a 0.5 mm chamfer guides the insert in
+        cylinder(csg, scope, x, y, top - 0.5, top + EPS, ri, n, ri + 0.5 + EPS),
+        cylinder(csg, scope, x, y, bottom, top - depth + EPS, dims.tap / 2, n),
+      ]),
+    );
   }
   if (spec.hole === 'nut') {
     const af = dims.nutAF + NUT_CLEARANCE;
@@ -122,10 +152,12 @@ export function postHole(
     const angle = Math.atan2(towards[1] - y, towards[0] - x);
     const slot = box(csg, scope, 0, -af / 2, 0, r + 1, af / 2, pocketH);
     const pocket = scope.keep(scope.keep(hex.add(slot)).rotate([0, 0, (angle * 180) / Math.PI]));
-    return scope.keep(csg.Manifold.union([
-      scope.keep(pocket.translate([x, y, z0])),
-      cylinder(csg, scope, x, y, bottom, top + EPS, (dims.d + THROUGH_CLEARANCE) / 2, n),
-    ]));
+    return scope.keep(
+      csg.Manifold.union([
+        scope.keep(pocket.translate([x, y, z0])),
+        cylinder(csg, scope, x, y, bottom, top + EPS, (dims.d + THROUGH_CLEARANCE) / 2, n),
+      ]),
+    );
   }
   return cylinder(csg, scope, x, y, bottom, top + EPS, dims.tap / 2, n);
 }
@@ -144,9 +176,18 @@ function pinBedProfile(t: number, bottom: number, below: number, inset: number):
   const shelf = -PIN_SPACER - RAIL_GAP;
   const tips = -below - PIN_TIP_GAP;
   return [
-    [sIn, bottom], [s0 + RAIL_THICK, bottom], [s0 + RAIL_THICK, t + RAIL_LIP], [s0, t + RAIL_LIP],
-    [s0, t + RAIL_GAP], [RAIL_GAP, t + RAIL_GAP], [RAIL_GAP, shelf], [slotOut, shelf],
-    [slotOut, tips], [slotIn, tips], [slotIn, shelf], [sIn, shelf],
+    [sIn, bottom],
+    [s0 + RAIL_THICK, bottom],
+    [s0 + RAIL_THICK, t + RAIL_LIP],
+    [s0, t + RAIL_LIP],
+    [s0, t + RAIL_GAP],
+    [RAIL_GAP, t + RAIL_GAP],
+    [RAIL_GAP, shelf],
+    [slotOut, shelf],
+    [slotOut, tips],
+    [slotIn, tips],
+    [slotIn, shelf],
+    [sIn, shelf],
   ];
 }
 
@@ -169,7 +210,13 @@ export function railToBoard(edge: Edge, w: number, d: number): Affine {
  * `RAIL_GRIP` deep, or, on an edge with soldered pins, the pin bed
  * (`pinBedProfile`). Its length is the edge's less `RAIL_SHORTEN` a side.
  */
-export function railLocal(csg: CsgApi, scope: CsgScope, board: PlacedBoard, edge: Edge, bottom: number): { local: Manifold; length: number } {
+export function railLocal(
+  csg: CsgApi,
+  scope: CsgScope,
+  board: PlacedBoard,
+  edge: Edge,
+  bottom: number,
+): { local: Manifold; length: number } {
   const { w, d, t } = board.def.size;
   const pins = board.def.pins;
   const length = (edge === 'front' || edge === 'back' ? w : d) - 2 * RAIL_SHORTEN;

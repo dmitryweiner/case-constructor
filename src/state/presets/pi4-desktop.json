@@ -42,12 +42,7 @@
           "pwr-led": false,
           "act-led": false
         },
-        "walls": [
-          "front",
-          "back",
-          "left",
-          "right"
-        ],
+        "walls": ["front", "back", "left", "right"],
         "wallOffset": 0
       }
     ],
@@ -82,9 +77,7 @@
     "extraCuts": [],
     "vents": {
       "on": true,
-      "faces": [
-        "back"
-      ],
+      "faces": ["back"],
       "pattern": "slots",
       "size": 2,
       "pitch": 4,
@@ -184,10 +177,7 @@
         "extraCuts": [],
         "vents": {
           "on": false,
-          "faces": [
-            "left",
-            "right"
-          ],
+          "faces": ["left", "right"],
           "pattern": "slots",
           "size": 2,
           "pitch": 4,

@@ -40,7 +40,10 @@ function carried(top: Record<string, unknown> = {}): AppState {
 
 describe('the placement', () => {
   it('a floor board carries a HAT display whose pattern fits; a hung one, or one that does not fit, carries nothing', () => {
-    expect(sanitizePlacement({ board: pi4.id, top: { board: hyper.id } }).top).toMatchObject({ board: hyper.id, standoff: hyper.back?.standoff });
+    expect(sanitizePlacement({ board: pi4.id, top: { board: hyper.id } }).top).toMatchObject({
+      board: hyper.id,
+      standoff: hyper.back?.standoff,
+    });
     expect(sanitizePlacement({ board: pi4.id, on: 'ceiling', top: { board: hyper.id } })).not.toHaveProperty('top');
     expect(sanitizePlacement({ board: 'arduino-uno', top: { board: hyper.id } })).not.toHaveProperty('top');
     expect(sanitizePlacement({ board: pi4.id, top: { board: 'lcdwiki-msp2807' } })).not.toHaveProperty('top');
@@ -97,7 +100,7 @@ describe('built', () => {
 });
 
 describe('the parts under it', () => {
-  it('a display on standoffs lower than the Pi\'s USB and Ethernet is reported', () => {
+  it("a display on standoffs lower than the Pi's USB and Ethernet is reported", () => {
     const codes = collisions(caseLayout(carried({ standoff: 11 }))).map((m) => m.code);
     expect(codes).toContain('warn.carriedOnParts');
   });
@@ -119,11 +122,11 @@ describe('every HAT display in the catalog', () => {
 
 describe('the board under it', () => {
   it('keeps its top parts closed by default (the GPIO header under the display); a toggle still opens them', () => {
-    const ids = (state: AppState): string[] => portCutters(caseLayout(state), state.shape).map((c) => (c.source.kind === 'port' ? `${c.source.board}:${c.source.port}` : ''));
+    const ids = (state: AppState): string[] =>
+      portCutters(caseLayout(state), state.shape).map((c) => (c.source.kind === 'port' ? `${c.source.board}:${c.source.port}` : ''));
     expect(ids(carried())).not.toContain('0:gpio');
     expect(ids(carried())).toContain('0:usb-c');
     const opened = sanitizeState({ ...defaultState(), boards: [{ board: pi4.id, z: 5, cuts: { gpio: true }, top: { board: hyper.id } }] });
     expect(ids(opened)).toContain('0:gpio');
   });
 });
-

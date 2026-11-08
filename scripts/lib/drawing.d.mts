@@ -1,13 +1,23 @@
 // Types of scripts/lib/drawing.mjs for the tests (tests/drawing.test.ts).
 
-export interface ShapeBase { layer: string; block: string; instance: number }
-export type Shape = ShapeBase & (
-  | { kind: 'line'; x1: number; y1: number; x2: number; y2: number }
-  | { kind: 'circle'; x: number; y: number; r: number }
-  | { kind: 'arc'; x: number; y: number; r: number; a0: number; a1: number }
-  | { kind: 'poly'; pts: [number, number][]; closed: boolean }
-);
-export interface Box { x0: number; y0: number; x1: number; y1: number }
+export interface ShapeBase {
+  layer: string;
+  block: string;
+  instance: number;
+}
+export type Shape = ShapeBase &
+  (
+    | { kind: 'line'; x1: number; y1: number; x2: number; y2: number }
+    | { kind: 'circle'; x: number; y: number; r: number }
+    | { kind: 'arc'; x: number; y: number; r: number; a0: number; a1: number }
+    | { kind: 'poly'; pts: [number, number][]; closed: boolean }
+  );
+export interface Box {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
 
 export function readDxf(text: string): Shape[];
 export function readSvg(text: string, scale?: number): Shape[];

@@ -2,7 +2,16 @@ import { effectiveRadii, insetAt, loftLevels, loftPoints, offsetLoft, ringPoints
 import type { LoftSpec } from '../src/geo/loft';
 
 const box: LoftSpec = {
-  cx: 50, cy: 35, hw: 50, hd: 35, cornerR: 4, z0: 0, z1: 30, edgeR: 0, filletBottom: true, filletTop: true,
+  cx: 50,
+  cy: 35,
+  hw: 50,
+  hd: 35,
+  cornerR: 4,
+  z0: 0,
+  z1: 30,
+  edgeR: 0,
+  filletBottom: true,
+  filletTop: true,
 };
 
 describe('loft', () => {

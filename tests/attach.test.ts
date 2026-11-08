@@ -84,7 +84,7 @@ describe('the layout', () => {
     expect(collisions(layout)).toEqual([]);
   });
 
-  it('opens the Pi\'s edge ports, not its parts on top (turned over, they point at the floor)', () => {
+  it("opens the Pi's edge ports, not its parts on top (turned over, they point at the floor)", () => {
     const state = withPi();
     const layout = caseLayout(state);
     const ports = portCutters(layout, state.shape).filter((cutter) => cutter.source.kind === 'port' && cutter.source.board === 0);

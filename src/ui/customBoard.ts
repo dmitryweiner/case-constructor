@@ -27,7 +27,12 @@ export function defaultCustomBoard(): BoardDef {
     size: { w: 50, d: 30, t: 1.6 },
     mount: {
       kind: 'holes',
-      holes: [{ x: 3, y: 3, d: 2.7 }, { x: 47, y: 3, d: 2.7 }, { x: 3, y: 27, d: 2.7 }, { x: 47, y: 27, d: 2.7 }],
+      holes: [
+        { x: 3, y: 3, d: 2.7 },
+        { x: 47, y: 3, d: 2.7 },
+        { x: 3, y: 27, d: 2.7 },
+        { x: 47, y: 27, d: 2.7 },
+      ],
       screw: 'M2.5',
       rails: 'long',
     },
@@ -46,35 +51,46 @@ export function customSignature(def: BoardDef): string {
 
 /** The board in the catalog's JSON format (plans/PLAN.md §2.2), ready to contribute. */
 export function catalogJson(def: BoardDef): string {
-  const slug = def.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'custom-board';
+  const slug =
+    def.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'custom-board';
   const ports = def.ports.map((port) => {
     const base: PortType = PORT_TYPES[port.type];
     const common = { id: port.id, type: port.type };
     const size = {
-      w: port.w, h: port.h, ...(port.shape === 'rect' ? { d: port.d } : {}),
+      w: port.w,
+      h: port.h,
+      ...(port.shape === 'rect' ? { d: port.d } : {}),
       ...(port.cutH !== undefined && port.cutH !== base.cutH ? { cutH: port.cutH } : {}),
     };
     return onFace(port)
       ? { ...common, edge: port.edge, x: port.x, y: port.y, ...size }
       : { ...common, edge: port.edge, along: port.along, z: port.z, ...size, protrude: port.protrude };
   });
-  return `${JSON.stringify({
-    id: slug,
-    name: def.name,
-    vendor: def.vendor,
-    kind: def.kind,
-    size: def.size,
-    ...(def.outline ? { outline: def.outline } : {}),
-    mount: def.mount.kind === 'holes'
-      ? { kind: 'holes', holes: def.mount.holes, screw: def.mount.screw }
-      : { kind: 'rails', holes: [], screw: def.mount.screw, rails: def.mount.rails },
-    topHeight: def.topHeight,
-    bottomHeight: def.bottomHeight,
-    ...(def.pins ? { pins: def.pins } : {}),
-    ports,
-    source: def.source,
-    verified: false,
-  }, null, 2)}\n`;
+  return `${JSON.stringify(
+    {
+      id: slug,
+      name: def.name,
+      vendor: def.vendor,
+      kind: def.kind,
+      size: def.size,
+      ...(def.outline ? { outline: def.outline } : {}),
+      mount:
+        def.mount.kind === 'holes'
+          ? { kind: 'holes', holes: def.mount.holes, screw: def.mount.screw }
+          : { kind: 'rails', holes: [], screw: def.mount.screw, rails: def.mount.rails },
+      topHeight: def.topHeight,
+      bottomHeight: def.bottomHeight,
+      ...(def.pins ? { pins: def.pins } : {}),
+      ports,
+      source: def.source,
+      verified: false,
+    },
+    null,
+    2,
+  )}\n`;
 }
 
 function numberInput(id: string, value: number, step: number, onInput: (value: number) => void): HTMLInputElement {
@@ -90,7 +106,12 @@ function numberInput(id: string, value: number, step: number, onInput: (value: n
   return input;
 }
 
-function selectInput(id: string, options: readonly { value: string; text: string }[], value: string, onChange: (value: string) => void): HTMLSelectElement {
+function selectInput(
+  id: string,
+  options: readonly { value: string; text: string }[],
+  value: string,
+  onChange: (value: string) => void,
+): HTMLSelectElement {
   const select = make('select');
   select.id = id;
   for (const option of options) {
@@ -126,7 +147,10 @@ export interface CustomEditorHandle {
  * the current definition into the next one.
  */
 export function renderCustomEditor(
-  container: HTMLElement, index: number, read: () => AppState, onChange: (next: AppState) => void,
+  container: HTMLElement,
+  index: number,
+  read: () => AppState,
+  onChange: (next: AppState) => void,
   download: (text: string, name: string) => void,
 ): CustomEditorHandle {
   const prefix = `board${index}_custom`;
@@ -135,9 +159,11 @@ export function renderCustomEditor(
     const state = read();
     onChange({ ...state, boards: state.boards.map((board, i) => (i === index ? change(board) : board)) });
   };
-  const update = (change: (def: BoardDef) => BoardDef): void => updatePlacement((board) => ({
-    ...board, custom: change(board.custom ?? defaultCustomBoard()),
-  }));
+  const update = (change: (def: BoardDef) => BoardDef): void =>
+    updatePlacement((board) => ({
+      ...board,
+      custom: change(board.custom ?? defaultCustomBoard()),
+    }));
   const def = current();
   const box = make('div', 'custom-editor');
   const inputs = new Map<string, (def: BoardDef) => number | string>();
@@ -159,10 +185,13 @@ export function renderCustomEditor(
   const size = make('div', 'table-row');
   const sizeField = (key: 'w' | 'd' | 't', label: Key, step: number): void => {
     const cell = make('label', 'cell');
-    cell.append(make('span', undefined, t(label)), track(
-      numberInput(`${prefix}_${key}`, def.size[key], step, (value) => update((d) => ({ ...d, size: { ...d.size, [key]: value } }))),
-      (d) => d.size[key],
-    ));
+    cell.append(
+      make('span', undefined, t(label)),
+      track(
+        numberInput(`${prefix}_${key}`, def.size[key], step, (value) => update((d) => ({ ...d, size: { ...d.size, [key]: value } }))),
+        (d) => d.size[key],
+      ),
+    );
     size.append(cell);
   };
   sizeField('w', 'custom.w', 0.5);
@@ -171,38 +200,88 @@ export function renderCustomEditor(
   box.append(size);
 
   const heights = make('div', 'table-row');
-  for (const [key, label] of [['topHeight', 'custom.top'], ['bottomHeight', 'custom.bottom']] as const) {
+  for (const [key, label] of [
+    ['topHeight', 'custom.top'],
+    ['bottomHeight', 'custom.bottom'],
+  ] as const) {
     const cell = make('label', 'cell');
-    cell.append(make('span', undefined, t(label)), track(
-      numberInput(`${prefix}_${key}`, def[key], 0.5, (value) => update((d) => ({ ...d, [key]: value }))),
-      (d) => d[key],
-    ));
+    cell.append(
+      make('span', undefined, t(label)),
+      track(
+        numberInput(`${prefix}_${key}`, def[key], 0.5, (value) => update((d) => ({ ...d, [key]: value }))),
+        (d) => d[key],
+      ),
+    );
     heights.append(cell);
   }
   box.append(heights);
 
-  box.append(labelled('custom.mount', selectInput(`${prefix}_mount`, [
-    { value: 'holes', text: t('mount.holes') }, { value: 'rails', text: t('mount.rails') },
-  ], def.mount.kind, (value) => update((d) => ({
-    ...d,
-    mount: { ...d.mount, kind: value === 'rails' ? 'rails' : 'holes', holes: value === 'rails' ? [] : (d.mount.holes.length ? d.mount.holes : defaultCustomBoard().mount.holes) },
-  })))));
+  box.append(
+    labelled(
+      'custom.mount',
+      selectInput(
+        `${prefix}_mount`,
+        [
+          { value: 'holes', text: t('mount.holes') },
+          { value: 'rails', text: t('mount.rails') },
+        ],
+        def.mount.kind,
+        (value) =>
+          update((d) => ({
+            ...d,
+            mount: {
+              ...d.mount,
+              kind: value === 'rails' ? 'rails' : 'holes',
+              holes: value === 'rails' ? [] : d.mount.holes.length ? d.mount.holes : defaultCustomBoard().mount.holes,
+            },
+          })),
+      ),
+    ),
+  );
 
   if (def.mount.kind === 'rails') {
-    box.append(labelled('custom.rails', selectInput(`${prefix}_rails`, [
-      { value: 'long', text: t('rails.long') }, { value: 'short', text: t('rails.short') },
-    ], def.mount.rails, (value) => update((d) => ({ ...d, mount: { ...d.mount, rails: value === 'short' ? 'short' : 'long' } })))));
+    box.append(
+      labelled(
+        'custom.rails',
+        selectInput(
+          `${prefix}_rails`,
+          [
+            { value: 'long', text: t('rails.long') },
+            { value: 'short', text: t('rails.short') },
+          ],
+          def.mount.rails,
+          (value) => update((d) => ({ ...d, mount: { ...d.mount, rails: value === 'short' ? 'short' : 'long' } })),
+        ),
+      ),
+    );
   } else {
-    box.append(labelled('board.screw', selectInput(`${prefix}_screw`, SCREW_SIZES.map((s) => ({ value: s, text: s })), def.mount.screw,
-      (value) => update((d) => ({ ...d, mount: { ...d.mount, screw: SCREW_SIZES.find((s) => s === value) ?? d.mount.screw } })))));
+    box.append(
+      labelled(
+        'board.screw',
+        selectInput(
+          `${prefix}_screw`,
+          SCREW_SIZES.map((s) => ({ value: s, text: s })),
+          def.mount.screw,
+          (value) => update((d) => ({ ...d, mount: { ...d.mount, screw: SCREW_SIZES.find((s) => s === value) ?? d.mount.screw } })),
+        ),
+      ),
+    );
     box.append(make('p', 'sub-title', t('custom.holes')));
     box.append(headerRow(['col.x', 'col.y', 'col.d']));
     def.mount.holes.forEach((hole, h) => {
       const row = make('div', 'table-row');
       for (const key of ['x', 'y', 'd'] as const) {
-        row.append(track(numberInput(`${prefix}_hole${h}_${key}`, hole[key], key === 'd' ? 0.1 : 0.5, (value) => update((d) => ({
-          ...d, mount: { ...d.mount, holes: d.mount.holes.map((item, i) => (i === h ? { ...item, [key]: value } : item)) },
-        }))), (d) => d.mount.holes[h]?.[key] ?? 0));
+        row.append(
+          track(
+            numberInput(`${prefix}_hole${h}_${key}`, hole[key], key === 'd' ? 0.1 : 0.5, (value) =>
+              update((d) => ({
+                ...d,
+                mount: { ...d.mount, holes: d.mount.holes.map((item, i) => (i === h ? { ...item, [key]: value } : item)) },
+              })),
+            ),
+            (d) => d.mount.holes[h]?.[key] ?? 0,
+          ),
+        );
       }
       const del = make('button', 'tb-btn row-del', '✕');
       del.type = 'button';
@@ -215,9 +294,12 @@ export function renderCustomEditor(
     const add = make('button', 'tb-btn', t('custom.hole.add'));
     add.type = 'button';
     add.id = `${prefix}_hole_add`;
-    add.addEventListener('click', () => update((d) => ({
-      ...d, mount: { ...d.mount, holes: [...d.mount.holes, { x: d.size.w / 2, y: d.size.d / 2, d: 2.7 }] },
-    })));
+    add.addEventListener('click', () =>
+      update((d) => ({
+        ...d,
+        mount: { ...d.mount, holes: [...d.mount.holes, { x: d.size.w / 2, y: d.size.d / 2, d: 2.7 }] },
+      })),
+    );
     box.append(add);
   }
 
@@ -226,10 +308,17 @@ export function renderCustomEditor(
   const addPort = make('button', 'tb-btn', t('custom.port.add'));
   addPort.type = 'button';
   addPort.id = `${prefix}_port_add`;
-  addPort.addEventListener('click', () => update((d) => {
-    const port: unknown = { id: autoPortId('usb-c', new Set(d.ports.map((item) => item.id))), type: 'usb-c', edge: 'front', along: d.size.w / 2 };
-    return { ...d, ports: [...d.ports, portFrom(port, d.size)] };
-  }));
+  addPort.addEventListener('click', () =>
+    update((d) => {
+      const port: unknown = {
+        id: autoPortId('usb-c', new Set(d.ports.map((item) => item.id))),
+        type: 'usb-c',
+        edge: 'front',
+        along: d.size.w / 2,
+      };
+      return { ...d, ports: [...d.ports, portFrom(port, d.size)] };
+    }),
+  );
   box.append(addPort);
 
   const save = make('button', 'tb-btn wide', t('custom.save'));
@@ -249,17 +338,34 @@ export function renderCustomEditor(
   function portRow(port: PortDef, p: number): HTMLElement {
     const wrap = make('div', 'port-edit');
     const head = make('div', 'table-row');
-    const setPort = (change: (item: Record<string, unknown>) => Record<string, unknown>): void => update((d) => ({
-      ...d, ports: d.ports.map((item, i) => (i === p ? portFrom(change({ ...item }), d.size) : item)),
-    }));
-    head.append(selectInput(`${prefix}_port${p}_type`, PORT_TYPE_IDS.map((id) => ({ value: id, text: tDynamic(`port.${id}`) })), port.type,
-      // a new type brings its own sizes, and an automatic id follows it
-      (value) => { if (isPortType(value)) updatePlacement((board) => withPortType(board, p, value)); }));
-    head.append(selectInput(`${prefix}_port${p}_edge`, [
-      ...EDGES.map((edge) => ({ value: edge, text: tDynamic(`face.${edge}`) })),
-      { value: 'top', text: t('custom.side.top') }, { value: 'bottom', text: t('custom.side.bottom') },
-    ], port.edge,
-      (value) => setPort((item) => ({ ...item, edge: value }))));
+    const setPort = (change: (item: Record<string, unknown>) => Record<string, unknown>): void =>
+      update((d) => ({
+        ...d,
+        ports: d.ports.map((item, i) => (i === p ? portFrom(change({ ...item }), d.size) : item)),
+      }));
+    head.append(
+      selectInput(
+        `${prefix}_port${p}_type`,
+        PORT_TYPE_IDS.map((id) => ({ value: id, text: tDynamic(`port.${id}`) })),
+        port.type,
+        // a new type brings its own sizes, and an automatic id follows it
+        (value) => {
+          if (isPortType(value)) updatePlacement((board) => withPortType(board, p, value));
+        },
+      ),
+    );
+    head.append(
+      selectInput(
+        `${prefix}_port${p}_edge`,
+        [
+          ...EDGES.map((edge) => ({ value: edge, text: tDynamic(`face.${edge}`) })),
+          { value: 'top', text: t('custom.side.top') },
+          { value: 'bottom', text: t('custom.side.bottom') },
+        ],
+        port.edge,
+        (value) => setPort((item) => ({ ...item, edge: value })),
+      ),
+    );
     const del = make('button', 'tb-btn row-del', '✕');
     del.type = 'button';
     del.id = `${prefix}_port${p}_remove`;
@@ -273,17 +379,35 @@ export function renderCustomEditor(
     const base: [string, Key][] = through ? [['base', 'col.base']] : [];
     const fields: readonly [string, Key][] = onFace(port)
       ? [['x', 'col.x'], ['y', 'col.y'], ['w', 'col.w'], ['d', 'col.depth'], ['h', 'col.h'], ...base]
-      : [['along', 'col.along'], ['z', 'col.z'], ['w', 'col.w'], ['h', 'col.h'], ['protrude', 'col.protrude']];
+      : [
+          ['along', 'col.along'],
+          ['z', 'col.z'],
+          ['w', 'col.w'],
+          ['h', 'col.h'],
+          ['protrude', 'col.protrude'],
+        ];
     // what Z and the sides mean is not obvious: a part under the board is a negative Z, not "underneath"
-    const hint = t(through ? (port.type === 'keys' ? 'custom.port.hint.keys' : 'custom.port.hint.knob')
-      : onFace(port) ? 'custom.port.hint.face' : 'custom.port.hint.edge');
+    const hint = t(
+      through
+        ? port.type === 'keys'
+          ? 'custom.port.hint.keys'
+          : 'custom.port.hint.knob'
+        : onFace(port)
+          ? 'custom.port.hint.face'
+          : 'custom.port.hint.edge',
+    );
     const values = make('div', 'table-row');
     for (const [key, label] of fields) {
       const cell = make('label', 'cell');
       cell.title = hint;
       const value = Number(Reflect.get(port, key) ?? 0);
-      cell.append(make('span', undefined, t(label)), track(numberInput(`${prefix}_port${p}_${key}`, value, 0.1,
-        (next) => setPort((item) => ({ ...item, [key]: next }))), (d) => Number(Reflect.get(d.ports[p] ?? {}, key) ?? 0)));
+      cell.append(
+        make('span', undefined, t(label)),
+        track(
+          numberInput(`${prefix}_port${p}_${key}`, value, 0.1, (next) => setPort((item) => ({ ...item, [key]: next }))),
+          (d) => Number(Reflect.get(d.ports[p] ?? {}, key) ?? 0),
+        ),
+      );
       values.append(cell);
     }
     const note = make('p', 'board-note', hint);
@@ -306,8 +430,20 @@ export function renderCustomEditor(
 
 /** A port from loose fields, through the board schema: missing sizes come from the type. */
 function portFrom(raw: unknown, size: { w: number; d: number }): PortDef {
-  return sanitizePort(raw, size, 0) ?? {
-    id: 'generic', type: 'generic', w: 5, h: 3, d: 5, clearance: 0.5, shape: 'rect', cut: false,
-    edge: 'front', along: size.w / 2, z: 0, protrude: 0,
-  };
+  return (
+    sanitizePort(raw, size, 0) ?? {
+      id: 'generic',
+      type: 'generic',
+      w: 5,
+      h: 3,
+      d: 5,
+      clearance: 0.5,
+      shape: 'rect',
+      cut: false,
+      edge: 'front',
+      along: size.w / 2,
+      z: 0,
+      protrude: 0,
+    }
+  );
 }

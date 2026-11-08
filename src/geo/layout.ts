@@ -161,20 +161,28 @@ export interface CaseLayout {
 export function boardTransform(def: BoardDef, rot: Rotation, x: number, y: number, z: number): Affine {
   const { w, d } = def.size;
   switch (rot) {
-    case 90: return [0, -1, 0, x + d, 1, 0, 0, y, 0, 0, 1, z];
-    case 180: return [-1, 0, 0, x + w, 0, -1, 0, y + d, 0, 0, 1, z];
-    case 270: return [0, 1, 0, x, -1, 0, 0, y + w, 0, 0, 1, z];
-    default: return [1, 0, 0, x, 0, 1, 0, y, 0, 0, 1, z];
+    case 90:
+      return [0, -1, 0, x + d, 1, 0, 0, y, 0, 0, 1, z];
+    case 180:
+      return [-1, 0, 0, x + w, 0, -1, 0, y + d, 0, 0, 1, z];
+    case 270:
+      return [0, 1, 0, x, -1, 0, 0, y + w, 0, 0, 1, z];
+    default:
+      return [1, 0, 0, x, 0, 1, 0, y, 0, 0, 1, z];
   }
 }
 
 /** Outward direction of a board edge in the board frame. */
 export function edgeNormal(edge: Edge): [number, number] {
   switch (edge) {
-    case 'front': return [0, -1];
-    case 'back': return [0, 1];
-    case 'left': return [-1, 0];
-    default: return [1, 0];
+    case 'front':
+      return [0, -1];
+    case 'back':
+      return [0, 1];
+    case 'left':
+      return [-1, 0];
+    default:
+      return [1, 0];
   }
 }
 
@@ -255,7 +263,14 @@ function edgeReach(def: BoardDef, placement: BoardPlacement, hung: boolean): Rec
 }
 
 /** A wall a placed board stands against, if it can: see PlacedWall. */
-function wallOf(input: LayoutInput, def: BoardDef, placement: BoardPlacement, toCase: Affine, outline: Rect, side: Edge): PlacedWall | null {
+function wallOf(
+  input: LayoutInput,
+  def: BoardDef,
+  placement: BoardPlacement,
+  toCase: Affine,
+  outline: Rect,
+  side: Edge,
+): PlacedWall | null {
   if (input.shape.kind === 'cylinder' || input.lid.face === side) return null;
   const [wx, wy] = edgeNormal(side);
   const edge = EDGES.find((one) => {
@@ -285,7 +300,16 @@ export function hangs(placement: BoardPlacement): boolean {
  * PlacedBoard.frame): parallel to the plate, its front `gap` below the
  * plate's inside, its plan centre where the layout puts it (cx, cy).
  */
-function hungTransform(def: BoardDef, front: number, rot: Rotation, cx: number, cy: number, gap: number, plate: number, frame: Affine): Affine {
+function hungTransform(
+  def: BoardDef,
+  front: number,
+  rot: Rotation,
+  cx: number,
+  cy: number,
+  gap: number,
+  plate: number,
+  frame: Affine,
+): Affine {
   const turned = rot === 90 || rot === 270;
   const W = turned ? def.size.d : def.size.w;
   const D = turned ? def.size.w : def.size.d;
@@ -293,7 +317,10 @@ function hungTransform(def: BoardDef, front: number, rot: Rotation, cx: number, 
   // frame: y = v·cos − w·sin, so the plan centre cy sits at v = (cy + w·sin) / cos
   const [cos, sin] = [frame[5], frame[9]];
   const v = (cy + wf * sin) / cos;
-  const local = composeAffine([1, 0, 0, cx - W / 2, 0, 1, 0, v - D / 2, 0, 0, 1, wf - def.size.t - front], boardTransform(def, rot, 0, 0, 0));
+  const local = composeAffine(
+    [1, 0, 0, cx - W / 2, 0, 1, 0, v - D / 2, 0, 0, 1, wf - def.size.t - front],
+    boardTransform(def, rot, 0, 0, 0),
+  );
   return composeAffine(frame, local);
 }
 
@@ -314,7 +341,15 @@ function place(input: LayoutInput, offsetX: number, offsetY: number, frame: Affi
 }
 
 /** Corners of a box in a board's frame → their extremes in the case frame. */
-function boxExtent(toCase: Affine, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): { rect: Rect; z0: number; z1: number } {
+function boxExtent(
+  toCase: Affine,
+  x0: number,
+  y0: number,
+  z0: number,
+  x1: number,
+  y1: number,
+  z1: number,
+): { rect: Rect; z0: number; z1: number } {
   const points = [x0, x1].flatMap((x) => [y0, y1].flatMap((y) => [z0, z1].map((z) => applyAffine(toCase, [x, y, z]))));
   const zs = points.map((p) => p[2]);
   return { rect: rectOf(points.map((p): [number, number] => [p[0], p[1]])), z0: Math.min(...zs), z1: Math.max(...zs) };
@@ -330,7 +365,13 @@ function attachedTo(parent: PlacedBoard): PlacedBoard | null {
   const def: BoardDef = { ...resolved, ports: resolved.ports.map((port) => ({ ...port, cut: backPortDefault(port) })) };
   const toCase = composeAffine(parent.toCase, attachTransform(parent.def, def, back.rot, back.standoff));
   const placement: BoardPlacement = {
-    board: def.id, x: 0, y: 0, z: 0, rot: back.rot, mount: { size: def.mount.screw, hole: 'tap', head: 'none' }, cuts: back.cuts,
+    board: def.id,
+    x: 0,
+    y: 0,
+    z: 0,
+    rot: back.rot,
+    mount: { size: def.mount.screw, hole: 'tap', head: 'none' },
+    cuts: back.cuts,
     ...(back.variant !== undefined ? { variant: back.variant } : {}),
   };
   const { w, d, t } = def.size;
@@ -364,7 +405,13 @@ function carriedBy(board: PlacedBoard): PlacedBoard | null {
   const def = resolveVariant(entry, top.variant);
   const toCase = composeAffine(board.toCase, invertRigid(attachTransform(def, board.def, top.rot, top.standoff)));
   const placement: BoardPlacement = {
-    board: def.id, x: 0, y: 0, z: 0, rot: top.rot, mount: { size: def.mount.screw, hole: 'tap', head: 'none' }, cuts: top.cuts,
+    board: def.id,
+    x: 0,
+    y: 0,
+    z: 0,
+    rot: top.rot,
+    mount: { size: def.mount.screw, hole: 'tap', head: 'none' },
+    cuts: top.cuts,
     ...(top.variant !== undefined ? { variant: top.variant } : {}),
   };
   const { w, d, t } = def.size;
@@ -407,11 +454,18 @@ function placeOwn(input: LayoutInput, offsetX: number, offsetY: number, frame: A
       ? hungTransform(def, top, placement.rot, cx, cy, placement.z, input.shape.floor, plateFrame)
       : boardTransform(def, placement.rot, placement.x + offsetX, placement.y + offsetY, input.shape.floor + placement.z);
     // a hung board may be tilted (the slope): its heights are its corners' extremes
-    const zs = (bz: number): number[] => [[0, 0], [w, 0], [0, d], [w, d]].map(([bx, by]) => applyAffine(toCase, [bx, by, bz])[2]);
+    const zs = (bz: number): number[] =>
+      [
+        [0, 0],
+        [w, 0],
+        [0, d],
+        [w, d],
+      ].map(([bx, by]) => applyAffine(toCase, [bx, by, bz])[2]);
     const z0 = Math.min(...zs(0));
     const zTop = Math.max(...zs(front));
     // a clamped panel's bars go below its back
-    const below = def.mount.kind === 'clamp' ? Math.max(undersideOf(def, pins), CLAMP_BAR_T - clampHold(def, placement).face) : undersideOf(def, pins);
+    const below =
+      def.mount.kind === 'clamp' ? Math.max(undersideOf(def, pins), CLAMP_BAR_T - clampHold(def, placement).face) : undersideOf(def, pins);
     const zBottom = Math.min(...zs(-below));
     const corner = (bx: number, by: number): [number, number] => {
       const p = applyAffine(toCase, [bx, by, 0]);
@@ -439,7 +493,10 @@ function placeOwn(input: LayoutInput, offsetX: number, offsetY: number, frame: A
 function union(rects: readonly Rect[]): Rect | null {
   if (rects.length === 0) return null;
   return rects.reduce((a, b) => ({
-    x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1),
+    x0: Math.min(a.x0, b.x0),
+    y0: Math.min(a.y0, b.y0),
+    x1: Math.max(a.x1, b.x1),
+    y1: Math.max(a.y1, b.y1),
   }));
 }
 
@@ -563,7 +620,10 @@ function stacksHeight(placed: readonly PlacedBoard[], shape: ShapeState): number
   // a carried display wants the ceiling the gap above its front: its window flush; so does a keyboard on the floor, its keys through the lid
   const flush = placed.filter((board) => board.carried || (!board.hung && opensKeys(board)));
   const rest = floor.filter((board) => !flush.includes(board));
-  let need = Math.max(Math.max(0, ...rest.map(floorTop), ...hung.map(hungDepth)) + shape.margin.top, ...flush.map((board) => floorTop(board) + CEILING_GAP));
+  let need = Math.max(
+    Math.max(0, ...rest.map(floorTop), ...hung.map(hungDepth)) + shape.margin.top,
+    ...flush.map((board) => floorTop(board) + CEILING_GAP),
+  );
   for (const above of hung) {
     for (const below of floor) {
       if (overlap(above.outline, below.outline) > 0.01) need = Math.max(need, floorTop(below) + shape.margin.top + hungDepth(above));
@@ -586,11 +646,13 @@ export function opensKeys(board: Pick<PlacedBoard, 'def' | 'placement'>): boolea
 export function caseLayout(input: LayoutInput): CaseLayout {
   const { shape } = input;
   const min = minimumDims(input);
-  let dims: Dims = shape.auto ? min : {
-    w: Math.max(min.w, shape.size.w),
-    d: Math.max(min.d, shape.size.d),
-    h: Math.max(min.h, shape.size.h),
-  };
+  let dims: Dims = shape.auto
+    ? min
+    : {
+        w: Math.max(min.w, shape.size.w),
+        d: Math.max(min.d, shape.size.d),
+        h: Math.max(min.h, shape.size.h),
+      };
   if (shape.kind === 'cylinder') dims = { ...dims, d: dims.w };
 
   const cavity = cavityOf(input, place(input, 0, 0, null));
@@ -598,21 +660,31 @@ export function caseLayout(input: LayoutInput): CaseLayout {
   // or against the wall a board stands against
   const band = lidBand(input.lid, input.shape);
   const { wall } = shape;
-  const offsetX = !cavity ? 0
-    : cavity.fixed.left ? wall + band.x0 - cavity.x0
-      : cavity.fixed.right ? dims.w - wall - band.x1 - cavity.x1
+  const offsetX = !cavity
+    ? 0
+    : cavity.fixed.left
+      ? wall + band.x0 - cavity.x0
+      : cavity.fixed.right
+        ? dims.w - wall - band.x1 - cavity.x1
         : (dims.w + band.x0 - band.x1) / 2 - (cavity.x0 + cavity.x1) / 2;
-  const offsetY = !cavity ? 0
-    : cavity.fixed.front ? wall + band.y0 - cavity.y0
-      : cavity.fixed.back ? dims.d - wall - band.y1 - cavity.y1
+  const offsetY = !cavity
+    ? 0
+    : cavity.fixed.front
+      ? wall + band.y0 - cavity.y0
+      : cavity.fixed.back
+        ? dims.d - wall - band.y1 - cavity.y1
         : (dims.d + band.y0 - band.y1) / 2 - (cavity.y0 + cavity.y1) / 2;
   const inner: Record<Edge, number> = {
-    left: wall + band.x0, right: dims.w - wall - band.x1, front: wall + band.y0, back: dims.d - wall - band.y1,
+    left: wall + band.x0,
+    right: dims.w - wall - band.x1,
+    front: wall + band.y0,
+    back: dims.d - wall - band.y1,
   };
-  const placeAll = (frame: Affine): PlacedBoard[] => place(input, offsetX, offsetY, frame).map((board): PlacedBoard => ({
-    ...board,
-    walls: board.walls.map((wall) => ({ ...wall, against: Math.abs(wall.line - inner[wall.side]) < 1e-6 })),
-  }));
+  const placeAll = (frame: Affine): PlacedBoard[] =>
+    place(input, offsetX, offsetY, frame).map((board): PlacedBoard => ({
+      ...board,
+      walls: board.walls.map((wall) => ({ ...wall, against: Math.abs(wall.line - inner[wall.side]) < 1e-6 })),
+    }));
 
   const margin = { floor: sideMargin(shape, input.lid), ceiling: hungMargin(shape, input.lid), posts: postRoom(input.lid) };
 
@@ -620,8 +692,9 @@ export function caseLayout(input: LayoutInput): CaseLayout {
   let backH = shape.console.backH;
   if (shape.kind !== 'console') {
     // a carried display under the flat top: how far below the ceiling its front ended up
-    const boards = placeAll(flatFrame(dims.h)).map((board): PlacedBoard => (board.carried
-      ? { ...board, gap: dims.h - shape.floor - board.zTop } : board));
+    const boards = placeAll(flatFrame(dims.h)).map((board): PlacedBoard =>
+      board.carried ? { ...board, gap: dims.h - shape.floor - board.zTop } : board,
+    );
     return { dims, boards, console: { frontH, backH }, inner, margin };
   }
   // The console's heights rise together — the slope's angle stays — until
@@ -715,9 +788,7 @@ export function portBlock(board: PlacedBoard, port: PortDef): [number, number, n
     // a display with a glass: its window as a thin layer on the glass's front
     const top = port.rows ? t + Math.max(port.base ?? KEY_SLAB, 0.1) : t + port.h;
     const glass = port.type === 'display' && port.glass;
-    const [z0, z1] = port.edge === 'top'
-      ? [glass ? t + port.h - WINDOW_LAYER : t, top + (glass ? WINDOW_LAYER / 2 : 0)]
-      : [-port.h, 0];
+    const [z0, z1] = port.edge === 'top' ? [glass ? t + port.h - WINDOW_LAYER : t, top + (glass ? WINDOW_LAYER / 2 : 0)] : [-port.h, 0];
     return [port.x - port.w / 2, port.y - port.d / 2, z0, port.x + port.w / 2, port.y + port.d / 2, z1];
   }
   const [nx, ny] = edgeNormal(port.edge);
@@ -750,7 +821,8 @@ export function standoffColumns(board: PlacedBoard): { x: number; y: number; r: 
 /** A block in a board's frame (x0, y0, z0, x1, y1, z1) as a box in the case frame. */
 function caseBox(board: PlacedBoard, b: readonly number[]): SpotBox {
   const corners: Vec3[] = [];
-  for (const x of [b[0], b[3]]) for (const y of [b[1], b[4]]) for (const z of [b[2], b[5]]) corners.push(applyAffine(board.toCase, [x, y, z]));
+  for (const x of [b[0], b[3]])
+    for (const y of [b[1], b[4]]) for (const z of [b[2], b[5]]) corners.push(applyAffine(board.toCase, [x, y, z]));
   return boxAround(corners);
 }
 
@@ -814,7 +886,11 @@ function notAgainst(board: PlacedBoard, side: Edge, layout: CaseLayout): Message
   // its own edge short of this board's line: only the margin it keeps takes the wall
   if (further.margin === 0 || out * (further.edge - own) > 1e-6) return { code: 'warn.notAgainstWall', params, ...strip };
   const posts = layout.margin.posts > 0 && Math.abs(further.margin - layout.margin.posts) < 1e-9;
-  return { code: posts ? 'warn.notAgainstWallPosts' : 'warn.notAgainstWallMargin', params: { ...params, margin: further.margin.toFixed(1) }, ...strip };
+  return {
+    code: posts ? 'warn.notAgainstWallPosts' : 'warn.notAgainstWallMargin',
+    params: { ...params, margin: further.margin.toFixed(1) },
+    ...strip,
+  };
 }
 
 /**
@@ -840,10 +916,12 @@ function recessedNotes(board: PlacedBoard, dims: Dims): Message[] {
     const boxes = walls.flatMap((one): SpotBox[] => {
       const ports = board.def.ports.filter((port) => port.edge === one.edge);
       if (ports.length === 0) return [];
-      const box = boxAround(ports.flatMap((port) => {
-        const b = caseBox(board, portBlock(board, port));
-        return [b.min, b.max];
-      }));
+      const box = boxAround(
+        ports.flatMap((port) => {
+          const b = caseBox(board, portBlock(board, port));
+          return [b.min, b.max];
+        }),
+      );
       const min: Vec3 = [box.min[0], box.min[1], box.min[2]];
       const max: Vec3 = [box.max[0], box.max[1], box.max[2]];
       if (one.side === 'left') min[0] = 0;
@@ -878,7 +956,11 @@ export function collisions(layout: CaseLayout): Message[] {
       const zOverlap = Math.min(a.zTop, b.zTop) - Math.max(a.zBottom, b.zBottom);
       if (zOverlap > 0 && overlap(a.outline, b.outline) > 0.01) {
         const both = shared(boardBox(a), boardBox(b));
-        out.push({ code: 'warn.boardsOverlap', params: { ...boardParams(a, 'a'), ...boardParams(b, 'b') }, ...onBoard(a, both ? [both] : []) });
+        out.push({
+          code: 'warn.boardsOverlap',
+          params: { ...boardParams(a, 'a'), ...boardParams(b, 'b') },
+          ...onBoard(a, both ? [both] : []),
+        });
       }
     }
   }
@@ -888,7 +970,11 @@ export function collisions(layout: CaseLayout): Message[] {
     if (carrier && board.z0 < carrier.zTop - 1e-6 && overlap(board.outline, carrier.outline) > 0.01) {
       const o = board.outline;
       const under = shared({ min: [o.x0, o.y0, board.z0], max: [o.x1, o.y1, carrier.zTop] }, boardBox(carrier));
-      out.push({ code: 'warn.carriedOnParts', params: { ...boardParams(board), mm: (carrier.zTop - board.z0).toFixed(1) }, ...onBoard(board, under ? [under] : []) });
+      out.push({
+        code: 'warn.carriedOnParts',
+        params: { ...boardParams(board), mm: (carrier.zTop - board.z0).toFixed(1) },
+        ...onBoard(board, under ? [under] : []),
+      });
     }
     if (board.attached !== undefined) continue;
     for (const wall of board.walls) if (!wall.against) out.push(notAgainst(board, wall.side, layout));
@@ -920,7 +1006,11 @@ export function collisions(layout: CaseLayout): Message[] {
         const clear = a.hung ? b.zTop <= a.z0 + a.def.size.t : b.zBottom >= a.z0;
         if (b === a || b.index === a.index || clear || overlap(rect, b.outline) <= 0) continue;
         const post = shared({ min: [rect.x0, rect.y0, a.hung ? a.z0 : 0], max: [rect.x1, rect.y1, a.hung ? Infinity : a.z0] }, boardBox(b));
-        out.push({ code: 'warn.standoffHitsBoard', params: { ...boardParams(a, 'a'), ...boardParams(b, 'b') }, ...onBoard(a, post ? [post] : []) });
+        out.push({
+          code: 'warn.standoffHitsBoard',
+          params: { ...boardParams(a, 'a'), ...boardParams(b, 'b') },
+          ...onBoard(a, post ? [post] : []),
+        });
       }
     }
   }
@@ -936,7 +1026,8 @@ function barsOnBack(board: PlacedBoard, boards: readonly PlacedBoard[]): boolean
     const ends = [...bar.posts, ...bar.holes];
     const [a0, a1] = [Math.min(...ends), Math.max(...ends)];
     const [b0, b1] = [bar.at - CLAMP_BAR_W / 2, bar.at + CLAMP_BAR_W / 2];
-    const rect = hold.across === 'x' ? boxExtent(board.toCase, a0, b0, 0, a1, b1, 0).rect : boxExtent(board.toCase, b0, a0, 0, b1, a1, 0).rect;
+    const rect =
+      hold.across === 'x' ? boxExtent(board.toCase, a0, b0, 0, a1, b1, 0).rect : boxExtent(board.toCase, b0, a0, 0, b1, a1, 0).rect;
     return overlap(rect, child.outline) > 0.01;
   });
 }
@@ -950,16 +1041,19 @@ function partOnSupport(board: PlacedBoard, port: TopPort): boolean {
   const hd = glass ? glass.d / 2 + RIM_FIT : (port.shape === 'round' ? port.w : port.d) / 2;
   const [cx, cy] = glass ? [glass.x, glass.y] : [port.x, port.y];
   // a key field's supports go between its keys: only the keys count
-  const parts: Rect[] = port.rows && !glass
-    ? keysOf(port).map((key) => ({ x0: key.x - key.w / 2, y0: key.y - key.d / 2, x1: key.x + key.w / 2, y1: key.y + key.d / 2 }))
-    : [{ x0: cx - hw, y0: cy - hd, x1: cx + hw, y1: cy + hd }];
+  const parts: Rect[] =
+    port.rows && !glass
+      ? keysOf(port).map((key) => ({ x0: key.x - key.w / 2, y0: key.y - key.d / 2, x1: key.x + key.w / 2, y1: key.y + key.d / 2 }))
+      : [{ x0: cx - hw, y0: cy - hd, x1: cx + hw, y1: cy + hd }];
   if (board.def.mount.kind === 'holes') {
     const boss = bossDiameter(board.placement.mount) / 2;
-    return board.def.mount.holes.some((hole) => parts.some((part) => {
-      const dx = Math.max(part.x0 - hole.x, 0, hole.x - part.x1);
-      const dy = Math.max(part.y0 - hole.y, 0, hole.y - part.y1);
-      return Math.hypot(dx, dy) < (glass ? hole.d / 2 : boss);
-    }));
+    return board.def.mount.holes.some((hole) =>
+      parts.some((part) => {
+        const dx = Math.max(part.x0 - hole.x, 0, hole.x - part.x1);
+        const dy = Math.max(part.y0 - hole.y, 0, hole.y - part.y1);
+        return Math.hypot(dx, dy) < (glass ? hole.d / 2 : boss);
+      }),
+    );
   }
   // rails step aside for a glass as standoffs do; a clamp's bars step aside by themselves
   if (glass || board.def.mount.kind === 'clamp') return false;
@@ -967,10 +1061,14 @@ function partOnSupport(board: PlacedBoard, port: TopPort): boolean {
   const pinned = board.hung ? [] : pinEdges(board);
   return railEdges(board.def).some((edge) => {
     const reach = railReach(pinned.includes(edge) && board.def.pins ? board.def.pins : null);
-    const strip: Rect = edge === 'front' ? { x0: RAIL_SHORTEN, y0: 0, x1: w - RAIL_SHORTEN, y1: reach }
-      : edge === 'back' ? { x0: RAIL_SHORTEN, y0: d - reach, x1: w - RAIL_SHORTEN, y1: d }
-        : edge === 'left' ? { x0: 0, y0: RAIL_SHORTEN, x1: reach, y1: d - RAIL_SHORTEN }
-          : { x0: w - reach, y0: RAIL_SHORTEN, x1: w, y1: d - RAIL_SHORTEN };
+    const strip: Rect =
+      edge === 'front'
+        ? { x0: RAIL_SHORTEN, y0: 0, x1: w - RAIL_SHORTEN, y1: reach }
+        : edge === 'back'
+          ? { x0: RAIL_SHORTEN, y0: d - reach, x1: w - RAIL_SHORTEN, y1: d }
+          : edge === 'left'
+            ? { x0: 0, y0: RAIL_SHORTEN, x1: reach, y1: d - RAIL_SHORTEN }
+            : { x0: w - reach, y0: RAIL_SHORTEN, x1: w, y1: d - RAIL_SHORTEN };
     return parts.some((part) => overlap(part, strip) > 0);
   });
 }
@@ -982,7 +1080,8 @@ export function dedupe(messages: Message[]): Message[] {
     const key = JSON.stringify([message.code, message.params]);
     const first = seen.get(key);
     if (!first) seen.set(key, message);
-    else if (first.spot && message.spot) seen.set(key, { ...first, spot: { ...first.spot, boxes: [...first.spot.boxes, ...message.spot.boxes] } });
+    else if (first.spot && message.spot)
+      seen.set(key, { ...first, spot: { ...first.spot, boxes: [...first.spot.boxes, ...message.spot.boxes] } });
   }
   return [...seen.values()];
 }

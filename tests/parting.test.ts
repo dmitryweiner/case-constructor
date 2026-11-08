@@ -118,14 +118,18 @@ describe('a low case', () => {
   it.each(LOW)('%s, lid %s, %s, %d mm high: closed, no slivers, no membrane, no overlap', (kind, face, fastening, h) => {
     const base = defaultState();
     const state = sanitizeState({
-      ...base, boards: [],
+      ...base,
+      boards: [],
       shape: { ...base.shape, kind, edgeR: 3, cornerR: 6, auto: false, size: { w: 60, d: 40, h } },
       lid: { ...base.lid, face, fastening },
     });
     expect(caseDims(state).h).toBe(h);
     const built = buildCase(csg, state, 8);
     const frame = faceFrame(state.lid.face, caseDims(state));
-    for (const [name, mesh] of [['body', built.body], ['lid', built.lid]] as const) {
+    for (const [name, mesh] of [
+      ['body', built.body],
+      ['lid', built.lid],
+    ] as const) {
       const report = validateMesh(mesh);
       expect(report.watertight, name).toBe(true);
       expect(report.degenerateTriangles, name).toBe(0);

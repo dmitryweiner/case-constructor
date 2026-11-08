@@ -18,9 +18,12 @@ const IDENTITY = [1, 0, 0, 1, 0, 0];
 
 function mul(m, n) {
   return [
-    m[0] * n[0] + m[2] * n[1], m[1] * n[0] + m[3] * n[1],
-    m[0] * n[2] + m[2] * n[3], m[1] * n[2] + m[3] * n[3],
-    m[0] * n[4] + m[2] * n[5] + m[4], m[1] * n[4] + m[3] * n[5] + m[5],
+    m[0] * n[0] + m[2] * n[1],
+    m[1] * n[0] + m[3] * n[1],
+    m[0] * n[2] + m[2] * n[3],
+    m[1] * n[2] + m[3] * n[3],
+    m[0] * n[4] + m[2] * n[5] + m[4],
+    m[1] * n[4] + m[3] * n[5] + m[5],
   ];
 }
 
@@ -81,9 +84,20 @@ function sectionEntities(pairs, name) {
   let expectName = false;
   let current = null;
   for (const [code, value] of pairs) {
-    if (code === 0 && value === 'SECTION') { expectName = true; continue; }
-    if (expectName && code === 2) { inside = value === name; expectName = false; continue; }
-    if (code === 0 && value === 'ENDSEC') { inside = false; current = null; continue; }
+    if (code === 0 && value === 'SECTION') {
+      expectName = true;
+      continue;
+    }
+    if (expectName && code === 2) {
+      inside = value === name;
+      expectName = false;
+      continue;
+    }
+    if (code === 0 && value === 'ENDSEC') {
+      inside = false;
+      current = null;
+      continue;
+    }
     if (!inside) continue;
     if (code === 0) {
       current = { type: value, codes: [] };
@@ -217,7 +231,11 @@ const PT_MM = 25.4 / 72;
 function parseTransform(s) {
   let m = IDENTITY;
   for (const [, name, args] of String(s ?? '').matchAll(/(\w+)\(([^)]*)\)/g)) {
-    const v = args.trim().split(/[\s,]+/).filter(Boolean).map(Number);
+    const v = args
+      .trim()
+      .split(/[\s,]+/)
+      .filter(Boolean)
+      .map(Number);
     let t = null;
     if (name === 'matrix') t = v;
     else if (name === 'translate') t = [1, 0, 0, 1, v[0], v[1] ?? 0];
@@ -280,7 +298,10 @@ function subpaths(d) {
         const p3 = at(take(), take());
         for (let k = 1; k <= 8; k++) {
           const u = k / 8;
-          const a = (1 - u) ** 3, b = 3 * (1 - u) ** 2 * u, c = 3 * (1 - u) * u * u, e = u ** 3;
+          const a = (1 - u) ** 3,
+            b = 3 * (1 - u) ** 2 * u,
+            c = 3 * (1 - u) * u * u,
+            e = u ** 3;
           cur?.pts.push([a * p0[0] + b * p1[0] + c * p2[0] + e * p3[0], a * p0[1] + b * p1[1] + c * p2[1] + e * p3[1]]);
         }
         pos = p3;
@@ -398,15 +419,28 @@ export function extents(shapes) {
   const box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
   const grow = (x, y) => {
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    box.x0 = Math.min(box.x0, x); box.y0 = Math.min(box.y0, y);
-    box.x1 = Math.max(box.x1, x); box.y1 = Math.max(box.y1, y);
+    box.x0 = Math.min(box.x0, x);
+    box.y0 = Math.min(box.y0, y);
+    box.x1 = Math.max(box.x1, x);
+    box.y1 = Math.max(box.y1, y);
   };
   for (const s of shapes) {
-    if (s.kind === 'line') { grow(s.x1, s.y1); grow(s.x2, s.y2); }
-    if (s.kind === 'arc') { grow(s.x - s.r, s.y - s.r); grow(s.x + s.r, s.y + s.r); }
+    if (s.kind === 'line') {
+      grow(s.x1, s.y1);
+      grow(s.x2, s.y2);
+    }
+    if (s.kind === 'arc') {
+      grow(s.x - s.r, s.y - s.r);
+      grow(s.x + s.r, s.y + s.r);
+    }
     if (s.kind === 'poly') for (const [x, y] of s.pts) grow(x, y);
   }
-  if (!Number.isFinite(box.x0)) for (const s of shapes) if (s.kind === 'circle') { grow(s.x - s.r, s.y - s.r); grow(s.x + s.r, s.y + s.r); }
+  if (!Number.isFinite(box.x0))
+    for (const s of shapes)
+      if (s.kind === 'circle') {
+        grow(s.x - s.r, s.y - s.r);
+        grow(s.x + s.r, s.y + s.r);
+      }
   return box;
 }
 
@@ -425,7 +459,13 @@ export function turned(shapes, deg = 0, flip = false) {
 /** The pieces a drawing draws lines with, as polylines (circles left out). */
 export function polylines(shapes) {
   return shapes.flatMap((s) => {
-    if (s.kind === 'line') return [[[s.x1, s.y1], [s.x2, s.y2]]];
+    if (s.kind === 'line')
+      return [
+        [
+          [s.x1, s.y1],
+          [s.x2, s.y2],
+        ],
+      ];
     if (s.kind === 'arc') return [arcToPoly(s).pts];
     if (s.kind === 'poly') return [s.closed && s.pts.length > 2 ? [...s.pts, s.pts[0]] : s.pts];
     return [];
@@ -440,7 +480,13 @@ export function scaled(shapes, k) {
 /** The bounding box of one shape. */
 export function shapeBox(s) {
   if (s.kind === 'circle' || s.kind === 'arc') return { x0: s.x - s.r, y0: s.y - s.r, x1: s.x + s.r, y1: s.y + s.r };
-  const pts = s.kind === 'line' ? [[s.x1, s.y1], [s.x2, s.y2]] : s.pts;
+  const pts =
+    s.kind === 'line'
+      ? [
+          [s.x1, s.y1],
+          [s.x2, s.y2],
+        ]
+      : s.pts;
   const xs = pts.map(([x]) => x);
   const ys = pts.map(([, y]) => y);
   return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };

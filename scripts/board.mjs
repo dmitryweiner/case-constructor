@@ -31,7 +31,9 @@ const flags = parseArgs(process.argv.slice(2), ['svg', 'out', 'variant', 'brd', 
 if (flags.has('format')) {
   const dir = 'src/boards/data';
   let changed = 0;
-  for (const name of readdirSync(dir).filter((f) => f.endsWith('.json')).sort()) {
+  for (const name of readdirSync(dir)
+    .filter((f) => f.endsWith('.json'))
+    .sort()) {
     const path = `${dir}/${name}`;
     const text = readFileSync(path, 'utf8');
     const formatted = formatBoard(JSON.parse(text));
@@ -68,7 +70,9 @@ if (flags.has('brd') || flags.has('kicad')) {
     // the pads' box can sit off the footprint's origin (a jack's origin is a pin): its centre too
     const size = e.size ? `  ${r(e.size.w)} × ${r(e.size.d)} pads centred ${r(e.x + e.size.cx)}, ${r(e.y + e.size.cy)}` : '';
     const nets = e.nets.filter((n) => !/^(GND|VSS|AGND)$/i.test(n)).slice(0, 3);
-    console.log(`${e.name.padEnd(8)} ${String(e.value).padEnd(18).slice(0, 18)} ${e.package.padEnd(24).slice(0, 24)} at ${r(e.x)}, ${r(e.y)}  rot ${e.rot}  ${e.side}${size}${nets.length ? `  nets ${nets.join(',')}` : ''}`);
+    console.log(
+      `${e.name.padEnd(8)} ${String(e.value).padEnd(18).slice(0, 18)} ${e.package.padEnd(24).slice(0, 24)} at ${r(e.x)}, ${r(e.y)}  rot ${e.rot}  ${e.side}${size}${nets.length ? `  nets ${nets.join(',')}` : ''}`,
+    );
   }
   process.exit(0);
 }

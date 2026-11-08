@@ -17,23 +17,42 @@ function cutControls(index: number): Control<AppState>[] {
   const at = (state: AppState): ExtraCut => state.extraCuts[index];
   const round = (state: AppState): boolean => at(state).shape === 'round';
   // `key` names the element (#cut0_d), `field` the value it edits: the diameter edits w
-  const range = (key: string, field: 'x' | 'y' | 'w' | 'h' | 'r', label: Control<AppState>['label'], min: number, max: number,
-    when?: (state: AppState) => boolean): Control<AppState> => ({
-    kind: 'range', key, label, min, max, step: 0.5, when,
+  const range = (
+    key: string,
+    field: 'x' | 'y' | 'w' | 'h' | 'r',
+    label: Control<AppState>['label'],
+    min: number,
+    max: number,
+    when?: (state: AppState) => boolean,
+  ): Control<AppState> => ({
+    kind: 'range',
+    key,
+    label,
+    min,
+    max,
+    step: 0.5,
+    when,
     ...(field === 'x' || field === 'y' ? { hint: 'cut.xy.hint' as const } : {}),
     get: (state) => at(state)[field],
     set: (state, value) => patchCut(state, index, { [field]: value }),
   });
   return [
     {
-      kind: 'select', key: 'face', label: 'cut.face',
+      kind: 'select',
+      key: 'face',
+      label: 'cut.face',
       options: cutFaces('box').map((value) => ({ value, label: `face.${value}` as const })),
       get: (state) => at(state).face,
       set: (state, value) => patchCut(state, index, { face: cutFaces(state.shape.kind).find((face) => face === value) ?? at(state).face }),
     },
     {
-      kind: 'segmented', key: 'shape', label: 'cut.shape',
-      options: [{ value: 'rect', label: 'cutshape.rect' }, { value: 'round', label: 'cutshape.round' }],
+      kind: 'segmented',
+      key: 'shape',
+      label: 'cut.shape',
+      options: [
+        { value: 'rect', label: 'cutshape.rect' },
+        { value: 'round', label: 'cutshape.round' },
+      ],
       get: (state) => at(state).shape,
       set: (state, value) => patchCut(state, index, { shape: value === 'round' ? 'round' : 'rect' }),
     },
@@ -50,9 +69,7 @@ export interface CutsCardHandle {
   sync(state: AppState): void;
 }
 
-export function renderCutsCard(
-  container: HTMLElement, read: () => AppState, onChange: (next: AppState) => void,
-): CutsCardHandle {
+export function renderCutsCard(container: HTMLElement, read: () => AppState, onChange: (next: AppState) => void): CutsCardHandle {
   let handles: ControlsHandle<AppState>[] = [];
   let count = -1;
 

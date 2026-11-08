@@ -27,7 +27,9 @@ import { readStep } from './lib/step.mjs';
 const file = process.argv[2];
 const flags = parseArgs(process.argv.slice(3), ['match', 'part', 'board', 'rotate', 'min', 'max', 'up']);
 if (!file) {
-  console.error('usage: node scripts/step.mjs <file.step> [--match re] [--part name] [--board name] [--rotate deg] [--flip] [--min mm] [--max mm]');
+  console.error(
+    'usage: node scripts/step.mjs <file.step> [--match re] [--part name] [--board name] [--rotate deg] [--flip] [--min mm] [--max mm]',
+  );
   process.exit(2);
 }
 
@@ -36,11 +38,11 @@ const model = readStep(readFileSync(file, 'latin1'));
 // Models made Y-up (SolidWorks and others) are turned to z up first: a
 // right-handed turn that brings the chosen axis to +z.
 const UP = {
-  'z': ([x, y, z]) => [x, y, z],
+  z: ([x, y, z]) => [x, y, z],
   '-z': ([x, y, z]) => [x, -y, -z],
-  'y': ([x, y, z]) => [x, -z, y],
+  y: ([x, y, z]) => [x, -z, y],
   '-y': ([x, y, z]) => [x, z, -y],
-  'x': ([x, y, z]) => [y, z, x],
+  x: ([x, y, z]) => [y, z, x],
   '-x': ([x, y, z]) => [-y, z, -x],
 };
 const up = UP[String(flags.get('up') ?? 'z')];
@@ -72,7 +74,12 @@ const turn = ([x, y]) => {
 };
 /** A model box → its xy box after the turn. */
 const turnedBox = ({ lo, hi }) => {
-  const corners = [[lo[0], lo[1]], [hi[0], lo[1]], [lo[0], hi[1]], [hi[0], hi[1]]].map(turn);
+  const corners = [
+    [lo[0], lo[1]],
+    [hi[0], lo[1]],
+    [lo[0], hi[1]],
+    [hi[0], hi[1]],
+  ].map(turn);
   const xs = corners.map(([x]) => x);
   const ys = corners.map(([, y]) => y);
   return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys), z0: lo[2], z1: hi[2] };
@@ -81,9 +88,10 @@ const turnedBox = ({ lo, hi }) => {
 const named = flags.get('board');
 const footprint = (p) => (p.hi[0] - p.lo[0]) * (p.hi[1] - p.lo[1]);
 const largest = (list) => [...list].sort((a, b) => footprint(b) - footprint(a))[0];
-const board = (named ? parts.find((p) => p.path.includes(named)) : undefined)
-  ?? largest(parts.filter((p) => /board|pcb/i.test(p.name) && !/asm|assembly/i.test(p.name)))
-  ?? largest(parts);
+const board =
+  (named ? parts.find((p) => p.path.includes(named)) : undefined) ??
+  largest(parts.filter((p) => /board|pcb/i.test(p.name) && !/asm|assembly/i.test(p.name))) ??
+  largest(parts);
 const frame = turnedBox(board);
 const round = (v) => Math.round(v * 100) / 100;
 console.log(`board: ${board.path}  ${round(frame.x1 - frame.x0)} × ${round(frame.y1 - frame.y0)}, top at z ${round(frame.z1)} (model)`);
@@ -95,7 +103,15 @@ const rows = parts
   .filter((p) => p !== board && (!match || match.test(p.path)))
   .map((p) => {
     const b = turnedBox(p);
-    return { path: p.path, x0: b.x0 - frame.x0, x1: b.x1 - frame.x0, y0: b.y0 - frame.y0, y1: b.y1 - frame.y0, z0: b.z0 - frame.z1, z1: b.z1 - frame.z1 };
+    return {
+      path: p.path,
+      x0: b.x0 - frame.x0,
+      x1: b.x1 - frame.x0,
+      y0: b.y0 - frame.y0,
+      y1: b.y1 - frame.y0,
+      z0: b.z0 - frame.z1,
+      z1: b.z1 - frame.z1,
+    };
   })
   .filter((r) => {
     const size = Math.max(r.x1 - r.x0, r.y1 - r.y0);
@@ -103,7 +119,9 @@ const rows = parts
   })
   .sort((a, b) => a.x0 - b.x0 || a.y0 - b.y0);
 for (const r of rows) {
-  console.log(`${r.path}\n    x ${round(r.x0)}…${round(r.x1)}  y ${round(r.y0)}…${round(r.y1)}  z ${round(r.z0)}…${round(r.z1)}  (${round(r.x1 - r.x0)} × ${round(r.y1 - r.y0)}, centre ${round((r.x0 + r.x1) / 2)}, ${round((r.y0 + r.y1) / 2)})`);
+  console.log(
+    `${r.path}\n    x ${round(r.x0)}…${round(r.x1)}  y ${round(r.y0)}…${round(r.y1)}  z ${round(r.z0)}…${round(r.z1)}  (${round(r.x1 - r.x0)} × ${round(r.y1 - r.y0)}, centre ${round((r.x0 + r.x1) / 2)}, ${round((r.y0 + r.y1) / 2)})`,
+  );
 }
 
 const partName = flags.get('part');

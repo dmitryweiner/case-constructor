@@ -27,7 +27,7 @@ jobs:
       - run: npm run build
       # the main thread knows nothing about WASM (CLAUDE.md, invariants): the
       # main chunk must not mention manifold at all
-      - run: "! grep -l manifold dist/assets/index-*.js"
+      - run: '! grep -l manifold dist/assets/index-*.js'
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         with:

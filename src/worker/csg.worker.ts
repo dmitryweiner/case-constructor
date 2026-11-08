@@ -64,7 +64,12 @@ function run(csg: CsgApi, jobId: number, job: CsgJob): JobPart[] {
   };
   const builds = cases.map(({ half, state: one }) => {
     const labels = sanitizeLabelRasters(half === 'b' ? job.labelsB : job.labels);
-    return { half, built: half ? cachedBuild(csg, half, one, halfHinge(state, half), segments, stage, labels) : buildCase(csg, one, segments, stage, labels) };
+    return {
+      half,
+      built: half
+        ? cachedBuild(csg, half, one, halfHinge(state, half), segments, stage, labels)
+        : buildCase(csg, one, segments, stage, labels),
+    };
   });
   if (exporting) stage({ code: 'progress.check' });
   return builds.flatMap(({ half, built }) => {
@@ -92,7 +97,13 @@ function run(csg: CsgApi, jobId: number, job: CsgJob): JobPart[] {
 const lastHalves = new Map<Half, { key: string; built: CaseBuild }>();
 
 function cachedBuild(
-  csg: CsgApi, half: Half, state: AppState, hinge: HalfHinge | null, segments: number, stage: (label: Message) => void, labels: readonly (LabelRaster | null)[],
+  csg: CsgApi,
+  half: Half,
+  state: AppState,
+  hinge: HalfHinge | null,
+  segments: number,
+  stage: (label: Message) => void,
+  labels: readonly (LabelRaster | null)[],
 ): CaseBuild {
   const key = `${segments}|${labels.map(rasterKey).join(',')}|${JSON.stringify(hinge)}|${JSON.stringify(state)}`;
   const last = lastHalves.get(half);

@@ -18,7 +18,12 @@ import { rasterRuns } from './label';
  * material and holes, case frame, the lid's and the body's apart.
  */
 export function earSolids(
-  csg: CsgApi, scope: CsgScope, ears: readonly EarSpec[], frame: FaceFrame, plate: number, segments: number,
+  csg: CsgApi,
+  scope: CsgScope,
+  ears: readonly EarSpec[],
+  frame: FaceFrame,
+  plate: number,
+  segments: number,
 ): { onLid: boolean; material: Manifold; holes: Manifold }[] {
   const n = Math.max(16, segments * 4);
   return [false, true].flatMap((onLid) => {
@@ -47,14 +52,19 @@ const PAD_SINK = 0.5;
  * to be cut once the pads are on.
  */
 export function keyholePadSolids(
-  csg: CsgApi, scope: CsgScope, closed: ClosedKeyholes, frame: FaceFrame, segments: number,
+  csg: CsgApi,
+  scope: CsgScope,
+  closed: ClosedKeyholes,
+  frame: FaceFrame,
+  segments: number,
 ): { material: Manifold; holes: Manifold | null } {
   const n = Math.max(16, segments * 4);
   const material = closed.pads.map((pad) => {
     const r = Math.min(PAD_R, (pad.u1 - pad.u0) / 2 - 0.01, (pad.v1 - pad.v0) / 2 - 0.01);
     const core = scope.keep(csg.CrossSection.square([pad.u1 - pad.u0 - 2 * r, pad.v1 - pad.v0 - 2 * r], true));
-    const rounded = scope.keep(scope.keep(scope.keep(core.offset(r, 'Round', 2, n)).simplify(1e-3))
-      .translate([(pad.u0 + pad.u1) / 2, (pad.v0 + pad.v1) / 2]));
+    const rounded = scope.keep(
+      scope.keep(scope.keep(core.offset(r, 'Round', 2, n)).simplify(1e-3)).translate([(pad.u0 + pad.u1) / 2, (pad.v0 + pad.v1) / 2]),
+    );
     return transformSolid(scope, extrude(csg, scope, rounded, -PAD_SINK, closed.height), frame.fromFace);
   });
   return { material: unionAll(csg, scope, material), holes: cuttersSolid(csg, scope, closed.cutters, segments) };
@@ -66,8 +76,13 @@ export function keyholePadSolids(
  * above it. The ink is the union of the raster's row runs.
  */
 export function labelSolid(
-  csg: CsgApi, scope: CsgScope, label: LabelState, raster: LabelRaster, fromFace: Affine,
-  centre: { u: number; v: number }, depth: number,
+  csg: CsgApi,
+  scope: CsgScope,
+  label: LabelState,
+  raster: LabelRaster,
+  fromFace: Affine,
+  centre: { u: number; v: number },
+  depth: number,
 ): Manifold | null {
   const runs = rasterRuns(raster);
   if (runs.length === 0) return null;

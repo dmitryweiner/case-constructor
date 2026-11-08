@@ -80,7 +80,11 @@ export const BUILD_STAGES: readonly Message[] = [
 
 /** `hinge`: a half of a hinged case gets its knuckles (`state/hinged.ts`, `halfHinge`). */
 export function buildCase(
-  csg: CsgApi, state: AppState, segments: number, onStage: (stage: Message) => void = () => {}, labels: readonly (LabelRaster | null)[] = [],
+  csg: CsgApi,
+  state: AppState,
+  segments: number,
+  onStage: (stage: Message) => void = () => {},
+  labels: readonly (LabelRaster | null)[] = [],
   hinge: HalfHinge | null = null,
 ): CaseBuild {
   const scope = new CsgScope();
@@ -110,37 +114,44 @@ export function buildCase(
     // standoff does not open it.
     onStage(BUILD_STAGES[2]);
     // a hung board's supports are a floor board's in the case turned upside down
-    const held = (board: PlacedBoard): Support[] => (board.def.mount.kind === 'holes'
-      ? standoffs(csg, scope, board, shape.floor, segments)
-      : board.def.mount.kind === 'clamp'
-        ? clampPosts(csg, scope, board, shape.floor, segments)
-        : railsScrewed(board.def, board.placement)
-          ? screwedRails(csg, scope, board, shape.floor, segments)
-          : rails(csg, scope, board, shape.floor));
+    const held = (board: PlacedBoard): Support[] =>
+      board.def.mount.kind === 'holes'
+        ? standoffs(csg, scope, board, shape.floor, segments)
+        : board.def.mount.kind === 'clamp'
+          ? clampPosts(csg, scope, board, shape.floor, segments)
+          : railsScrewed(board.def, board.placement)
+            ? screwedRails(csg, scope, board, shape.floor, segments)
+            : rails(csg, scope, board, shape.floor);
     // and step aside for its glass, which a rim around it locates
     // built in its plate's frame (the top, or the console's slope), then turned into the case
     const hung = (board: PlacedBoard): Support[] => {
       const frame = board.frame ?? flatFrame(dims.h);
       const local = composeAffine(invertRigid(frame), board.toCase);
       const keepOut = glassKeepOut(csg, scope, board, segments);
-      const own = fromCeiling(scope, held(upsideDown({ ...board, toCase: local, z0: local[11] }, 0)), 0)
-        .map((support): Support => {
-          const material = transformSolid(scope, support.material, frame);
-          return {
-            base: applyAffine(frame, support.base),
-            material: keepOut ? scope.keep(material.subtract(keepOut)) : material,
-            holes: support.holes ? transformSolid(scope, support.holes, frame) : null,
-            ...(support.loose ? { loose: { ...support.loose, solid: transformSolid(scope, support.loose.solid, frame) } } : {}),
-          };
-        });
+      const own = fromCeiling(scope, held(upsideDown({ ...board, toCase: local, z0: local[11] }, 0)), 0).map((support): Support => {
+        const material = transformSolid(scope, support.material, frame);
+        return {
+          base: applyAffine(frame, support.base),
+          material: keepOut ? scope.keep(material.subtract(keepOut)) : material,
+          holes: support.holes ? transformSolid(scope, support.holes, frame) : null,
+          ...(support.loose ? { loose: { ...support.loose, solid: transformSolid(scope, support.loose.solid, frame) } } : {}),
+        };
+      });
       return [...own, ...rimSolids(csg, scope, board, shape.floor, segments)];
     };
     // a board on a display's back rides on the display's own standoffs
     // (a carried display only gets the rim around its glass)
-    const supports: Support[] = layout.boards.flatMap((board) => (board.attached !== undefined
-      ? (board.carried ? rimSolids(csg, scope, board, shape.floor, segments) : []) : board.def.battery
-      ? batterySupports(csg, scope, board, board.def.battery, shape.floor, segments)
-      : board.hung ? hung(board) : held(board)));
+    const supports: Support[] = layout.boards.flatMap((board) =>
+      board.attached !== undefined
+        ? board.carried
+          ? rimSolids(csg, scope, board, shape.floor, segments)
+          : []
+        : board.def.battery
+          ? batterySupports(csg, scope, board, board.def.battery, shape.floor, segments)
+          : board.hung
+            ? hung(board)
+            : held(board),
+    );
     // a hinged half's magnets: a boss under the inner face's plate, its pocket open into the cavity —
     // a support of that plate, so it goes with the lid when the lid is on top
     if (hinge?.magnets) {
@@ -167,12 +178,26 @@ export function buildCase(
     body = attach(csg, scope, body, forBody, lidSolid);
     lidSolid = attach(csg, scope, lidSolid, forLid, rawBody);
     // rails on screws go with the part their posts are on
-    const loose = (own: Support[]): { solid: Manifold; local: Manifold }[] => own.flatMap((support) => (support.loose ? [support.loose] : []));
+    const loose = (own: Support[]): { solid: Manifold; local: Manifold }[] =>
+      own.flatMap((support) => (support.loose ? [support.loose] : []));
     const railParts = (own: Support[]): { assembled: SurfaceMesh | null; print: SurfaceMesh | null } => {
       const pieces = loose(own);
       if (pieces.length === 0) return { assembled: null, print: null };
-      const print = railsForPrint(csg, scope, pieces.map((piece) => piece.local));
-      return { assembled: fromManifold(unionAll(csg, scope, pieces.map((piece) => piece.solid))), print: print ? fromManifold(print) : null };
+      const print = railsForPrint(
+        csg,
+        scope,
+        pieces.map((piece) => piece.local),
+      );
+      return {
+        assembled: fromManifold(
+          unionAll(
+            csg,
+            scope,
+            pieces.map((piece) => piece.solid),
+          ),
+        ),
+        print: print ? fromManifold(print) : null,
+      };
     };
     const bodyRails = railParts(forBody);
     const lidRails = railParts(forLid);
@@ -309,21 +334,35 @@ export function buildCase(
     if (raised.body.length > 0) body = scope.keep(body.add(unionAll(csg, scope, raised.body)));
     if (raised.lid.length > 0) lidSolid = scope.keep(lidSolid.add(unionAll(csg, scope, raised.lid)));
 
-    const screw = lid.fastening === 'printed'
-      ? fromManifold(screwSolid(csg, scope, screwShape(lid.thread.size, plate, lid.fit), threadPoints(segments)))
-      : null;
+    const screw =
+      lid.fastening === 'printed'
+        ? fromManifold(screwSolid(csg, scope, screwShape(lid.thread.size, plate, lid.fit), threadPoints(segments)))
+        : null;
     // clamp bars go with the part that holds what they clamp: battery bars with the body,
     // a panel's with the lid when the lid holds the panel
-    const bars = layout.boards.flatMap((board) => (board.def.battery
-      ? [{ onLid: false, solid: batteryClamps(csg, scope, board, board.def.battery, segments) }]
-      : board.hung && board.def.mount.kind === 'clamp' ? [{ onLid: heldByLid(board, lid.face), solid: clampBars(csg, scope, board, segments) }] : []));
+    const bars = layout.boards.flatMap((board) =>
+      board.def.battery
+        ? [{ onLid: false, solid: batteryClamps(csg, scope, board, board.def.battery, segments) }]
+        : board.hung && board.def.mount.kind === 'clamp'
+          ? [{ onLid: heldByLid(board, lid.face), solid: clampBars(csg, scope, board, segments) }]
+          : [],
+    );
     const merged = (onLid: boolean): SurfaceMesh | null => {
       const solids = bars.filter((bar) => bar.onLid === onLid).map((bar) => bar.solid);
       return solids.length > 0 ? fromManifold(unionAll(csg, scope, solids)) : null;
     };
     return {
-      body: fromManifold(body), lid: fromManifold(lidSolid), screw, clamps: merged(false), lidClamps: merged(true), hinge: leaf ? fromManifold(leaf) : null,
-      rails: bodyRails.assembled, lidRails: lidRails.assembled, railsPrint: bodyRails.print, lidRailsPrint: lidRails.print, dims,
+      body: fromManifold(body),
+      lid: fromManifold(lidSolid),
+      screw,
+      clamps: merged(false),
+      lidClamps: merged(true),
+      hinge: leaf ? fromManifold(leaf) : null,
+      rails: bodyRails.assembled,
+      lidRails: lidRails.assembled,
+      railsPrint: bodyRails.print,
+      lidRailsPrint: lidRails.print,
+      dims,
     };
   } finally {
     scope.dispose();
@@ -336,7 +375,13 @@ export function buildCase(
  */
 function attach(csg: CsgApi, scope: CsgScope, part: Manifold, supports: readonly Support[], other: Manifold): Manifold {
   if (supports.length === 0) return part;
-  const material = scope.keep(unionAll(csg, scope, supports.map((support) => support.material)).subtract(other));
+  const material = scope.keep(
+    unionAll(
+      csg,
+      scope,
+      supports.map((support) => support.material),
+    ).subtract(other),
+  );
   const grown = scope.keep(part.add(material));
   const holes = supports.flatMap((support) => (support.holes ? [support.holes] : []));
   if (holes.length === 0) return grown;
