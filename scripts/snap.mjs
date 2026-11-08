@@ -236,7 +236,7 @@ if (clip) {
 
 const evalExpr = flags.get('eval');
 const evalResult = evalExpr ? await page.evaluate(async (expr) => {
-  // eslint-disable-next-line no-eval
+  // oxlint-disable-next-line no-eval
   const value = await (0, eval)(expr);
   return JSON.stringify(value, null, 1);
 }, evalExpr) : null;

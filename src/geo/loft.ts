@@ -95,7 +95,8 @@ export function loftLevels(spec: LoftSpec, segments: number): number[] {
   const { edgeR: e } = effectiveRadii(spec);
   const levels = [spec.z0, spec.z1];
   // uniform in angle along the arc: dz = e·(1 − cos φ)
-  for (let i = 1; e > 0 && i <= segments; i++) {
+  const steps = e > 0 ? segments : 0;
+  for (let i = 1; i <= steps; i++) {
     const dz = e * (1 - Math.cos((i / segments) * (Math.PI / 2)));
     if (spec.filletBottom) levels.push(spec.z0 + dz);
     if (spec.filletTop) levels.push(spec.z1 - dz);

@@ -62,8 +62,8 @@ describe('the caps', () => {
     expect(holes[0]).toMatchObject({ shape: 'round', w: 2 * caps[0].stemR + 2 * CAP_FIT });
     // bare holes: the button grown by its clearance
     const bare = caseLayout(state({ buttons: 'hole' }));
-    const plain = portCutters(bare, shape).filter((cutter) => cutter.source.kind === 'port' && cutter.source.port === 'prg');
-    expect(plain[0].w).toBeCloseTo(3 + 2 * 0.6, 6);
+    const plain = portCutters(bare, shape).find((cutter) => cutter.source.kind === 'port' && cutter.source.port === 'prg');
+    expect(plain?.w).toBeCloseTo(3 + 2 * 0.6, 6);
   });
 
   it('the flange lies on its button, the stem reaches CAP_PROUD out of the top — on the floor, deep under the lid, and hung', () => {

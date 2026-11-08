@@ -28,7 +28,7 @@ describe('board catalog', () => {
     // the sanitizer must not have to change anything that was written
     expect(board.size).toEqual(r.size);
     expect(board.name).toBe(r.name);
-    expect(typeof r.source === 'string' && /^https:\/\//.test(r.source)).toBe(true);
+    expect(typeof r.source === 'string' && r.source.startsWith('https://')).toBe(true);
     expect(typeof r.verified).toBe('boolean');
     expect(board.topHeight).toBe(r.topHeight);
     expect(board.bottomHeight).toBe(r.bottomHeight);

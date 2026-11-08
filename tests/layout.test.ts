@@ -275,9 +275,9 @@ describe('a user\'s project: the layout messages say where and what to do', () =
 
   it('connectors that do stick out: how thin a wall brings them flush', () => {
     const thick = sanitizeState({ ...defaultState(), shape: { ...defaultState().shape, wall: 4 }, boards: [{ ...defaultState().boards[0], walls: ['front'] }] });
-    const [note] = collisions(caseLayout(thick)).filter((m) => m.code.startsWith('info.portsRecessed'));
-    expect(note.code).toBe('info.portsRecessedOut');
-    expect(note.params).toMatchObject({ board: 1, walls: 'front', wall: 4 });
+    const note = collisions(caseLayout(thick)).find((m) => m.code.startsWith('info.portsRecessed'));
+    expect(note?.code).toBe('info.portsRecessedOut');
+    expect(note?.params).toMatchObject({ board: 1, walls: 'front', wall: 4 });
   });
 });
 

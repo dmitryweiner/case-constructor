@@ -119,7 +119,8 @@ export function validateMesh(mesh: SurfaceMesh, areaEps = 1e-12): MeshReport {
   }
   const edgeKey = (a: number, b: number): number => (a < b ? a * nVerts + b : b * nVerts + a);
   let degenerate = 0;
-  for (let t = 0; indicesValid && t < indices.length; t += 3) {
+  const checked = indicesValid ? indices.length : 0;
+  for (let t = 0; t < checked; t += 3) {
     const ia = indices[t];
     const ib = indices[t + 1];
     const ic = indices[t + 2];

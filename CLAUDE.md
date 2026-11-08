@@ -51,7 +51,7 @@ does not mention `manifold`, and the upload of `dist/`.
 ## Commands
 
 ```bash
-npm run check     # tsc + eslint (no `as` casts) + vitest
+npm run check     # tsc (TypeScript 7) + oxlint --type-aware (no `as` casts) + vitest
 npm run smoke     # browser smoke; --preview for the production build
 npm run build     # production build → ./dist
 ```
@@ -511,7 +511,8 @@ freely; a temporary script that turns out useful becomes a permanent one.
   literal under `src/` outside `src/i18n/`.
 - Hebrew is text-only RTL: `<html dir>` stays `ltr`; `style.css` gives every
   text element `unicode-bidi: plaintext` (= `dir="auto"`).
-- No `as` casts (eslint); `as const` is allowed.
+- No `as` casts (oxlint `typescript/consistent-type-assertions`, `.oxlintrc.json`);
+  `as const` is allowed. Every rule turned off there says why.
 
 ## What costs what
 

@@ -28,13 +28,13 @@ import type { Affine, Vec3 } from './surface';
 
 /** Points and solids in a half's hinge frame: x along the hinge, u outward from the wall's outer face, z up. */
 interface HingeFrame {
-  at(x: number, u: number, z: number): Vec3;
+  at: (x: number, u: number, z: number) => Vec3;
   /** a solid built along z (a cylinder, a prism) turned onto the axis: z → x */
-  along(solid: Manifold): Manifold;
+  along: (solid: Manifold) => Manifold;
   /** the same, turned onto the line (x, z) through the wall: z → −u (inwards) */
-  across(solid: Manifold, x: number, z: number): Manifold;
+  across: (solid: Manifold, x: number, z: number) => Manifold;
   /** a box over x, u and z ranges */
-  box(x0: number, x1: number, u0: number, u1: number, z0: number, z1: number): Manifold;
+  box: (x0: number, x1: number, u0: number, u1: number, z0: number, z1: number) => Manifold;
   n: number;
 }
 

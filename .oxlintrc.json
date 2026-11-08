@@ -1,0 +1,46 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import", "vitest"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error"
+  },
+  "env": { "browser": true, "worker": true, "node": true, "es2024": true },
+  "ignorePatterns": ["dist/**", "scripts/**", "shots/**", "drawings/**"],
+  "rules": {
+    // Forbid type coercion via `as`. Use type guards (typeof, instanceof,
+    // user-defined predicates) or proper typing instead.
+    "typescript/consistent-type-assertions": ["error", { "assertionStyle": "never" }],
+    // Unused parameters of interface signatures are marked with `_`.
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    // Styles are imported for their side effect.
+    "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
+    // Small helpers stay next to the one place that uses them.
+    "unicorn/consistent-function-scoping": "off",
+    // A nested build reuses the name of what it refines (`solid`, `built`).
+    "no-shadow": "off",
+    // State is immutable: elements are copied with a change, never mutated.
+    "oxc/no-map-spread": "off",
+    // `sort()` / `reverse()` run on copies or arrays the function owns.
+    "unicorn/no-array-sort": "off",
+    "unicorn/no-array-reverse": "off",
+    // Labels and names are cut by code points on purpose (not UTF-16 units).
+    "typescript/no-misused-spread": "off",
+    // The app posts only to its worker, and a worker takes no target origin.
+    "unicorn/require-post-message-target-origin": "off"
+  },
+  "overrides": [
+    {
+      "files": ["tests/**"],
+      "rules": {
+        // Vitest's `expect(value, message)` names the failing case.
+        "vitest/valid-expect": ["error", { "maxArgs": 2 }],
+        // A test walks shapes, faces and boards and checks what applies to each.
+        "vitest/no-conditional-expect": "off",
+        // Shared checks are helpers named `expect…` or `check…`.
+        "vitest/expect-expect": ["error", { "assertFunctionNames": ["expect", "expect*", "check*"] }]
+      }
+    }
+  ]
+}

@@ -300,7 +300,7 @@ describe('the knuckles', () => {
       const lower = mergeMeshes([a.body, a.lid]);
       const upper = mergeMeshes([b.body, b.lid]);
       for (let angle = 0; angle <= 180; angle += 15) {
-        expect(shared(lower, transformMesh(upper, upperPose(fold, angle))), `${lids} ${angle}°`).toBeLessThan(1e-6);
+        expect(shared(lower, transformMesh(upper, upperPose(fold, angle))), `${lids.join(',')} ${angle}°`).toBeLessThan(1e-6);
       }
       // the bar is there: the lower body is a closed solid through the upper half's knuckles' x
       const hinge = halfHinge(state, 'b');

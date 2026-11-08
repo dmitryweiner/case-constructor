@@ -417,9 +417,9 @@ describe('printed caps over the keys (K3b)', () => {
     const shape = { ...s.shape, console: layout.console };
     const [cap] = keyCaps(layout, shape);
     expect(cap.corner).toBeCloseTo(0.5, 6);
-    const [hole] = portCutters(layout, shape).filter((cutter) => cutter.source.kind === 'port' && cutter.source.port === 'keys');
+    const hole = portCutters(layout, shape).find((cutter) => cutter.source.kind === 'port' && cutter.source.port === 'keys');
     expect(hole).toMatchObject({ shape: 'rect', w: 2 * cap.stemR + 2 * CAP_FIT });
-    expect(hole.r).toBeCloseTo(0.5 + CAP_FIT, 6);
+    expect(hole?.r).toBeCloseTo(0.5 + CAP_FIT, 6);
     const built = buildCase(csg, s, 8);
     const report = validateMesh(built.lid);
     expect(report.watertight).toBe(true);
@@ -594,6 +594,7 @@ describe('a keypad’s flange under the plate (K4) and the last two keyboards', 
     expect(s.boards[0]).not.toHaveProperty('on');
     const layout = caseLayout(s);
     const openings = portCutters(layout, { ...s.shape, console: layout.console }).filter((cutter) => cutter.source.kind === 'port' && cutter.ez[2] === 1);
+    // oxlint-disable-next-line typescript/require-array-sort-compare -- port ids (and false), any string order does
     expect(openings.map((cutter) => cutter.source.kind === 'port' && cutter.source.port).sort()).toEqual(['display', 'keys']);
   });
 

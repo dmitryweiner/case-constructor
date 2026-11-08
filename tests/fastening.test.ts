@@ -160,7 +160,7 @@ describe('screw posts', () => {
         // between the boss and the wall, on the diagonal: solid
         for (const t of [spot.r + 0.3, (spot.r + along) / 2]) {
           const p = applyAffine(g.frame.fromFace, [spot.centre[0] + dir[0] * t, spot.centre[1] + dir[1] * t, z]);
-          expect(solidAt(body, p), `post ${spot.centre.map((v) => v.toFixed(1))} at ${t.toFixed(1)}`).toBe(true);
+          expect(solidAt(body, p), `post ${spot.centre.map((v) => v.toFixed(1)).join(',')} at ${t.toFixed(1)}`).toBe(true);
         }
       }
       // nothing of a post reaches the outer surface: the body's outer corner has no seam at the post's levels
@@ -306,7 +306,7 @@ describe('head seats keep inside the lid', () => {
       for (let k = 0; k < 8; k++) {
         const a = (k * Math.PI) / 4;
         const p = applyAffine(frame.fromFace, [spot.centre[0] + Math.cos(a) * (r - 0.4), spot.centre[1] + Math.sin(a) * (r - 0.4), -1.2]);
-        expect(solidAt(lid, p), `post ${spot.centre.map((v) => v.toFixed(1))}, ${k * 45}°`).toBe(false);
+        expect(solidAt(lid, p), `post ${spot.centre.map((v) => v.toFixed(1)).join(',')}, ${k * 45}°`).toBe(false);
       }
     }
     lid.delete();
@@ -335,7 +335,7 @@ describe('head seats keep inside the lid', () => {
       const dv = cv < extent.h / 2 ? -1 : 1;
       const k = (seatR + SEAT_WALL / 2) / Math.SQRT2;
       const p = applyAffine(frame.fromFace, [cu + du * k, cv + dv * k, -0.3]);
-      expect(solidAt(lid, p), `corner of ${dims.w}×${dims.d} at ${spot.centre.map((v) => v.toFixed(1))}`).toBe(true);
+      expect(solidAt(lid, p), `corner of ${dims.w}×${dims.d} at ${spot.centre.map((v) => v.toFixed(1)).join(',')}`).toBe(true);
     }
     lid.delete();
   });

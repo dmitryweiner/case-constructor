@@ -55,7 +55,7 @@ export function createProgress({ wrap, fill, label }: ProgressElements): Progres
   let hideFrame = 0;
 
   function render(): void {
-    const shown = active.filter((tracker) => tracker.visible).at(-1);
+    const shown = active.findLast((tracker) => tracker.visible);
     if (!shown) {
       // Two jobs in a row — one ending and the next starting in the same
       // frame — must not blink the bar: hide a frame later.

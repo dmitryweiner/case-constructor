@@ -788,3 +788,9 @@ review pass and wait for the user's.
   export card ("View and export"), with a caption over the canvas saying what
   is shown; Both is the first tab. A console with a bottom lid prints lying
   on its slope.
+- **2026-11-08.** TypeScript 7 (`tsc` 7.0, the native compiler): no code
+  change was needed, the check takes 0.5 s instead of 3.7 s. typescript-eslint
+  does not support it, so ESLint gave way to oxlint with `oxlint-tsgolint`
+  (`--type-aware`, `.oxlintrc.json`): the `as` ban is
+  `typescript/consistent-type-assertions`; the rules that fight the code's
+  style are off, each with its reason; `lib` is ES2023 (`findLast`).

@@ -484,7 +484,7 @@ function portControls(index: number, state: AppState): Control<AppState>[] {
 }
 
 /** A row of plain action buttons under a label, styled like a segmented control. */
-function actionRow(label: Key, hint: Key | null, buttons: { id: string; text: string; title?: string; run(): void }[]): HTMLElement {
+function actionRow(label: Key, hint: Key | null, buttons: { id: string; text: string; title?: string; run: () => void }[]): HTMLElement {
   const row = make('div', 'row');
   const name = make('span', 'row-label', t(label));
   if (hint) name.title = t(hint);
