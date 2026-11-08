@@ -50,7 +50,8 @@ User documentation: [docs/](docs/README.md).
 ```bash
 npm install
 npm run dev       # http://localhost:5173
-npm run check     # tsc + oxlint + vitest
+npm run check     # tsc + oxlint + prettier + vitest
+npm run format    # prettier
 npm run smoke     # browser smoke (Playwright)
 npm run build
 ```

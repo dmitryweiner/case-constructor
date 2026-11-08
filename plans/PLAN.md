@@ -794,3 +794,7 @@ review pass and wait for the user's.
   (`--type-aware`, `.oxlintrc.json`): the `as` ban is
   `typescript/consistent-type-assertions`; the rules that fight the code's
   style are off, each with its reason; `lib` is ES2023 (`findLast`).
+  Then prettier (`.prettierrc.json`, `npm run format`; `lint` checks it),
+  one reformatting commit listed in `.git-blame-ignore-revs`; Markdown,
+  the board catalog and the golden file are not its. Node is pinned in
+  `.node-version` instead of `.nvmrc`.

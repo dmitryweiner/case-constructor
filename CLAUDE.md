@@ -51,7 +51,8 @@ does not mention `manifold`, and the upload of `dist/`.
 ## Commands
 
 ```bash
-npm run check     # tsc (TypeScript 7) + oxlint --type-aware (no `as` casts) + vitest
+npm run check     # tsc (TypeScript 7) + oxlint --type-aware (no `as` casts) + prettier --check + vitest
+npm run format    # prettier --write (not *.md, the board catalog, golden, fixtures: .prettierignore)
 npm run smoke     # browser smoke; --preview for the production build
 npm run build     # production build → ./dist
 ```
