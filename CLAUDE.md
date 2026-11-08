@@ -35,7 +35,7 @@ ghosts (the branch `through-bolts`): done.
 
 ## Node
 
-Node 22 (`.nvmrc`; vitest 5 needs ≥ 22.12). The login shell has Node 20 by
+Node 22 (`.node-version`; vitest 5 needs ≥ 22.12). The login shell has Node 20 by
 default (`fnm env` in ~/.zshrc puts it first in every command). A
 SessionStart hook in `.claude/settings.local.json` exports Node 22's path
 through `$CLAUDE_ENV_FILE`; without it, run commands with
