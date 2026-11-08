@@ -75,10 +75,7 @@ if (rawUrl) {
 }
 
 label('boot');
-await page.waitForFunction(
-  () => (document.querySelector('#status')?.textContent ?? '').length > 0,
-  { timeout: 20000 },
-);
+await page.waitForFunction(() => (document.querySelector('#status')?.textContent ?? '').length > 0, { timeout: 20000 });
 
 // Dev builds report when the worker has answered for the current state; the
 // production build has no hook, and there the audit's text is all there is.
@@ -88,14 +85,16 @@ async function settle() {
     await page.waitForFunction(() => window.__case?.built(), undefined, { timeout: 30000 });
     return;
   }
-  await page.waitForFunction(
-    () => {
-      const text = document.querySelector('#audit')?.textContent ?? '';
-      return text.length > 0 && !/building|сборка|збирання|בונה/.test(text);
-    },
-    undefined,
-    { timeout: 30000 },
-  ).catch(() => {});
+  await page
+    .waitForFunction(
+      () => {
+        const text = document.querySelector('#audit')?.textContent ?? '';
+        return text.length > 0 && !/building|сборка|збирання|בונה/.test(text);
+      },
+      undefined,
+      { timeout: 30000 },
+    )
+    .catch(() => {});
 }
 await settle();
 
@@ -175,17 +174,21 @@ if (panelMode) {
     const box = await page.locator('#view').boundingBox();
     const sheet = await page.locator('#panel').boundingBox();
     await page.mouse.click(box.x + box.width - 20, (box.y + sheet.y) / 2);
-  }
-  else if (await page.locator('#panelBtn').isVisible()) await page.click('#panelBtn');
+  } else if (await page.locator('#panelBtn').isVisible()) await page.click('#panelBtn');
   // the sheet and the picture move for 0.25 s
   await page.waitForTimeout(400);
 }
 
 // Camera presets: directions in the screen frame (y up; the model's front is +z).
 const CAMERAS = {
-  iso: [140, 110, 170], under: [140, -110, 170],
-  top: [0, 1, 0.001], bottom: [0, -1, 0.001],
-  front: [0, 0.25, 1], back: [0, 0.25, -1], left: [-1, 0.25, 0], right: [1, 0.25, 0],
+  iso: [140, 110, 170],
+  under: [140, -110, 170],
+  top: [0, 1, 0.001],
+  bottom: [0, -1, 0.001],
+  front: [0, 0.25, 1],
+  back: [0, 0.25, -1],
+  left: [-1, 0.25, 0],
+  right: [1, 0.25, 0],
 };
 const cameraName = flags.get('camera');
 if (cameraName) {
@@ -235,11 +238,13 @@ if (clip) {
 }
 
 const evalExpr = flags.get('eval');
-const evalResult = evalExpr ? await page.evaluate(async (expr) => {
-  // eslint-disable-next-line no-eval
-  const value = await (0, eval)(expr);
-  return JSON.stringify(value, null, 1);
-}, evalExpr) : null;
+const evalResult = evalExpr
+  ? await page.evaluate(async (expr) => {
+      // oxlint-disable-next-line no-eval
+      const value = await (0, eval)(expr);
+      return JSON.stringify(value, null, 1);
+    }, evalExpr)
+  : null;
 const status = await page.locator('#status').textContent();
 const audit = (await page.locator('#audit').textContent()).trim();
 const warnings = (await page.locator('#warnings').innerText()).trim();

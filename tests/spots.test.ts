@@ -80,7 +80,7 @@ describe('message spots', () => {
     expect(Math.min(box.min[0], box.min[1], dims.w - box.max[0], dims.d - box.max[1])).toBeLessThan(state.shape.wall + 1e-6);
   });
 
-  it('every spot of the user\'s project is inside the case', () => {
+  it("every spot of the user's project is inside the case", () => {
     const all = [...messages, ...cutMessages(user)].filter((m) => m.spot);
     expect(all.length).toBeGreaterThanOrEqual(5);
     for (const m of all) {

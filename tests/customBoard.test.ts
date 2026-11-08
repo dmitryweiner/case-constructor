@@ -73,7 +73,11 @@ describe('custom board', () => {
     });
     const placement = sanitizePlacement({ board: 'custom', custom, cuts: { 'usb-c-1': false } });
     const next = withPortType(placement, 0, 'led');
-    expect(next.custom?.ports.map((port) => [port.id, port.type])).toEqual([['led-2', 'led'], ['led-1', 'led'], ['power', 'usb-c']]);
+    expect(next.custom?.ports.map((port) => [port.id, port.type])).toEqual([
+      ['led-2', 'led'],
+      ['led-1', 'led'],
+      ['power', 'usb-c'],
+    ]);
     expect(next.cuts).toEqual({ 'led-2': false });
     // a name the user gave stays
     expect(withPortType(placement, 2, 'button').custom?.ports[2].id).toBe('power');
@@ -88,10 +92,17 @@ describe('custom board', () => {
       ['dc-jack-5.5-1', 'dc-jack-5.5-2'],
       ['button-1', 'button-2', 'button-3', 'display-1', 'led-1'],
     ]);
-    const closed = sanitizePlacement({ board: 'custom', custom: { ...defaultCustomBoard(), ports: [
-      { id: 'usb-c-1', type: 'usb-c', edge: 'front', along: 10 },
-      { id: 'usb-c-2', type: 'led', edge: 'back', along: 10 },
-    ] }, cuts: { 'usb-c-1': false, 'usb-c-2': false } });
+    const closed = sanitizePlacement({
+      board: 'custom',
+      custom: {
+        ...defaultCustomBoard(),
+        ports: [
+          { id: 'usb-c-1', type: 'usb-c', edge: 'front', along: 10 },
+          { id: 'usb-c-2', type: 'led', edge: 'back', along: 10 },
+        ],
+      },
+      cuts: { 'usb-c-1': false, 'usb-c-2': false },
+    });
     expect(closed.custom?.ports.map((port) => port.id)).toEqual(['usb-c-1', 'led-1']);
     expect(closed.cuts).toEqual({ 'usb-c-1': false, 'led-1': false });
     expect(sanitizeState(state)).toEqual(state);

@@ -2,7 +2,11 @@ import { CURRENT_PROJECT_KEY, loadCurrentProject, saveCurrentProject } from '../
 import { defaultState } from '../src/state/schema';
 
 /** A Map behind the two Storage methods the module uses. */
-function fakeStorage(initial: Record<string, string> = {}): { getItem(key: string): string | null; setItem(key: string, value: string): void; data: Map<string, string> } {
+function fakeStorage(initial: Record<string, string> = {}): {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  data: Map<string, string>;
+} {
   const data = new Map(Object.entries(initial));
   return {
     data,

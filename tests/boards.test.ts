@@ -3,8 +3,27 @@
 
 import { RAW_BOARDS, CATALOG, catalogBoard } from '../src/boards/catalog';
 import type { PortType } from '../src/boards/schema';
-import { PORT_TYPES, insidePolygon, isPortType, onFace, resolveVariant, sanitizeBoard, sanitizeOutline, sanitizePort, windowInGlass } from '../src/boards/schema';
-import { defaultPlacement, sanitizePlacement, portCut, boardOf, entryOf, minBoardZ, placementMinZ, pinsDown } from '../src/boards/placement';
+import {
+  PORT_TYPES,
+  insidePolygon,
+  isPortType,
+  onFace,
+  resolveVariant,
+  sanitizeBoard,
+  sanitizeOutline,
+  sanitizePort,
+  windowInGlass,
+} from '../src/boards/schema';
+import {
+  defaultPlacement,
+  sanitizePlacement,
+  portCut,
+  boardOf,
+  entryOf,
+  minBoardZ,
+  placementMinZ,
+  pinsDown,
+} from '../src/boards/placement';
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -28,7 +47,7 @@ describe('board catalog', () => {
     // the sanitizer must not have to change anything that was written
     expect(board.size).toEqual(r.size);
     expect(board.name).toBe(r.name);
-    expect(typeof r.source === 'string' && /^https:\/\//.test(r.source)).toBe(true);
+    expect(typeof r.source === 'string' && r.source.startsWith('https://')).toBe(true);
     expect(typeof r.verified).toBe('boolean');
     expect(board.topHeight).toBe(r.topHeight);
     expect(board.bottomHeight).toBe(r.bottomHeight);
@@ -64,7 +83,12 @@ describe('board catalog', () => {
       if (p.glass !== undefined) {
         const glass = rec(p.glass);
         // a round glass, like a round part, gives its diameter once
-        expect(onFace(port) && port.glass, `${port.id} glass`).toEqual({ r: 0, shape: 'rect', ...glass, ...(glass.shape === 'round' ? { d: glass.w } : {}) });
+        expect(onFace(port) && port.glass, `${port.id} glass`).toEqual({
+          r: 0,
+          shape: 'rect',
+          ...glass,
+          ...(glass.shape === 'round' ? { d: glass.w } : {}),
+        });
         if (onFace(port) && port.glass) expect(windowInGlass(port, port.glass), `${port.id} window in its glass`).toBe(true);
       }
       if (onFace(port)) {
@@ -142,21 +166,64 @@ describe('sanitizeBoard', () => {
 
   it('an outline is clamped into the size and turned counter-clockwise; a crossing one is dropped', () => {
     const size = { w: 10, d: 10 };
-    expect(sanitizeOutline([[0, 0], [0, 10], [12, 10], [10, 0]], size)).toEqual([[10, 0], [10, 10], [0, 10], [0, 0]]);
-    expect(sanitizeOutline([[0, 0], [10, 10], [10, 0], [0, 10]], size)).toBeUndefined();
-    expect(sanitizeOutline([[0, 0], [5, 5]], size)).toBeUndefined();
+    expect(
+      sanitizeOutline(
+        [
+          [0, 0],
+          [0, 10],
+          [12, 10],
+          [10, 0],
+        ],
+        size,
+      ),
+    ).toEqual([
+      [10, 0],
+      [10, 10],
+      [0, 10],
+      [0, 0],
+    ]);
+    expect(
+      sanitizeOutline(
+        [
+          [0, 0],
+          [10, 10],
+          [10, 0],
+          [0, 10],
+        ],
+        size,
+      ),
+    ).toBeUndefined();
+    expect(
+      sanitizeOutline(
+        [
+          [0, 0],
+          [5, 5],
+        ],
+        size,
+      ),
+    ).toBeUndefined();
     expect(sanitizeOutline('nope', size)).toBeUndefined();
   });
 
   it('pins need an edge; the rest takes defaults', () => {
     expect(sanitizeBoard({ pins: { below: 8 } }).pins).toBeUndefined();
-    expect(sanitizeBoard({ pins: { edges: ['back', 'front', 'top'] } }).pins)
-      .toEqual({ below: 8.5, edges: ['front', 'back'], inset: 1.27, soldered: false });
+    expect(sanitizeBoard({ pins: { edges: ['back', 'front', 'top'] } }).pins).toEqual({
+      below: 8.5,
+      edges: ['front', 'back'],
+      inset: 1.27,
+      soldered: false,
+    });
   });
 
   it('a board without holes is held by rails; duplicate port ids are renamed', () => {
-    const board = sanitizeBoard({ size: { w: 40, d: 20 }, mount: { kind: 'holes', holes: [] },
-      ports: [{ id: 'a', type: 'usb-c', edge: 'left' }, { id: 'a', type: 'led', edge: 'top' }] });
+    const board = sanitizeBoard({
+      size: { w: 40, d: 20 },
+      mount: { kind: 'holes', holes: [] },
+      ports: [
+        { id: 'a', type: 'usb-c', edge: 'left' },
+        { id: 'a', type: 'led', edge: 'top' },
+      ],
+    });
     expect(board.mount.kind).toBe('rails');
     expect(board.ports.map((port) => port.id)).toEqual(['a', 'a-2']);
   });
@@ -196,8 +263,12 @@ describe('display entries', () => {
     // not around the window: no glass at all
     expect(sanitizePort({ ...window, glass: { x: 25, y: 45, w: 30, d: 69.2, t: 3.5 } }, size, 0)).not.toHaveProperty('glass');
     // only a display part on top has one
-    expect(sanitizePort({ ...window, type: 'generic', glass: { x: 25, y: 45, w: 50, d: 69.2, t: 3.5 } }, size, 0)).not.toHaveProperty('glass');
-    expect(sanitizePort({ ...window, edge: 'bottom', glass: { x: 25, y: 45, w: 50, d: 69.2, t: 3.5 } }, size, 0)).not.toHaveProperty('glass');
+    expect(sanitizePort({ ...window, type: 'generic', glass: { x: 25, y: 45, w: 50, d: 69.2, t: 3.5 } }, size, 0)).not.toHaveProperty(
+      'glass',
+    );
+    expect(sanitizePort({ ...window, edge: 'bottom', glass: { x: 25, y: 45, w: 50, d: 69.2, t: 3.5 } }, size, 0)).not.toHaveProperty(
+      'glass',
+    );
   });
 
   it('a display is its own kind, and a panel may be thicker than a PCB', () => {
@@ -218,8 +289,12 @@ describe('display entries', () => {
 });
 
 const FAMILY = {
-  id: 'family', name: 'Family', size: { w: 20, d: 20, t: 1 }, mount: { kind: 'rails', holes: [] },
-  topHeight: 3, bottomHeight: 1,
+  id: 'family',
+  name: 'Family',
+  size: { w: 20, d: 20, t: 1 },
+  mount: { kind: 'rails', holes: [] },
+  topHeight: 3,
+  bottomHeight: 1,
   ports: [
     { id: 'usb', type: 'usb-c', edge: 'back', along: 10 },
     { id: 'boot', type: 'button', edge: 'top', x: 4, y: 16, cut: false },
@@ -227,8 +302,14 @@ const FAMILY = {
   ],
   variants: [
     { id: 'a', name: 'Model A', ports: { boot: { cut: true }, reset: { cut: true } } },
-    { id: 'b', name: 'Model B', ports: { reset: { cut: true, x: 10, ghost: 1 }, nope: { cut: true } }, remove: ['boot'],
-      add: [{ id: 'display', type: 'display', edge: 'bottom', x: 10, y: 8, w: 12, d: 10, h: 2 }], bottomHeight: 1.5 },
+    {
+      id: 'b',
+      name: 'Model B',
+      ports: { reset: { cut: true, x: 10, ghost: 1 }, nope: { cut: true } },
+      remove: ['boot'],
+      add: [{ id: 'display', type: 'display', edge: 'bottom', x: 10, y: 8, w: 12, d: 10, h: 2 }],
+      bottomHeight: 1.5,
+    },
   ],
 };
 
@@ -252,14 +333,20 @@ describe('variants', () => {
   it('a variant overrides, removes and adds ports; the first is the default', () => {
     const family = sanitizeBoard(FAMILY);
     const a = resolveVariant(family, 'a');
-    expect(a.ports.map((port) => [port.id, port.cut])).toEqual([['usb', true], ['boot', true], ['reset', true]]);
+    expect(a.ports.map((port) => [port.id, port.cut])).toEqual([
+      ['usb', true],
+      ['boot', true],
+      ['reset', true],
+    ]);
     expect(resolveVariant(family, undefined)).toEqual(a);
     expect(resolveVariant(family, 'zzz')).toEqual(a);
     const b = resolveVariant(family, 'b');
     expect(b.ports.map((port) => port.id)).toEqual(['usb', 'reset', 'display']);
     expect(b.ports.find((port) => port.id === 'reset')).toMatchObject({ x: 10, y: 16, cut: true });
     expect(b.bottomHeight).toBe(1.5);
-    expect(resolveVariant(sanitizeBoard({ ...FAMILY, variants: undefined }), 'a').ports.every((port) => port.id === 'usb' || !port.cut)).toBe(true);
+    expect(
+      resolveVariant(sanitizeBoard({ ...FAMILY, variants: undefined }), 'a').ports.every((port) => port.id === 'usb' || !port.cut),
+    ).toBe(true);
   });
 
   it('the placement keeps a real variant, the board it builds is resolved', () => {

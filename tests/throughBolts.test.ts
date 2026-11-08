@@ -18,7 +18,17 @@ import { innerProtrusion } from '../src/state/hinged';
 import { applyAffine, meshBounds } from '../src/geo/surface';
 import { throughHardware } from '../src/geo/hardware';
 import { validateMesh } from '../src/geo/validate';
-import { NUT_AF_MAX, NUT_AF_MIN, NUT_H_MAX, NUT_H_MIN, defaultLid, nutSize, postDiameter, sanitizeLid, throughAllowed } from '../src/geo/lidSpec';
+import {
+  NUT_AF_MAX,
+  NUT_AF_MIN,
+  NUT_H_MAX,
+  NUT_H_MIN,
+  defaultLid,
+  nutSize,
+  postDiameter,
+  sanitizeLid,
+  throughAllowed,
+} from '../src/geo/lidSpec';
 import { BOSS_WALL, NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE } from '../src/geo/fasteners';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
@@ -57,7 +67,10 @@ describe('the nut size', () => {
   });
 
   it('a nyloc nut (DIN 985) is taller, as wide', () => {
-    for (const [size, h] of [['M3', 4], ['M4', 5]] as const) {
+    for (const [size, h] of [
+      ['M3', 4],
+      ['M4', 5],
+    ] as const) {
       const lid = sanitizeLid({ fastening: 'through', screw: { size }, nut: { kind: 'nyloc' } }, 'box');
       expect(nutSize(lid)).toEqual({ af: SCREWS[size].nutAF, h });
     }
@@ -206,7 +219,10 @@ describe('the built case', () => {
   }
 
   it.each([
-    ['top', 'box', 'recessed'], ['bottom', 'box', 'surface'], ['top', 'cylinder', 'surface'], ['bottom', 'cylinder', 'recessed'],
+    ['top', 'box', 'recessed'],
+    ['bottom', 'box', 'surface'],
+    ['top', 'cylinder', 'surface'],
+    ['bottom', 'cylinder', 'recessed'],
   ] as const)('lid %s on a %s, nut %s: a clear line through each column, the pocket empty, plastic around', (face, kind, place) => {
     const state = caseWith(face, kind, place);
     const { frame, plate, spots, lid } = lidPosts(state);
@@ -235,7 +251,10 @@ describe('the built case', () => {
         expect(solidAt(body, at(af / 2 - 0.3, -frame.depth + bolt.pocket + 0.4)), 'above the pocket').toBe(true);
       }
     }
-    for (const [name, mesh] of [['body', built.body], ['lid', built.lid]] as const) {
+    for (const [name, mesh] of [
+      ['body', built.body],
+      ['lid', built.lid],
+    ] as const) {
       const report = validateMesh(mesh);
       expect(report.watertight, name).toBe(true);
       expect(report.degenerateTriangles, name).toBe(0);
@@ -250,7 +269,8 @@ describe('the notes and checks', () => {
   const plain = (lid: Record<string, unknown>, shape: Record<string, unknown> = {}) => {
     const base = defaultState();
     return sanitizeState({
-      ...base, boards: [],
+      ...base,
+      boards: [],
       shape: { ...base.shape, auto: false, size: { w: 90, d: 70, h: 40 }, ...shape },
       lid: { ...base.lid, fastening: 'through', screw: { size: 'M3', head: 'countersunk' }, ...lid },
     });
@@ -278,7 +298,7 @@ describe('the notes and checks', () => {
     expect(throughNotes(plain({ fastening: 'screws' }))).toEqual([]);
   });
 
-  it('a nut on the face wider than its column runs over the far face\'s edge', () => {
+  it("a nut on the face wider than its column runs over the far face's edge", () => {
     expect(codes(throughNotes(plain({ nut: { place: 'surface', af: 14 } })))).toContain('warn.nutOverEdge');
     // recessed, the column grows with the pocket
     expect(codes(throughNotes(plain({ nut: { place: 'recessed', af: 14 } })))).not.toContain('warn.nutOverEdge');
@@ -288,12 +308,13 @@ describe('the notes and checks', () => {
   it('a column runs into a floor board: a post only near the lid does not', () => {
     // a board pushed into a corner, low on the floor: a screw post 8 mm under the lid misses it
     const base = defaultState();
-    const withBoard = (fastening: string) => sanitizeState({
-      ...base,
-      shape: { ...base.shape, auto: false, size: { w: 110, d: 90, h: 60 }, margin: { ...base.shape.margin, side: 0 } },
-      boards: [{ ...base.boards[0], z: 3, walls: ['left', 'front'] }],
-      lid: { ...base.lid, fastening },
-    });
+    const withBoard = (fastening: string) =>
+      sanitizeState({
+        ...base,
+        shape: { ...base.shape, auto: false, size: { w: 110, d: 90, h: 60 }, margin: { ...base.shape.margin, side: 0 } },
+        boards: [{ ...base.boards[0], z: 3, walls: ['left', 'front'] }],
+        lid: { ...base.lid, fastening },
+      });
     const hits = (state: AppState) => {
       const { frame, plate, zp, spots, lid } = lidPosts(state);
       return postCollisions(spots, frame, zp, plate, lid, caseLayout(state).boards).length;
@@ -356,11 +377,13 @@ describe('the notes and checks', () => {
 
   it('a hinged half: a flat head on its inner face widens the gap, a countersunk one does not', () => {
     const base = defaultState();
-    const hinged = (head: string) => sanitizeState({
-      ...base, boards: [],
-      shape: { ...base.shape, kind: 'hinged' },
-      lid: { ...base.lid, face: 'top', fastening: 'through', screw: { size: 'M3', head } },
-    });
+    const hinged = (head: string) =>
+      sanitizeState({
+        ...base,
+        boards: [],
+        shape: { ...base.shape, kind: 'hinged' },
+        lid: { ...base.lid, face: 'top', fastening: 'through', screw: { size: 'M3', head } },
+      });
     expect(innerProtrusion(hinged('none'), 'a')).toBeGreaterThanOrEqual(SCREWS.M3.headH - 1e-9);
     expect(innerProtrusion(hinged('countersunk'), 'a')).toBeLessThan(SCREWS.M3.headH);
   });
@@ -370,7 +393,8 @@ describe('the hardware in the view', () => {
   const state = (lid: Record<string, unknown>) => {
     const base = defaultState();
     return sanitizeState({
-      ...base, boards: [],
+      ...base,
+      boards: [],
       shape: { ...base.shape, auto: false, size: { w: 90, d: 70, h: 40 } },
       lid: { ...base.lid, fastening: 'through', screw: { size: 'M3', head: 'countersunk' }, ...lid },
     });

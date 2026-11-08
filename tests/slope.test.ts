@@ -59,7 +59,12 @@ describe('a board on the slope', () => {
     for (let k = 0; k < 3; k++) expect(up[k]).toBeCloseTo(-plane.n[k], 9);
     const front = board.def.size.t + board.def.topHeight;
     const { w, d } = board.def.size;
-    for (const [x, y] of [[0, 0], [w, 0], [0, d], [w, d]]) {
+    for (const [x, y] of [
+      [0, 0],
+      [w, 0],
+      [0, d],
+      [w, d],
+    ]) {
       expect(belowInside(state, applyAffine(board.toCase, [x, y, front]))).toBeCloseTo(0.3, 6);
     }
   });
@@ -80,7 +85,7 @@ describe('a board on the slope', () => {
     expect(caseLayout(onSlope([], { walls: ['front'] })).boards[0].walls).toEqual([]);
   });
 
-  it('its window goes along the slope\'s normal, chamfered from the inside', () => {
+  it("its window goes along the slope's normal, chamfered from the inside", () => {
     const state = onSlope();
     const layout = caseLayout(state);
     const board = layout.boards[0];

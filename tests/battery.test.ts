@@ -1,7 +1,17 @@
 // Batteries: the spec and its sanitizer, a battery placed like a board (the
 // layout, the walls, the overlap checks), its ghost.
 
-import { CELLS, CLAMP_ABOVE, CLAMP_POST_ZONE, batteryDef, batteryHold, batterySize, cellCentres, defaultBattery, sanitizeBattery } from '../src/boards/battery';
+import {
+  CELLS,
+  CLAMP_ABOVE,
+  CLAMP_POST_ZONE,
+  batteryDef,
+  batteryHold,
+  batterySize,
+  cellCentres,
+  defaultBattery,
+  sanitizeBattery,
+} from '../src/boards/battery';
 import type { BatterySpec } from '../src/boards/battery';
 import { initCSG, toManifold } from '../src/geo/csg';
 import type { CsgApi } from '../src/geo/csg';
@@ -26,7 +36,7 @@ describe('battery spec', () => {
     expect(size.d - centres[2] - 18.6 / 2).toBeCloseTo(1.2, 6);
   });
 
-  it('a pack is one block of the user\'s size; garbage falls back', () => {
+  it("a pack is one block of the user's size; garbage falls back", () => {
     expect(batterySize(sanitizeBattery({ kind: 'pack', pack: { w: 50, d: 30, h: 6 } }))).toEqual({ w: 50, d: 30, h: 6 });
     expect(sanitizeBattery({ kind: 'pack', count: 3 }).count).toBe(1);
     expect(sanitizeBattery({ kind: 'D-cell', count: 9 })).toEqual({ ...defaultBattery('18650'), count: 4 });
@@ -34,7 +44,7 @@ describe('battery spec', () => {
     expect(sanitizeBattery(twice)).toEqual(twice);
   });
 
-  it('its board entry: no PCB, no holes, no ports; the clamp\'s room on top', () => {
+  it("its board entry: no PCB, no holes, no ports; the clamp's room on top", () => {
     const def = batteryDef(defaultBattery('21700'));
     expect(def.size.t).toBe(0);
     expect(def.mount.holes).toEqual([]);
@@ -100,10 +110,11 @@ describe('cradles and the clamp', () => {
     csg = await initCSG();
   });
   const base = defaultState();
-  const stateWith = (spec: BatterySpec, extra: Record<string, unknown> = {}) => sanitizeState({
-    ...base,
-    boards: [{ ...defaultPlacement(batteryDef(spec)), battery: spec, ...extra }],
-  });
+  const stateWith = (spec: BatterySpec, extra: Record<string, unknown> = {}) =>
+    sanitizeState({
+      ...base,
+      boards: [{ ...defaultPlacement(batteryDef(spec)), battery: spec, ...extra }],
+    });
 
   /** The battery itself as a solid, case frame: its cells, or its pack. */
   function batterySolid(state: ReturnType<typeof stateWith>): Manifold {

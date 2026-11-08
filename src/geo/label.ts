@@ -64,7 +64,12 @@ export function rasterRuns(raster: LabelRaster): [number, number][][] {
         const x1 = col * s - cx;
         const y1 = cy - row * s;
         const y0 = y1 - s;
-        out.push([[x0, y0], [x1, y0], [x1, y1], [x0, y1]]);
+        out.push([
+          [x0, y0],
+          [x1, y0],
+          [x1, y1],
+          [x0, y1],
+        ]);
         start = -1;
       }
     }
@@ -95,12 +100,21 @@ export function labelSurface(face: Face, shape: ShapeState, dims: Dims): LabelSu
     const fromFace = slopeFrame(shape.console.frontH, shape.console.backH, dims.d);
     const length = Math.hypot(dims.d, shape.console.backH - shape.console.frontH);
     return {
-      face, fromFace, toFace: invertRigid(fromFace), extent: { w: dims.w, h: length },
+      face,
+      fromFace,
+      toFace: invertRigid(fromFace),
+      extent: { w: dims.w, h: length },
       flat: (margin) => ({ u0: margin, v0: margin, u1: dims.w - margin, v1: length - margin }),
     };
   }
   const frame = faceFrame(face, dims);
-  return { face, fromFace: frame.fromFace, toFace: frame.toFace, extent: frame.extent, flat: (margin) => flatRegion(shape, dims, face, margin) };
+  return {
+    face,
+    fromFace: frame.fromFace,
+    toFace: frame.toFace,
+    extent: frame.extent,
+    flat: (margin) => flatRegion(shape, dims, face, margin),
+  };
 }
 
 /**
@@ -108,19 +122,24 @@ export function labelSurface(face: Face, shape: ShapeState, dims: Dims): LabelSu
  * The anchor puts its turned box against an edge or into a corner of the
  * face's flat part, `margin` in; the offset moves it from there.
  */
-export function labelPlacement(label: LabelState, raster: LabelRaster, surface: LabelSurface): { u: number; v: number; w: number; h: number } {
+export function labelPlacement(
+  label: LabelState,
+  raster: LabelRaster,
+  surface: LabelSurface,
+): { u: number; v: number; w: number; h: number } {
   const { extent } = surface;
   const w = raster.w * raster.mmPerPx;
   const h = raster.h * raster.mmPerPx;
   const { hw, hh } = labelBox(w, h, label.angle);
   const flat = surface.flat(label.margin);
   const anchor = label.anchor;
-  const u = anchor.endsWith('Left') || anchor === 'left' ? flat.u0 + hw
-    : anchor.endsWith('Right') || anchor === 'right' ? flat.u1 - hw
-      : extent.w / 2;
-  const v = anchor.startsWith('top') ? flat.v1 - hh
-    : anchor.startsWith('bottom') ? flat.v0 + hh
-      : extent.h / 2;
+  const u =
+    anchor.endsWith('Left') || anchor === 'left'
+      ? flat.u0 + hw
+      : anchor.endsWith('Right') || anchor === 'right'
+        ? flat.u1 - hw
+        : extent.w / 2;
+  const v = anchor.startsWith('top') ? flat.v1 - hh : anchor.startsWith('bottom') ? flat.v0 + hh : extent.h / 2;
   return { u: u + label.x, v: v + label.y, w, h };
 }
 
@@ -141,8 +160,13 @@ export interface LabelHead {
  * each other.
  */
 export function labelWarnings(
-  labels: readonly LabelState[], rasters: readonly (LabelRaster | null)[], shape: ShapeState, dims: Dims, lid: LidState,
-  cutters: readonly CutterSpec[], heads: readonly LabelHead[],
+  labels: readonly LabelState[],
+  rasters: readonly (LabelRaster | null)[],
+  shape: ShapeState,
+  dims: Dims,
+  lid: LidState,
+  cutters: readonly CutterSpec[],
+  heads: readonly LabelHead[],
 ): Message[] {
   const lidFrame = faceFrame(lid.face, dims);
   const zp = -(plateOf(shape, lid.face) + lid.depth);
@@ -157,7 +181,8 @@ export function labelWarnings(
     const box = { u0: place.u - hw, v0: place.v - hh, u1: place.u + hw, v1: place.v + hh };
     const plate = plateOf(shape, surface.face);
     const corners: Vec3[] = [];
-    for (const u of [box.u0, box.u1]) for (const v of [box.v0, box.v1]) for (const w of [-plate, 0]) corners.push(applyAffine(surface.fromFace, [u, v, w]));
+    for (const u of [box.u0, box.u1])
+      for (const v of [box.v0, box.v1]) for (const w of [-plate, 0]) corners.push(applyAffine(surface.fromFace, [u, v, w]));
     const depths = corners.map((p) => applyAffine(lidFrame.toFace, p)[2]);
     const onLid = Math.min(...depths) > zp;
     return [{ label, n: index + 1, surface, box, corners, depths, spot: boxSpot(boxAround(corners), onLid ? 'lid' : 'body') }];

@@ -38,9 +38,7 @@
         },
         "cuts": {},
         "pins": true,
-        "walls": [
-          "left"
-        ],
+        "walls": ["left"],
         "wallOffset": 0,
         "on": "ceiling",
         "buttons": "caps",
@@ -78,10 +76,7 @@
     "extraCuts": [],
     "vents": {
       "on": true,
-      "faces": [
-        "front",
-        "back"
-      ],
+      "faces": ["front", "back"],
       "pattern": "hex",
       "size": 3,
       "pitch": 5,
@@ -182,10 +177,7 @@
         "extraCuts": [],
         "vents": {
           "on": false,
-          "faces": [
-            "left",
-            "right"
-          ],
+          "faces": ["left", "right"],
           "pattern": "slots",
           "size": 2,
           "pitch": 4,

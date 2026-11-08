@@ -55,7 +55,7 @@ export function outerTopAt(shape: ShapeState, dims: Dims, frontH: number, backH:
 
 /** How high an edge port's opening is: the part, or its bottom `cutH` (a terminal's wire slot). */
 function openingH(port: PortDef): number {
-  return onFace(port) ? port.h : port.cutH ?? port.h;
+  return onFace(port) ? port.h : (port.cutH ?? port.h);
 }
 
 function sectionOf(port: PortDef): { shape: 'rect' | 'round'; w: number; h: number; r: number } {
@@ -72,18 +72,30 @@ function sectionOf(port: PortDef): { shape: 'rect' | 'round'; w: number; h: numb
 function channelBack(board: PlacedBoard, port: PortDef & { edge: 'front' | 'back' | 'left' | 'right' }): number {
   if (port.reach !== undefined) return port.d + CHANNEL_BACK;
   // a keyboard's connector taller than what the plate lies on (the KeebDeck's USB-C beside its keypad)
-  if ((board.hung || opensKeys(board)) && keyFields(board.def).length > 0 && port.z + port.h > frontHeight(board.def, board.placement) + 1e-6) return port.d + CHANNEL_BACK;
+  if (
+    (board.hung || opensKeys(board)) &&
+    keyFields(board.def).length > 0 &&
+    port.z + port.h > frontHeight(board.def, board.placement) + 1e-6
+  )
+    return port.d + CHANNEL_BACK;
   return board.walls.some((wall) => wall.edge === port.edge) ? Math.max(0, port.protrude) + CHANNEL_BACK : CHANNEL_BACK;
 }
 
 /** The connector face point and the outward direction of an edge port, case frame. */
-export function portAxis(board: PlacedBoard, port: PortDef & { edge: 'front' | 'back' | 'left' | 'right' }): { face: Vec3; dir: [number, number] } {
+export function portAxis(
+  board: PlacedBoard,
+  port: PortDef & { edge: 'front' | 'back' | 'left' | 'right' },
+): { face: Vec3; dir: [number, number] } {
   const { w, d, t } = board.def.size;
   const [nx, ny] = edgeNormal(port.edge);
-  const [ex, ey] = port.edge === 'front' ? [port.along, 0]
-    : port.edge === 'back' ? [port.along, d]
-      : port.edge === 'left' ? [0, port.along]
-        : [w, port.along];
+  const [ex, ey] =
+    port.edge === 'front'
+      ? [port.along, 0]
+      : port.edge === 'back'
+        ? [port.along, d]
+        : port.edge === 'left'
+          ? [0, port.along]
+          : [w, port.along];
   const zc = t + port.z + openingH(port) / 2;
   const face = applyAffine(board.toCase, [ex + nx * port.protrude, ey + ny * port.protrude, zc]);
   const dir = rotateVec(board.toCase, [nx, ny, 0]);
@@ -112,7 +124,8 @@ function openingsOf(board: PlacedBoard, port: PortDef): { port: PortDef; window:
   const open = keysOpen(board.def, board.placement);
   if (open === 'window' || !port.rows) return [{ port: { ...port, clearance }, window: true }];
   // a printed cap's stem goes through its hole
-  if (open === 'caps') return capSizes(port, { size: board.placement.capSize, fit: clearance }).map((cap) => capOpening(board, port, cap, clearance));
+  if (open === 'caps')
+    return capSizes(port, { size: board.placement.capSize, fit: clearance }).map((cap) => capOpening(board, port, cap, clearance));
   return keysOf(port).map((key) => ({ port: { ...port, ...key, clearance }, window: false }));
 }
 
@@ -120,7 +133,15 @@ function openingsOf(board: PlacedBoard, port: PortDef): { port: PortDef; window:
 function capOpening(board: PlacedBoard, port: TopPort, cap: CapSize, fit: number): { port: PortDef; window: boolean; corner?: number } {
   const style = capStyle(board.placement);
   return {
-    port: { ...port, x: cap.x, y: cap.y, w: 2 * cap.stemR, d: 2 * cap.stemR, shape: style.shape === 'round' ? 'round' : 'rect', clearance: fit },
+    port: {
+      ...port,
+      x: cap.x,
+      y: cap.y,
+      w: 2 * cap.stemR,
+      d: 2 * cap.stemR,
+      shape: style.shape === 'round' ? 'round' : 'rect',
+      clearance: fit,
+    },
     window: false,
     ...(style.shape === 'square' ? { corner: capCorner('square', style.r, cap.stemR) + fit } : {}),
   };
@@ -150,9 +171,10 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
         const w = port.shape === 'round' ? section.w : (turned ? port.d : port.w) + 2 * port.clearance;
         const h = port.shape === 'round' ? section.w : (turned ? port.w : port.d) + 2 * port.clearance;
         // up through the ceiling from just above a top element, down through the floor from just below an underside one
-        const [s0, s1] = port.edge === 'top'
-          ? [Math.min(board.z0 + board.def.size.t + port.h + COLUMN_GAP, ceiling(cx, cy) - 0.2), top(cx, cy) + 1]
-          : [-1, Math.max(board.z0 - port.h - COLUMN_GAP, shape.floor + 0.2)];
+        const [s0, s1] =
+          port.edge === 'top'
+            ? [Math.min(board.z0 + board.def.size.t + port.h + COLUMN_GAP, ceiling(cx, cy) - 0.2), top(cx, cy) + 1]
+            : [-1, Math.max(board.z0 - port.h - COLUMN_GAP, shape.floor + 0.2)];
         // a hung display's window widens 45° outwards from the inside of the top
         // (or a carried display's, under a flat top)
         const bevel = (board.hung || board.gap !== undefined) && window && port.edge === 'top' && board.placement.bevel !== false;
@@ -177,7 +199,13 @@ export function portCutters(layout: CaseLayout, shape: ShapeState): CutterSpec[]
  * channel along its edge's normal, tilted with the board.
  */
 function tiltedCutter(
-  board: PlacedBoard, port: PortDef, window: boolean, section: ReturnType<typeof sectionOf>, shape: ShapeState, dims: Dims, reach: number,
+  board: PlacedBoard,
+  port: PortDef,
+  window: boolean,
+  section: ReturnType<typeof sectionOf>,
+  shape: ShapeState,
+  dims: Dims,
+  reach: number,
   source: CutterSpec['source'],
 ): CutterSpec {
   const plate = shape.floor;
@@ -189,18 +217,50 @@ function tiltedCutter(
     const h = port.shape === 'round' ? section.w : port.d + 2 * port.clearance;
     if (port.edge === 'bottom') {
       const origin = applyAffine(m, [port.x, port.y, 0]);
-      return { origin, ex: axis([1, 0, 0]), ey: axis([0, -1, 0]), ez: axis([0, 0, -1]), s0: port.h + COLUMN_GAP, s1: reach, ...section, w, h, source };
+      return {
+        origin,
+        ex: axis([1, 0, 0]),
+        ey: axis([0, -1, 0]),
+        ez: axis([0, 0, -1]),
+        s0: port.h + COLUMN_GAP,
+        s1: reach,
+        ...section,
+        w,
+        h,
+        source,
+      };
     }
     const origin = applyAffine(m, [port.x, port.y, t]);
     // a board turned over on a display's back: its column runs on through whatever is there
     const frame = board.frame;
-    if (!frame) return { origin, ex: axis([1, 0, 0]), ey: axis([0, 1, 0]), ez: axis([0, 0, 1]), s0: port.h + COLUMN_GAP, s1: reach, ...section, w, h, source };
+    if (!frame)
+      return {
+        origin,
+        ex: axis([1, 0, 0]),
+        ey: axis([0, 1, 0]),
+        ez: axis([0, 0, 1]),
+        s0: port.h + COLUMN_GAP,
+        s1: reach,
+        ...section,
+        w,
+        h,
+        source,
+      };
     // how far the plate's inside is above the PCB along the normal (the board is parallel to it)
     const inside = -plate - applyAffine(invertRigid(frame), origin)[2];
     const bevel = window && board.placement.bevel !== false ? { flare: { from: inside, rate: WINDOW_FLARE } } : {};
     return {
-      origin, ex: axis([1, 0, 0]), ey: axis([0, 1, 0]), ez: axis([0, 0, 1]),
-      s0: Math.min(port.h + COLUMN_GAP, inside - 0.2), s1: inside + plate + 1, ...section, w, h, ...bevel, source,
+      origin,
+      ex: axis([1, 0, 0]),
+      ey: axis([0, 1, 0]),
+      ez: axis([0, 0, 1]),
+      s0: Math.min(port.h + COLUMN_GAP, inside - 0.2),
+      s1: inside + plate + 1,
+      ...section,
+      w,
+      h,
+      ...bevel,
+      source,
     };
   }
   const { face } = portAxis(board, port);
@@ -262,14 +322,17 @@ function cutterSpot(cutter: CutterSpec, dims: Dims): MessageSpot {
 
 /** Whether an opening is a plug's slot that stays inside (an edge port with `reach`). */
 function slotOnly(layout: CaseLayout, source: { board: number; port: string }): boolean {
-  return layout.boards.some((board) => board.index === source.board
-    && board.def.ports.some((port) => port.id === source.port && !onFace(port) && port.reach !== undefined));
+  return layout.boards.some(
+    (board) =>
+      board.index === source.board && board.def.ports.some((port) => port.id === source.port && !onFace(port) && port.reach !== undefined),
+  );
 }
 
 /** A port's opening in a message: the board (the one with this port under that number) and the port. */
 function sourceParams(layout: CaseLayout, source: { board: number; port: string }): Record<string, string | number> {
-  const board = layout.boards.find((one) => one.index === source.board && one.def.ports.some((port) => port.id === source.port))
-    ?? layout.boards.find((one) => one.index === source.board);
+  const board =
+    layout.boards.find((one) => one.index === source.board && one.def.ports.some((port) => port.id === source.port)) ??
+    layout.boards.find((one) => one.index === source.board);
   const port = board?.def.ports.find((one) => one.id === source.port);
   return {
     ...(board ? boardParams(board) : { board: source.board + 1 }),
@@ -284,7 +347,11 @@ function sourceParams(layout: CaseLayout, source: { board: number; port: string 
  * through the lid skirt, a user cut in a rounded corner.
  */
 export function cutWarnings(
-  layout: CaseLayout, shape: ShapeState, lid: LidState, cutters: readonly CutterSpec[], extras: readonly ExtraCut[],
+  layout: CaseLayout,
+  shape: ShapeState,
+  lid: LidState,
+  cutters: readonly CutterSpec[],
+  extras: readonly ExtraCut[],
 ): Message[] {
   const out: Message[] = [];
   const { dims } = layout;
@@ -298,7 +365,8 @@ export function cutWarnings(
       // the connector and the way out to the wall
       const block = portBlock(board, port);
       const corners: Vec3[] = [];
-      for (const x of [block[0], block[3]]) for (const y of [block[1], block[4]]) for (const z of [block[2], block[5]]) corners.push(applyAffine(board.toCase, [x, y, z]));
+      for (const x of [block[0], block[3]])
+        for (const y of [block[1], block[4]]) for (const z of [block[2], block[5]]) corners.push(applyAffine(board.toCase, [x, y, z]));
       const atWall = corners.map((p): Vec3 => [p[0] + dir[0] * gap, p[1] + dir[1] * gap, p[2]]);
       const spot = boxSpot(boxAround([...corners, ...atWall]), { board: board.index });
       out.push({ code: 'warn.portFar', params: { ...boardParams(board), port: port.id, portType: port.type, mm: gap.toFixed(0) }, spot });
@@ -335,8 +403,17 @@ export function cutWarnings(
   for (const cutter of cutters) {
     if (!cutter.flare || cutter.source.kind !== 'port' || shape.kind === 'cylinder' || shape.kind === 'console') continue;
     const g = flareAt(cutter, cutter.s1);
-    const window: ExtraCut = { face: 'top', shape: 'rect', x: cutter.origin[0], y: cutter.origin[1], w: cutter.w + 2 * g, h: cutter.h + 2 * g, r: 0 };
-    if (inCorner(shape, dims, window)) out.push({ code: 'warn.windowInCorner', params: sourceParams(layout, cutter.source), spot: cutterSpot(cutter, dims) });
+    const window: ExtraCut = {
+      face: 'top',
+      shape: 'rect',
+      x: cutter.origin[0],
+      y: cutter.origin[1],
+      w: cutter.w + 2 * g,
+      h: cutter.h + 2 * g,
+      r: 0,
+    };
+    if (inCorner(shape, dims, window))
+      out.push({ code: 'warn.windowInCorner', params: sourceParams(layout, cutter.source), spot: cutterSpot(cutter, dims) });
   }
   return out;
 }
@@ -361,9 +438,11 @@ export function thinnestWeb(field: Pick<TopPort, 'rows'>, fit: number): number {
 export function thinnestCapWeb(field: Pick<TopPort, 'rows'>, fit: number, size?: number): number {
   const caps = capSizes(field, { size, fit });
   let thinnest = Infinity;
-  caps.forEach((a, i) => caps.slice(i + 1).forEach((b) => {
-    thinnest = Math.min(thinnest, Math.hypot(a.x - b.x, a.y - b.y) - a.stemR - b.stemR - 2 * fit);
-  }));
+  caps.forEach((a, i) =>
+    caps.slice(i + 1).forEach((b) => {
+      thinnest = Math.min(thinnest, Math.hypot(a.x - b.x, a.y - b.y) - a.stemR - b.stemR - 2 * fit);
+    }),
+  );
   return thinnest;
 }
 
@@ -372,7 +451,14 @@ export function thinnestCapWeb(field: Pick<TopPort, 'rows'>, fit: number, size?:
  * its face), along the board's normal, mm: in the plate's frame for a hung
  * board, above the outer top for one on the floor.
  */
-export function keysProud(board: PlacedBoard, port: { x: number; y: number; h: number }, shape: ShapeState, dims: Dims, frontH: number, backH: number): number {
+export function keysProud(
+  board: PlacedBoard,
+  port: { x: number; y: number; h: number },
+  shape: ShapeState,
+  dims: Dims,
+  frontH: number,
+  backH: number,
+): number {
   const p = applyAffine(board.toCase, [port.x, port.y, board.def.size.t + port.h]);
   if (board.frame) return applyAffine(invertRigid(board.frame), p)[2];
   return p[2] - outerTopAt(shape, dims, frontH, backH)(p[0], p[1]);
@@ -388,7 +474,8 @@ export function keyNotes(layout: CaseLayout, shape: ShapeState): Message[] {
       const { t } = board.def.size;
       const corners: Vec3[] = [];
       for (const x of [field.x - field.w / 2, field.x + field.w / 2]) {
-        for (const y of [field.y - field.d / 2, field.y + field.d / 2]) for (const z of [t, t + field.h]) corners.push(applyAffine(board.toCase, [x, y, z]));
+        for (const y of [field.y - field.d / 2, field.y + field.d / 2])
+          for (const z of [t, t + field.h]) corners.push(applyAffine(board.toCase, [x, y, z]));
       }
       const spot = boxSpot(boxAround(corners), { board: board.index });
       const params = { ...boardParams(board), port: field.id, portType: field.type, mm: Math.abs(proud).toFixed(1) };
@@ -399,7 +486,8 @@ export function keyNotes(layout: CaseLayout, shape: ShapeState): Message[] {
         const caps = capSizes(field, { size: board.placement.capSize, fit });
         out.push({ code: 'info.keyCaps', params: { ...params, n: caps.length }, spot });
         const hold = Math.min(...caps.map((cap) => cap.flangeR - cap.stemR - fit));
-        if (hold < CAP_HOLD - 1e-9) out.push({ code: 'warn.capFlangeSmall', params: { ...params, mm: Math.max(0, hold).toFixed(1) }, spot });
+        if (hold < CAP_HOLD - 1e-9)
+          out.push({ code: 'warn.capFlangeSmall', params: { ...params, mm: Math.max(0, hold).toFixed(1) }, spot });
       } else {
         const code = proud >= -0.05 ? 'info.keysProud' : open === 'holes' ? 'warn.keysUnderFace' : 'info.keysSunk';
         out.push({ code, params: proud >= -0.05 ? { ...params, mm: Math.max(0, proud).toFixed(1) } : params, spot });
@@ -408,10 +496,17 @@ export function keyNotes(layout: CaseLayout, shape: ShapeState): Message[] {
       if (!board.hung && open === 'holes' && field.base !== undefined) {
         const p = applyAffine(board.toCase, [field.x, field.y, t + field.base]);
         const high = ceilingAt(shape, layout.dims, layout.console.frontH, layout.console.backH)(p[0], p[1]) - p[2] - CEILING_GAP;
-        if (high > 0.2) out.push({ code: 'warn.keysPlateHigh', params: { ...params, mm: high.toFixed(1), z: (board.placement.z + high).toFixed(1) }, spot });
+        if (high > 0.2)
+          out.push({
+            code: 'warn.keysPlateHigh',
+            params: { ...params, mm: high.toFixed(1), z: (board.placement.z + high).toFixed(1) },
+            spot,
+          });
       }
-      const web = open === 'holes' ? thinnestWeb(field, fit) : open === 'caps' ? thinnestCapWeb(field, fit, board.placement.capSize) : Infinity;
-      if (web < KEY_WEB - 1e-9) out.push({ code: 'warn.keyWebThin', params: { ...params, mm: Math.max(0, web).toFixed(1), min: KEY_WEB }, spot });
+      const web =
+        open === 'holes' ? thinnestWeb(field, fit) : open === 'caps' ? thinnestCapWeb(field, fit, board.placement.capSize) : Infinity;
+      if (web < KEY_WEB - 1e-9)
+        out.push({ code: 'warn.keyWebThin', params: { ...params, mm: Math.max(0, web).toFixed(1), min: KEY_WEB }, spot });
     }
     out.push(...buttonCapNotes(board));
   }
@@ -433,16 +528,26 @@ function buttonCapNotes(board: PlacedBoard): Message[] {
   const columnSpot = (i: number, r: number, h: number): MessageSpot => {
     const { x, y } = caps[i];
     const corners: Vec3[] = [];
-    for (const px of [x - r, x + r]) for (const py of [y - r, y + r]) for (const pz of [t, t + h]) corners.push(applyAffine(board.toCase, [px, py, pz]));
+    for (const px of [x - r, x + r])
+      for (const py of [y - r, y + r]) for (const pz of [t, t + h]) corners.push(applyAffine(board.toCase, [px, py, pz]));
     return boxSpot(boxAround(corners), { board: board.index });
   };
-  const all = boxAround(caps.flatMap((cap, i) => columnSpot(i, cap.flangeR, buttons[i].port.h + CAP_FLANGE_T).boxes.flatMap((box) => [box.min, box.max])));
-  const out: Message[] = [{ code: 'info.buttonCaps', params: { ...boardParams(board), n: caps.length }, spot: boxSpot(all, { board: board.index }) }];
+  const all = boxAround(
+    caps.flatMap((cap, i) => columnSpot(i, cap.flangeR, buttons[i].port.h + CAP_FLANGE_T).boxes.flatMap((box) => [box.min, box.max])),
+  );
+  const out: Message[] = [
+    { code: 'info.buttonCaps', params: { ...boardParams(board), n: caps.length }, spot: boxSpot(all, { board: board.index }) },
+  ];
   caps.forEach((cap, i) => {
     const { port } = buttons[i];
     const params = { ...boardParams(board), port: port.id, portType: port.type };
     const hold = cap.flangeR - cap.stemR - fit;
-    if (hold < CAP_HOLD - 1e-9) out.push({ code: 'warn.capFlangeSmall', params: { ...params, mm: Math.max(0, hold).toFixed(1) }, spot: columnSpot(i, cap.flangeR, port.h) });
+    if (hold < CAP_HOLD - 1e-9)
+      out.push({
+        code: 'warn.capFlangeSmall',
+        params: { ...params, mm: Math.max(0, hold).toFixed(1) },
+        spot: columnSpot(i, cap.flangeR, port.h),
+      });
     const top = t + port.h;
     const over = board.def.ports.find((other) => {
       if (other.id === port.id || (onFace(other) && other.edge === 'bottom')) return false;
@@ -452,7 +557,8 @@ function buttonCapNotes(board: PlacedBoard): Message[] {
       const dy = Math.max(y0 - cap.y, 0, cap.y - y1);
       return Math.hypot(dx, dy) < cap.flangeR - 1e-6;
     });
-    if (over) out.push({ code: 'warn.capOverPart', params: { ...params, part: over.id }, spot: columnSpot(i, cap.flangeR, port.h + CAP_FLANGE_T) });
+    if (over)
+      out.push({ code: 'warn.capOverPart', params: { ...params, part: over.id }, spot: columnSpot(i, cap.flangeR, port.h + CAP_FLANGE_T) });
   });
   return out;
 }
@@ -475,7 +581,19 @@ export function plugNotes(layout: CaseLayout): Message[] {
       const out = applyAffine(toPlate, top)[2];
       if (out <= 0.05) return [];
       const spot = boxSpot(boxAround([face, top]), { board: board.index });
-      return [{ code: 'info.plugProud', params: { ...boardParams(board), port: port.id, portType: port.type, mm: out.toFixed(1), gap: (Math.ceil((board.placement.z + out + 0.05) * 10) / 10).toFixed(1) }, spot }];
+      return [
+        {
+          code: 'info.plugProud',
+          params: {
+            ...boardParams(board),
+            port: port.id,
+            portType: port.type,
+            mm: out.toFixed(1),
+            gap: (Math.ceil((board.placement.z + out + 0.05) * 10) / 10).toFixed(1),
+          },
+          spot,
+        },
+      ];
     });
   });
 }
@@ -492,7 +610,12 @@ function inCorner(shape: ShapeState, dims: Dims, cut: ExtraCut): boolean {
   if (cut.face === 'top' || cut.face === 'bottom') {
     if (u0 < edge || v0 < edge || u1 > extent.w - edge || v1 > extent.h - edge) return true;
     const r = Math.max(0, corner - edge);
-    for (const [u, v] of [[u0, v0], [u1, v0], [u0, v1], [u1, v1]]) {
+    for (const [u, v] of [
+      [u0, v0],
+      [u1, v0],
+      [u0, v1],
+      [u1, v1],
+    ]) {
       const cu = Math.min(Math.max(u, corner), extent.w - corner);
       const cv = Math.min(Math.max(v, corner), extent.h - corner);
       if (Math.hypot(u - cu, v - cv) > r) return true;
@@ -523,9 +646,11 @@ export function knuckleCutWarnings(layout: CaseLayout, hinge: HalfHinge, strip0:
     if (min[2] >= z1 || max[2] <= z0) continue;
     if (!hinge.blocks.some((block) => min[0] < block.x1 && max[0] > block.x0)) continue;
     const spot = cutterSpot(cutter, dims);
-    out.push(cutter.source.kind === 'port'
-      ? { code: 'warn.cutHitsKnuckle', params: sourceParams(layout, cutter.source), spot }
-      : { code: 'warn.extraHitsKnuckle', params: { n: cutter.source.index + 1 }, spot });
+    out.push(
+      cutter.source.kind === 'port'
+        ? { code: 'warn.cutHitsKnuckle', params: sourceParams(layout, cutter.source), spot }
+        : { code: 'warn.extraHitsKnuckle', params: { n: cutter.source.index + 1 }, spot },
+    );
   }
   return out;
 }
@@ -543,7 +668,10 @@ export function leafPadWarnings(layout: CaseLayout, hinge: HalfHinge, wall: numb
   const [y0, y1] = hinge.wall === 'back' ? [dims.d - wall - length, dims.d - wall] : [wall, wall + length];
   const out: Message[] = [];
   for (const screw of leaf.screws) {
-    const pad: SpotBox = { min: [screw.x - r, y0, Math.max(leaf.padZ[0], leaf.z - r - length)], max: [screw.x + r, y1, Math.min(leaf.padZ[1], leaf.z + r + length)] };
+    const pad: SpotBox = {
+      min: [screw.x - r, y0, Math.max(leaf.padZ[0], leaf.z - r - length)],
+      max: [screw.x + r, y1, Math.min(leaf.padZ[1], leaf.z + r + length)],
+    };
     for (const board of layout.boards) {
       const box = board.footprint;
       if (pad.min[0] >= box.x1 || pad.max[0] <= box.x0 || pad.min[1] >= box.y1 || pad.max[1] <= box.y0) continue;
@@ -590,7 +718,10 @@ export function magnetWarnings(layout: CaseLayout, hinge: HalfHinge): Message[] 
   if (!m) return [];
   const out: Message[] = [];
   for (const spot of m.spots) {
-    const boss: SpotBox = { min: [spot.x - m.bossR, spot.y - m.bossR, m.bottom - 1], max: [spot.x + m.bossR, spot.y + m.bossR, layout.dims.h] };
+    const boss: SpotBox = {
+      min: [spot.x - m.bossR, spot.y - m.bossR, m.bottom - 1],
+      max: [spot.x + m.bossR, spot.y + m.bossR, layout.dims.h],
+    };
     for (const board of layout.boards) {
       const box = board.footprint;
       if (boss.min[0] >= box.x1 || boss.max[0] <= box.x0 || boss.min[1] >= box.y1 || boss.max[1] <= box.y0) continue;
@@ -600,4 +731,3 @@ export function magnetWarnings(layout: CaseLayout, hinge: HalfHinge): Message[] 
   }
   return dedupe(out);
 }
-

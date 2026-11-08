@@ -45,7 +45,7 @@ function windowOf(state: AppState): CutterSpec {
 }
 
 describe('the window', () => {
-  it('a hung display\'s window flares from the inside of the top; unchamfered, or on the floor, it does not', () => {
+  it("a hung display's window flares from the inside of the top; unchamfered, or on the floor, it does not", () => {
     const state = hung('lcdwiki-msp2807');
     const layout = caseLayout(state);
     const cutter = windowOf(state);
@@ -92,7 +92,7 @@ describe('the window', () => {
 });
 
 describe('the rim', () => {
-  it('holds the glass: material just outside it, the glass\'s place empty, to the lid with a top lid', () => {
+  it("holds the glass: material just outside it, the glass's place empty, to the lid with a top lid", () => {
     const state = hung('lcd-1602-i2c');
     const built = buildCase(csg, state, 8);
     expect(validateMesh(built.lid).watertight).toBe(true);
@@ -108,7 +108,7 @@ describe('the rim', () => {
     lid.delete();
   });
 
-  it('steps aside for a part on top: the round panel\'s FPC tail', () => {
+  it("steps aside for a part on top: the round panel's FPC tail", () => {
     const state = hung('lcdwiki-msp1281', {}, { kind: 'cylinder' });
     const built = buildCase(csg, state, 8);
     expect(validateMesh(built.lid).watertight).toBe(true);
@@ -133,7 +133,7 @@ describe('the rim', () => {
 });
 
 describe('standoffs and the glass', () => {
-  it('a 1602\'s standoffs step aside for its bezel, and nothing is warned about', () => {
+  it("a 1602's standoffs step aside for its bezel, and nothing is warned about", () => {
     const state = hung('lcd-1602-i2c');
     expect(collisions(caseLayout(state))).toEqual([]);
     const built = buildCase(csg, state, 8);
@@ -153,24 +153,34 @@ describe('standoffs and the glass', () => {
 
 describe('under a rounded top', () => {
   const displays = CATALOG.filter((def) => def.kind === 'display').map((def) => def.id);
-  it.each(displays.flatMap((id) => [[id, 'box', 10], [id, 'box', 20], [id, 'cylinder', 8]] as const))(
-    '%s in a %s with a %s mm edge: on the flat ceiling, clear of the skirt, no slivers', (id, kind, edgeR) => {
-      const state = hung(id, {}, { kind, edgeR });
-      const built = buildCase(csg, state, 12);
-      for (const part of [built.body, built.lid]) {
-        const report = validateMesh(part);
-        expect(report.watertight).toBe(true);
-        expect(report.degenerateTriangles).toBe(0);
-      }
-    },
-  );
+  it.each(
+    displays.flatMap(
+      (id) =>
+        [
+          [id, 'box', 10],
+          [id, 'box', 20],
+          [id, 'cylinder', 8],
+        ] as const,
+    ),
+  )('%s in a %s with a %s mm edge: on the flat ceiling, clear of the skirt, no slivers', (id, kind, edgeR) => {
+    const state = hung(id, {}, { kind, edgeR });
+    const built = buildCase(csg, state, 12);
+    for (const part of [built.body, built.lid]) {
+      const report = validateMesh(part);
+      expect(report.watertight).toBe(true);
+      expect(report.degenerateTriangles).toBe(0);
+    }
+  });
 });
 
 describe('every display in the catalog', () => {
-  it.each(CATALOG.filter((def) => def.kind === 'display').map((def) => [def.id]))('%s hangs in a plain box with nothing to warn about', (id) => {
-    const state = sanitizeState({ ...defaultState(), boards: [{ board: id, on: 'ceiling', z: 0.3 }] });
-    const layout = caseLayout(state);
-    expect(collisions(layout)).toEqual([]);
-    expect(cutWarnings(layout, state.shape, state.lid, portCutters(layout, state.shape), [])).toEqual([]);
-  });
+  it.each(CATALOG.filter((def) => def.kind === 'display').map((def) => [def.id]))(
+    '%s hangs in a plain box with nothing to warn about',
+    (id) => {
+      const state = sanitizeState({ ...defaultState(), boards: [{ board: id, on: 'ceiling', z: 0.3 }] });
+      const layout = caseLayout(state);
+      expect(collisions(layout)).toEqual([]);
+      expect(cutWarnings(layout, state.shape, state.lid, portCutters(layout, state.shape), [])).toEqual([]);
+    },
+  );
 });

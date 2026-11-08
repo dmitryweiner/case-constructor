@@ -57,9 +57,7 @@ export async function ensureServer(preview) {
   // test last week's code and fail somewhere puzzling
   if (preview) await run('npx', ['vite', 'build']);
   const port = preview ? PREVIEW_PORT : DEV_PORT;
-  const cmd = preview
-    ? ['vite', 'preview', '--port', String(port), '--strictPort']
-    : ['vite', '--port', String(port), '--strictPort'];
+  const cmd = preview ? ['vite', 'preview', '--port', String(port), '--strictPort'] : ['vite', '--port', String(port), '--strictPort'];
   const proc = spawn('npx', cmd, { stdio: 'ignore' });
   for (let i = 0; i < 40 && !(await serverUp(base)); i++) {
     await new Promise((r) => setTimeout(r, 500));

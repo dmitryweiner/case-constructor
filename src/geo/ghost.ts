@@ -20,14 +20,19 @@ import { meshNormals } from './normals';
 /** An axis-aligned box in a frame (a board's), mapped to the case frame. */
 function boxMesh(toCase: Affine, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): SurfaceMesh {
   const corners: Vec3[] = [
-    [x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0],
-    [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1],
+    [x0, y0, z0],
+    [x1, y0, z0],
+    [x1, y1, z0],
+    [x0, y1, z0],
+    [x0, y0, z1],
+    [x1, y0, z1],
+    [x1, y1, z1],
+    [x0, y1, z1],
   ];
   const positions = new Float32Array(24);
   corners.forEach((corner, i) => positions.set(applyAffine(toCase, corner), i * 3));
   const indices = new Uint32Array([
-    0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4,
-    2, 3, 7, 2, 7, 6, 1, 2, 6, 1, 6, 5, 3, 0, 4, 3, 4, 7,
+    0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 2, 3, 7, 2, 7, 6, 1, 2, 6, 1, 6, 5, 3, 0, 4, 3, 4, 7,
   ]);
   return { positions, indices, normals: meshNormals(positions, indices) };
 }
@@ -82,7 +87,13 @@ function circle(x: number, y: number, r: number, clockwise: boolean): [number, n
  * built the same way faces out of the material. Vertices are shared, so the
  * mesh is closed.
  */
-function prismMesh(board: Pick<PlacedBoard, 'toCase'>, outer: [number, number][], holes: [number, number][][], z0: number, z1: number): SurfaceMesh {
+function prismMesh(
+  board: Pick<PlacedBoard, 'toCase'>,
+  outer: [number, number][],
+  holes: [number, number][][],
+  z0: number,
+  z1: number,
+): SurfaceMesh {
   const loops = [outer, ...holes];
   const flat = loops.flat();
   const n = flat.length;
@@ -144,9 +155,8 @@ export function pinBlocks(board: PlacedBoard): [number, number, number, number, 
     const length = along ? w : d;
     // the row's centre line across the edge, in the board frame
     const c = edge === 'front' ? inset : edge === 'back' ? d - inset : edge === 'left' ? inset : w - inset;
-    const row = (half: number, z0: number, z1: number): [number, number, number, number, number, number] => (along
-      ? [inset, c - half, z0, length - inset, c + half, z1]
-      : [c - half, inset, z0, c + half, length - inset, z1]);
+    const row = (half: number, z0: number, z1: number): [number, number, number, number, number, number] =>
+      along ? [inset, c - half, z0, length - inset, c + half, z1] : [c - half, inset, z0, c + half, length - inset, z1];
     return [row(PIN_SPACER_W / 2, -PIN_SPACER, 0), row(PIN_SIZE / 2, -below, -PIN_SPACER)];
   });
 }
@@ -154,9 +164,16 @@ export function pinBlocks(board: PlacedBoard): [number, number, number, number, 
 /** The keys of a board's key fields as blocks on the field's base up to their tops, board frame. */
 export function keyBlocks(def: BoardDef): [number, number, number, number, number, number][] {
   const { t } = def.size;
-  return keyFields(def).flatMap((field) => keysOf(field).map((key): [number, number, number, number, number, number] => [
-    key.x - key.w / 2, key.y - key.d / 2, t + (field.base ?? KEY_SLAB), key.x + key.w / 2, key.y + key.d / 2, t + field.h,
-  ]));
+  return keyFields(def).flatMap((field) =>
+    keysOf(field).map((key): [number, number, number, number, number, number] => [
+      key.x - key.w / 2,
+      key.y - key.d / 2,
+      t + (field.base ?? KEY_SLAB),
+      key.x + key.w / 2,
+      key.y + key.d / 2,
+      t + field.h,
+    ]),
+  );
 }
 
 /** The outline of a glass in the board frame, counter-clockwise: a circle, or a rectangle with its rounded corners. */
@@ -164,13 +181,26 @@ function glassOutline(glass: Glass): [number, number][] {
   if (glass.shape === 'round') return circle(glass.x, glass.y, glass.w / 2, false);
   const hw = glass.w / 2;
   const hd = glass.d / 2;
-  if (glass.r <= 0) return [[glass.x - hw, glass.y - hd], [glass.x + hw, glass.y - hd], [glass.x + hw, glass.y + hd], [glass.x - hw, glass.y + hd]];
+  if (glass.r <= 0)
+    return [
+      [glass.x - hw, glass.y - hd],
+      [glass.x + hw, glass.y - hd],
+      [glass.x + hw, glass.y + hd],
+      [glass.x - hw, glass.y + hd],
+    ];
   const steps = GHOST_CIRCLE / 4;
-  const corners: [number, number, number][] = [[hw - glass.r, -hd + glass.r, -90], [hw - glass.r, hd - glass.r, 0], [-hw + glass.r, hd - glass.r, 90], [-hw + glass.r, -hd + glass.r, 180]];
-  return corners.flatMap(([cx, cy, from]) => Array.from({ length: steps + 1 }, (_, i): [number, number] => {
-    const a = ((from + (90 * i) / steps) * Math.PI) / 180;
-    return [glass.x + cx + glass.r * Math.cos(a), glass.y + cy + glass.r * Math.sin(a)];
-  }));
+  const corners: [number, number, number][] = [
+    [hw - glass.r, -hd + glass.r, -90],
+    [hw - glass.r, hd - glass.r, 0],
+    [-hw + glass.r, hd - glass.r, 90],
+    [-hw + glass.r, -hd + glass.r, 180],
+  ];
+  return corners.flatMap(([cx, cy, from]) =>
+    Array.from({ length: steps + 1 }, (_, i): [number, number] => {
+      const a = ((from + (90 * i) / steps) * Math.PI) / 180;
+      return [glass.x + cx + glass.r * Math.cos(a), glass.y + cy + glass.r * Math.sin(a)];
+    }),
+  );
 }
 
 /** The glass slabs of a board's display parts, case frame: `t` thick, their front at the part's height. */
@@ -179,7 +209,7 @@ function glassGhost(board: PlacedBoard): SurfaceMesh | null {
   const slabs = board.def.ports.flatMap((port) => {
     if (!onFace(port) || !port.glass) return [];
     // a keypad's flange: its front at the field's base, the keys standing out of it
-    const front = t + (port.type === 'keys' ? port.base ?? port.h : port.h);
+    const front = t + (port.type === 'keys' ? (port.base ?? port.h) : port.h);
     return [prismMesh(board, glassOutline(port.glass), [], front - port.glass.t, front)];
   });
   return slabs.length > 0 ? mergeMeshes(slabs) : null;
@@ -194,17 +224,30 @@ function glassGhost(board: PlacedBoard): SurfaceMesh | null {
 export function boardGhost(board: PlacedBoard): { pcb: SurfaceMesh; ports: SurfaceMesh | null; glass: SurfaceMesh | null } {
   if (board.def.battery) return { pcb: batteryGhost(board, board.def.battery), ports: null, glass: null };
   const { w, d, t } = board.def.size;
-  const blocks = [...board.def.ports.map((port) => portBlock(board, port)), ...keyBlocks(board.def), ...pinBlocks(board)]
-    .map(([x0, y0, z0, x1, y1, z1]) => boxMesh(board.toCase, x0, y0, z0, x1, y1, z1));
+  const blocks = [...board.def.ports.map((port) => portBlock(board, port)), ...keyBlocks(board.def), ...pinBlocks(board)].map(
+    ([x0, y0, z0, x1, y1, z1]) => boxMesh(board.toCase, x0, y0, z0, x1, y1, z1),
+  );
   const holes = ghostHoles(board.def);
   // the real outline when the entry has one (chamfers, notches); layout and cavity keep the rectangle
-  const outer = board.def.outline ?? [[0, 0], [w, 0], [w, d], [0, d]];
-  const pcb = holes.length === 0 && !board.def.outline
-    ? boxMesh(board.toCase, 0, 0, 0, w, d, t)
-    : prismMesh(board, outer, holes.map((hole) => circle(hole.x, hole.y, hole.r + hole.pad, true)), 0, t);
-  const pads = holes.map((hole) => prismMesh(
-    board, circle(hole.x, hole.y, hole.r + hole.pad, false), [circle(hole.x, hole.y, hole.r, true)], -PAD_PROUD, t + PAD_PROUD,
-  ));
+  const outer = board.def.outline ?? [
+    [0, 0],
+    [w, 0],
+    [w, d],
+    [0, d],
+  ];
+  const pcb =
+    holes.length === 0 && !board.def.outline
+      ? boxMesh(board.toCase, 0, 0, 0, w, d, t)
+      : prismMesh(
+          board,
+          outer,
+          holes.map((hole) => circle(hole.x, hole.y, hole.r + hole.pad, true)),
+          0,
+          t,
+        );
+  const pads = holes.map((hole) =>
+    prismMesh(board, circle(hole.x, hole.y, hole.r + hole.pad, false), [circle(hole.x, hole.y, hole.r, true)], -PAD_PROUD, t + PAD_PROUD),
+  );
   const parts = [...blocks, ...pads];
   return { pcb, ports: parts.length > 0 ? mergeMeshes(parts) : null, glass: glassGhost(board) };
 }

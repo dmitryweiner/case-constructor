@@ -145,11 +145,22 @@ export function shapeSpec(shape: ShapeState, dims: Dims): ShapeSpec {
   const cornerR = round ? w / 2 : shape.cornerR;
   const edgeR = shape.kind === 'console' ? 0 : shape.edgeR;
   const outer: LoftSpec = {
-    cx: w / 2, cy: d / 2, hw: w / 2, hd: d / 2,
-    cornerR, z0: 0, z1: h, edgeR, filletBottom: true, filletTop: true,
+    cx: w / 2,
+    cy: d / 2,
+    hw: w / 2,
+    hd: d / 2,
+    cornerR,
+    z0: 0,
+    z1: h,
+    edgeR,
+    filletBottom: true,
+    filletTop: true,
   };
   const inner: LoftSpec = {
-    cx: w / 2, cy: d / 2, hw: w / 2 - wall, hd: d / 2 - wall,
+    cx: w / 2,
+    cy: d / 2,
+    hw: w / 2 - wall,
+    hd: d / 2 - wall,
     cornerR: Math.max(0, cornerR - wall),
     z0: floor,
     z1: h - floor,

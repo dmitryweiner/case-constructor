@@ -28,7 +28,8 @@ beforeAll(async () => {
 function printedState(face: string, size: string): AppState {
   const base = defaultState();
   return sanitizeState({
-    ...base, boards: [],
+    ...base,
+    boards: [],
     shape: { ...base.shape, auto: false, size: { w: 90, d: 70, h: 40 } },
     lid: { ...base.lid, face, fastening: 'printed', thread: { size, fit: 0.2 } },
   });
@@ -58,8 +59,11 @@ describe('thread section', () => {
       // the crest at z = 0 spans angles just below 0; a quarter pitch up it has turned by +90°
       const radiusAt = (z: number, degrees: number): number => {
         const a = (degrees * Math.PI) / 180;
-        const probe = scope.keep(scope.keep(csg.Manifold.cube([0.05, 0.05, 0.05], true))
-          .translate([(d / 2 - 0.15) * Math.cos(a), (d / 2 - 0.15) * Math.sin(a), z]));
+        const probe = scope.keep(
+          scope
+            .keep(csg.Manifold.cube([0.05, 0.05, 0.05], true))
+            .translate([(d / 2 - 0.15) * Math.cos(a), (d / 2 - 0.15) * Math.sin(a), z]),
+        );
         return scope.keep(rod.intersect(probe)).volume();
       };
       const z = pitch + pitch / 4;
@@ -75,7 +79,8 @@ describe('printed screws', () => {
   it('a 4 mm thread is offered, with a warning that it may not hold; 6 mm and up are not warned about', () => {
     expect(THREAD_SIZES).toContain('P4');
     expect(THREADS.P4).toEqual({ d: 4, pitch: 1 });
-    const warned = (size: string) => printedScrewWarnings(effectiveLid(printedState('top', size).shape, printedState('top', size).lid, { w: 90, d: 70, h: 40 }));
+    const warned = (size: string) =>
+      printedScrewWarnings(effectiveLid(printedState('top', size).shape, printedState('top', size).lid, { w: 90, d: 70, h: 40 }));
     expect(warned('P4').map((m) => m.code)).toEqual(['warn.threadSmall']);
     for (const size of ['P6', 'P8', 'P10']) expect(warned(size)).toEqual([]);
     const snaps = sanitizeState({ ...defaultState(), lid: { ...defaultState().lid, thread: { size: 'P4', fit: 0.2 } } });
@@ -98,7 +103,12 @@ describe('printed screws', () => {
     expect(report.extents[0]).toBeGreaterThan(shape.headD - 1.2);
   });
 
-  it.each([['top', 'P6'], ['right', 'P8'], ['bottom', 'P10'], ['top', 'P4']] as const)(
+  it.each([
+    ['top', 'P6'],
+    ['right', 'P8'],
+    ['bottom', 'P10'],
+    ['top', 'P4'],
+  ] as const)(
     'lid %s, %s: turned to the right angle, the screw goes through the lid and into the post without touching either',
     (face, size) => {
       const state = printedState(face, size);

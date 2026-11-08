@@ -10,7 +10,8 @@ import { flareAt } from './cutters';
 import type { Affine } from './surface';
 
 export function cutterSolid(csg: CsgApi, scope: CsgScope, cutter: CutterSpec, segments: number): Manifold {
-  const grownBy = (g: number): CrossSection => sectionOf(csg, scope, { ...cutter, w: cutter.w + 2 * g, h: cutter.h + 2 * g, r: cutter.r + g }, segments);
+  const grownBy = (g: number): CrossSection =>
+    sectionOf(csg, scope, { ...cutter, w: cutter.w + 2 * g, h: cutter.h + 2 * g, r: cutter.r + g }, segments);
   let prism: Manifold;
   if (cutter.flare && cutter.flare.from < cutter.s1) {
     // a chamfered window: the straight part and the wider far end, hulled
@@ -45,8 +46,8 @@ function sectionOf(csg: CsgApi, scope: CsgScope, cutter: Pick<CutterSpec, 'shape
     const radius = Math.min(cutter.w, cutter.h) / 2;
     const half = Math.max(cutter.w, cutter.h) / 2 - radius;
     const alongW = cutter.w >= cutter.h;
-    const circle = (c: number): CrossSection => scope.keep(scope.keep(csg.CrossSection.circle(radius, circular))
-      .translate(alongW ? [c, 0] : [0, c]));
+    const circle = (c: number): CrossSection =>
+      scope.keep(scope.keep(csg.CrossSection.circle(radius, circular)).translate(alongW ? [c, 0] : [0, c]));
     section = scope.keep(csg.CrossSection.hull([circle(-half), circle(half)]));
   } else {
     const r = Math.max(0, Math.min(cutter.r, cutter.w / 2 - 0.01, cutter.h / 2 - 0.01));
@@ -66,8 +67,12 @@ const JITTER_MM = 0.002;
 /** All cutters as one solid, or null when there are none. */
 export function cuttersSolid(csg: CsgApi, scope: CsgScope, cutters: readonly CutterSpec[], segments: number): Manifold | null {
   if (cutters.length === 0) return null;
-  return unionAll(csg, scope, cutters.map((cutter, index) => {
-    const grow = JITTER_MM * ((index % 5) + 1);
-    return cutterSolid(csg, scope, { ...cutter, w: cutter.w + grow, h: cutter.h + grow, s1: cutter.s1 + grow }, segments);
-  }));
+  return unionAll(
+    csg,
+    scope,
+    cutters.map((cutter, index) => {
+      const grow = JITTER_MM * ((index % 5) + 1);
+      return cutterSolid(csg, scope, { ...cutter, w: cutter.w + grow, h: cutter.h + grow, s1: cutter.s1 + grow }, segments);
+    }),
+  );
 }

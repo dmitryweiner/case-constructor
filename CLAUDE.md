@@ -35,7 +35,7 @@ ghosts (the branch `through-bolts`): done.
 
 ## Node
 
-Node 22 (`.nvmrc`; vitest 5 needs ≥ 22.12). The login shell has Node 20 by
+Node 22 (`.node-version`; vitest 5 needs ≥ 22.12). The login shell has Node 20 by
 default (`fnm env` in ~/.zshrc puts it first in every command). A
 SessionStart hook in `.claude/settings.local.json` exports Node 22's path
 through `$CLAUDE_ENV_FILE`; without it, run commands with
@@ -51,7 +51,8 @@ does not mention `manifold`, and the upload of `dist/`.
 ## Commands
 
 ```bash
-npm run check     # tsc + eslint (no `as` casts) + vitest
+npm run check     # tsc (TypeScript 7) + oxlint --type-aware (no `as` casts) + prettier --check + vitest
+npm run format    # prettier --write (not *.md, the board catalog, golden, fixtures: .prettierignore)
 npm run smoke     # browser smoke; --preview for the production build
 npm run build     # production build → ./dist
 ```
@@ -511,7 +512,8 @@ freely; a temporary script that turns out useful becomes a permanent one.
   literal under `src/` outside `src/i18n/`.
 - Hebrew is text-only RTL: `<html dir>` stays `ltr`; `style.css` gives every
   text element `unicode-bidi: plaintext` (= `dir="auto"`).
-- No `as` casts (eslint); `as const` is allowed.
+- No `as` casts (oxlint `typescript/consistent-type-assertions`, `.oxlintrc.json`);
+  `as const` is allowed. Every rule turned off there says why.
 
 ## What costs what
 

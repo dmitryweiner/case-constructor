@@ -36,13 +36,19 @@ const td2 = catalogBoard('raspberry-pi-touch-display-2-7') ?? CATALOG[0];
 const epaper = catalogBoard('waveshare-epaper-7.5-v2') ?? CATALOG[0];
 
 function hung(board: string, patch: Partial<AppState> = {}, extra: Record<string, unknown> = {}): AppState {
-  return sanitizeState({ ...defaultState(), ...patch, boards: [{ board, on: 'ceiling', z: 0, mount: { size: 'M3', hole: 'insert' }, ...extra }] });
+  return sanitizeState({
+    ...defaultState(),
+    ...patch,
+    boards: [{ board, on: 'ceiling', z: 0, mount: { size: 'M3', hole: 'insert' }, ...extra }],
+  });
 }
 
 describe('clamp entries', () => {
   it('a clamped panel keeps its kind of mount, with or without holes on its back', () => {
     expect(sanitizeBoard({ size: { w: 100, d: 60 }, mount: { kind: 'clamp', holes: [] } }).mount.kind).toBe('clamp');
-    expect(sanitizeBoard({ size: { w: 100, d: 60 }, mount: { kind: 'clamp', holes: [{ x: 10, y: 10, d: 2.5 }] } }).mount.holes).toHaveLength(1);
+    expect(
+      sanitizeBoard({ size: { w: 100, d: 60 }, mount: { kind: 'clamp', holes: [{ x: 10, y: 10, d: 2.5 }] } }).mount.holes,
+    ).toHaveLength(1);
     expect(td2.mount.kind).toBe('clamp');
     expect(epaper.mount.kind).toBe('clamp');
   });
@@ -85,12 +91,16 @@ describe('the hold', () => {
 
   it('a bar steps aside for a part on the back; with nowhere to go it is reported', () => {
     const blocked = sanitizeBoard({
-      kind: 'display', size: { w: 100, d: 50, t: 2 }, mount: { kind: 'clamp', holes: [] },
+      kind: 'display',
+      size: { w: 100, d: 50, t: 2 },
+      mount: { kind: 'clamp', holes: [] },
       ports: [{ id: 'board', type: 'generic', edge: 'bottom', x: 50, y: 25, w: 100, d: 50, h: 5 }],
     });
     expect(clampHold(blocked, defaultPlacement(blocked)).blocked).toBe(true);
     const side = sanitizeBoard({
-      kind: 'display', size: { w: 100, d: 50, t: 2 }, mount: { kind: 'clamp', holes: [] },
+      kind: 'display',
+      size: { w: 100, d: 50, t: 2 },
+      mount: { kind: 'clamp', holes: [] },
       ports: [{ id: 'driver', type: 'generic', edge: 'bottom', x: 20, y: 25, w: 12, d: 30, h: 5 }],
     });
     const hold = clampHold(side, defaultPlacement(side));

@@ -10,7 +10,10 @@ export class History<T> {
   private future: T[] = [];
   private current: T;
 
-  constructor(initial: T, private readonly limit = 80) {
+  constructor(
+    initial: T,
+    private readonly limit = 80,
+  ) {
     this.current = initial;
   }
 

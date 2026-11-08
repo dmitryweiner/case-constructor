@@ -31,7 +31,9 @@ export function rimSolids(csg: CsgApi, scope: CsgScope, board: PlacedBoard, plat
   const n = roundSegments(segments) * 2;
   const { t } = board.def.size;
   return rimsOf(board).map((rim) => {
-    const ring = scope.keep(glassSection(csg, scope, rim.glass, RIM_FIT + RIM_W, n).subtract(glassSection(csg, scope, rim.glass, RIM_FIT, n)));
+    const ring = scope.keep(
+      glassSection(csg, scope, rim.glass, RIM_FIT + RIM_W, n).subtract(glassSection(csg, scope, rim.glass, RIM_FIT, n)),
+    );
     let solid = extrude(csg, scope, ring, rim.z0, rim.z1 + SINK);
     const parts = board.def.ports.flatMap((port) => {
       if (!onFace(port) || port.edge !== 'top' || port.id === rim.port || t + port.h + RIM_PART_GAP <= rim.z0) return [];
@@ -51,7 +53,9 @@ export function rimSolids(csg: CsgApi, scope: CsgScope, board: PlacedBoard, plat
  */
 export function glassKeepOut(csg: CsgApi, scope: CsgScope, board: PlacedBoard, segments: number): Manifold | null {
   const n = roundSegments(segments) * 2;
-  const solids = rimsOf(board).map((rim) => extrude(csg, scope, glassSection(csg, scope, rim.glass, RIM_FIT, n), board.def.size.t - 0.1, rim.z1));
+  const solids = rimsOf(board).map((rim) =>
+    extrude(csg, scope, glassSection(csg, scope, rim.glass, RIM_FIT, n), board.def.size.t - 0.1, rim.z1),
+  );
   if (solids.length === 0) return null;
   return transformSolid(scope, unionAll(csg, scope, solids), board.toCase);
 }

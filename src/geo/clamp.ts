@@ -75,7 +75,9 @@ export function clampHold(def: BoardDef, placement: Pick<BoardPlacement, 'press'
   if (def.mount.holes.length > 0) {
     // a tab from the nearer post to every hole on the back
     const bars = def.mount.holes.map((hole) => ({
-      at: along(hole), holes: [side(hole)], posts: [side(hole) < width / 2 ? posts[0] : posts[1]],
+      at: along(hole),
+      holes: [side(hole)],
+      posts: [side(hole) < width / 2 ? posts[0] : posts[1]],
     }));
     return { across, bars, posts, face, blocked: false };
   }
@@ -133,11 +135,13 @@ export function clampPads(def: BoardDef, placement: Pick<BoardPlacement, 'press'
     if (onFace(port)) {
       if (port.edge !== 'top') return [];
       const [hw, hd] = [port.w / 2, (port.shape === 'round' ? port.w : port.d) / 2];
-      return hold.across === 'x' ? [[port.y - hd, port.y + hd, port.x - hw, port.x + hw]] : [[port.x - hw, port.x + hw, port.y - hd, port.y + hd]];
+      return hold.across === 'x'
+        ? [[port.y - hd, port.y + hd, port.x - hw, port.x + hw]]
+        : [[port.x - hw, port.x + hw, port.y - hd, port.y + hd]];
     }
     if (port.z + port.h <= 0) return [];
     const half = port.w / 2;
-    const edgeAcross = hold.across === 'x' ? (port.edge === 'left' || port.edge === 'right') : (port.edge === 'front' || port.edge === 'back');
+    const edgeAcross = hold.across === 'x' ? port.edge === 'left' || port.edge === 'right' : port.edge === 'front' || port.edge === 'back';
     if (!edgeAcross) return [];
     const far = port.edge === 'right' || port.edge === 'back';
     const [a0, a1] = far ? [width - port.d + port.protrude, width + port.protrude] : [-port.protrude, port.d - port.protrude];
@@ -148,10 +152,12 @@ export function clampPads(def: BoardDef, placement: Pick<BoardPlacement, 'press'
     const [s0, s1] = [at - PAD_W / 2, at + PAD_W / 2];
     return s0 >= 0 && s1 <= length && boxes.every(([b0, b1, a0, a1]) => s1 <= b0 || s0 >= b1 || c1 <= a0 || c0 >= a1);
   };
-  return hold.bars.flatMap((bar) => ([0, 1] as const).flatMap((side): ClampPad[] => {
-    for (let step = 0; step <= PAD_SEARCH; step += 0.5) {
-      for (const at of [bar.at - step, bar.at + step]) if (free(side, at)) return [{ side, at }];
-    }
-    return [];
-  }));
+  return hold.bars.flatMap((bar) =>
+    ([0, 1] as const).flatMap((side): ClampPad[] => {
+      for (let step = 0; step <= PAD_SEARCH; step += 0.5) {
+        for (const at of [bar.at - step, bar.at + step]) if (free(side, at)) return [{ side, at }];
+      }
+      return [];
+    }),
+  );
 }

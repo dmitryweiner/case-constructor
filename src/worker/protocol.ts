@@ -14,10 +14,7 @@ import type { Half } from '../state/hinged';
  * A job. A preview builds the exact case at preview resolution; an export
  * builds it at `state.resolution` and checks every part.
  */
-export type CsgJob = (
-  | { kind: 'preview'; state: AppState; segments: number }
-  | { kind: 'export'; state: AppState }
-) & {
+export type CsgJob = ({ kind: 'preview'; state: AppState; segments: number } | { kind: 'export'; state: AppState }) & {
   /**
    * The labels' texts as rasters, one per label in `state.labels`: fonts
    * live in the main thread, so it draws the texts; a raster is derived from

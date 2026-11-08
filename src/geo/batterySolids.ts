@@ -13,7 +13,16 @@ import { SINK, box, cylinder, postHole, roundSegments } from './standoffs';
 import { applyAffine } from './surface';
 import type { BatterySpec } from '../boards/battery';
 import {
-  CLAMP_W, SADDLE_W, SADDLE_WRAP, SEAT_CLEARANCE, STOP_H, STOP_LEG, STOP_T, batteryHold, batterySize, cellCentres,
+  CLAMP_W,
+  SADDLE_W,
+  SADDLE_WRAP,
+  SEAT_CLEARANCE,
+  STOP_H,
+  STOP_LEG,
+  STOP_T,
+  batteryHold,
+  batterySize,
+  cellCentres,
 } from '../boards/battery';
 
 /** A cylinder along x from x0 to x1 around (y, z), battery frame. */
@@ -38,7 +47,14 @@ function cradles(csg: CsgApi, scope: CsgScope, spec: BatterySpec, zf: number, n:
   // a pack: an L-shaped stop outside each corner, and a pad under it when the pack is raised
   const top = Math.min(STOP_H, 0.6 * size.h);
   const sorted = (a: number, b: number): [number, number] => [Math.min(a, b), Math.max(a, b)];
-  return ([[0, 0, -1, -1], [size.w, 0, 1, -1], [size.w, size.d, 1, 1], [0, size.d, -1, 1]] as const).flatMap(([cx, cy, sx, sy]) => {
+  return (
+    [
+      [0, 0, -1, -1],
+      [size.w, 0, 1, -1],
+      [size.w, size.d, 1, 1],
+      [0, size.d, -1, 1],
+    ] as const
+  ).flatMap(([cx, cy, sx, sy]) => {
     const [ax0, ax1] = sorted(cx + sx * STOP_T, cx - sx * STOP_LEG);
     const [ay0, ay1] = sorted(cy + sy * STOP_T, cy);
     const [bx0, bx1] = sorted(cx + sx * STOP_T, cx);
@@ -56,7 +72,14 @@ function cradles(csg: CsgApi, scope: CsgScope, spec: BatterySpec, zf: number, n:
  * clamp posts, the posts' holes as for a board's standoffs (the nut slots
  * pointing at the battery).
  */
-export function batterySupports(csg: CsgApi, scope: CsgScope, board: PlacedBoard, spec: BatterySpec, floor: number, segments: number): Support[] {
+export function batterySupports(
+  csg: CsgApi,
+  scope: CsgScope,
+  board: PlacedBoard,
+  spec: BatterySpec,
+  floor: number,
+  segments: number,
+): Support[] {
   const n = roundSegments(segments);
   const hold = batteryHold(spec);
   const size = batterySize(spec);

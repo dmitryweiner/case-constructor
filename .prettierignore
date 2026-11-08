@@ -1,0 +1,12 @@
+dist/
+package-lock.json
+# laid out by scripts/board.mjs --format (tests/boards.test.ts checks it)
+src/boards/data/
+# written by UPDATE_GOLDEN=1 (tests/golden.test.ts)
+tests/golden/
+# files as vendors and users made them
+tests/fixtures/
+user-voices/
+# hand-wrapped prose: prettier pulls a list item's line that starts inside
+# an inline code span back to column 0
+*.md

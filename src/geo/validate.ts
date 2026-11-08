@@ -119,11 +119,16 @@ export function validateMesh(mesh: SurfaceMesh, areaEps = 1e-12): MeshReport {
   }
   const edgeKey = (a: number, b: number): number => (a < b ? a * nVerts + b : b * nVerts + a);
   let degenerate = 0;
-  for (let t = 0; indicesValid && t < indices.length; t += 3) {
+  const checked = indicesValid ? indices.length : 0;
+  for (let t = 0; t < checked; t += 3) {
     const ia = indices[t];
     const ib = indices[t + 1];
     const ic = indices[t + 2];
-    for (const [a, b] of [[ia, ib], [ib, ic], [ic, ia]]) {
+    for (const [a, b] of [
+      [ia, ib],
+      [ib, ic],
+      [ic, ia],
+    ]) {
       const key = edgeKey(a, b);
       let e = edges.get(key);
       if (!e) {
@@ -133,7 +138,9 @@ export function validateMesh(mesh: SurfaceMesh, areaEps = 1e-12): MeshReport {
       e.count++;
       e.balance += a < b ? 1 : -1;
     }
-    const a = ia * 3, b = ib * 3, c = ic * 3;
+    const a = ia * 3,
+      b = ib * 3,
+      c = ic * 3;
     const abx = positions[b] - positions[a];
     const aby = positions[b + 1] - positions[a + 1];
     const abz = positions[b + 2] - positions[a + 2];
@@ -154,11 +161,7 @@ export function validateMesh(mesh: SurfaceMesh, areaEps = 1e-12): MeshReport {
     }
   }
 
-  const extents: [number, number, number] = [
-    max[0] - min[0],
-    max[1] - min[1],
-    max[2] - min[2],
-  ];
+  const extents: [number, number, number] = [max[0] - min[0], max[1] - min[1], max[2] - min[2]];
   return {
     finite,
     indicesValid,

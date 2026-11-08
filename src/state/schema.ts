@@ -12,9 +12,7 @@ import { catalogBoard, CATALOG } from '../boards/catalog';
 import type { ExtraCut } from '../geo/cutters';
 import { sanitizeExtraCuts } from '../geo/cutters';
 import type { FanState, LabelState, VentState, WallMountState } from '../geo/extras';
-import {
-  defaultFan, defaultVents, defaultWallMount, sanitizeFan, sanitizeLabels, sanitizeVents, sanitizeWallMount,
-} from '../geo/extras';
+import { defaultFan, defaultVents, defaultWallMount, sanitizeFan, sanitizeLabels, sanitizeVents, sanitizeWallMount } from '../geo/extras';
 import type { LidState } from '../geo/lidSpec';
 import { defaultLid, lidForKind, sanitizeLid } from '../geo/lidSpec';
 import type { PrintArrange } from '../geo/print';

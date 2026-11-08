@@ -54,16 +54,38 @@ export function boltMesh(lid: LidState, bolt: ThroughBolt): SurfaceMesh {
   const end = bolt.underHead - bolt.length;
   if (lid.screw.head === 'countersunk') {
     const head = COUNTERSUNK_HEAD_D[lid.screw.size] / 2;
-    return latheMesh([[r, end], [r, -(head - r)], [head, 0]], ROUND);
+    return latheMesh(
+      [
+        [r, end],
+        [r, -(head - r)],
+        [head, 0],
+      ],
+      ROUND,
+    );
   }
-  return latheMesh([[r, end], [r, bolt.underHead], [screw.headD / 2, bolt.underHead], [screw.headD / 2, bolt.underHead + screw.headH]], ROUND);
+  return latheMesh(
+    [
+      [r, end],
+      [r, bolt.underHead],
+      [screw.headD / 2, bolt.underHead],
+      [screw.headD / 2, bolt.underHead + screw.headH],
+    ],
+    ROUND,
+  );
 }
 
 /** A hex nut in the lid's face frame, its axis at u = v = 0, from z0 down to z0 − h, `turn` radians about its axis. */
 export function nutMesh(lid: LidState, z0: number, turn: number): SurfaceMesh {
   const { af, h } = nutSize(lid);
   const corner = af / Math.sqrt(3);
-  return latheMesh([[corner, z0 - h], [corner, z0]], 6, turn);
+  return latheMesh(
+    [
+      [corner, z0 - h],
+      [corner, z0],
+    ],
+    6,
+    turn,
+  );
 }
 
 /**
@@ -80,9 +102,11 @@ export function throughHardware(state: AppState): { bolts: SurfaceMesh; nuts: Su
   const bearing = -frame.depth + bolt.pocket;
   const at = (u: number, v: number): Affine => composeAffine(frame.fromFace, translation(u, v, 0));
   const bolts = mergeMeshes(spots.map((spot) => transformMesh(one, at(spot.centre[0], spot.centre[1]))));
-  const nuts = mergeMeshes(spots.map((spot) => {
-    const towards = Math.atan2(spot.centre[1] - spot.anchor[1], spot.centre[0] - spot.anchor[0]);
-    return transformMesh(nutMesh(lid, bearing, towards + Math.PI / 6), at(spot.centre[0], spot.centre[1]));
-  }));
+  const nuts = mergeMeshes(
+    spots.map((spot) => {
+      const towards = Math.atan2(spot.centre[1] - spot.anchor[1], spot.centre[0] - spot.anchor[0]);
+      return transformMesh(nutMesh(lid, bearing, towards + Math.PI / 6), at(spot.centre[0], spot.centre[1]));
+    }),
+  );
   return { bolts, nuts };
 }

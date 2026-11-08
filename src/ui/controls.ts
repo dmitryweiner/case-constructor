@@ -95,7 +95,7 @@ export interface ButtonControl<T> extends Common<T> {
 }
 
 export type Control<T> =
-  | RangeControl<T> | SelectControl<T> | SegmentedControl<T> | TogglesControl<T> | CheckControl<T> | TextControl<T> | ButtonControl<T>;
+  RangeControl<T> | SelectControl<T> | SegmentedControl<T> | TogglesControl<T> | CheckControl<T> | TextControl<T> | ButtonControl<T>;
 
 export interface ControlsHandle<T> {
   /** updates the shown values without rebuilding the DOM */
@@ -263,7 +263,10 @@ export function renderControls<T>(
       const readout = make('output', undefined, control.get(read()).toFixed(digits));
       const minus = make('button', 'adj-btn', '−');
       const plus = make('button', 'adj-btn', '+');
-      for (const [button, dir] of [[minus, -1], [plus, 1]] as const) {
+      for (const [button, dir] of [
+        [minus, -1],
+        [plus, 1],
+      ] as const) {
         button.type = 'button';
         button.dataset.slider = slider.id;
         button.dataset.dir = String(dir);

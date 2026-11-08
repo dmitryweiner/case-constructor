@@ -26,8 +26,15 @@ describe('project file', () => {
   });
 
   it('refuses anything else instead of resetting the work', () => {
-    for (const text of ['', 'not json', '[]', '42', '{"hello":"world"}', '{"app":"clayform","state":{}}',
-      '{"app":"case-constructor","state":null}']) {
+    for (const text of [
+      '',
+      'not json',
+      '[]',
+      '42',
+      '{"hello":"world"}',
+      '{"app":"clayform","state":{}}',
+      '{"app":"case-constructor","state":null}',
+    ]) {
       expect(decodePresetFile(text), text).toBeNull();
     }
   });
@@ -69,14 +76,19 @@ describe('built-in presets', () => {
 
   it('every file in src/state/presets is a preset, named after its id, with no stray keys', () => {
     const dir = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'state', 'presets');
-    const files = readdirSync(dir).filter((name) => name.endsWith('.json')).sort();
+    const files = readdirSync(dir)
+      .filter((name) => name.endsWith('.json'))
+      .sort();
     expect(files).toEqual(PRESETS.map((preset) => `${preset.id}.json`).sort());
     for (const name of files) {
       const file: unknown = JSON.parse(readFileSync(join(dir, name), 'utf8'));
       const state: unknown = typeof file === 'object' && file !== null ? Reflect.get(file, 'state') : null;
       // the sanitizer drops a key it does not know: a typo in a hand-edited file would vanish silently
       const built = new Set(keyPaths(presetById(name.replace(/\.json$/, ''))?.build()));
-      expect(keyPaths(state).filter((path) => !built.has(path)), name).toEqual([]);
+      expect(
+        keyPaths(state).filter((path) => !built.has(path)),
+        name,
+      ).toEqual([]);
     }
   });
 });

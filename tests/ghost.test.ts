@@ -49,7 +49,17 @@ describe('board ghosts', () => {
 
   it('a hole on the board edge stays inside the outline (its pad shrinks or it is left out)', () => {
     const def = catalogBoard('raspberry-pi-4b') ?? CATALOG[0];
-    const edgy = { ...def, mount: { ...def.mount, holes: [{ x: 1, y: 10, d: 2.7 }, { x: 5, y: 10, d: 2.7 }, { x: 30, y: 30, d: 3 }] } };
+    const edgy = {
+      ...def,
+      mount: {
+        ...def.mount,
+        holes: [
+          { x: 1, y: 10, d: 2.7 },
+          { x: 5, y: 10, d: 2.7 },
+          { x: 30, y: 30, d: 3 },
+        ],
+      },
+    };
     const holes = ghostHoles(edgy);
     for (const hole of holes) {
       expect(hole.x - hole.r - hole.pad).toBeGreaterThan(0);

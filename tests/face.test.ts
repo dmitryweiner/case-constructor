@@ -8,9 +8,11 @@ describe('face frames', () => {
     for (const face of FACES) {
       const frame = faceFrame(face, dims);
       let maxZ = -Infinity;
-      for (const x of [0, dims.w]) for (const y of [0, dims.d]) for (const z of [0, dims.h]) {
-        maxZ = Math.max(maxZ, applyAffine(frame.toFace, [x, y, z])[2]);
-      }
+      for (const x of [0, dims.w])
+        for (const y of [0, dims.d])
+          for (const z of [0, dims.h]) {
+            maxZ = Math.max(maxZ, applyAffine(frame.toFace, [x, y, z])[2]);
+          }
       expect(maxZ, face).toBeCloseTo(0);
       expect(applyAffine(frame.toFace, [dims.w / 2, dims.d / 2, dims.h / 2])[2], face).toBeLessThan(0);
     }
@@ -21,12 +23,14 @@ describe('face frames', () => {
       const frame = faceFrame(face, dims);
       const us: number[] = [];
       const vs: number[] = [];
-      for (const x of [0, dims.w]) for (const y of [0, dims.d]) for (const z of [0, dims.h]) {
-        const p = applyAffine(frame.toFace, [x, y, z]);
-        if (Math.abs(p[2]) > 1e-9) continue;
-        us.push(p[0]);
-        vs.push(p[1]);
-      }
+      for (const x of [0, dims.w])
+        for (const y of [0, dims.d])
+          for (const z of [0, dims.h]) {
+            const p = applyAffine(frame.toFace, [x, y, z]);
+            if (Math.abs(p[2]) > 1e-9) continue;
+            us.push(p[0]);
+            vs.push(p[1]);
+          }
       expect(Math.min(...us), face).toBeCloseTo(0);
       expect(Math.max(...us), face).toBeCloseTo(frame.extent.w);
       expect(Math.min(...vs), face).toBeCloseTo(0);
@@ -37,9 +41,10 @@ describe('face frames', () => {
   it('the frames are right-handed rotations and fromFace inverts toFace', () => {
     for (const face of FACES) {
       const { toFace, fromFace } = faceFrame(face, dims);
-      const det = toFace[0] * (toFace[5] * toFace[10] - toFace[6] * toFace[9])
-        - toFace[1] * (toFace[4] * toFace[10] - toFace[6] * toFace[8])
-        + toFace[2] * (toFace[4] * toFace[9] - toFace[5] * toFace[8]);
+      const det =
+        toFace[0] * (toFace[5] * toFace[10] - toFace[6] * toFace[9]) -
+        toFace[1] * (toFace[4] * toFace[10] - toFace[6] * toFace[8]) +
+        toFace[2] * (toFace[4] * toFace[9] - toFace[5] * toFace[8]);
       expect(det, face).toBeCloseTo(1);
       const id = composeAffine(fromFace, toFace);
       expect([...id], face).toEqual([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0].map((v) => expect.closeTo(v, 9)));

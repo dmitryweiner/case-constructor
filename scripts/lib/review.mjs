@@ -23,7 +23,20 @@ const r2 = (v) => Math.round(v * 100) / 100;
 
 function kindOf(file) {
   const ext = extname(file).toLowerCase();
-  const kinds = { '.dxf': 'dxf', '.pdf': 'pdf', '.brd': 'brd', '.kicad_pcb': 'kicad', '.png': 'image', '.jpg': 'image', '.jpeg': 'image', '.webp': 'image', '.step': 'step', '.stp': 'step', '.html': 'page', '.htm': 'page' };
+  const kinds = {
+    '.dxf': 'dxf',
+    '.pdf': 'pdf',
+    '.brd': 'brd',
+    '.kicad_pcb': 'kicad',
+    '.png': 'image',
+    '.jpg': 'image',
+    '.jpeg': 'image',
+    '.webp': 'image',
+    '.step': 'step',
+    '.stp': 'step',
+    '.html': 'page',
+    '.htm': 'page',
+  };
   if (kinds[ext]) return kinds[ext];
   if (ext) return null;
   const head = readFileSync(file).subarray(0, 256).toString('latin1');
@@ -77,7 +90,12 @@ function quarterOf(T) {
 // --- the board's own geometry
 
 function perimeter(def) {
-  const pts = def.outline ?? [[0, 0], [def.size.w, 0], [def.size.w, def.size.d], [0, def.size.d]];
+  const pts = def.outline ?? [
+    [0, 0],
+    [def.size.w, 0],
+    [def.size.w, def.size.d],
+    [0, def.size.d],
+  ];
   const out = [];
   for (let i = 0; i < pts.length; i++) {
     const [ax, ay] = pts[i];
@@ -88,7 +106,6 @@ function perimeter(def) {
   return out;
 }
 
-
 /** Items with a box in a grid; a query scans only cells inside the grid, or the list when that is fewer. */
 function gridOf(items, boxOf) {
   let x0 = Infinity;
@@ -97,7 +114,10 @@ function gridOf(items, boxOf) {
   let y1 = -Infinity;
   for (const item of items) {
     const [ax, ay, bx, by] = boxOf(item);
-    x0 = Math.min(x0, ax); y0 = Math.min(y0, ay); x1 = Math.max(x1, bx); y1 = Math.max(y1, by);
+    x0 = Math.min(x0, ax);
+    y0 = Math.min(y0, ay);
+    x1 = Math.max(x1, bx);
+    y1 = Math.max(y1, by);
   }
   const cell = Math.max((x1 - x0) / 150, (y1 - y0) / 150, 1e-9);
   const nx = Math.floor((x1 - x0) / cell);
@@ -204,7 +224,11 @@ function holeFit(T, holes, within, tol = 0.4) {
     const [x, y] = apply(T, h.x, h.y);
     let best = Infinity;
     for (const [c, d] of within(x, y, 0, tol * T.s)) if (d < best && fits(c, T.s, h.d)) best = d;
-    if (best < Infinity) { n++; err += (best / T.s) ** 2; worst = Math.max(worst, best / T.s); }
+    if (best < Infinity) {
+      n++;
+      err += (best / T.s) ** 2;
+      worst = Math.max(worst, best / T.s);
+    }
   }
   return { n, rms: n ? Math.sqrt(err / n) : Infinity, worst };
 }
@@ -218,7 +242,11 @@ function centred(T, holes, within, tol) {
     const [x, y] = apply(T, h.x, h.y);
     let best = null;
     for (const [c, d] of within(x, y, 0, tol * T.s)) if (!best || d < best[1]) best = [c, d];
-    if (best) { dx += best[0].x - x; dy += best[0].y - y; n++; }
+    if (best) {
+      dx += best[0].x - x;
+      dy += best[0].y - y;
+      n++;
+    }
   }
   return n ? { ...T, tx: T.tx + dx / n, ty: T.ty + dy / n } : T;
 }
@@ -258,7 +286,8 @@ function byHoles(holes, centres) {
   if (holes.length < 2 || centres.length < 2) return [];
   const within = centreGrid(centres);
   const pairs = [];
-  for (let i = 0; i < holes.length; i++) for (let j = i + 1; j < holes.length; j++) pairs.push([i, j, Math.hypot(holes[i].x - holes[j].x, holes[i].y - holes[j].y)]);
+  for (let i = 0; i < holes.length; i++)
+    for (let j = i + 1; j < holes.length; j++) pairs.push([i, j, Math.hypot(holes[i].x - holes[j].x, holes[i].y - holes[j].y)]);
   pairs.sort((a, b) => b[2] - a[2]);
   const need = Math.min(holes.length, 3);
   const out = [];
@@ -291,21 +320,27 @@ function byHoles(holes, centres) {
   }
   // one candidate per pose
   const seen = new Set();
-  return out.sort((a, b) => b.holes - a.holes || a.rms - b.rms).filter(({ T }) => {
-    const key = `${T.f},${quarterOf(T)},${Math.round(T.tx / T.s)},${Math.round(T.ty / T.s)}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  }).slice(0, 400);
+  return out
+    .sort((a, b) => b.holes - a.holes || a.rms - b.rms)
+    .filter(({ T }) => {
+      const key = `${T.f},${quarterOf(T)},${Math.round(T.tx / T.s)},${Math.round(T.ty / T.s)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 400);
 }
 
 function byOutline(def, lines) {
   const loops = chainLoops(lines, 0.02, { budget: 20000 });
-  const boxes = loops.map((loop) => {
-    const xs = loop.map(([x]) => x);
-    const ys = loop.map(([, y]) => y);
-    return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
-  }).sort((a, b) => (b.x1 - b.x0) * (b.y1 - b.y0) - (a.x1 - a.x0) * (a.y1 - a.y0)).slice(0, 30);
+  const boxes = loops
+    .map((loop) => {
+      const xs = loop.map(([x]) => x);
+      const ys = loop.map(([, y]) => y);
+      return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+    })
+    .sort((a, b) => (b.x1 - b.x0) * (b.y1 - b.y0) - (a.x1 - a.x0) * (a.y1 - a.y0))
+    .slice(0, 30);
   const { w, d } = def.size;
   const out = [];
   for (const box of boxes) {
@@ -332,7 +367,12 @@ function byOutline(def, lines) {
 function portSamples(boxes) {
   const out = [];
   for (const [x0, y0, x1, y1] of boxes) {
-    const corners = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+    const corners = [
+      [x0, y0],
+      [x1, y0],
+      [x1, y1],
+      [x0, y1],
+    ];
     for (let i = 0; i < 4; i++) {
       const [ax, ay] = corners[i];
       const [bx, by] = corners[(i + 1) % 4];
@@ -347,10 +387,13 @@ function portSamples(boxes) {
 function content(T, def, lines) {
   let n = 0;
   for (const pts of lines) {
-    if (pts.every(([x, y]) => {
-      const [bx, by] = invert(T, x, y);
-      return bx > 0.3 && by > 0.3 && bx < def.size.w - 0.3 && by < def.size.d - 0.3;
-    })) n++;
+    if (
+      pts.every(([x, y]) => {
+        const [bx, by] = invert(T, x, y);
+        return bx > 0.3 && by > 0.3 && bx < def.size.w - 0.3 && by < def.size.d - 0.3;
+      })
+    )
+      n++;
   }
   return n;
 }
@@ -364,10 +407,11 @@ export function align(def, shapes, borrowed = [], boxes = [], trueScale = false)
   const lines = polylines(shapes.filter((s) => s.kind !== 'circle'));
   const grid = segmentGrid(lines);
   const edge = perimeter(def);
-  const edgeHit = (T) => edge.filter(([x, y]) => {
-    const [X, Y] = apply(T, x, y);
-    return grid.near(X, Y, 0.3 * T.s);
-  }).length / edge.length;
+  const edgeHit = (T) =>
+    edge.filter(([x, y]) => {
+      const [X, Y] = apply(T, x, y);
+      return grid.near(X, Y, 0.3 * T.s);
+    }).length / edge.length;
   const holes = def.mount.holes;
   for (const T of borrowed) {
     const hit = edgeHit(T);
@@ -388,17 +432,25 @@ export function align(def, shapes, borrowed = [], boxes = [], trueScale = false)
   for (const c of candidates) {
     const hit = edgeHit(c.T);
     // a mirror or a half turn of a symmetric hole pattern: the connectors tell
-    const partHit = parts.length && hit > 0.3 ? parts.filter(([x, y]) => {
-      const [X, Y] = apply(c.T, x, y);
-      return grid.near(X, Y, 0.5 * c.T.s);
-    }).length / parts.length : 0;
+    const partHit =
+      parts.length && hit > 0.3
+        ? parts.filter(([x, y]) => {
+            const [X, Y] = apply(c.T, x, y);
+            return grid.near(X, Y, 0.5 * c.T.s);
+          }).length / parts.length
+        : 0;
     // by the outline alone, a table cell of the right proportions fits as well: the board has parts inside
     const byEdge = outlined && !c.borrowed;
     const inside = byEdge ? content(c.T, def, lines) : 0;
     if (byEdge && inside < 8) continue;
     // holes count only with the edge under them (tiny pads at a tiny scale match any pattern);
     // ties (a symmetric hole pattern, a rectangle): the top view, unturned
-    const score = (c.holes + 1) * hit * hit + 0.6 * partHit + 0.5 * Math.min(1, inside / 40) + (c.T.f === 1 ? 0.02 : 0) + (quarterOf(c.T) === 0 ? 0.01 : 0);
+    const score =
+      (c.holes + 1) * hit * hit +
+      0.6 * partHit +
+      0.5 * Math.min(1, inside / 40) +
+      (c.T.f === 1 ? 0.02 : 0) +
+      (quarterOf(c.T) === 0 ? 0.01 : 0);
     if (!best || score > best.score) best = { ...c, edge: hit, partHit, inside, score };
   }
   // round letters of a title block match two holes as well; the board's edge must be there
@@ -406,8 +458,8 @@ export function align(def, shapes, borrowed = [], boxes = [], trueScale = false)
   const how = best.borrowed
     ? `as the other file of the set, holes ${best.holes}/${holes.length}, edge ${Math.round(best.edge * 100)}%`
     : outlined
-    ? `by the outline (no holes to go by), edge ${Math.round(best.edge * 100)}%, ${best.inside} shapes inside`
-    : `by holes ${best.holes}/${holes.length} (rms ${r2(best.rms)} mm${best.worst > 0.4 ? `; HOLES OFF by up to ${r2(best.worst)} mm` : ''}), edge ${Math.round(best.edge * 100)}%, connectors ${Math.round(best.partHit * 100)}%`;
+      ? `by the outline (no holes to go by), edge ${Math.round(best.edge * 100)}%, ${best.inside} shapes inside`
+      : `by holes ${best.holes}/${holes.length} (rms ${r2(best.rms)} mm${best.worst > 0.4 ? `; HOLES OFF by up to ${r2(best.worst)} mm` : ''}), edge ${Math.round(best.edge * 100)}%, connectors ${Math.round(best.partHit * 100)}%`;
   const turn = `${quarterOf(best.T) * 90}°${best.T.f === -1 ? ', mirrored' : ''}`;
   const weak = best.edge < 0.5 ? ' — WEAK: check it' : '';
   return { ...best, how: `${how}; scale ${r2(best.T.s)}, ${turn}${weak}` };
@@ -427,10 +479,12 @@ function shapesMarkup(shapes, T) {
   for (const pts of polylines(shapes.filter((s) => s.kind !== 'circle'))) {
     if (pts.length > 1) parts.push(`M${pts.map(([x, y]) => P(x, y)).join('L')}`);
   }
-  const circles = shapes.filter((s) => s.kind === 'circle').map((c) => {
-    const [x, y] = invert(T, c.x, c.y);
-    return `<circle cx="${num(x)}" cy="${num(-y)}" r="${r2(c.r / T.s)}"/>`;
-  });
+  const circles = shapes
+    .filter((s) => s.kind === 'circle')
+    .map((c) => {
+      const [x, y] = invert(T, c.x, c.y);
+      return `<circle cx="${num(x)}" cy="${num(-y)}" r="${r2(c.r / T.s)}"/>`;
+    });
   const ns = 'vector-effect="non-scaling-stroke"';
   return `<g fill="none" stroke="currentColor" stroke-width="1"><path d="${parts.join('')}" ${ns}/>${circles.join('').replaceAll('/>', ` ${ns}/>`)}</g>`;
 }
@@ -439,7 +493,9 @@ function dxfLayer(def, file, borrowed, boxes) {
   const shapes = readDxf(readFileSync(file, 'latin1'));
   const pose = align(def, shapes, borrowed, boxes, true);
   if (pose && pose.edge >= 0.7) borrowed.push(pose.T);
-  return pose ? { markup: shapesMarkup(shapes, pose.T), how: pose.how, score: pose.score } : { markup: shapesMarkup(shapes, identityAt(shapes, def)), how: 'not aligned: two points by hand', score: 0.05 };
+  return pose
+    ? { markup: shapesMarkup(shapes, pose.T), how: pose.how, score: pose.score }
+    : { markup: shapesMarkup(shapes, identityAt(shapes, def)), how: 'not aligned: two points by hand', score: 0.05 };
 }
 
 /** Unaligned: the drawing round the board at about twice its size, to be aligned by two points. */
@@ -475,7 +531,11 @@ function pdfLayers(def, file, boxes) {
   const count = pageCount(file);
   for (let page = 1; page <= Math.min(count, MAX_PAGES); page++) {
     let svg;
-    try { svg = pdfToSvg(file, page); } catch { continue; }
+    try {
+      svg = pdfToSvg(file, page);
+    } catch {
+      continue;
+    }
     const shapes = readSvg(svg);
     if (shapes.length === 0) continue;
     pages.push({ page, svg, shapes, pose: align(def, shapes, [], boxes) });
@@ -483,12 +543,25 @@ function pdfLayers(def, file, boxes) {
   const posed = pages.filter((p) => p.pose).sort((a, b) => b.pose.score - a.pose.score);
   if (posed.length) {
     const best = posed[0];
-    return [{ nested: nestable(best.svg), matrix: pageMatrix(best.pose.T), how: `page ${best.page} of ${count}, ${best.pose.how}`, score: best.pose.score }];
+    return [
+      {
+        nested: nestable(best.svg),
+        matrix: pageMatrix(best.pose.T),
+        how: `page ${best.page} of ${count}, ${best.pose.how}`,
+        score: best.pose.score,
+      },
+    ];
   }
   for (const p of pages) p.rank = drawingWords(file, p.page) * 1000 + p.shapes.filter((s) => s.kind === 'circle').length;
-  return pages.sort((a, b) => b.rank - a.rank).slice(0, 3).map((p, i) => ({
-    nested: nestable(p.svg), matrix: pageMatrix(identityAt(p.shapes, def)), how: `page ${p.page} of ${count}, not aligned: two points by hand`, score: 0.05 - i * 0.01,
-  }));
+  return pages
+    .sort((a, b) => b.rank - a.rank)
+    .slice(0, 3)
+    .map((p, i) => ({
+      nested: nestable(p.svg),
+      matrix: pageMatrix(identityAt(p.shapes, def)),
+      how: `page ${p.page} of ${count}, not aligned: two points by hand`,
+      score: 0.05 - i * 0.01,
+    }));
 }
 
 /** pdftocairo's units (pt, y down) → drawing mm (y up, readSvg) → board frame → display mm: one affine. */
@@ -506,10 +579,18 @@ function pageMatrix(T) {
 
 /** A page SVG to nest in the stage: plain user units, so the matrix alone places it. */
 function nestable(svg) {
-  const vb = svg.match(/viewBox="([^"]+)"/)?.[1].split(/[\s,]+/).map(Number);
+  const vb = svg
+    .match(/viewBox="([^"]+)"/)?.[1]
+    .split(/[\s,]+/)
+    .map(Number);
   const w = vb ? vb[2] : parseFloat(svg.match(/width="([\d.]+)/)?.[1] ?? '600');
   const h = vb ? vb[3] : parseFloat(svg.match(/height="([\d.]+)/)?.[1] ?? '800');
-  return svg.replace(/<\?xml[^>]*>/, '').replace(/<svg\b[^>]*>/, `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" overflow="visible">`);
+  return svg
+    .replace(/<\?xml[^>]*>/, '')
+    .replace(
+      /<svg\b[^>]*>/,
+      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" overflow="visible">`,
+    );
 }
 
 /**
@@ -528,11 +609,24 @@ function stepLayer(def, file, boxes) {
   const extent = [0, 1, 2].map((k) => board.hi[k] - board.lo[k]);
   const upAxis = extent.indexOf(Math.min(...extent));
   // the other two axes, right-handed, as x and y
-  const [ax, ay] = [[1, 2], [2, 0], [0, 1]][upAxis];
+  const [ax, ay] = [
+    [1, 2],
+    [2, 0],
+    [0, 1],
+  ][upAxis];
   board = pick(named.length ? named : raw, ax, ay);
   const rect = (p) => {
     const [x0, y0, x1, y1] = [p.lo[ax], p.lo[ay], p.hi[ax], p.hi[ay]];
-    return { kind: 'poly', pts: [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], closed: true };
+    return {
+      kind: 'poly',
+      pts: [
+        [x0, y0],
+        [x1, y0],
+        [x1, y1],
+        [x0, y1],
+      ],
+      closed: true,
+    };
   };
   const shapes = raw.filter((p) => p !== board).map(rect);
   shapes.push(rect(board));
@@ -543,7 +637,11 @@ function stepLayer(def, file, boxes) {
   const pose = align(def, shapes, [], boxes, true);
   const markup = shapesMarkup(shapes, pose ? pose.T : identityAt(shapes, def));
   // after a 2D drawing of the same board: boxes are coarser than outlines
-  return { markup, how: `parts' boxes of the 3D model, ${pose ? pose.how : 'not aligned: two points by hand'}`, score: pose ? pose.score / 2 : 0.04 };
+  return {
+    markup,
+    how: `parts' boxes of the 3D model, ${pose ? pose.how : 'not aligned: two points by hand'}`,
+    score: pose ? pose.score / 2 : 0.04,
+  };
 }
 
 function pcbLayer(def, file, kind) {
@@ -553,7 +651,9 @@ function pcbLayer(def, file, kind) {
     for (const deg of [0, 90, 180, 270]) {
       const board = turnBoard(read, deg, flip);
       const T = { s: 1, th: 0, f: 1, tx: 0, ty: 0 };
-      const fit = board.holes.length ? holeFit(T, def.mount.holes, centreGrid(board.holes.map((h) => ({ x: h.x, y: h.y, ds: [h.d] })))) : { n: 0 };
+      const fit = board.holes.length
+        ? holeFit(T, def.mount.holes, centreGrid(board.holes.map((h) => ({ x: h.x, y: h.y, ds: [h.d] }))))
+        : { n: 0 };
       const size = Math.abs(board.outline.w - def.size.w) + Math.abs(board.outline.d - def.size.d);
       const score = fit.n - size / 10 + (flip ? 0 : 0.02) + (deg === 0 ? 0.01 : 0);
       if (!best || score > best.score) best = { board, deg, flip, fit, score };
@@ -561,12 +661,24 @@ function pcbLayer(def, file, kind) {
   }
   const { board } = best;
   const P = ([x, y]) => `${num(x)},${num(-y)}`;
-  const outline = board.outlinePieces.filter((p) => p.length > 1).map((p) => `M${p.map(P).join('L')}`).join('');
+  const outline = board.outlinePieces
+    .filter((p) => p.length > 1)
+    .map((p) => `M${p.map(P).join('L')}`)
+    .join('');
   const holes = board.holes.map((h) => `<circle cx="${num(h.x)}" cy="${num(-h.y)}" r="${r2(h.d / 2)}"/>`).join('');
-  const pads = board.elements.filter((e) => e.size && Math.max(e.size.w, e.size.d) >= 2).map((e) => ({
-    e, x: e.x + e.size.cx - e.size.w / 2, y: e.y + e.size.cy + e.size.d / 2,
-  }));
-  const rects = pads.map(({ e, x, y }) => `<rect x="${num(x)}" y="${num(-y)}" width="${num(e.size.w)}" height="${num(e.size.d)}"${e.side === 'bottom' ? ' stroke-dasharray="1 0.6"' : ''}/>`).join('');
+  const pads = board.elements
+    .filter((e) => e.size && Math.max(e.size.w, e.size.d) >= 2)
+    .map((e) => ({
+      e,
+      x: e.x + e.size.cx - e.size.w / 2,
+      y: e.y + e.size.cy + e.size.d / 2,
+    }));
+  const rects = pads
+    .map(
+      ({ e, x, y }) =>
+        `<rect x="${num(x)}" y="${num(-y)}" width="${num(e.size.w)}" height="${num(e.size.d)}"${e.side === 'bottom' ? ' stroke-dasharray="1 0.6"' : ''}/>`,
+    )
+    .join('');
   const names = pads.map(({ e, x, y }) => `<text x="${num(x + e.size.w / 2)}" y="${num(-y + e.size.d / 2)}">${e.name}</text>`).join('');
   const markup = `<g fill="none" stroke="currentColor" stroke-width="0.15"><path d="${outline}" stroke-width="0.3"/>${holes}${rects}</g><g font-size="1.2" text-anchor="middle" dominant-baseline="middle" fill="currentColor">${names}</g>`;
   const how = `pads of the layout (≥ 2 mm); holes ${best.fit.n}/${def.mount.holes.length}, turned ${best.deg}°${best.flip ? ', mirrored' : ''}; dashed: underside`;

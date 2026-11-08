@@ -76,8 +76,15 @@ function offset(scope: CsgScope, outline: CrossSection, delta: number, circular:
  * (rounded corners, edge fillets).
  */
 export function skirtSolid(
-  csg: CsgApi, scope: CsgScope, spec: ShapeSpec, outer: Manifold, frame: FaceFrame,
-  zp: number, lid: LidState, shape: { wall: number; floor: number }, segments: number,
+  csg: CsgApi,
+  scope: CsgScope,
+  spec: ShapeSpec,
+  outer: Manifold,
+  frame: FaceFrame,
+  zp: number,
+  lid: LidState,
+  shape: { wall: number; floor: number },
+  segments: number,
 ): Manifold | null {
   const { wall } = shape;
   const topPoly = loftSlice(spec.inner, spec.innerCut, frame, zp, segments);
@@ -100,7 +107,19 @@ export function skirtSolid(
     // the opening's lowest point: above the floor where a fillet rounds it
     const low = Math.max(shape.floor, ...[topPoly, bottomPoly].map((poly) => Math.min(...poly.map((p) => p[1]))));
     const above = low + lid.fit + lid.lip.t + 0.01;
-    const floorBand = scope.keep(new csg.CrossSection([[[-1e4, -1e4], [1e4, -1e4], [1e4, above], [-1e4, above]]], 'Positive'));
+    const floorBand = scope.keep(
+      new csg.CrossSection(
+        [
+          [
+            [-1e4, -1e4],
+            [1e4, -1e4],
+            [1e4, above],
+            [-1e4, above],
+          ],
+        ],
+        'Positive',
+      ),
+    );
     ring = scope.keep(ring.subtract(floorBand));
     webRing = scope.keep(webRing.subtract(floorBand));
   }

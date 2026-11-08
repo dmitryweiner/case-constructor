@@ -47,7 +47,10 @@ function saveIndex(index) {
 /** Every file under a directory, relative paths. */
 function filesUnder(dir) {
   if (!existsSync(dir)) return [];
-  return readdirSync(dir, { recursive: true }).map(String).filter((f) => statSync(join(dir, f)).isFile()).sort();
+  return readdirSync(dir, { recursive: true })
+    .map(String)
+    .filter((f) => statSync(join(dir, f)).isFile())
+    .sort();
 }
 
 /** The URL to download, and where it goes in the cache. */
@@ -59,7 +62,9 @@ function plan(url) {
   if (u.hostname === 'github.com' && u.pathname.includes('/blob/')) {
     download = `https://raw.githubusercontent.com${u.pathname.replace('/blob/', '/')}`;
   }
-  let clean = decodeURIComponent(u.pathname).replace(/^\/+/, '').replace(/[^\w.\-/ ]+/g, '_');
+  let clean = decodeURIComponent(u.pathname)
+    .replace(/^\/+/, '')
+    .replace(/[^\w.\-/ ]+/g, '_');
   if (clean === '' || clean.endsWith('/')) clean += 'index.html';
   let path = join(ROOT, u.hostname, clean);
   if (drive) path = join(ROOT, u.hostname, drive[1]);
@@ -73,7 +78,8 @@ function unpack(path, kind) {
     mkdirSync(dir, { recursive: true });
     const [tool, args] = kind === 'rar' ? ['bsdtar', ['-xf', path, '-C', dir]] : ['unzip', ['-q', '-o', path, '-d', dir]];
     const result = spawnSync(tool, args, { encoding: 'utf8' });
-    if (result.error || (result.status !== 0 && result.status !== 1)) console.error(`${tool}: ${result.error?.message ?? result.stderr.trim()}`);
+    if (result.error || (result.status !== 0 && result.status !== 1))
+      console.error(`${tool}: ${result.error?.message ?? result.stderr.trim()}`);
   }
   return dir;
 }
@@ -105,11 +111,15 @@ if (flags.has('list')) {
 if (flags.has('all')) {
   // one child per entry: a failure (a page that moved, Drive) is reported and the rest go on
   let failed = 0;
-  for (const name of readdirSync('src/boards/data').filter((f) => f.endsWith('.json')).sort()) {
+  for (const name of readdirSync('src/boards/data')
+    .filter((f) => f.endsWith('.json'))
+    .sort()) {
     const id = name.replace(/\.json$/, '');
     const result = spawnSync(process.execPath, [process.argv[1], '--board', id], { encoding: 'utf8' });
     const first = (result.stdout || result.stderr).trim().split('\n')[0];
-    console.log(`${result.status === 0 ? 'ok  ' : 'FAIL'} ${id}: ${result.status === 0 ? first : (result.stderr.trim().split('\n')[0] ?? '')}`);
+    console.log(
+      `${result.status === 0 ? 'ok  ' : 'FAIL'} ${id}: ${result.status === 0 ? first : (result.stderr.trim().split('\n')[0] ?? '')}`,
+    );
     if (result.status !== 0) failed++;
   }
   console.log(`${failed} failed`);

@@ -12,8 +12,12 @@ describe('board transforms', () => {
   it('the rotated outline starts at (x, y) for every rotation', () => {
     for (const rot of [0, 90, 180, 270] as const) {
       const m = boardTransform(pi, rot, 10, 20, 0);
-      const corners = [[0, 0], [pi.size.w, 0], [0, pi.size.d], [pi.size.w, pi.size.d]]
-        .map(([x, y]) => applyAffine(m, [x, y, 0]));
+      const corners = [
+        [0, 0],
+        [pi.size.w, 0],
+        [0, pi.size.d],
+        [pi.size.w, pi.size.d],
+      ].map(([x, y]) => applyAffine(m, [x, y, 0]));
       expect(Math.min(...corners.map((c) => c[0])), `${rot}`).toBeCloseTo(10);
       expect(Math.min(...corners.map((c) => c[1])), `${rot}`).toBeCloseTo(20);
     }
@@ -53,7 +57,10 @@ describe('caseLayout', () => {
   });
 
   it('a console raises its heights until the slope clears the board', () => {
-    const state = sanitizeState({ ...defaultState(), shape: { ...defaultState().shape, kind: 'console', console: { frontH: 10, backH: 12 } } });
+    const state = sanitizeState({
+      ...defaultState(),
+      shape: { ...defaultState().shape, kind: 'console', console: { frontH: 10, backH: 12 } },
+    });
     const layout = caseLayout(state);
     expect(layout.console.frontH).toBeGreaterThan(10);
     expect(layout.console.backH - layout.console.frontH).toBeCloseTo(2);
@@ -92,14 +99,30 @@ describe('collisions', () => {
   });
 
   it('a part on the underside landing on a standoff or a rail is reported, and it lifts the board', () => {
-    const custom = (mount: object, x: number, y: number) => sanitizeState({
-      ...defaultState(),
-      boards: [{ board: 'custom', custom: {
-        size: { w: 40, d: 30, t: 1.6 }, mount, bottomHeight: 1,
-        ports: [{ id: 'led', type: 'led', edge: 'bottom', x, y, w: 2, d: 2, h: 5, shape: 'rect' }],
-      }, z: 0 }],
-    });
-    const holes = { kind: 'holes', holes: [{ x: 3, y: 3, d: 2.7 }, { x: 37, y: 27, d: 2.7 }], screw: 'M2.5' };
+    const custom = (mount: object, x: number, y: number) =>
+      sanitizeState({
+        ...defaultState(),
+        boards: [
+          {
+            board: 'custom',
+            custom: {
+              size: { w: 40, d: 30, t: 1.6 },
+              mount,
+              bottomHeight: 1,
+              ports: [{ id: 'led', type: 'led', edge: 'bottom', x, y, w: 2, d: 2, h: 5, shape: 'rect' }],
+            },
+            z: 0,
+          },
+        ],
+      });
+    const holes = {
+      kind: 'holes',
+      holes: [
+        { x: 3, y: 3, d: 2.7 },
+        { x: 37, y: 27, d: 2.7 },
+      ],
+      screw: 'M2.5',
+    };
     const codes = (state: ReturnType<typeof custom>) => collisions(caseLayout(state)).map((m) => m.code);
     expect(codes(custom(holes, 4, 4))).toContain('warn.bottomPartOnSupport');
     expect(codes(custom(holes, 20, 15))).toEqual([]);
@@ -122,11 +145,12 @@ describe('collisions', () => {
 
 describe('a board against a wall', () => {
   const base = defaultState();
-  const withWall = (wall: string, extra: Record<string, unknown> = {}, shape: Record<string, unknown> = {}) => sanitizeState({
-    ...base,
-    shape: { ...base.shape, ...shape },
-    boards: [{ ...base.boards[0], walls: [wall], ...extra }],
-  });
+  const withWall = (wall: string, extra: Record<string, unknown> = {}, shape: Record<string, unknown> = {}) =>
+    sanitizeState({
+      ...base,
+      shape: { ...base.shape, ...shape },
+      boards: [{ ...base.boards[0], walls: [wall], ...extra }],
+    });
   /** The faces of the board's connectors on its edge facing the case's `side`, as the case frame's coordinate along it. */
   const faces = (state: ReturnType<typeof withWall>, side: 'right' | 'front') => {
     const layout = caseLayout(state);
@@ -200,7 +224,9 @@ describe('a board against a wall', () => {
     // the second board reaches 10 mm further right: it takes the wall, the first is left short of it
     const codes = collisions(caseLayout(state));
     const pushed = codes.filter((m) => m.code === 'warn.notAgainstWall').map((m) => m.params);
-    expect(pushed).toEqual([{ board: 1, boardName: 'Raspberry Pi 4 Model B', side: 'right', other: 2, otherName: 'Raspberry Pi 4 Model B', mm: '10.0' }]);
+    expect(pushed).toEqual([
+      { board: 1, boardName: 'Raspberry Pi 4 Model B', side: 'right', other: 2, otherName: 'Raspberry Pi 4 Model B', mm: '10.0' },
+    ]);
   });
 
   it('a board flush with one against the wall: the other keeps its margin, and the message says so', () => {
@@ -209,16 +235,38 @@ describe('a board against a wall', () => {
       ...base,
       lid: { ...base.lid, face: 'top', chosen: 'top', fastening: 'screws', screw: { size: 'M3', hole: 'tap', head: 'countersunk' } },
       boards: [
-        { board: 'esp32-devkitc-v4', x: 1.7, y: 1.65, z: 9.5, rot: 0, mount: { size: 'M2.5', hole: 'tap', head: 'none' }, cuts: {}, pins: true, walls: ['left'], wallOffset: 0 },
-        { board: 'battery', battery: { kind: '18650', count: 2, pack: { w: 60, d: 35, h: 8 }, press: 0.3 }, x: 1.7, y: 46.2, z: 1, rot: 0, mount: { size: 'M3', hole: 'tap', head: 'none' }, cuts: {} },
+        {
+          board: 'esp32-devkitc-v4',
+          x: 1.7,
+          y: 1.65,
+          z: 9.5,
+          rot: 0,
+          mount: { size: 'M2.5', hole: 'tap', head: 'none' },
+          cuts: {},
+          pins: true,
+          walls: ['left'],
+          wallOffset: 0,
+        },
+        {
+          board: 'battery',
+          battery: { kind: '18650', count: 2, pack: { w: 60, d: 35, h: 8 }, press: 0.3 },
+          x: 1.7,
+          y: 46.2,
+          z: 1,
+          rot: 0,
+          mount: { size: 'M3', hole: 'tap', head: 'none' },
+          cuts: {},
+        },
       ],
     });
     const messages = collisions(caseLayout(state)).filter((m) => m.code.startsWith('warn.notAgainstWall'));
     // the posts take 5.8 + 0.5 mm, the ESP32 keeps WALL_GAP: the wall is 6 mm off it
-    expect(messages.map(({ code, params }) => ({ code, params }))).toEqual([{
-      code: 'warn.notAgainstWallPosts',
-      params: { board: 1, boardName: 'ESP32-DevKitC V4', side: 'left', other: 2, otherName: '2 × 18650', margin: '6.3', mm: '6.0' },
-    }]);
+    expect(messages.map(({ code, params }) => ({ code, params }))).toEqual([
+      {
+        code: 'warn.notAgainstWallPosts',
+        params: { board: 1, boardName: 'ESP32-DevKitC V4', side: 'left', other: 2, otherName: '2 × 18650', margin: '6.3', mm: '6.0' },
+      },
+    ]);
     setLang('ru');
     const [text] = messages.map(tm);
     setLang('en');
@@ -231,7 +279,7 @@ describe('a board against a wall', () => {
     expect(collisions(caseLayout(moved)).filter((m) => m.code.startsWith('warn.notAgainstWall'))).toEqual([]);
   });
 
-  it('a cylinder, a rail edge and the side lid\'s own face ignore the wall', () => {
+  it("a cylinder, a rail edge and the side lid's own face ignore the wall", () => {
     const cylinder = withWall('right', {}, { kind: 'cylinder' });
     expect(caseLayout(cylinder).boards[0].walls).toEqual([]);
     const sideLid = sanitizeState({ ...withWall('right'), lid: { ...base.lid, face: 'right', chosen: 'right' } });
@@ -243,7 +291,7 @@ describe('a board against a wall', () => {
   });
 });
 
-describe('a user\'s project: the layout messages say where and what to do', () => {
+describe("a user's project: the layout messages say where and what to do", () => {
   const file: unknown = JSON.parse(readFileSync(new URL('./fixtures/korpus-1.json', import.meta.url), 'utf8'));
   const state = sanitizeState(Reflect.get(file ?? {}, 'state'));
   const messages = collisions(caseLayout(state));
@@ -269,15 +317,22 @@ describe('a user\'s project: the layout messages say where and what to do', () =
     setLang('ru');
     const text = messages.map(tm);
     setLang('en');
-    expect(text).toContain('Плата 1 «TPA3118», спереди и сзади: разъёмы кончаются у края платы, а стенка 2 мм — их торцы на 2.3 мм глубже, чем просит «Разъёмы от поверхности». Обычно это не мешает: штекер или палец достаёт их через отверстие. Если разъёмы на самом деле выступают за край платы, укажите это в «Выступ» (редактор своей платы).');
-    expect(text).toContain('Плата 1 «TPA3118» не у стенки справа: плата 3 «KaRadio ESP32» стоит ближе к ней и отодвигает стенку на 117.7 мм. Сдвиньте плату 3 «KaRadio ESP32» от стенки на 117.7 мм или снимите «справа» в «К стенке».');
+    expect(text).toContain(
+      'Плата 1 «TPA3118», спереди и сзади: разъёмы кончаются у края платы, а стенка 2 мм — их торцы на 2.3 мм глубже, чем просит «Разъёмы от поверхности». Обычно это не мешает: штекер или палец достаёт их через отверстие. Если разъёмы на самом деле выступают за край платы, укажите это в «Выступ» (редактор своей платы).',
+    );
+    expect(text).toContain(
+      'Плата 1 «TPA3118» не у стенки справа: плата 3 «KaRadio ESP32» стоит ближе к ней и отодвигает стенку на 117.7 мм. Сдвиньте плату 3 «KaRadio ESP32» от стенки на 117.7 мм или снимите «справа» в «К стенке».',
+    );
   });
 
   it('connectors that do stick out: how thin a wall brings them flush', () => {
-    const thick = sanitizeState({ ...defaultState(), shape: { ...defaultState().shape, wall: 4 }, boards: [{ ...defaultState().boards[0], walls: ['front'] }] });
-    const [note] = collisions(caseLayout(thick)).filter((m) => m.code.startsWith('info.portsRecessed'));
-    expect(note.code).toBe('info.portsRecessedOut');
-    expect(note.params).toMatchObject({ board: 1, walls: 'front', wall: 4 });
+    const thick = sanitizeState({
+      ...defaultState(),
+      shape: { ...defaultState().shape, wall: 4 },
+      boards: [{ ...defaultState().boards[0], walls: ['front'] }],
+    });
+    const note = collisions(caseLayout(thick)).find((m) => m.code.startsWith('info.portsRecessed'));
+    expect(note?.code).toBe('info.portsRecessedOut');
+    expect(note?.params).toMatchObject({ board: 1, walls: 'front', wall: 4 });
   });
 });
-

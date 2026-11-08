@@ -56,11 +56,17 @@ export function earCentres(ears: RailEars, length: number, r: number): [[number,
     // past the board's ends, flush with the rail's outer face
     const u = RAIL_SHORTEN + RAIL_EAR_CLEAR + r;
     const s = railOuter() - EAR_SINK - r;
-    return [[-u, s], [length + u, s]];
+    return [
+      [-u, s],
+      [length + u, s],
+    ];
   }
   // off the outer face, a seat's room between the rail and the post under the ear
   const s = railOuter() + RAIL_SEAT + r;
-  return [[r + EAR_INSET, s], [length - r - EAR_INSET, s]];
+  return [
+    [r + EAR_INSET, s],
+    [length - r - EAR_INSET, s],
+  ];
 }
 
 /**
@@ -71,7 +77,10 @@ export function earCentres(ears: RailEars, length: number, r: number): [[number,
  */
 export function earOutline(ears: RailEars, centre: readonly [number, number], length: number, r: number, k = 16): [number, number][] {
   const [u, s] = centre;
-  const ring = Array.from({ length: k }, (_, i): [number, number] => [u + r * Math.cos((2 * Math.PI * i) / k), s + r * Math.sin((2 * Math.PI * i) / k)]);
+  const ring = Array.from({ length: k }, (_, i): [number, number] => [
+    u + r * Math.cos((2 * Math.PI * i) / k),
+    s + r * Math.sin((2 * Math.PI * i) / k),
+  ]);
   const inner = railOuter() - EAR_SINK;
   if (ears === 'along') {
     // from the round end to 1 mm into the rail, the rail's outer wall's width

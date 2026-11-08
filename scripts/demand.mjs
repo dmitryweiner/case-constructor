@@ -35,7 +35,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function queries() {
   const file = flags.get('file');
   const fromFile = file
-    ? readFileSync(file, 'utf8').split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'))
+    ? readFileSync(file, 'utf8')
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l && !l.startsWith('#'))
     : [];
   return [...inline, ...fromFile];
 }
@@ -44,7 +47,12 @@ function queries() {
 function done() {
   const out = flags.get('out');
   if (!out || !existsSync(out)) return new Set();
-  return new Set(readFileSync(out, 'utf8').split('\n').filter(Boolean).map((l) => l.split('\t').at(-1)));
+  return new Set(
+    readFileSync(out, 'utf8')
+      .split('\n')
+      .filter(Boolean)
+      .map((l) => l.split('\t').at(-1)),
+  );
 }
 
 function emit(fields) {
@@ -73,7 +81,9 @@ async function github() {
     if (skip.has(q)) continue;
     let count = 'error';
     for (let attempt = 0; attempt < 4; attempt++) {
-      const r = spawnSync('gh', ['api', '-X', 'GET', 'search/code', '-f', `q=${q}`, '-f', 'per_page=1', '--jq', '.total_count'], { encoding: 'utf8' });
+      const r = spawnSync('gh', ['api', '-X', 'GET', 'search/code', '-f', `q=${q}`, '-f', 'per_page=1', '--jq', '.total_count'], {
+        encoding: 'utf8',
+      });
       if (r.status === 0) {
         count = r.stdout.trim();
         break;
@@ -98,7 +108,7 @@ async function printablesSearch(query) {
     const res = await fetch('https://api.printables.com/graphql/', {
       method: 'POST',
       body,
-      headers: { 'Content-Type': 'application/json', 'Origin': 'https://www.printables.com', 'User-Agent': 'Mozilla/5.0' },
+      headers: { 'Content-Type': 'application/json', Origin: 'https://www.printables.com', 'User-Agent': 'Mozilla/5.0' },
     });
     if (res.ok) return (await res.json()).data.searchPrints2;
     await sleep(20_000 * (attempt + 1));
@@ -117,14 +127,20 @@ async function printables() {
     const found = await printablesSearch(query);
     const hits = found.items.filter((i) => re.test(i.name));
     const downloads = hits.reduce((s, i) => s + (i.downloadCount ?? 0), 0);
-    const best = [...hits].sort((a, b) => b.downloadCount - a.downloadCount).slice(0, 2).map((i) => `${i.name} (${i.downloadCount})`);
+    const best = [...hits]
+      .sort((a, b) => b.downloadCount - a.downloadCount)
+      .slice(0, 2)
+      .map((i) => `${i.name} (${i.downloadCount})`);
     emit([found.totalCount, `${hits.length}/${found.items.length}`, downloads, best.join('; '), line]);
     await sleep(3000);
   }
 }
 
 async function circuitpython() {
-  const boards = await cachedJson('circuitpython-files.json', 'https://raw.githubusercontent.com/adafruit/circuitpython-org/main/_data/files.json');
+  const boards = await cachedJson(
+    'circuitpython-files.json',
+    'https://raw.githubusercontent.com/adafruit/circuitpython-org/main/_data/files.json',
+  );
   const ranked = [...boards].sort((a, b) => b.downloads - a.downloads);
   const total = ranked.reduce((s, b) => s + b.downloads, 0);
   console.log(`# ${ranked.length} boards, ${total} downloads in all; below ≈1,000 is noise`);
@@ -140,9 +156,11 @@ async function meshmap() {
   for (const n of nodes) counts.set(n.hwModel, (counts.get(n.hwModel) ?? 0) + 1);
   console.log(`# ${nodes.length} nodes (only those publishing a position over MQTT)`);
   const res = queries().map((q) => new RegExp(q, 'i'));
-  [...counts].sort((a, b) => b[1] - a[1]).forEach(([model, n], i) => {
-    if (res.length === 0 ? i < 30 : res.some((re) => re.test(model))) emit([n, `${((100 * n) / nodes.length).toFixed(1)} %`, model]);
-  });
+  [...counts]
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([model, n], i) => {
+      if (res.length === 0 ? i < 30 : res.some((re) => re.test(model))) emit([n, `${((100 * n) / nodes.length).toFixed(1)} %`, model]);
+    });
 }
 
 async function pypi() {

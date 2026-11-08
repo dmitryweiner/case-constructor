@@ -53,14 +53,34 @@ import { faceFrame } from './geo/face';
 import { caseLayout, collisions, heldByLid, lidDepthMax, placeBoards } from './geo/layout';
 import { boardGhost, portCaptionAnchor, spotMesh, standoffGhost } from './geo/ghost';
 import {
-  MAX_BOARDS, NEW_BOARD_GAP, backPortDefault, boardOf, defaultPlacement, ownPortDefault, portCut, withBackCut, withPortCut, withTopCut,
+  MAX_BOARDS,
+  NEW_BOARD_GAP,
+  backPortDefault,
+  boardOf,
+  defaultPlacement,
+  ownPortDefault,
+  portCut,
+  withBackCut,
+  withPortCut,
+  withTopCut,
 } from './boards/placement';
 import type { BoardDef } from './boards/schema';
 import { resolveVariant } from './boards/schema';
 import { catalogBoard } from './boards/catalog';
 import type { LidPlace, PrintArrange } from './geo/print';
 import {
-  LID_PLACES, PRINT_GAP_MAX, PRINT_GAP_MIN, bodyForPrint, bothForPrint, hingeForPrint, lidWithScrews, screwsInCase, sideCheeksForPrint, stackBehind, withClamps, withRails,
+  LID_PLACES,
+  PRINT_GAP_MAX,
+  PRINT_GAP_MIN,
+  bodyForPrint,
+  bothForPrint,
+  hingeForPrint,
+  lidWithScrews,
+  screwsInCase,
+  sideCheeksForPrint,
+  stackBehind,
+  withClamps,
+  withRails,
 } from './geo/print';
 import { capsInCase, capsWithLid, keyCaps, withCaps } from './geo/caps';
 import { restWarnings } from './geo/rests';
@@ -228,13 +248,29 @@ function printControls(): Control<AppState>[] {
   const notPrint = (s: AppState): boolean => effectiveView(s.exportMode) !== 'print';
   return [
     {
-      kind: 'segmented', key: 'lid', label: 'print.lid', hint: 'print.lid.hint', when: both, disabled: notPrint,
+      kind: 'segmented',
+      key: 'lid',
+      label: 'print.lid',
+      hint: 'print.lid.hint',
+      when: both,
+      disabled: notPrint,
       options: LID_PLACES.map((place) => ({ value: place, label: `print.lid.${place}` as const })),
       get: (s) => s.print.lid,
-      set: (s, value) => ({ ...s, print: { ...s.print, lid: LID_PLACES.find((place): place is LidPlace => place === value) ?? s.print.lid } }),
+      set: (s, value) => ({
+        ...s,
+        print: { ...s.print, lid: LID_PLACES.find((place): place is LidPlace => place === value) ?? s.print.lid },
+      }),
     },
     {
-      kind: 'range', key: 'gap', label: 'print.gap', hint: 'print.gap.hint', when: both, disabled: notPrint, min: PRINT_GAP_MIN, max: PRINT_GAP_MAX, step: 1,
+      kind: 'range',
+      key: 'gap',
+      label: 'print.gap',
+      hint: 'print.gap.hint',
+      when: both,
+      disabled: notPrint,
+      min: PRINT_GAP_MIN,
+      max: PRINT_GAP_MAX,
+      step: 1,
       get: (s) => s.print.gap,
       set: (s, value) => ({ ...s, print: { ...s.print, gap: value } }),
     },
@@ -246,18 +282,44 @@ let labelRows: LabelsCardHandle;
 let extraRows: ExtrasHandle;
 
 function renderPanel(): void {
-  caseRows = renderControls(caseParams, caseControls(), () => state, (next) => applyState(next), 'case');
-  hingeRows = renderControls(hingeParams, hingeControls(), () => state, (next) => applyState(next), 'hinge');
-  cableRows = renderCablesCard(cableCards, () => state, (next) => applyState(next));
+  caseRows = renderControls(
+    caseParams,
+    caseControls(),
+    () => state,
+    (next) => applyState(next),
+    'case',
+  );
+  hingeRows = renderControls(
+    hingeParams,
+    hingeControls(),
+    () => state,
+    (next) => applyState(next),
+    'hinge',
+  );
+  cableRows = renderCablesCard(
+    cableCards,
+    () => state,
+    (next) => applyState(next),
+  );
   halfRows = renderControls(halfParams, halfControls(), () => halfView, setHalfView, 'edit');
   angleRows = renderControls(angleParams, angleControls(), () => halfView, setHalfView, 'view');
-  boardRows = renderBoardsCard(boardCards, () => edited(), applyEdit,
-    (text, name) => download(text, name, 'application/json'));
+  boardRows = renderBoardsCard(
+    boardCards,
+    () => edited(),
+    applyEdit,
+    (text, name) => download(text, name, 'application/json'),
+  );
   cutRows = renderCutsCard(cutCards, () => edited(), applyEdit);
   labelRows = renderLabelsCard(labelCards, () => edited(), applyEdit);
   extraRows = renderExtras(extraOpenings, extraMounting, () => edited(), applyEdit);
   lidRows = renderControls(lidParams, lidControls(), () => edited(), applyEdit, 'lid');
-  printRows = renderControls(printParams, printControls(), () => state, (next) => applyState(next), 'print');
+  printRows = renderControls(
+    printParams,
+    printControls(),
+    () => state,
+    (next) => applyState(next),
+    'print',
+  );
 }
 renderPanel();
 
@@ -362,9 +424,14 @@ interface Notice {
   half?: Half;
 }
 const notice = (message: Message): Notice => ({
-  text: tm(message), info: message.code.startsWith('info.'), ...(message.spot ? { spot: message.spot } : {}),
+  text: tm(message),
+  info: message.code.startsWith('info.'),
+  ...(message.spot ? { spot: message.spot } : {}),
 });
-const said = (key: Key, params?: Readonly<Record<string, string | number>>): Notice => ({ text: t(key, params), info: key.startsWith('info.') });
+const said = (key: Key, params?: Readonly<Record<string, string | number>>): Notice => ({
+  text: t(key, params),
+  info: key.startsWith('info.'),
+});
 /** Warnings the panel computes itself, before the worker answers. */
 let baseWarnings: Notice[] = [];
 
@@ -417,8 +484,12 @@ function caseNotices(one: AppState, labels: readonly (LabelRaster | null)[], hin
       out.push(said('warn.headDClamped', { max: limits.d.toFixed(1) }));
     }
     // the table's depth was always capped quietly; a depth the user set is worth a word
-    if (hasHead(lidBuilt) && lidBuilt.screw.head === 'counterbore' && lidBuilt.head.depth !== null
-      && headSeat(lidBuilt).depth > plate - HEAD_FLOOR) {
+    if (
+      hasHead(lidBuilt) &&
+      lidBuilt.screw.head === 'counterbore' &&
+      lidBuilt.head.depth !== null &&
+      headSeat(lidBuilt).depth > plate - HEAD_FLOOR
+    ) {
       out.push(said('warn.headDepthClamped', { max: (plate - HEAD_FLOOR).toFixed(1) }));
     }
     out.push(...postCollisions(spots, frame, zp, plate, lidBuilt, layout.boards).map(notice));
@@ -430,9 +501,15 @@ function caseNotices(one: AppState, labels: readonly (LabelRaster | null)[], hin
   out.push(...printedScrewWarnings(lidBuilt).map(notice));
   out.push(...extrasWarnings(one, shapeBuilt, layout, lidBuilt).map(notice));
   // a screw head on the lid: a label there keeps clear of it
-  const head = hasHead(lidBuilt) ? (lidBuilt.screw.head === 'none' ? SCREWS[lidBuilt.screw.size].headD : headSeat(lidBuilt).d) / 2 + 0.5
-    : lidBuilt.fastening === 'printed' ? screwShape(lidBuilt.thread.size, 0, 0).headD / 2 + 0.5 : 0;
-  const heads = [...(head > 0 ? lidPosts(one).spots.map((spot) => ({ u: spot.centre[0], v: spot.centre[1], r: head })) : []), ...nutHeads(one)];
+  const head = hasHead(lidBuilt)
+    ? (lidBuilt.screw.head === 'none' ? SCREWS[lidBuilt.screw.size].headD : headSeat(lidBuilt).d) / 2 + 0.5
+    : lidBuilt.fastening === 'printed'
+      ? screwShape(lidBuilt.thread.size, 0, 0).headD / 2 + 0.5
+      : 0;
+  const heads = [
+    ...(head > 0 ? lidPosts(one).spots.map((spot) => ({ u: spot.centre[0], v: spot.centre[1], r: head })) : []),
+    ...nutHeads(one),
+  ];
   const openings = [...cutters, ...extrasCutters(one, shapeBuilt, layout, lidBuilt, top, cutters)];
   out.push(...labelWarnings(one.labels, labels, shapeBuilt, dims, lidBuilt, openings, heads).map(notice));
   return out;
@@ -451,13 +528,15 @@ interface GhostGroup {
 function caseGhosts(one: AppState, half: Half | null): GhostGroup {
   const layout = caseLayout(one);
   const numbered = layout.boards.length > 1;
-  const captions = layout.boards.flatMap((board) => board.def.ports.map((port): SceneCaption => ({
-    // a board on a display's back: its own toggles, under the display's number; the upper half's start with 'u'
-    key: `${half === 'b' ? 'u' : ''}${board.index}${board.carried ? 't' : board.attached !== undefined ? 'b' : ''}:${port.id}`,
-    text: `${numbered ? `${board.index + 1}: ` : ''}${tDynamic(`port.${port.type}`)} · ${port.id}`,
-    at: portCaptionAnchor(board, port),
-    dim: !portCut(board.placement, port.id, port.cut),
-  })));
+  const captions = layout.boards.flatMap((board) =>
+    board.def.ports.map((port): SceneCaption => ({
+      // a board on a display's back: its own toggles, under the display's number; the upper half's start with 'u'
+      key: `${half === 'b' ? 'u' : ''}${board.index}${board.carried ? 't' : board.attached !== undefined ? 'b' : ''}:${port.id}`,
+      text: `${numbered ? `${board.index + 1}: ` : ''}${tDynamic(`port.${port.type}`)} · ${port.id}`,
+      at: portCaptionAnchor(board, port),
+      dim: !portCut(board.placement, port.id, port.cut),
+    })),
+  );
   const captionsOnLid = layout.boards.flatMap((board) => board.def.ports.map(() => heldByLid(board, one.lid.face)));
   const groups = layout.boards.map((board) => {
     const ghost = boardGhost(board);
@@ -560,31 +639,59 @@ let shownPortCaptions: SceneCaption[] = [];
 function drawWarnings(): void {
   const place = viewWarnings.checked ? placeInView : null;
   const active = activeWarning();
-  for (const row of warningsEl.querySelectorAll<HTMLElement>('[data-warn]')) row.classList.toggle('hot', Number(row.dataset.warn) === active);
-  const spotted = place ? shownNotices.flatMap((line) => (line.spot && line.n !== undefined ? [{ ...line, spot: line.spot, n: line.n }] : [])) : [];
+  for (const row of warningsEl.querySelectorAll<HTMLElement>('[data-warn]'))
+    row.classList.toggle('hot', Number(row.dataset.warn) === active);
+  const spotted = place
+    ? shownNotices.flatMap((line) => (line.spot && line.n !== undefined ? [{ ...line, spot: line.spot, n: line.n }] : []))
+    : [];
   // a note's place shows only when it is picked: the red is for what needs a look
-  scene.setSpots(place ? spotted.flatMap((line): SceneSpot[] => (line.info && line.n !== active ? [] : [{
-    mesh: transformMesh(spotMesh(line.spot), place(line.spot.holder, line.half)), offset: [0, 0, 0], hot: line.n === active,
-  }])) : []);
-  scene.setCaptions([...shownPortCaptions, ...(place ? spotted.map((line): SceneCaption => {
-    const badge = `${line.info ? 'ℹ' : '⚠'} ${line.n}`;
-    return {
-      key: `warn:${line.n}`,
-      text: line.n === active ? `${badge} ${line.text}` : badge,
-      at: applyAffine(place(line.spot.holder, line.half), line.spot.at),
-      dim: false,
-      warn: { open: line.n === active, info: line.info },
-    };
-  }) : [])]);
+  scene.setSpots(
+    place
+      ? spotted.flatMap((line): SceneSpot[] =>
+          line.info && line.n !== active
+            ? []
+            : [
+                {
+                  mesh: transformMesh(spotMesh(line.spot), place(line.spot.holder, line.half)),
+                  offset: [0, 0, 0],
+                  hot: line.n === active,
+                },
+              ],
+        )
+      : [],
+  );
+  scene.setCaptions([
+    ...shownPortCaptions,
+    ...(place
+      ? spotted.map((line): SceneCaption => {
+          const badge = `${line.info ? 'ℹ' : '⚠'} ${line.n}`;
+          return {
+            key: `warn:${line.n}`,
+            text: line.n === active ? `${badge} ${line.text}` : badge,
+            at: applyAffine(place(line.spot.holder, line.half), line.spot.at),
+            dim: false,
+            warn: { open: line.n === active, info: line.info },
+          };
+        })
+      : []),
+  ]);
 }
 
 async function showPreview(stamp: number): Promise<void> {
   const requested = state;
   try {
     const result = await progress.track(
-      (onProgress) => csg.run({
-        kind: 'preview', state: requested, segments: PREVIEW_SEGMENTS, labels: currentLabels.a, labelsB: currentLabels.b,
-      }, onProgress),
+      (onProgress) =>
+        csg.run(
+          {
+            kind: 'preview',
+            state: requested,
+            segments: PREVIEW_SEGMENTS,
+            labels: currentLabels.a,
+            labelsB: currentLabels.b,
+          },
+          onProgress,
+        ),
       { label: 'progress.preview' },
     );
     if (!result || stamp !== generation) return;
@@ -624,7 +731,11 @@ function builtCases(parts: JobPart[]): BuiltCase[] {
 }
 
 function caseMeshes(one: BuiltCase): SurfaceMesh[] {
-  return [one.body, one.lid, ...[one.screw, one.clamps, one.lidClamps, one.hinge, one.railsPrint, one.lidRailsPrint].flatMap((mesh) => (mesh ? [mesh] : []))];
+  return [
+    one.body,
+    one.lid,
+    ...[one.screw, one.clamps, one.lidClamps, one.hinge, one.railsPrint, one.lidRailsPrint].flatMap((mesh) => (mesh ? [mesh] : [])),
+  ];
 }
 
 /** Where the last print layout of Both put the lid: the caption names it (auto decides by the meshes). */
@@ -647,19 +758,32 @@ function printParts(built: AppState, one: BuiltCase, arrange: PrintArrange = bui
     meshes.map((mesh, i): ScenePart => ({ role: names[i] ?? 'screw', mesh }));
   // printed caps print with the part that has the top (the lid, when it is the top), after everything else on its bed
   const withLid = capsWithLid(face);
-  const caps = built.exportMode === 'both' || (built.exportMode === 'lid') === withLid ? keyCaps(layout, { ...built.shape, console: layout.console }) : [];
+  const caps =
+    built.exportMode === 'both' || (built.exportMode === 'lid') === withLid
+      ? keyCaps(layout, { ...built.shape, console: layout.console })
+      : [];
   const capped = (parts: ScenePart[]): ScenePart[] => {
-    const placed = withCaps(parts.map((part) => part.mesh), caps, arrange.gap);
+    const placed = withCaps(
+      parts.map((part) => part.mesh),
+      caps,
+      arrange.gap,
+    );
     return placed.length > parts.length ? [...parts, { role: 'cap', mesh: placed[placed.length - 1] }] : parts;
   };
   // rails on screws, top down, right of the rest (the lid's go with the lid)
   const railed = (parts: ScenePart[], rails: SurfaceMesh | null): ScenePart[] => {
-    const placed = withRails(parts.map((part) => part.mesh), rails, arrange.gap);
+    const placed = withRails(
+      parts.map((part) => part.mesh),
+      rails,
+      arrange.gap,
+    );
     return placed.length > parts.length ? [...parts, { role: 'clamp', mesh: placed[placed.length - 1] }] : parts;
   };
   if (built.exportMode === 'lid') {
     const lidParts = lidWithScrews(lid, screw, count, face, dims);
-    return capped(railed(roles(withClamps(lidParts, lidClamps), [...(['lid', 'screw'] as const).slice(0, lidParts.length), 'clamp']), lidRailsPrint));
+    return capped(
+      railed(roles(withClamps(lidParts, lidClamps), [...(['lid', 'screw'] as const).slice(0, lidParts.length), 'clamp']), lidRailsPrint),
+    );
   }
   const both = built.exportMode === 'both' ? bothForPrint(body, lid, screw, count, face, dims, shape, arrange) : null;
   if (both) lidPlaced = both.place;
@@ -667,7 +791,8 @@ function printParts(built: AppState, one: BuiltCase, arrange: PrintArrange = bui
   const names: ScenePart['role'][] = built.exportMode === 'both' ? ['body', 'lid', 'screw'] : ['body'];
   const bars = built.exportMode === 'both' && lidClamps ? (clamps ? mergeMeshes([clamps, lidClamps]) : lidClamps) : clamps;
   const withClampBars = withClamps(placed, bars);
-  const rails = built.exportMode === 'both' && lidRailsPrint ? (railsPrint ? stackBehind(railsPrint, lidRailsPrint) : lidRailsPrint) : railsPrint;
+  const rails =
+    built.exportMode === 'both' && lidRailsPrint ? (railsPrint ? stackBehind(railsPrint, lidRailsPrint) : lidRailsPrint) : railsPrint;
   return capped(railed(roles(withClampBars, [...names.slice(0, placed.length), 'clamp']), rails));
 }
 
@@ -696,7 +821,9 @@ function printAll(built: AppState, cases: BuiltCase[], arrange: PrintArrange = b
     out.push(...sideCheeksForPrint(hinge('a'), hinge('b'), w, 0, y0, arrange.gap).map((mesh): ScenePart => ({ role: 'hinge', mesh })));
     return out;
   }
-  const leaves = cases.flatMap((one) => (one.hinge ? [one.half === 'b' ? transformMesh(one.hinge, upperPose(foldOfState(built), 0)) : one.hinge] : []));
+  const leaves = cases.flatMap((one) =>
+    one.hinge ? [one.half === 'b' ? transformMesh(one.hinge, upperPose(foldOfState(built), 0)) : one.hinge] : [],
+  );
   if (leaves.length > 0 && built.exportMode !== 'lid') out.push({ role: 'hinge', mesh: hingeForPrint(mergeMeshes(leaves), 0, behind()) });
   return out;
 }
@@ -765,18 +892,20 @@ function drawParts(): void {
     const layout = caseLayout(own);
     const { dims } = layout;
     const pose = poseOf(built, one.half);
-    const posed = (part: ScenePart): ScenePart => (pose === IDENTITY ? part
-      : { ...part, mesh: transformMesh(part.mesh, pose), offset: rotateVec(pose, part.offset ?? [0, 0, 0]) });
+    const posed = (part: ScenePart): ScenePart =>
+      pose === IDENTITY ? part : { ...part, mesh: transformMesh(part.mesh, pose), offset: rotateVec(pose, part.offset ?? [0, 0, 0]) };
     // exploded with the lid shown, the boards the lid holds go with it
     const n = faceFrame(own.lid.face, dims).n;
-    const lifted = (onLid: boolean | undefined, share = 1): Vec => (onLid
-      ? [n[0] * lidLift * share, n[1] * lidLift * share, n[2] * lidLift * share] : [0, 0, 0]);
+    const lifted = (onLid: boolean | undefined, share = 1): Vec =>
+      onLid ? [n[0] * lidLift * share, n[1] * lidLift * share, n[2] * lidLift * share] : [0, 0, 0];
     const group = ghostGroups.find((candidate) => candidate.half === one.half);
     const local: ScenePart[] = [];
     if (showBody) {
       local.push({ role: 'body', mesh: one.body });
       if (withBoards && group) {
-        local.push(...group.parts.map((ghost, i): ScenePart => ({ ...ghost, offset: plus(ghost.offset ?? [0, 0, 0], lifted(group.partsOnLid[i])) })));
+        local.push(
+          ...group.parts.map((ghost, i): ScenePart => ({ ...ghost, offset: plus(ghost.offset ?? [0, 0, 0], lifted(group.partsOnLid[i])) })),
+        );
       }
       // battery clamps on their posts; exploded, lifted off the battery (a panel's bars under a slope stay put)
       const liftedBars = mode === 'exploded' && own.boards.some((board) => board.board === 'battery');
@@ -808,14 +937,19 @@ function drawParts(): void {
         local.push({ role: 'hardware', mesh: hardware.nuts });
       }
       // printed caps in the lid's holes; exploded, over the lifted lid
-      const caps = capsWithLid(own.lid.face) ? capsInCase(keyCaps(layout, { ...own.shape, console: layout.console }), n, 2 * lidLift) : null;
+      const caps = capsWithLid(own.lid.face)
+        ? capsInCase(keyCaps(layout, { ...own.shape, console: layout.console }), n, 2 * lidLift)
+        : null;
       if (caps) local.push({ role: 'cap', mesh: caps });
     }
     parts.push(...local.map(posed));
     if (withBoards && viewPortNames.checked && group) {
-      captions.push(...group.captions.map((caption, i): SceneCaption => ({
-        ...caption, at: applyAffine(pose, plus(caption.at, lifted(group.captionsOnLid[i]))),
-      })));
+      captions.push(
+        ...group.captions.map((caption, i): SceneCaption => ({
+          ...caption,
+          at: applyAffine(pose, plus(caption.at, lifted(group.captionsOnLid[i]))),
+        })),
+      );
     }
     // a spot moves with what holds it: the lid, a board the lid holds, or the body
     holders.set(one.half, (holder) => {
@@ -926,16 +1060,19 @@ function audit(meshes: SurfaceMesh[], ms: number): void {
 }
 
 function renderPartList(): void {
-  const rows: [Key, string][] = isHinged(state) ? [[`part.hinged.${state.exportMode}`, '']]
+  const rows: [Key, string][] = isHinged(state)
+    ? [[`part.hinged.${state.exportMode}`, '']]
     : state.exportMode === 'both'
       ? [['part.both', '']]
       : [[state.exportMode === 'body' ? 'part.body' : 'part.lid', '']];
-  partList.replaceChildren(...rows.map(([key, note]) => {
-    const item = make('li');
-    item.append(make('span', 'part-name', t(key)));
-    if (note) item.append(make('span', 'part-note', note));
-    return item;
-  }));
+  partList.replaceChildren(
+    ...rows.map(([key, note]) => {
+      const item = make('li');
+      item.append(make('span', 'part-name', t(key)));
+      if (note) item.append(make('span', 'part-note', note));
+      return item;
+    }),
+  );
 }
 
 function toMesh(part: JobPart): SurfaceMesh {
@@ -1097,8 +1234,11 @@ function setPresetRef(ref: string, name: string): void {
   presetRef = ref;
   presetName = name;
   const id = ref.slice(2);
-  const source = ref.startsWith('b:') ? presetById(id)?.build()
-    : ref.startsWith('u:') ? userPresets.find((item) => item.name === id)?.state : undefined;
+  const source = ref.startsWith('b:')
+    ? presetById(id)?.build()
+    : ref.startsWith('u:')
+      ? userPresets.find((item) => item.name === id)?.state
+      : undefined;
   presetBase = source ? presetSignature(source) : '';
   keepProject();
   showPreset();
@@ -1112,7 +1252,8 @@ function setPresetRef(ref: string, name: string): void {
 function showPreset(): void {
   const open = presetRef !== '' && presetSignature(state) === presetBase;
   presetBtn.textContent = (presetRef === '' || open ? presetName : '') || t('topbar.presets');
-  if (!presetsPanel.hidden) renderPresetList(presetList, presetRows(), open ? presetRef : '', { onPick: openPreset, onDelete: deletePreset });
+  if (!presetsPanel.hidden)
+    renderPresetList(presetList, presetRows(), open ? presetRef : '', { onPick: openPreset, onDelete: deletePreset });
 }
 
 function firstPreset(): CurrentProject {
@@ -1312,7 +1453,10 @@ function togglePortCut(caption: string): void {
     const port = entry ? resolveVariant(entry, top?.variant).ports.find((one) => one.id === key.slice(colon + 1)) : undefined;
     if (!top || !port) return;
     const value = !(top.cuts[port.id] ?? port.cut);
-    apply({ ...one, boards: one.boards.map((one, i) => (i === index ? { ...one, top: { ...top, cuts: withTopCut(top, port, value) } } : one)) });
+    apply({
+      ...one,
+      boards: one.boards.map((one, i) => (i === index ? { ...one, top: { ...top, cuts: withTopCut(top, port, value) } } : one)),
+    });
     return;
   }
   const back = placement?.back;
@@ -1321,7 +1465,10 @@ function togglePortCut(caption: string): void {
     const port = entry ? resolveVariant(entry, back?.variant).ports.find((one) => one.id === key.slice(colon + 1)) : undefined;
     if (!back || !port) return;
     const value = !(back.cuts[port.id] ?? backPortDefault(port));
-    apply({ ...one, boards: one.boards.map((one, i) => (i === index ? { ...one, back: { ...back, cuts: withBackCut(back, port, value) } } : one)) });
+    apply({
+      ...one,
+      boards: one.boards.map((one, i) => (i === index ? { ...one, back: { ...back, cuts: withBackCut(back, port, value) } } : one)),
+    });
     return;
   }
   const port = placement ? boardOf(placement).ports.find((one) => one.id === key.slice(colon + 1)) : undefined;
@@ -1356,8 +1503,8 @@ view.addEventListener('pointermove', (event) => {
 const release = (event: PointerEvent): void => {
   const start = pressed.get(event.pointerId);
   pressed.delete(event.pointerId);
-  const tap = start && !gesture && event.timeStamp - start.t < TAP_MS
-    && Math.hypot(event.clientX - start.x, event.clientY - start.y) <= TAP_MOVE_PX;
+  const tap =
+    start && !gesture && event.timeStamp - start.t < TAP_MS && Math.hypot(event.clientX - start.x, event.clientY - start.y) <= TAP_MOVE_PX;
   if (pressed.size === 0) gesture = false;
   if (!tap) return;
   const box = view.getBoundingClientRect();
@@ -1410,11 +1557,14 @@ if (import.meta.env.DEV) {
     /** the port captions shown now and where on the canvas */
     captions: () => scene.shownCaptions().filter((caption) => !caption.key.startsWith('warn:')),
     /** the warnings' badges shown now: number, message, where on the canvas, open or not, and how many boxes */
-    warnings: () => scene.shownCaptions().flatMap((caption) => {
-      const n = caption.key.startsWith('warn:') ? Number(caption.key.slice(5)) : NaN;
-      const line = shownNotices.find((one) => one.n === n);
-      return line ? [{ n, text: line.text, x: caption.x, y: caption.y, open: n === activeWarning(), boxes: line.spot?.boxes.length ?? 0 }] : [];
-    }),
+    warnings: () =>
+      scene.shownCaptions().flatMap((caption) => {
+        const n = caption.key.startsWith('warn:') ? Number(caption.key.slice(5)) : NaN;
+        const line = shownNotices.find((one) => one.n === n);
+        return line
+          ? [{ n, text: line.text, x: caption.x, y: caption.y, open: n === activeWarning(), boxes: line.spot?.boxes.length ?? 0 }]
+          : [];
+      }),
     drawn: () => drawnRoles,
     drawnParts: () => drawnParts,
     project: (points: [number, number, number][]) => scene.project(points),

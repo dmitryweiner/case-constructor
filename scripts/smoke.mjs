@@ -66,10 +66,7 @@ async function drawn() {
 /** Exports the current mode and checks the downloaded STL is a sane binary file. */
 async function exportStl(step) {
   const started = Date.now();
-  const [download] = await Promise.all([
-    page.waitForEvent('download', { timeout: 60000 }),
-    page.click('#exportBtn'),
-  ]);
+  const [download] = await Promise.all([page.waitForEvent('download', { timeout: 60000 }), page.click('#exportBtn')]);
   const path = join(tmpdir(), `case-smoke-${Date.now()}.stl`);
   await download.saveAs(path);
   const bytes = readFileSync(path);
@@ -81,7 +78,12 @@ async function exportStl(step) {
 }
 
 label('favicon');
-const faviconStatus = await page.evaluate(() => fetch('./favicon.svg').then((r) => r.status, () => 0));
+const faviconStatus = await page.evaluate(() =>
+  fetch('./favicon.svg').then(
+    (r) => r.status,
+    () => 0,
+  ),
+);
 if (faviconStatus !== 200) errors.push(`[favicon] favicon.svg → ${faviconStatus}`);
 
 label('boot');
@@ -100,8 +102,9 @@ for (const kind of ['box', 'cylinder', 'console']) {
 await page.click('#case_kind_box');
 
 label('slider-extremes');
-const ranges = await page.$$eval('#caseParams input[type=range]:not(:disabled), #lidParams input[type=range]',
-  (nodes) => nodes.filter((n) => n.closest('.row')?.hidden === false).map((n) => n.id));
+const ranges = await page.$$eval('#caseParams input[type=range]:not(:disabled), #lidParams input[type=range]', (nodes) =>
+  nodes.filter((n) => n.closest('.row')?.hidden === false).map((n) => n.id),
+);
 for (const id of ranges) {
   for (const bound of ['min', 'max']) {
     await setRange(id, await page.locator(`#${id}`).getAttribute(bound));
@@ -111,19 +114,21 @@ await expectWatertight('slider-extremes');
 
 // N4: a case down to 10 mm high (manual size, nothing inside to grow it)
 label('low-case');
-if (await page.locator('#case_h').getAttribute('min') !== '10') errors.push('[low-case] the height slider does not start at 10');
+if ((await page.locator('#case_h').getAttribute('min')) !== '10') errors.push('[low-case] the height slider does not start at 10');
 // the plain box (manual size, no boards) with the extremes above undone
 await page.click('#presetBtn');
 await page.click('#presetList [data-preset="b:plain-box"]');
 await setRange('case_h', 10);
 await expectWatertight('low-case');
-if (await page.locator('#case_h').inputValue() !== '10') errors.push(`[low-case] built ${await page.locator('#case_h').inputValue()} high, not 10`);
+if ((await page.locator('#case_h').inputValue()) !== '10')
+  errors.push(`[low-case] built ${await page.locator('#case_h').inputValue()} high, not 10`);
 await page.check('#case_auto');
 // the auto size of a bare Heltec V4 on its rails: lower than the old least 20
 await page.click('#boardAdd');
 await page.click('#boardList [data-board="heltec-wifi-lora-32-v4"]');
 await expectWatertight('low-case:heltec');
-if (Number(await page.locator('#case_h').inputValue()) >= 20) errors.push(`[low-case] the auto Heltec case is ${await page.locator('#case_h').inputValue()} high`);
+if (Number(await page.locator('#case_h').inputValue()) >= 20)
+  errors.push(`[low-case] the auto Heltec case is ${await page.locator('#case_h').inputValue()} high`);
 
 // N2: rails on screws — every hole kind, both kinds of ears; hung (the lid's rails) and on the floor (the body's)
 label('rails-screwed');
@@ -322,17 +327,23 @@ await page.click('#boardList [data-board="lcdwiki-msp2807"]');
 await expectWatertight('displays:msp2807');
 if (!(await page.evaluate(() => window.__case.drawn())).includes('glass')) errors.push('[displays] no glass drawn');
 // hung from the ceiling when added: the gap slider, not the standoff height; exploded, it goes up with the lid
-if (!(await page.locator('#board1_on_ceiling').getAttribute('class'))?.includes('active')) errors.push('[hang] a display is not hung when added');
-if (!(await page.locator('#board1_gap').isVisible()) || await page.locator('#board1_z').isVisible()) errors.push('[hang] a hung board shows the standoff height');
+if (!(await page.locator('#board1_on_ceiling').getAttribute('class'))?.includes('active'))
+  errors.push('[hang] a display is not hung when added');
+if (!(await page.locator('#board1_gap').isVisible()) || (await page.locator('#board1_z').isVisible()))
+  errors.push('[hang] a hung board shows the standoff height');
 const lifted = await page.evaluate(() => {
   const parts = window.__case.drawnParts();
-  return { lid: parts.find((part) => part.role === 'lid')?.offset?.[2] ?? 0, glass: parts.find((part) => part.role === 'glass')?.offset?.[2] ?? 0 };
+  return {
+    lid: parts.find((part) => part.role === 'lid')?.offset?.[2] ?? 0,
+    glass: parts.find((part) => part.role === 'glass')?.offset?.[2] ?? 0,
+  };
 });
-if (Math.abs(lifted.lid - lifted.glass) > 1e-6 || lifted.lid <= 0) errors.push(`[hang] exploded, the lid rises ${lifted.lid} and the display ${lifted.glass}`);
+if (Math.abs(lifted.lid - lifted.glass) > 1e-6 || lifted.lid <= 0)
+  errors.push(`[hang] exploded, the lid rises ${lifted.lid} and the display ${lifted.glass}`);
 await page.click('#board1_hole_nut');
 await expectWatertight('hang:nut');
 // the window's chamfer, on by default; off, the case still closes
-if (!(await page.isChecked('#board1_bevel'))) errors.push('[window] a hung display\'s window is not chamfered');
+if (!(await page.isChecked('#board1_bevel'))) errors.push("[window] a hung display's window is not chamfered");
 await page.uncheck('#board1_bevel');
 await expectWatertight('window:plain');
 await page.check('#board1_bevel');
@@ -343,7 +354,8 @@ await expectWatertight('hang:bottom-lid');
 // on a console it hangs from the slope; a tilted edge cannot stand against the front or back wall
 await page.click('#case_kind_console');
 await expectWatertight('hang:slope');
-if (!(await page.isDisabled('#board1_wall_front')) || !(await page.isDisabled('#board1_wall_back'))) errors.push('[slope] a board on the slope offers the front or back wall');
+if (!(await page.isDisabled('#board1_wall_front')) || !(await page.isDisabled('#board1_wall_back')))
+  errors.push('[slope] a board on the slope offers the front or back wall');
 await page.click('#case_kind_box');
 await page.click('#lid_face_top');
 await page.click('#board1_on_floor');
@@ -363,13 +375,16 @@ const keyboardGroup = await page.evaluate(() => {
 if (keyboardGroup !== 'Keyboards') errors.push(`[keyboards] CardKB under ${keyboardGroup}, not Keyboards`);
 await page.click('#boardList [data-board="m5stack-cardkb-v1.1"]');
 await expectWatertight('keys:cardkb');
-if (!(await page.locator('#board1_on_ceiling').getAttribute('class'))?.includes('active')) errors.push('[keyboards] the CardKB is not hung when added');
-if (!(await page.locator('#board1_keys_window').getAttribute('class'))?.includes('active')) errors.push('[keyboards] the CardKB does not open a window');
+if (!(await page.locator('#board1_on_ceiling').getAttribute('class'))?.includes('active'))
+  errors.push('[keyboards] the CardKB is not hung when added');
+if (!(await page.locator('#board1_keys_window').getAttribute('class'))?.includes('active'))
+  errors.push('[keyboards] the CardKB does not open a window');
 if (!(await page.textContent('#warnings'))?.includes('under the lid')) errors.push('[keyboards] no word on how deep the keys sit');
 // its keys are too low for holes: a hole per key says so
 await page.click('#board1_keys_holes');
 await expectWatertight('keys:holes');
-if (!(await page.textContent('#warnings'))?.includes('a finger will not press')) errors.push('[keyboards] no warning for keys under the face in their holes');
+if (!(await page.textContent('#warnings'))?.includes('a finger will not press'))
+  errors.push('[keyboards] no warning for keys under the face in their holes');
 await setRange('board1_keyFit', 2);
 await expectWatertight('keys:fit');
 if (!(await page.textContent('#warnings'))?.includes('of lid between')) errors.push('[keyboards] no warning for a thin web between holes');
@@ -384,7 +399,7 @@ await page.click('#tabBoth');
 // square caps with rounded corners: the slider stops short of a sharp corner
 await page.click('#board1_capShape_square');
 await expectWatertight('keys:square-caps');
-if (Number(await page.getAttribute('#board1_capR', 'min')) < 0.3) errors.push('[keyboards] a square cap\'s corner may go sharp');
+if (Number(await page.getAttribute('#board1_capR', 'min')) < 0.3) errors.push("[keyboards] a square cap's corner may go sharp");
 await setRange('board1_capR', 0.3);
 // the widest caps the neighbours leave room for: no thin web, the flanges still hold (at the caps' own fit:
 // the 2 mm fit above lets no flange hold, whatever the size)
@@ -393,25 +408,30 @@ await setRange('board1_capSize', await page.getAttribute('#board1_capSize', 'max
 await expectWatertight('keys:caps-widest');
 if ((await page.textContent('#warnings'))?.includes('may slip out')) errors.push('[keyboards] the widest caps slip out');
 await page.waitForTimeout(200);
-if (Number(await page.evaluate(() => window.__case.state().boards[1].capR)) < 0.3) errors.push('[keyboards] a square cap\'s corner went sharp');
+if (Number(await page.evaluate(() => window.__case.state().boards[1].capR)) < 0.3)
+  errors.push("[keyboards] a square cap's corner went sharp");
 await expectWatertight('keys:square-caps-r');
 await page.click('#board1_keys_window');
 // held by clamp bars instead of rails: they print with the lid that holds it
 await page.click('#board1_hold_clamp');
 await expectWatertight('keys:cardkb-clamp');
-if ((await page.textContent('#board1'))?.includes('grooved rails')) errors.push('[keyboards] a clamped CardKB still says it is held by rails');
+if ((await page.textContent('#board1'))?.includes('grooved rails'))
+  errors.push('[keyboards] a clamped CardKB still says it is held by rails');
 // sunk under the lid, it lies between the bars and the pads; the socket's note names the gap that hides it
 // (on a 2 mm top: the slider extremes above left a 6 mm one, under which the socket hides anyway)
 const floorBefore = await page.inputValue('#case_floor');
 await setRange('case_floor', 2);
 await setRange('board1_gap', 1.3);
 await expectWatertight('keys:cardkb-pads');
-const sinkTo = (await page.textContent('#warnings'))?.match(/the socket stands [0-9.]+ mm out of the lid through its slot; a Gap to the ceiling of ([0-9.]+) mm/)?.[1];
+const sinkTo = (await page.textContent('#warnings'))?.match(
+  /the socket stands [0-9.]+ mm out of the lid through its slot; a Gap to the ceiling of ([0-9.]+) mm/,
+)?.[1];
 if (!sinkTo) errors.push('[keyboards] no word on how far the Grove socket stands out');
 else {
   await setRange('board1_gap', sinkTo);
   await expectWatertight('keys:cardkb-sunk');
-  if ((await page.textContent('#warnings'))?.includes('the socket stands')) errors.push(`[keyboards] the Grove socket still stands out at ${sinkTo} mm`);
+  if ((await page.textContent('#warnings'))?.includes('the socket stands'))
+    errors.push(`[keyboards] the Grove socket still stands out at ${sinkTo} mm`);
 }
 await setRange('case_floor', floorBefore);
 await page.click('#tabLid');
@@ -424,8 +444,10 @@ await page.click('#boardAdd');
 await page.fill('#boardSearch', 'macropad');
 await page.click('#boardList [data-board="adafruit-macropad-rp2040"]');
 await expectWatertight('keys:macropad');
-if (!(await page.locator('#board1_on_floor').getAttribute('class'))?.includes('active')) errors.push('[keyboards] the MacroPad is not on the floor');
-if (!(await page.locator('#board1_keys_holes').getAttribute('class'))?.includes('active')) errors.push('[keyboards] the MacroPad does not get a hole per key');
+if (!(await page.locator('#board1_on_floor').getAttribute('class'))?.includes('active'))
+  errors.push('[keyboards] the MacroPad is not on the floor');
+if (!(await page.locator('#board1_keys_holes').getAttribute('class'))?.includes('active'))
+  errors.push('[keyboards] the MacroPad does not get a hole per key');
 await page.click('#board1_remove');
 // the BBQ20KBD: on the floor, a rest under each free corner (the worker builds them; the case stays closed)
 await page.click('#boardAdd');
@@ -461,25 +483,28 @@ await page.click('#tabBoth');
 label('back');
 await page.selectOption('#board1_back', 'raspberry-pi-5');
 await expectWatertight('back:pi5');
-if (!(await page.isDisabled('#board1_back_rot_0')) || (await page.isDisabled('#board1_back_rot_270'))) errors.push('[back] the Pi\'s turns are not the pattern\'s');
+if (!(await page.isDisabled('#board1_back_rot_0')) || (await page.isDisabled('#board1_back_rot_270')))
+  errors.push("[back] the Pi's turns are not the pattern's");
 await page.click('#board1_back_rot_270');
 await expectWatertight('back:270');
-if (!(await page.locator('#board1_back_cut_usb-c').count())) errors.push('[back] no toggles for the Pi\'s ports');
+if (!(await page.locator('#board1_back_cut_usb-c').count())) errors.push("[back] no toggles for the Pi's ports");
 // the camera eases after the turn: read the captions once it has stopped, just before the click
 await page.waitForTimeout(600);
 const backCaption = (await page.evaluate(() => window.__case.captions())).find((caption) => caption.key.startsWith('1b:'));
 if (backCaption) {
   const portId = backCaption.key.slice(3);
-  const backCut = (id) => page.evaluate((port) => {
-    const board = window.__case.state().boards[1];
-    return board ? (board.back?.cuts[port] ?? 'default') : `no board 1 (${window.__case.state().boards.length} boards)`;
-  }, id);
+  const backCut = (id) =>
+    page.evaluate((port) => {
+      const board = window.__case.state().boards[1];
+      return board ? (board.back?.cuts[port] ?? 'default') : `no board 1 (${window.__case.state().boards.length} boards)`;
+    }, id);
   const before = await backCut(portId);
   const viewBox = await page.locator('#view').boundingBox();
   await page.mouse.click(viewBox.x + backCaption.x, viewBox.y + backCaption.y);
   await expectWatertight('back:caption');
   const after = await backCut(portId);
-  if (after === before || String(after).startsWith('no board')) errors.push(`[back] a click on the ${portId} caption: ${before} → ${after}`);
+  if (after === before || String(after).startsWith('no board'))
+    errors.push(`[back] a click on the ${portId} caption: ${before} → ${after}`);
 }
 await page.selectOption('#board1_back', '');
 await expectWatertight('back:none');
@@ -507,7 +532,8 @@ const portIds = await page.evaluate(() => window.__case.state().boards[0].custom
 if (portIds.join() !== 'micro-hdmi-1,usb-c-2') errors.push(`[custom] port ids ${portIds.join()}`);
 if (!(await page.locator('#board0_cut_micro-hdmi-1').count())) errors.push('[custom] no toggle for micro-hdmi-1');
 // a part under the board is a negative Z on an edge: the hint says so
-if (!(await page.locator('#board0_custom_port0_hint').textContent()).includes('under the board')) errors.push('[custom] the edge port hint does not explain Z');
+if (!(await page.locator('#board0_custom_port0_hint').textContent()).includes('under the board'))
+  errors.push('[custom] the edge port hint does not explain Z');
 await page.click('#board0_custom_hole_add');
 await page.click('#board0_custom_hole4_remove');
 await expectWatertight('custom:edited');
@@ -516,7 +542,8 @@ if (catalogFile.suggestedFilename() !== 'smoke-board.json') errors.push(`[custom
 const catalogPath = join(tmpdir(), `case-smoke-board-${Date.now()}.json`);
 await catalogFile.saveAs(catalogPath);
 const catalogJson = JSON.parse(readFileSync(catalogPath, 'utf8'));
-if (catalogJson.size?.w !== 64 || catalogJson.ports?.length !== 2) errors.push(`[custom] catalog JSON ${JSON.stringify(catalogJson).slice(0, 120)}`);
+if (catalogJson.size?.w !== 64 || catalogJson.ports?.length !== 2)
+  errors.push(`[custom] catalog JSON ${JSON.stringify(catalogJson).slice(0, 120)}`);
 await page.selectOption('#board0_custom_mount', 'rails');
 await expectWatertight('custom:rails');
 // a key field on top goes through the plate from its base: the editor asks for it
@@ -552,7 +579,8 @@ await page.click('#boardsArrange_row');
 const [[x0], [x1]] = await boardXY();
 if (!(x1 > x0 + 10)) errors.push(`[boards:arrange] the gap is not kept: ${x0}, ${x1}`);
 await page.click('#board1_align summary');
-if ((await page.locator('#board1_alignRef').inputValue()) !== '0') errors.push('[boards:align] board 2 is not aligned to board 1 by default');
+if ((await page.locator('#board1_alignRef').inputValue()) !== '0')
+  errors.push('[boards:align] board 2 is not aligned to board 1 by default');
 await page.click('#board1_align_nextY');
 await page.click('#board1_align_left');
 await expectWatertight('boards:align');
@@ -598,11 +626,14 @@ await page.click('#presetList [data-preset="b:plain-box"]');
 label('hinged');
 await page.click('#case_kind_hinged');
 await expectWatertight('hinged');
-if (!(await page.locator('#hingeCard').isVisible()) || !(await page.locator('#halfBar').isVisible())) errors.push('[hinged] no hinge card or half switch');
-if (!(await page.locator('#halfGroup').evaluate((group) => group.contains(document.getElementById('lidParams'))))) errors.push('[hinged] the lid is not under the half switch');
+if (!(await page.locator('#hingeCard').isVisible()) || !(await page.locator('#halfBar').isVisible()))
+  errors.push('[hinged] no hinge card or half switch');
+if (!(await page.locator('#halfGroup').evaluate((group) => group.contains(document.getElementById('lidParams')))))
+  errors.push('[hinged] the lid is not under the half switch');
 if (!(await page.locator('#lid_face_front').isDisabled())) errors.push('[hinged] a half allows a side lid');
 if (await page.locator('#mountCard').isVisible()) errors.push('[hinged] a hinged case offers a wall mount');
-if (!(await page.locator('#halfGroup').evaluate((group) => group.contains(document.getElementById('labelCards'))))) errors.push('[hinged] the labels are not under the half switch');
+if (!(await page.locator('#halfGroup').evaluate((group) => group.contains(document.getElementById('labelCards')))))
+  errors.push('[hinged] the labels are not under the half switch');
 await page.click('#edit_half_b');
 await page.click('#boardAdd');
 await page.click('#boardList [data-board="esp32-devkitc-v4"]');
@@ -610,13 +641,20 @@ await page.click('#lid_face_bottom');
 await expectWatertight('hinged:upper');
 const halves = await page.evaluate(() => {
   const state = window.__case.state();
-  return [state.boards.length, state.hinge.b.boards.length, state.lid.face, state.hinge.b.lid.face, window.__case.parts().cases.length].join();
+  return [
+    state.boards.length,
+    state.hinge.b.boards.length,
+    state.lid.face,
+    state.hinge.b.lid.face,
+    window.__case.parts().cases.length,
+  ].join();
 });
 if (halves !== '0,1,top,bottom,2') errors.push(`[hinged] boards, lids, built halves: ${halves}`);
 // both lids on the bottom: knuckles printed with the halves would hang under the bed
 await page.click('#edit_half_a');
 await page.click('#lid_face_bottom');
-if (!(await page.textContent('#warnings'))?.includes('below the bed')) errors.push('[hinged] no warning for knuckles with both lids on the bottom');
+if (!(await page.textContent('#warnings'))?.includes('below the bed'))
+  errors.push('[hinged] no warning for knuckles with both lids on the bottom');
 await page.click('#lid_face_top');
 await page.click('#hinge_layout_full');
 await page.click('#hinge_knuckles_5');
@@ -643,7 +681,7 @@ await setRange('cable0_plugH', 5);
 await page.click('#cable0_through_face');
 await expectWatertight('hinged:cable-face');
 await page.click('#cable0_through_wall');
-if (!(await page.textContent('#warnings'))?.includes('from slot to slot')) errors.push('[hinged] no word on the cable\'s length');
+if (!(await page.textContent('#warnings'))?.includes('from slot to slot')) errors.push("[hinged] no word on the cable's length");
 await expectWatertight('hinged:cable');
 await page.click('#cable0_remove');
 // a printed hinge on screws: any lids, cones printed in place
@@ -655,8 +693,9 @@ await page.click('#edit_half_a');
 await page.click('#lid_face_bottom');
 await page.click('#edit_half_b');
 await page.click('#lid_face_bottom');
-if ((await page.textContent('#warnings'))?.includes('below the bed')) errors.push('[hinged] a printed hinge warns about lids on the bottom');
-if (!(await page.textContent('#warnings'))?.includes('Printed hinge:')) errors.push('[hinged] no word on the printed hinge\'s screws');
+if ((await page.textContent('#warnings'))?.includes('below the bed'))
+  errors.push('[hinged] a printed hinge warns about lids on the bottom');
+if (!(await page.textContent('#warnings'))?.includes('Printed hinge:')) errors.push("[hinged] no word on the printed hinge's screws");
 await expectWatertight('hinged:leaves');
 if (!(await drawn()).includes('hinge')) errors.push('[hinged] the printed hinge is not drawn');
 await page.click('#viewPrint');
@@ -665,11 +704,12 @@ await exportStl('hinged:leaves');
 await page.click('#viewExploded');
 // on the sides: the cheeks beside the case, the back edge's layout gone, no cones
 await page.click('#hinge_place_sides');
-if (await page.locator('#hinge_layout_ends').isVisible()) errors.push('[hinged] side pivots offer the back edge\'s layout');
+if (await page.locator('#hinge_layout_ends').isVisible()) errors.push("[hinged] side pivots offer the back edge's layout");
 if (!(await page.locator('#hinge_axle_cones').isDisabled())) errors.push('[hinged] side pivots offer cones');
 await expectWatertight('hinged:sides-leaves');
 await page.click('#viewPrint');
-if ((await drawn()).split(',').filter((role) => role === 'hinge').length !== 4) errors.push('[hinged] the side cheeks are not four on the bed');
+if ((await drawn()).split(',').filter((role) => role === 'hinge').length !== 4)
+  errors.push('[hinged] the side cheeks are not four on the bed');
 await page.click('#viewExploded');
 await page.click('#hinge_kind_knuckles');
 await expectWatertight('hinged:sides-knuckles');
@@ -686,17 +726,20 @@ if (!(await page.locator('#hinge_magnet').isVisible())) errors.push('[hinged] no
 await expectWatertight('hinged:magnets');
 await page.click('#hinge_magnets');
 await page.click('#hinge_gapAuto');
-if (await page.locator('#board0_remove').count()) errors.push('[hinged] the lower half shows the upper half\'s board');
-if ((await page.locator('#lid_face_top').getAttribute('class'))?.includes('active') !== true) errors.push('[hinged] the lower half shows the upper half\'s lid');
+if (await page.locator('#board0_remove').count()) errors.push("[hinged] the lower half shows the upper half's board");
+if ((await page.locator('#lid_face_top').getAttribute('class'))?.includes('active') !== true)
+  errors.push("[hinged] the lower half shows the upper half's lid");
 // exploded lies open flat; the angle is the assembled view's
 if (await page.locator('#view_angle').isVisible()) errors.push('[hinged] the angle is offered in the exploded view');
-if (!(await page.locator('#viewCaption').textContent()).includes('open flat')) errors.push('[hinged] the exploded caption does not say open flat');
+if (!(await page.locator('#viewCaption').textContent()).includes('open flat'))
+  errors.push('[hinged] the exploded caption does not say open flat');
 await page.click('#viewAssembled');
 await setRange('view_angle', 0);
 await expectWatertight('hinged:closed');
 if (!(await page.locator('#viewCaption').textContent()).includes('open by 0°')) errors.push('[hinged] the caption does not say the angle');
 await page.click('#viewPrint');
-if (!(await page.locator('#viewCaption').textContent()).includes('upper half behind')) errors.push('[hinged] the print caption does not place the upper half');
+if (!(await page.locator('#viewCaption').textContent()).includes('upper half behind'))
+  errors.push('[hinged] the print caption does not place the upper half');
 if (await page.locator('#view_angle').isVisible()) errors.push('[hinged] the angle is offered in the print layout');
 await page.click('#viewExploded');
 await exportStl('hinged');
@@ -707,12 +750,16 @@ await page.click('#lid_face_top');
 label('lid:console-and-back');
 await page.click('#case_kind_console');
 await expectWatertight('lid:console-bottom');
-const lowest = await page.evaluate(() => Math.min(...window.__case.drawnParts().map((part) => {
-  let low = Infinity;
-  const p = part.mesh.positions;
-  for (let i = 2; i < p.length; i += 3) low = Math.min(low, p[i] + (part.offset?.[2] ?? 0));
-  return low;
-})));
+const lowest = await page.evaluate(() =>
+  Math.min(
+    ...window.__case.drawnParts().map((part) => {
+      let low = Infinity;
+      const p = part.mesh.positions;
+      for (let i = 2; i < p.length; i += 3) low = Math.min(low, p[i] + (part.offset?.[2] ?? 0));
+      return low;
+    }),
+  ),
+);
 if (lowest < -1e-6) errors.push(`[lid] the exploded bottom lid goes under the grid: z = ${lowest.toFixed(2)}`);
 await page.click('#case_kind_box');
 const faceBack = await page.evaluate(() => window.__case.state().lid.face);
@@ -787,13 +834,15 @@ await page.click('#lid_fastening_through');
 await expectWatertight('fastening:through');
 if (await page.locator('#lid_hole_tap').isVisible()) errors.push('[through] bolts offer a hole kind');
 if (!(await page.locator('#lid_nutPlace_recessed').isVisible())) errors.push('[through] no nut controls');
-if (!(await page.locator('#warnings').textContent()).includes('sit')) errors.push('[through] no note on the bolts and how deep the nuts sit');
+if (!(await page.locator('#warnings').textContent()).includes('sit'))
+  errors.push('[through] no note on the bolts and how deep the nuts sit');
 if (!(await drawn()).includes('hardware')) errors.push(`[through] the bolts are not drawn: ${await drawn()}`);
 await page.click('#lid_nut_nyloc');
 await page.click('#lid_nutPlace_surface');
 await page.click('#lid_head_countersunk');
 await expectWatertight('fastening:through:surface');
-if (!(await page.locator('#warnings').textContent()).includes('stands out')) errors.push('[through] no note on how far the bolts stand out');
+if (!(await page.locator('#warnings').textContent()).includes('stands out'))
+  errors.push('[through] no note on how far the bolts stand out');
 await setRange('lid_nutAF', 7);
 if (!(await page.locator('#lid_nutReset').isVisible())) errors.push('[through] no nut reset after a change');
 await page.click('#lid_nutReset');
@@ -810,7 +859,8 @@ await page.click('#tabBoth');
 await page.click('#lid_face_left');
 await expectWatertight('fastening:through:left');
 if (!(await page.locator('#lid_fastening_through').isDisabled())) errors.push('[through] offered with a side lid');
-if (!(await page.locator('#warnings').textContent()).includes('holds on screws')) errors.push('[through] no note that a side lid holds on screws');
+if (!(await page.locator('#warnings').textContent()).includes('holds on screws'))
+  errors.push('[through] no note that a side lid holds on screws');
 await page.click('#lid_face_top');
 await page.click('#case_kind_cylinder');
 await expectWatertight('fastening:through:cylinder');
@@ -818,11 +868,13 @@ await page.click('#case_kind_console');
 await expectWatertight('fastening:through:console');
 if (!(await page.locator('#lid_fastening_through').isDisabled())) errors.push('[through] offered on a console');
 await page.click('#case_kind_box');
-if ((await page.locator('#warnings').textContent()).includes('holds on screws')) errors.push('[through] the screws note stays on a box with a top lid');
+if ((await page.locator('#warnings').textContent()).includes('holds on screws'))
+  errors.push('[through] the screws note stays on a box with a top lid');
 await page.click('#lid_fastening_snaps');
 await setRange('case_edgeR', 4);
 await expectWatertight('fastening:snaps:fillet');
-if (!(await page.locator('#warnings').textContent()).includes('rounded corners end')) errors.push('[fastening] no note about the raised lid depth');
+if (!(await page.locator('#warnings').textContent()).includes('rounded corners end'))
+  errors.push('[fastening] no note about the raised lid depth');
 await setRange('case_edgeR', 0);
 
 // extras: vents of every pattern, a fan, both wall mounts on their faces, labels in a real font
@@ -849,13 +901,15 @@ await page.click('#mount_kind_keyholes');
 await expectWatertight('keyholes');
 await page.click('#mount_keyhole_closed');
 await expectWatertight('keyholes:closed');
-if (!(await page.locator('#warnings').textContent()).includes('supports')) errors.push('[keyholes:closed] no warning about the pads on the bed');
+if (!(await page.locator('#warnings').textContent()).includes('supports'))
+  errors.push('[keyholes:closed] no warning about the pads on the bed');
 await page.click('#mount_face_back');
 await expectWatertight('keyholes:closed:back');
 // the lid's face: allowed, with a warning (the lid holds the weight)
 await page.click('#mount_face_top');
 await expectWatertight('keyholes:closed:lid');
-if (!(await page.locator('#warnings').textContent()).includes('on the lid')) errors.push('[keyholes:lid] no warning about the mount on the lid');
+if (!(await page.locator('#warnings').textContent()).includes('on the lid'))
+  errors.push('[keyholes:lid] no warning about the mount on the lid');
 await page.click('#mount_face_bottom');
 await page.click('#mount_keyhole_through');
 await page.click('#mount_kind_ears');
@@ -878,13 +932,15 @@ if (!(await page.locator('#mount_earWalls_frontBack').isDisabled())) errors.push
 await expectWatertight('ears:back');
 await page.click('#mount_earWalls_topBottom');
 await expectWatertight('ears:back:topBottom');
-if (!(await page.locator('#warnings').textContent()).includes('under the bed')) errors.push('[ears:back:topBottom] no warning about the ear under the bed');
+if (!(await page.locator('#warnings').textContent()).includes('under the bed'))
+  errors.push('[ears:back:topBottom] no warning about the ear under the bed');
 await page.click('#mount_earWalls_leftRight');
 await page.click('#mount_face_bottom');
 const trianglesBefore = await page.evaluate(() => window.__case.parts()?.lid.indices.length ?? 0);
 await page.click('#labelAdd');
 // the plain box has no board to name (a board's name: tests/extras.test.ts)
-if ((await page.inputValue('#label0_text')) !== '') errors.push(`[label] a new label in a box with no boards says: ${await page.inputValue('#label0_text')}`);
+if ((await page.inputValue('#label0_text')) !== '')
+  errors.push(`[label] a new label in a box with no boards says: ${await page.inputValue('#label0_text')}`);
 await page.fill('#label0_text', 'Hello שלום Привет');
 await page.waitForTimeout(1500);
 await expectWatertight('label');
@@ -985,7 +1041,8 @@ await page.evaluate(() => {
   Storage.prototype.setItem = window.__setItem;
 });
 await setRange('case_wall', 3.5);
-if (await page.locator('#storageNote').isVisible()) errors.push(`[storage-note] the banner stays once writes work: "${await storageText()}"`);
+if (await page.locator('#storageNote').isVisible())
+  errors.push(`[storage-note] the banner stays once writes work: "${await storageText()}"`);
 
 // the project file round trip: save, change, open
 label('file');
@@ -1011,9 +1068,11 @@ await page.setInputFiles('#fileInput', join(process.cwd(), 'tests/fixtures/korpu
 await page.waitForTimeout(150);
 await expectWatertight('file:user');
 const userLines = await page.locator('#warnings .warn-line').allTextContents();
-if (!userLines.some((line) => line.includes('not against the right wall: board 3 “KaRadio ESP32”'))) errors.push(`[file:user] ${userLines.join(' | ').slice(0, 200)}`);
+if (!userLines.some((line) => line.includes('not against the right wall: board 3 “KaRadio ESP32”')))
+  errors.push(`[file:user] ${userLines.join(' | ').slice(0, 200)}`);
 if ((await page.locator('#warnings .warn-line.info').count()) !== 2) errors.push('[file:user] not two notes');
-if ((await page.locator('#warnings .warn-head').textContent()) !== '3 warnings · 2 notes') errors.push(`[file:user] head ${await page.locator('#warnings .warn-head').textContent()}`);
+if ((await page.locator('#warnings .warn-head').textContent()) !== '3 warnings · 2 notes')
+  errors.push(`[file:user] head ${await page.locator('#warnings .warn-head').textContent()}`);
 // on the model: a badge per message with a place, a hover on a line opens its badge, the toggle hides them
 label('file:user:spots');
 await page.waitForTimeout(150);
@@ -1022,10 +1081,12 @@ if (badges.length !== 5) errors.push(`[file:user:spots] ${badges.length} badges:
 await page.hover('#warnings [data-warn="1"]');
 const opened = await page.evaluate(() => window.__case.warnings().find((badge) => badge.n === 1));
 if (!opened?.open || !opened.text.includes('right wall')) errors.push(`[file:user:spots] hover: ${JSON.stringify(opened)}`);
-if (!(await page.locator('#warnings [data-warn="1"]').evaluate((row) => row.classList.contains('hot')))) errors.push('[file:user:spots] the hovered line is not lit');
+if (!(await page.locator('#warnings [data-warn="1"]').evaluate((row) => row.classList.contains('hot'))))
+  errors.push('[file:user:spots] the hovered line is not lit');
 await page.mouse.move(0, 0);
 await page.uncheck('#viewWarnings');
-if ((await page.evaluate(() => window.__case.warnings())).length !== 0) errors.push('[file:user:spots] the toggle does not hide the badges');
+if ((await page.evaluate(() => window.__case.warnings())).length !== 0)
+  errors.push('[file:user:spots] the toggle does not hide the badges');
 await page.check('#viewWarnings');
 
 // view modes and export tabs: what is drawn follows both
@@ -1047,14 +1108,17 @@ const presetShown = async () => ({
 // edits within HISTORY_DELAY_MS of each other are one undo step: let the preset's own step land first
 await page.waitForTimeout(700);
 let shown = await presetShown();
-if (shown.button !== 'Pi 4 desktop case' || shown.current !== 'b:pi4-desktop') errors.push(`[preset-changed] opened: ${JSON.stringify(shown)}`);
+if (shown.button !== 'Pi 4 desktop case' || shown.current !== 'b:pi4-desktop')
+  errors.push(`[preset-changed] opened: ${JSON.stringify(shown)}`);
 await setRange('case_wall', 2.5);
 await page.waitForTimeout(700);
 shown = await presetShown();
-if (shown.button !== 'Presets…' || shown.current !== '') errors.push(`[preset-changed] changed, still shown as open: ${JSON.stringify(shown)}`);
+if (shown.button !== 'Presets…' || shown.current !== '')
+  errors.push(`[preset-changed] changed, still shown as open: ${JSON.stringify(shown)}`);
 await page.click('#undoBtn');
 shown = await presetShown();
-if (shown.button !== 'Pi 4 desktop case' || shown.current !== 'b:pi4-desktop') errors.push(`[preset-changed] undone: ${JSON.stringify(shown)}`);
+if (shown.button !== 'Pi 4 desktop case' || shown.current !== 'b:pi4-desktop')
+  errors.push(`[preset-changed] undone: ${JSON.stringify(shown)}`);
 const tabOrder = await page.$$eval('.tabs .tab', (nodes) => nodes.map((n) => n.id));
 if (tabOrder[0] !== 'tabBoth') errors.push(`[view] the first export tab is ${tabOrder[0]}`);
 await page.click('#tabBoth');
@@ -1065,22 +1129,33 @@ if (!/body.*board.*lid/.test(await drawn())) errors.push(`[view] assembled/both 
 // the lid's place on the bed: behind the body, then right of it; the caption names it
 label('view:print-lid');
 await page.click('#viewPrint');
-const lidBox = () => page.evaluate(() => {
-  const parts = window.__case.drawnParts();
-  const box = (role) => {
-    const { positions: p } = parts.find((part) => part.role === role).mesh;
-    let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
-    for (let i = 0; i < p.length; i += 3) { x0 = Math.min(x0, p[i]); x1 = Math.max(x1, p[i]); y0 = Math.min(y0, p[i + 1]); y1 = Math.max(y1, p[i + 1]); }
-    return { x0, y0, x1, y1 };
-  };
-  return { body: box('body'), lid: box('lid') };
-});
+const lidBox = () =>
+  page.evaluate(() => {
+    const parts = window.__case.drawnParts();
+    const box = (role) => {
+      const { positions: p } = parts.find((part) => part.role === role).mesh;
+      let x0 = Infinity;
+      let y0 = Infinity;
+      let x1 = -Infinity;
+      let y1 = -Infinity;
+      for (let i = 0; i < p.length; i += 3) {
+        x0 = Math.min(x0, p[i]);
+        x1 = Math.max(x1, p[i]);
+        y0 = Math.min(y0, p[i + 1]);
+        y1 = Math.max(y1, p[i + 1]);
+      }
+      return { x0, y0, x1, y1 };
+    };
+    return { body: box('body'), lid: box('lid') };
+  });
 await page.click('#print_lid_behind');
 await setRange('print_gap', 20);
 await page.waitForTimeout(150);
 const behind = await lidBox();
-if (Math.abs(behind.lid.y0 - behind.body.y1 - 20) > 0.01 || Math.abs(behind.lid.x0) > 0.01) errors.push(`[view:print-lid] behind: ${JSON.stringify(behind)}`);
-if (!(await page.locator('#viewCaption').textContent()).includes('lid behind')) errors.push('[view:print-lid] the caption does not say behind');
+if (Math.abs(behind.lid.y0 - behind.body.y1 - 20) > 0.01 || Math.abs(behind.lid.x0) > 0.01)
+  errors.push(`[view:print-lid] behind: ${JSON.stringify(behind)}`);
+if (!(await page.locator('#viewCaption').textContent()).includes('lid behind'))
+  errors.push('[view:print-lid] the caption does not say behind');
 await page.click('#print_lid_right');
 await page.waitForTimeout(150);
 const right = await lidBox();
@@ -1089,24 +1164,32 @@ await exportStl('both:right');
 await page.click('#print_lid_auto');
 await setRange('print_gap', 10);
 await page.click('#viewExploded');
-if (!(await page.locator('#print_lid_auto').isDisabled()) || !(await page.locator('#print_gap').isDisabled())) errors.push('[view:print-lid] the lid\'s place is offered outside the print layout');
+if (!(await page.locator('#print_lid_auto').isDisabled()) || !(await page.locator('#print_gap').isDisabled()))
+  errors.push("[view:print-lid] the lid's place is offered outside the print layout");
 await page.click('#tabLid');
-if (await page.locator('#print_lid_auto').isVisible()) errors.push('[view:print-lid] the Lid tab offers the lid\'s place');
+if (await page.locator('#print_lid_auto').isVisible()) errors.push("[view:print-lid] the Lid tab offers the lid's place");
 await expectWatertight('view:lid');
 if ((await drawn()) !== 'lid') errors.push(`[view] the Lid tab draws ${await drawn()}`);
 if (await page.locator('#viewRow').isVisible()) errors.push('[view] the Lid tab offers a view');
 if (await page.locator('#viewBoards').isVisible()) errors.push('[view] the Lid tab offers boards');
-if (!(await page.locator('#viewCaption').textContent()).includes('print layout')) errors.push('[view] the Lid tab caption does not say print layout');
+if (!(await page.locator('#viewCaption').textContent()).includes('print layout'))
+  errors.push('[view] the Lid tab caption does not say print layout');
 // in the print layout the lid lies on its outer face: most of its footprint is on the bed
 const lidOnBed = await page.evaluate(() => {
   const [part] = window.__case.drawnParts();
   const { positions: p, indices: ix } = part.mesh;
   const dz = part.offset?.[2] ?? 0;
   let minZ = Infinity;
-  let x0 = Infinity; let x1 = -Infinity; let y0 = Infinity; let y1 = -Infinity;
+  let x0 = Infinity;
+  let x1 = -Infinity;
+  let y0 = Infinity;
+  let y1 = -Infinity;
   for (let i = 0; i < p.length; i += 3) {
     minZ = Math.min(minZ, p[i + 2] + dz);
-    x0 = Math.min(x0, p[i]); x1 = Math.max(x1, p[i]); y0 = Math.min(y0, p[i + 1]); y1 = Math.max(y1, p[i + 1]);
+    x0 = Math.min(x0, p[i]);
+    x1 = Math.max(x1, p[i]);
+    y0 = Math.min(y0, p[i + 1]);
+    y1 = Math.max(y1, p[i + 1]);
   }
   let bed = 0;
   for (let t = 0; t < ix.length; t += 3) {
@@ -1116,12 +1199,14 @@ const lidOnBed = await page.evaluate(() => {
   }
   return { minZ, share: bed / ((x1 - x0) * (y1 - y0)) };
 });
-if (Math.abs(lidOnBed.minZ) > 0.01 || lidOnBed.share < 0.5) errors.push(`[view] the Lid tab does not show the lid on its outer face: ${JSON.stringify(lidOnBed)}`);
+if (Math.abs(lidOnBed.minZ) > 0.01 || lidOnBed.share < 0.5)
+  errors.push(`[view] the Lid tab does not show the lid on its outer face: ${JSON.stringify(lidOnBed)}`);
 await page.click('#tabBody');
 await expectWatertight('view:body');
 if ((await drawn()).includes('lid') || !(await drawn()).includes('board')) errors.push(`[view] the Body tab draws ${await drawn()}`);
 if (await page.locator('#viewExploded').isVisible()) errors.push('[view] the Body tab offers exploded');
-if ((await page.locator('#viewAssembled').getAttribute('aria-checked')) !== 'true') errors.push('[view] the Body tab is not shown assembled');
+if ((await page.locator('#viewAssembled').getAttribute('aria-checked')) !== 'true')
+  errors.push('[view] the Body tab is not shown assembled');
 await page.uncheck('#viewBoards');
 if ((await drawn()).includes('board')) errors.push('[view] the boards toggle does nothing');
 await page.check('#viewBoards');
@@ -1130,7 +1215,8 @@ if ((await page.locator('#viewExploded').getAttribute('aria-checked')) !== 'true
 await page.click('#viewPrint');
 await expectWatertight('view:print');
 if ((await drawn()) !== 'body,lid') errors.push(`[view] the print layout draws ${await drawn()}`);
-if (!(await page.locator('#viewCaption').textContent()).includes('print layout')) errors.push('[view] the caption does not say print layout');
+if (!(await page.locator('#viewCaption').textContent()).includes('print layout'))
+  errors.push('[view] the caption does not say print layout');
 if (!(await page.locator('#viewBoards').isDisabled())) errors.push('[view] the boards toggle is live in the print layout');
 await page.check('#viewXray');
 await page.waitForTimeout(100);
@@ -1172,26 +1258,27 @@ label('mobile');
 await page.setViewportSize({ width: 390, height: 780 });
 await page.waitForTimeout(400);
 // the drawn parts' bounding box on screen: the sheet may move it, never scale or stretch it
-const onScreen = () => page.evaluate(() => {
-  const lo = [Infinity, Infinity, Infinity];
-  const hi = [-Infinity, -Infinity, -Infinity];
-  for (const part of window.__case.drawnParts()) {
-    const p = part.mesh.positions;
-    const o = part.offset ?? [0, 0, 0];
-    for (let i = 0; i < p.length; i += 3) {
-      for (let k = 0; k < 3; k++) {
-        lo[k] = Math.min(lo[k], p[i + k] + o[k]);
-        hi[k] = Math.max(hi[k], p[i + k] + o[k]);
+const onScreen = () =>
+  page.evaluate(() => {
+    const lo = [Infinity, Infinity, Infinity];
+    const hi = [-Infinity, -Infinity, -Infinity];
+    for (const part of window.__case.drawnParts()) {
+      const p = part.mesh.positions;
+      const o = part.offset ?? [0, 0, 0];
+      for (let i = 0; i < p.length; i += 3) {
+        for (let k = 0; k < 3; k++) {
+          lo[k] = Math.min(lo[k], p[i + k] + o[k]);
+          hi[k] = Math.max(hi[k], p[i + k] + o[k]);
+        }
       }
     }
-  }
-  const corners = [];
-  for (const x of [lo[0], hi[0]]) for (const y of [lo[1], hi[1]]) for (const z of [lo[2], hi[2]]) corners.push([x, y, z]);
-  const screen = window.__case.project(corners);
-  const xs = screen.map((q) => q[0]);
-  const ys = screen.map((q) => q[1]);
-  return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys), cy: (Math.max(...ys) + Math.min(...ys)) / 2 };
-});
+    const corners = [];
+    for (const x of [lo[0], hi[0]]) for (const y of [lo[1], hi[1]]) for (const z of [lo[2], hi[2]]) corners.push([x, y, z]);
+    const screen = window.__case.project(corners);
+    const xs = screen.map((q) => q[0]);
+    const ys = screen.map((q) => q[1]);
+    return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys), cy: (Math.max(...ys) + Math.min(...ys)) / 2 };
+  });
 const withSheet = await onScreen();
 const canvasBox = await page.locator('#view').boundingBox();
 const [tapX, tapY] = [canvasBox.x + 200, canvasBox.y + 60];
@@ -1208,13 +1295,23 @@ await page.click('#panelBtn');
 await page.waitForTimeout(400);
 if (!(await page.locator('#case_wall').isVisible())) errors.push('[mobile] the sheet did not open');
 // with the sheet open, a drag on the canvas turns the case and leaves the sheet open
-const turnedBefore = await page.evaluate(() => window.__case.project([[0, 0, 0], [100, 0, 0]]));
+const turnedBefore = await page.evaluate(() =>
+  window.__case.project([
+    [0, 0, 0],
+    [100, 0, 0],
+  ]),
+);
 await page.mouse.move(tapX, tapY);
 await page.mouse.down();
 await page.mouse.move(tapX + 60, tapY + 10, { steps: 6 });
 await page.mouse.up();
 await page.waitForTimeout(300);
-const turnedAfter = await page.evaluate(() => window.__case.project([[0, 0, 0], [100, 0, 0]]));
+const turnedAfter = await page.evaluate(() =>
+  window.__case.project([
+    [0, 0, 0],
+    [100, 0, 0],
+  ]),
+);
 if (JSON.stringify(turnedBefore) === JSON.stringify(turnedAfter)) errors.push('[mobile] a drag over the open sheet does not turn the case');
 if (!(await page.locator('#panel').evaluate((el) => el.classList.contains('open')))) errors.push('[mobile] a drag closed the sheet');
 if (shotsDir) await page.screenshot({ path: `${shotsDir}/mobile.png` });

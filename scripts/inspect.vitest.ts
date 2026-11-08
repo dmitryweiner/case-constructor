@@ -61,8 +61,11 @@ function parseValue(text: string): unknown {
  */
 const TEST_FORMS: { id: string; note: string; form: ThreadForm }[] = [
   { id: 'a', note: 'today: 6 × 1, 60°, half a pitch deep', form: threadForm('P6') },
-  { id: 'b', note: 'print-friendly: 6 × 1.5, the overhanging flank at 45°, 0.4 pitch deep',
-    form: { d: 6, pitch: 1.5, depth: 0.4, rise: 0.4, fall: 0.4 * Math.tan(Math.PI / 6) } },
+  {
+    id: 'b',
+    note: 'print-friendly: 6 × 1.5, the overhanging flank at 45°, 0.4 pitch deep',
+    form: { d: 6, pitch: 1.5, depth: 0.4, rise: 0.4, fall: 0.4 * Math.tan(Math.PI / 6) },
+  },
   { id: 'c', note: 'the first default: 6 × 1.5, 60°, half a pitch deep', form: { ...threadForm('P6'), pitch: 1.5 } },
 ];
 /** The fits of the three holes in each test nut, 1, 2 and 3 dots. */
@@ -108,7 +111,9 @@ function threadTest(csg: CsgApi, dir: string): void {
         // a 0.5 mm chamfer at the mouth, as on the case's posts
         const R = form.d / 2;
         const sink = R - minorRadius(form) + 0.5;
-        const cone = scope.keep(scope.keep(csg.Manifold.cylinder(sink + 0.05, minorRadius(form) + fit, R + fit + 0.55, n)).translate([x, y, h - sink]));
+        const cone = scope.keep(
+          scope.keep(csg.Manifold.cylinder(sink + 0.05, minorRadius(form) + fit, R + fit + 0.55, n)).translate([x, y, h - sink]),
+        );
         nut = scope.keep(nut.subtract(scope.keep(hole.add(cone))));
         nut = scope.keep(nut.subtract(scope.keep(csg.Manifold.union(dots(csg, scope, k + 1, x, d - 2, h)))));
       });
@@ -120,13 +125,18 @@ function threadTest(csg: CsgApi, dir: string): void {
       nut = scope.keep(nut.subtract(scope.keep(csg.Manifold.union(front))));
       const nutMesh = fromManifold(nut);
 
-      for (const [part, mesh] of [['screw', screwMesh], ['nut', nutMesh]] as const) {
+      for (const [part, mesh] of [
+        ['screw', screwMesh],
+        ['nut', nutMesh],
+      ] as const) {
         const r = validateMesh(mesh);
         const file = join(dir, `thread-${id}-${part}.stl`);
         writeFileSync(file, new Uint8Array(encodeSTL(mesh, { name: `thread-${id}-${part}` })));
         console.log(`${file}: ${r.triangleCount} tri, watertight ${r.watertight}, ${r.degenerateTriangles} degenerate`);
       }
-      console.log(`  ${id} (${index + 1} dot${index ? 's' : ''}): ${note}; holes ${TEST_FITS.map((fit, k) => `${k + 1} dot${k ? 's' : ''} = ${fit}`).join(', ')} mm`);
+      console.log(
+        `  ${id} (${index + 1} dot${index ? 's' : ''}): ${note}; holes ${TEST_FITS.map((fit, k) => `${k + 1} dot${k ? 's' : ''} = ${fit}`).join(', ')} mm`,
+      );
     } finally {
       scope.dispose();
     }
@@ -154,21 +164,42 @@ it('inspect', async () => {
   for (const { half, state: one } of casesOf(state)) {
     const started = performance.now();
     const stages: string[] = [];
-    const built = buildCase(csg, one, segments, (stage) => {
-      stages.push(`${stage.code} @${(performance.now() - started).toFixed(0)}`);
-      // labels are rasterised by the browser's fonts: none here
-    }, [], half ? halfHinge(state, half) : null);
+    const built = buildCase(
+      csg,
+      one,
+      segments,
+      (stage) => {
+        stages.push(`${stage.code} @${(performance.now() - started).toFixed(0)}`);
+        // labels are rasterised by the browser's fonts: none here
+      },
+      [],
+      half ? halfHinge(state, half) : null,
+    );
     const total = performance.now() - started;
-    console.log(`${half ? `half ${half}: ` : ''}state: ${JSON.stringify({ shape: one.shape.kind, lid: one.lid.face, depth: one.lid.depth, boards: one.boards.map((b) => b.board) })}`);
-    console.log(`dims ${built.dims.w.toFixed(2)}×${built.dims.d.toFixed(2)}×${built.dims.h.toFixed(2)}, segments ${segments}, ${total.toFixed(0)} ms`);
+    console.log(
+      `${half ? `half ${half}: ` : ''}state: ${JSON.stringify({ shape: one.shape.kind, lid: one.lid.face, depth: one.lid.depth, boards: one.boards.map((b) => b.board) })}`,
+    );
+    console.log(
+      `dims ${built.dims.w.toFixed(2)}×${built.dims.d.toFixed(2)}×${built.dims.h.toFixed(2)}, segments ${segments}, ${total.toFixed(0)} ms`,
+    );
     console.log(`stages: ${stages.join(', ')}`);
-    for (const [id, mesh] of Object.entries({ body: built.body, lid: built.lid, ...(built.screw ? { screw: built.screw } : {}), ...(built.hinge ? { hinge: built.hinge } : {}),
-      ...(built.clamps ? { clamp: built.clamps } : {}), ...(built.lidClamps ? { lidClamp: built.lidClamps } : {}),
-      ...(built.rails ? { rails: built.rails } : {}), ...(built.lidRails ? { lidRails: built.lidRails } : {}),
-      ...(built.railsPrint ? { railsPrint: built.railsPrint } : {}), ...(built.lidRailsPrint ? { lidRailsPrint: built.lidRailsPrint } : {}) })) {
+    for (const [id, mesh] of Object.entries({
+      body: built.body,
+      lid: built.lid,
+      ...(built.screw ? { screw: built.screw } : {}),
+      ...(built.hinge ? { hinge: built.hinge } : {}),
+      ...(built.clamps ? { clamp: built.clamps } : {}),
+      ...(built.lidClamps ? { lidClamp: built.lidClamps } : {}),
+      ...(built.rails ? { rails: built.rails } : {}),
+      ...(built.lidRails ? { lidRails: built.lidRails } : {}),
+      ...(built.railsPrint ? { railsPrint: built.railsPrint } : {}),
+      ...(built.lidRailsPrint ? { lidRailsPrint: built.lidRailsPrint } : {}),
+    })) {
       const r = validateMesh(mesh);
-      console.log(`${id}: ${r.triangleCount} tri, ${r.degenerateTriangles} degenerate, watertight ${r.watertight}, `
-        + `volume ${(r.volume / 1000).toFixed(2)} cm³, bbox ${r.bbox.min.map((v) => v.toFixed(2))} … ${r.bbox.max.map((v) => v.toFixed(2))}`);
+      console.log(
+        `${id}: ${r.triangleCount} tri, ${r.degenerateTriangles} degenerate, watertight ${r.watertight}, ` +
+          `volume ${(r.volume / 1000).toFixed(2)} cm³, bbox ${r.bbox.min.map((v) => v.toFixed(2))} … ${r.bbox.max.map((v) => v.toFixed(2))}`,
+      );
       if (args.degenerate) {
         // zero-area triangles: where they are, grouped to a 0.5 mm grid
         const spots = new Map<string, number>();
@@ -183,7 +214,8 @@ it('inspect', async () => {
           const key = [p[a], p[a + 1], p[a + 2]].map((v) => (Math.round(v * 2) / 2).toFixed(1)).join(',');
           spots.set(key, (spots.get(key) ?? 0) + 1);
           // the first few in full: which vertices collapse, and along what
-          if (exact.length < 6) exact.push([a, b, c].map((i) => `(${[p[i], p[i + 1], p[i + 2]].map((v) => v.toFixed(4)).join(', ')})`).join(' '));
+          if (exact.length < 6)
+            exact.push([a, b, c].map((i) => `(${[p[i], p[i + 1], p[i + 2]].map((v) => v.toFixed(4)).join(', ')})`).join(' '));
         }
         for (const [key, count] of [...spots].slice(0, 20)) console.log(`  degenerate ×${count} at ${key}`);
         for (const line of exact) console.log(`    ${line}`);

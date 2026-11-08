@@ -131,25 +131,51 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
     // Boards are drawn schematically and see-through, so they never read as
     // part of the case: the PCB green, its connectors and parts amber.
     board: new THREE.MeshStandardMaterial({
-      color: COLORS.board, metalness: 0, roughness: 0.8, transparent: true, opacity: 0.7, depthWrite: false,
+      color: COLORS.board,
+      metalness: 0,
+      roughness: 0.8,
+      transparent: true,
+      opacity: 0.7,
+      depthWrite: false,
     }),
     port: new THREE.MeshStandardMaterial({
-      color: COLORS.port, metalness: 0.2, roughness: 0.6, transparent: true, opacity: 0.6, depthWrite: false,
+      color: COLORS.port,
+      metalness: 0.2,
+      roughness: 0.6,
+      transparent: true,
+      opacity: 0.6,
+      depthWrite: false,
     }),
     // through bolts and their nuts: bought steel, schematic like the boards
     hardware: new THREE.MeshStandardMaterial({
-      color: COLORS.hardware, metalness: 0.6, roughness: 0.4, transparent: true, opacity: 0.8, depthWrite: false,
+      color: COLORS.hardware,
+      metalness: 0.6,
+      roughness: 0.4,
+      transparent: true,
+      opacity: 0.8,
+      depthWrite: false,
     }),
     // a display's glass: dark, its window in the ports' amber over it
     glass: new THREE.MeshStandardMaterial({
-      color: COLORS.glass, metalness: 0.3, roughness: 0.2, transparent: true, opacity: 0.8, depthWrite: false,
+      color: COLORS.glass,
+      metalness: 0.3,
+      roughness: 0.2,
+      transparent: true,
+      opacity: 0.8,
+      depthWrite: false,
     }),
   };
 
   // seen through the walls: no depth test, drawn last
-  const spotMaterial = (opacity: number): THREE.MeshBasicMaterial => new THREE.MeshBasicMaterial({
-    color: WARN_COLOR, transparent: true, opacity, depthWrite: false, depthTest: false, side: THREE.DoubleSide,
-  });
+  const spotMaterial = (opacity: number): THREE.MeshBasicMaterial =>
+    new THREE.MeshBasicMaterial({
+      color: WARN_COLOR,
+      transparent: true,
+      opacity,
+      depthWrite: false,
+      depthTest: false,
+      side: THREE.DoubleSide,
+    });
   const spotMaterials = { cold: spotMaterial(0.13), hot: spotMaterial(0.45) };
   const spotObjects: THREE.Mesh[] = [];
 
@@ -225,7 +251,13 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
     applyInset(canvas.clientWidth, canvas.clientHeight);
   }
 
-  interface Shown { caption: SceneCaption; el: HTMLElement; w: number; h: number; rect: [number, number, number, number] | null }
+  interface Shown {
+    caption: SceneCaption;
+    el: HTMLElement;
+    w: number;
+    h: number;
+    rect: [number, number, number, number] | null;
+  }
   let captions: Shown[] = [];
 
   /** Places the captions for this frame: projected, nearest first, none over another. */
@@ -235,17 +267,24 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     const eye = camera.position;
-    const placed = captions.map((shown) => {
-      const world = new THREE.Vector3(...shown.caption.at).applyMatrix4(group.matrixWorld);
-      const v = world.clone().project(camera);
-      return { shown, x: ((v.x + 1) / 2) * w, y: ((1 - v.y) / 2) * h, depth: world.distanceTo(eye), behind: v.z > 1 };
-      // a warning's badge first, then the nearest captions
-    }).sort((a, b) => Number(Boolean(b.shown.caption.warn)) - Number(Boolean(a.shown.caption.warn)) || a.depth - b.depth);
+    const placed = captions
+      .map((shown) => {
+        const world = new THREE.Vector3(...shown.caption.at).applyMatrix4(group.matrixWorld);
+        const v = world.clone().project(camera);
+        return { shown, x: ((v.x + 1) / 2) * w, y: ((1 - v.y) / 2) * h, depth: world.distanceTo(eye), behind: v.z > 1 };
+        // a warning's badge first, then the nearest captions
+      })
+      .sort((a, b) => Number(Boolean(b.shown.caption.warn)) - Number(Boolean(a.shown.caption.warn)) || a.depth - b.depth);
     const taken: [number, number, number, number][] = [];
     for (const { shown, x, y, behind } of placed) {
       const rect: [number, number, number, number] = [x - shown.w / 2, y - shown.h - CAPTION_LIFT, shown.w, shown.h];
-      const clash = taken.some((r) => rect[0] < r[0] + r[2] + CAPTION_GAP && r[0] < rect[0] + rect[2] + CAPTION_GAP
-        && rect[1] < r[1] + r[3] + CAPTION_GAP && r[1] < rect[1] + rect[3] + CAPTION_GAP);
+      const clash = taken.some(
+        (r) =>
+          rect[0] < r[0] + r[2] + CAPTION_GAP &&
+          r[0] < rect[0] + rect[2] + CAPTION_GAP &&
+          rect[1] < r[1] + r[3] + CAPTION_GAP &&
+          r[1] < rect[1] + rect[3] + CAPTION_GAP,
+      );
       const off = behind || clash || x < 0 || x > w || y < 0 || y > h;
       shown.rect = off ? null : rect;
       shown.el.hidden = off;
@@ -344,8 +383,11 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
       captionLayer.replaceChildren();
       captions = list.map((caption) => {
         const el = document.createElement('span');
-        el.className = caption.warn ? `warn-badge${caption.warn.info ? ' info' : ''}${caption.warn.open ? ' open' : ''}`
-          : caption.dim ? 'port-caption dim' : 'port-caption';
+        el.className = caption.warn
+          ? `warn-badge${caption.warn.info ? ' info' : ''}${caption.warn.open ? ' open' : ''}`
+          : caption.dim
+            ? 'port-caption dim'
+            : 'port-caption';
         el.textContent = caption.text;
         captionLayer.append(el);
         return { caption, el, w: 0, h: 0, rect: null };
@@ -382,7 +424,9 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
     },
 
     shownCaptions(): { key: string; x: number; y: number }[] {
-      return captions.flatMap(({ caption, rect }) => (rect ? [{ key: caption.key, x: rect[0] + rect[2] / 2, y: rect[1] + rect[3] / 2 }] : []));
+      return captions.flatMap(({ caption, rect }) =>
+        rect ? [{ key: caption.key, x: rect[0] + rect[2] / 2, y: rect[1] + rect[3] / 2 }] : [],
+      );
     },
 
     setXray(on: boolean): void {

@@ -42,13 +42,15 @@ describe('the storage notes', () => {
   });
 
   it('add a failed preset action, which can be dismissed', () => {
-    expect(storageNotes({ project: 'ok', preset: { action: 'save', result: 'full' } }))
-      .toEqual([{ key: 'error.presetSaveFull', dismiss: true }]);
+    expect(storageNotes({ project: 'ok', preset: { action: 'save', result: 'full' } })).toEqual([
+      { key: 'error.presetSaveFull', dismiss: true },
+    ]);
     expect(storageNotes({ project: 'blocked', preset: { action: 'save', result: 'blocked' } })).toEqual([
       { key: 'storage.project.blocked', dismiss: false },
       { key: 'error.presetSave', dismiss: true },
     ]);
-    expect(storageNotes({ project: 'ok', preset: { action: 'delete', result: 'blocked' } }))
-      .toEqual([{ key: 'error.presetDelete', dismiss: true }]);
+    expect(storageNotes({ project: 'ok', preset: { action: 'delete', result: 'blocked' } })).toEqual([
+      { key: 'error.presetDelete', dismiss: true },
+    ]);
   });
 });

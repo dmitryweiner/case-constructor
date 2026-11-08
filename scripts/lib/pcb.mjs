@@ -24,8 +24,12 @@ function bboxOf(points) {
 /** A local box turned by a footprint's rotation (and mirror), as a box around its centre. */
 function placedSize(local, deg, mirror) {
   if (!local) return null;
-  const corners = [[local.x0, local.y0], [local.x1, local.y0], [local.x0, local.y1], [local.x1, local.y1]]
-    .map(([x, y]) => rotated(mirror ? -x : x, y, deg));
+  const corners = [
+    [local.x0, local.y0],
+    [local.x1, local.y0],
+    [local.x0, local.y1],
+    [local.x1, local.y1],
+  ].map(([x, y]) => rotated(mirror ? -x : x, y, deg));
   const b = bboxOf(corners);
   // a turn by 90° leaves 1e-16 noise in the sizes
   const clean = (v) => Math.round(v * 1e4) / 1e4;
@@ -75,10 +79,17 @@ export function readBrd(text) {
       const points = [];
       for (const [tag] of pkg[2].matchAll(/<(?:smd|pad)\b[^>]*>/g)) {
         const a = attrs(tag);
-        const x = Number(a.x), y = Number(a.y);
-        const dx = Number(a.dx ?? a.diameter ?? 0) / 2, dy = Number(a.dy ?? a.diameter ?? 0) / 2;
+        const x = Number(a.x),
+          y = Number(a.y);
+        const dx = Number(a.dx ?? a.diameter ?? 0) / 2,
+          dy = Number(a.dy ?? a.diameter ?? 0) / 2;
         const { deg } = eagleRot(a.rot);
-        for (const [cx, cy] of [[-dx, -dy], [dx, -dy], [-dx, dy], [dx, dy]]) {
+        for (const [cx, cy] of [
+          [-dx, -dy],
+          [dx, -dy],
+          [-dx, dy],
+          [dx, dy],
+        ]) {
           const [rx, ry] = rotated(cx, cy, deg);
           points.push([x + rx, y + ry]);
         }
@@ -106,8 +117,13 @@ export function readBrd(text) {
     const a = attrs(tag);
     const { deg, mirror } = eagleRot(a.rot);
     elements.push({
-      name: a.name, value: a.value ?? '', package: a.package ?? '',
-      x: Number(a.x), y: Number(a.y), rot: deg, side: mirror ? 'bottom' : 'top',
+      name: a.name,
+      value: a.value ?? '',
+      package: a.package ?? '',
+      x: Number(a.x),
+      y: Number(a.y),
+      rot: deg,
+      side: mirror ? 'bottom' : 'top',
       size: placedSize(packages.get(`${a.library}/${a.package}`), deg, mirror),
       nets: [...(nets.get(a.name) ?? [])],
     });
@@ -196,8 +212,10 @@ export function readKicad(text) {
       const piece = Array.isArray(item) && /^fp_(line|arc|rect|poly|circle)$/.test(head(item)) ? edgePiece(item) : null;
       if (piece) outlinePieces.push(piece.map(toBoard));
     }
-    const property = (name) => childrenNamed(fp, 'property').find((p) => p[1] === name)?.[2]
-      ?? childrenNamed(fp, 'fp_text').find((p) => p[1] === name.toLowerCase())?.[2] ?? '';
+    const property = (name) =>
+      childrenNamed(fp, 'property').find((p) => p[1] === name)?.[2] ??
+      childrenNamed(fp, 'fp_text').find((p) => p[1] === name.toLowerCase())?.[2] ??
+      '';
     const pads = childrenNamed(fp, 'pad');
     const padPoints = [];
     const nets = new Set();
@@ -206,9 +224,15 @@ export function readKicad(text) {
       const size = child(pad, 'size');
       if (pat && size) {
         const [px, py, prot] = [Number(pat[1]), Number(pat[2]), Number(pat[3] ?? 0)];
-        const hx = Number(size[1]) / 2, hy = Number(size[2]) / 2;
+        const hx = Number(size[1]) / 2,
+          hy = Number(size[2]) / 2;
         // pad rotation in KiCad includes the footprint's: take it relative
-        for (const [cx, cy] of [[-hx, -hy], [hx, -hy], [-hx, hy], [hx, hy]]) {
+        for (const [cx, cy] of [
+          [-hx, -hy],
+          [hx, -hy],
+          [-hx, hy],
+          [hx, hy],
+        ]) {
           const [rx, ry] = rotated(cx, cy, -(prot - frot));
           padPoints.push([px + rx, -(py + ry)]);
         }
@@ -229,8 +253,13 @@ export function readKicad(text) {
       }
     }
     elements.push({
-      name: property('Reference'), value: property('Value'), package: String(fp[1] ?? ''),
-      x: fx, y: fy, rot: frot, side,
+      name: property('Reference'),
+      value: property('Value'),
+      package: String(fp[1] ?? ''),
+      x: fx,
+      y: fy,
+      rot: frot,
+      side,
       // pads are in the footprint's frame with y down; flipped to y up above, turned by the footprint's rotation
       size: placedSize(bboxOf(padPoints), frot, false),
       nets: [...nets],
@@ -270,10 +299,14 @@ export function turnBoard(board, deg = 0, flip = false) {
   const map = ([x, y]) => {
     const fx = flip ? w - x : x;
     switch (quarter) {
-      case 1: return [d - y, fx];
-      case 2: return [w - fx, d - y];
-      case 3: return [y, w - fx];
-      default: return [fx, y];
+      case 1:
+        return [d - y, fx];
+      case 2:
+        return [w - fx, d - y];
+      case 3:
+        return [y, w - fx];
+      default:
+        return [fx, y];
     }
   };
   const swap = quarter % 2 === 1;

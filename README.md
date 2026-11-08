@@ -50,12 +50,13 @@ User documentation: [docs/](docs/README.md).
 ```bash
 npm install
 npm run dev       # http://localhost:5173
-npm run check     # tsc + eslint + vitest
+npm run check     # tsc + oxlint + prettier + vitest
+npm run format    # prettier
 npm run smoke     # browser smoke (Playwright)
 npm run build
 ```
 
-Stack: Vite, TypeScript, Three.js, [manifold-3d](https://github.com/elalish/manifold)
+Stack: Vite, TypeScript 7, oxlint, Three.js, [manifold-3d](https://github.com/elalish/manifold)
 (WASM, in a worker), vitest, Playwright. A sibling of
 [ClayForm](https://github.com/dmitryweiner/clayform).
 

@@ -105,9 +105,10 @@ export function capSizes(field: CapKeys, chosen?: { size?: number; fit: number }
   const nearest = nearestOf(field);
   const range = chosen?.size !== undefined ? capSizeRange(field, chosen.fit) : null;
   return keys.map((key, i) => {
-    const stemR = range && chosen?.size !== undefined
-      ? Math.min(range.max, Math.max(range.min, chosen.size)) / 2
-      : Math.min(key.w, key.d) / 2 + CAP_GROW;
+    const stemR =
+      range && chosen?.size !== undefined
+        ? Math.min(range.max, Math.max(range.min, chosen.size)) / 2
+        : Math.min(key.w, key.d) / 2 + CAP_GROW;
     return { x: key.x, y: key.y, stemR, flangeR: Math.max(stemR, Math.min(stemR + CAP_LIP, (nearest[i] - CAP_GAP) / 2)) };
   });
 }

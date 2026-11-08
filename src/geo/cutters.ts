@@ -112,11 +112,22 @@ export const VERTICAL_AXES: { ex: Vec3; ey: Vec3; ez: Vec3 } = { ex: [1, 0, 0], 
  * cut; on the console's slope (its top) a cut is a vertical column through
  * the slope.
  */
-export function extraCutters(cuts: readonly ExtraCut[], shape: ShapeState, dims: Dims, slopeTop: (x: number, y: number) => number): CutterSpec[] {
+export function extraCutters(
+  cuts: readonly ExtraCut[],
+  shape: ShapeState,
+  dims: Dims,
+  slopeTop: (x: number, y: number) => number,
+): CutterSpec[] {
   return cuts.map((cut, index): CutterSpec => {
     const plate = plateOf(shape, cut.face);
     const frame = faceFrame(cut.face, dims);
-    const common = { shape: cut.shape, w: cut.w, h: cut.shape === 'rect' ? cut.h : cut.w, r: cut.r, source: { kind: 'extra' as const, index } };
+    const common = {
+      shape: cut.shape,
+      w: cut.w,
+      h: cut.shape === 'rect' ? cut.h : cut.w,
+      r: cut.r,
+      source: { kind: 'extra' as const, index },
+    };
     if (shape.kind === 'console' && cut.face === 'top') {
       const [x, y] = [cut.x, cut.y];
       const top = slopeTop(x, y);

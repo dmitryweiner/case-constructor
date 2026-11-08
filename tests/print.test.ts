@@ -1,4 +1,14 @@
-import { bodyForPrint, bothForPrint, lidForPrint, lidWithScrews, printLayout, PRINT_GAP_MM, sanitizePrint, screwsForPrint, screwsInCase } from '../src/geo/print';
+import {
+  bodyForPrint,
+  bothForPrint,
+  lidForPrint,
+  lidWithScrews,
+  printLayout,
+  PRINT_GAP_MM,
+  sanitizePrint,
+  screwsForPrint,
+  screwsInCase,
+} from '../src/geo/print';
 import { SCREW_GAP } from '../src/geo/thread';
 import { faceFrame } from '../src/geo/face';
 import { applyAffine, transformMesh, translation } from '../src/geo/surface';
@@ -14,7 +24,10 @@ describe('print layout', () => {
     for (const face of FACES) {
       for (const mesh of [bodyForPrint(boxMesh(), face, dims), lidForPrint(boxMesh(), face, dims)]) {
         const { min } = meshBounds(mesh);
-        expect(min.map((x) => +x.toFixed(6)), face).toEqual([0, 0, 0]);
+        expect(
+          min.map((x) => +x.toFixed(6)),
+          face,
+        ).toEqual([0, 0, 0]);
         const report = validateMesh(mesh);
         expect(report.watertight).toBe(true);
         expect(report.volume).toBeGreaterThan(0);
@@ -32,7 +45,7 @@ describe('print layout', () => {
     expect(meshBounds(lid).min[0]).toBeCloseTo(meshBounds(body).max[0] + PRINT_GAP_MM);
   });
 
-  it('behind the body: the lid starts a gap past the body\'s back, at x = 0', () => {
+  it("behind the body: the lid starts a gap past the body's back, at x = 0", () => {
     const [body, lid] = printLayout(boxMesh(), boxMesh(), 'top', dims, undefined, { lid: 'behind', gap: 4 });
     expect(meshBounds(lid).min[0]).toBeCloseTo(0);
     expect(meshBounds(lid).min[1]).toBeCloseTo(meshBounds(body).max[1] + 4);
@@ -49,7 +62,10 @@ describe('print layout', () => {
     const [, lidDeep] = printLayout(boxMesh(60, 120, 26), boxMesh(60, 120, 3), 'top', deep, undefined, { lid: 'auto', gap: 10 });
     expect(meshBounds(lidDeep).min[0]).toBeCloseTo(70);
     // a square one: a tie keeps the right
-    const [, lidSquare] = printLayout(boxMesh(10, 10, 6), boxMesh(10, 10, 3), 'top', { w: 10, d: 10, h: 6 }, undefined, { lid: 'auto', gap: 10 });
+    const [, lidSquare] = printLayout(boxMesh(10, 10, 6), boxMesh(10, 10, 3), 'top', { w: 10, d: 10, h: 6 }, undefined, {
+      lid: 'auto',
+      gap: 10,
+    });
     expect(meshBounds(lidSquare).min[0]).toBeCloseTo(20);
   });
 
@@ -75,7 +91,7 @@ describe('printed screws', () => {
     expect(validateMesh(row).volume).toBeGreaterThan(0);
   });
 
-  it('in the case: heads on the lid\'s outer face, outside, over each post', () => {
+  it("in the case: heads on the lid's outer face, outside, over each post", () => {
     for (const face of FACES) {
       const frame = faceFrame(face, dims);
       const placed = screwsInCase(screw, [[3, 2]], face, dims);
@@ -118,7 +134,12 @@ describe('console with a bottom lid', () => {
     const { caseLayout } = await import('../src/geo/layout');
     const { defaultState, sanitizeState } = await import('../src/state/schema');
     const csg = await initCSG();
-    const state = sanitizeState({ ...defaultState(), boards: [], shape: { ...defaultState().shape, kind: 'console' }, lid: { ...defaultState().lid, face: 'bottom' } });
+    const state = sanitizeState({
+      ...defaultState(),
+      boards: [],
+      shape: { ...defaultState().shape, kind: 'console' },
+      lid: { ...defaultState().lid, face: 'bottom' },
+    });
     const layout = caseLayout(state);
     const built = buildCase(csg, state, 8);
     const shape = { kind: state.shape.kind, console: layout.console };

@@ -6,12 +6,18 @@
 import { hasKey, lang, t } from '../i18n';
 
 const ATTRIBUTES: readonly [string, (node: HTMLElement, text: string) => void][] = [
-  ['data-i18n', (node, text) => {
-    node.textContent = text;
-  }],
-  ['data-i18n-title', (node, text) => {
-    node.title = text;
-  }],
+  [
+    'data-i18n',
+    (node, text) => {
+      node.textContent = text;
+    },
+  ],
+  [
+    'data-i18n-title',
+    (node, text) => {
+      node.title = text;
+    },
+  ],
   ['data-i18n-aria', (node, text) => node.setAttribute('aria-label', text)],
 ];
 

@@ -29,12 +29,7 @@ export interface PresetListHandlers {
 /** How long "Delete?" waits for the second tap before turning back into 🗑. */
 const CONFIRM_MS = 3000;
 
-export function renderPresetList(
-  root: HTMLElement,
-  rows: PresetRow[],
-  current: string,
-  handlers: PresetListHandlers,
-): void {
+export function renderPresetList(root: HTMLElement, rows: PresetRow[], current: string, handlers: PresetListHandlers): void {
   root.replaceChildren();
   const mine = rows.filter((row) => row.mine);
   const builtin = rows.filter((row) => !row.mine);

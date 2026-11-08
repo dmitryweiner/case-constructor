@@ -9,13 +9,17 @@ export const PRESET_FILE_APP = 'case-constructor';
 export const PRESET_FILE_VERSION = 1;
 
 export function encodePresetFile(name: string, state: AppState, savedAt = new Date()): string {
-  return JSON.stringify({
-    app: PRESET_FILE_APP,
-    version: PRESET_FILE_VERSION,
-    name,
-    savedAt: savedAt.toISOString(),
-    state,
-  }, null, 2);
+  return JSON.stringify(
+    {
+      app: PRESET_FILE_APP,
+      version: PRESET_FILE_VERSION,
+      name,
+      savedAt: savedAt.toISOString(),
+      state,
+    },
+    null,
+    2,
+  );
 }
 
 /**
@@ -47,6 +51,9 @@ export function decodePresetFile(text: string): { name: string; state: AppState 
 
 /** File name `case-constructor-<name>.json`, without characters forbidden in paths. */
 export function presetFileName(name: string): string {
-  const slug = name.trim().replace(/[\\/:*?"<>|\s]+/g, '-').replace(/^-+|-+$/g, '');
+  const slug = name
+    .trim()
+    .replace(/[\\/:*?"<>|\s]+/g, '-')
+    .replace(/^-+|-+$/g, '');
   return `case-constructor-${slug || 'preset'}.json`;
 }

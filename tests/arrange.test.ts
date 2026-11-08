@@ -114,9 +114,11 @@ describe('alignBoard', () => {
   it('edges and centres line up with the other board; only the board moves', () => {
     const ref = rects(mixed, mixed.boards)[0].outline;
     const cases = [
-      ['left', (r: Rect) => r.x0, ref.x0], ['right', (r: Rect) => r.x1, ref.x1],
+      ['left', (r: Rect) => r.x0, ref.x0],
+      ['right', (r: Rect) => r.x1, ref.x1],
       ['centreX', (r: Rect) => (r.x0 + r.x1) / 2, (ref.x0 + ref.x1) / 2],
-      ['front', (r: Rect) => r.y0, ref.y0], ['back', (r: Rect) => r.y1, ref.y1],
+      ['front', (r: Rect) => r.y0, ref.y0],
+      ['back', (r: Rect) => r.y1, ref.y1],
       ['centreY', (r: Rect) => (r.y0 + r.y1) / 2, (ref.y0 + ref.y1) / 2],
     ] as const;
     for (const [how, pick, want] of cases) {
@@ -133,16 +135,25 @@ describe('alignBoard', () => {
     expect(behind[2].footprint.y0).toBeCloseTo(behind[0].footprint.y1 + GAP, 2);
   });
 
-  it('same height: the standoff height of the other board, never below the board\'s own minimum', () => {
-    const state = stateWith([{ board: 'raspberry-pi-4b', z: 12 }, { board: 'arduino-uno', x: 100, z: 4 }]);
+  it("same height: the standoff height of the other board, never below the board's own minimum", () => {
+    const state = stateWith([
+      { board: 'raspberry-pi-4b', z: 12 },
+      { board: 'arduino-uno', x: 100, z: 4 },
+    ]);
     expect(alignBoard(state, 1, 0, 'height', GAP)[1].z).toBe(12);
-    const low = stateWith([{ board: 'raspberry-pi-zero-2-w', z: 2 }, { board: 'raspberry-pi-4b', x: 100, z: 9 }]);
+    const low = stateWith([
+      { board: 'raspberry-pi-zero-2-w', z: 2 },
+      { board: 'raspberry-pi-4b', x: 100, z: 9 },
+    ]);
     const aligned = alignBoard(low, 1, 0, 'height', GAP)[1].z;
     expect(aligned).toBe(sanitizeState({ ...low, boards: [low.boards[0], { ...low.boards[1], z: 2 }] }).boards[1].z);
   });
 
   it('a position that would go negative shifts the whole layout instead', () => {
-    const state = stateWith([{ board: 'arduino-uno', x: 0, y: 0 }, { board: 'raspberry-pi-4b', x: 100, y: 0 }]);
+    const state = stateWith([
+      { board: 'arduino-uno', x: 0, y: 0 },
+      { board: 'raspberry-pi-4b', x: 100, y: 0 },
+    ]);
     // the Pi's right edge to the Uno's: the Pi is wider, its x goes below 0
     const boards = alignBoard(state, 1, 0, 'right', GAP);
     const placed = rects(state, boards);

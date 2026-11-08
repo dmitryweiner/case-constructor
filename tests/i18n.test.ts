@@ -32,15 +32,13 @@ describe('dictionaries', () => {
   it('every language uses the same template parameters', () => {
     for (const lang of LANGS) {
       for (const key of KEYS) {
-        expect([...new Set(placeholders(DICTS[lang][key]))], `${lang}:${key}`)
-          .toEqual([...new Set(placeholders(DICTS.en[key]))]);
+        expect([...new Set(placeholders(DICTS[lang][key]))], `${lang}:${key}`).toEqual([...new Set(placeholders(DICTS.en[key]))]);
       }
     }
   });
 
   it('plural forms: as many as the language has categories for whole numbers', () => {
-    const forms = (template: string): number[] =>
-      [...template.matchAll(/\{\w+\|([^}]*)\}/g)].map((match) => match[1].split('|').length);
+    const forms = (template: string): number[] => [...template.matchAll(/\{\w+\|([^}]*)\}/g)].map((match) => match[1].split('|').length);
     for (const lang of LANGS) {
       for (const key of KEYS) {
         for (const count of forms(DICTS[lang][key])) expect(count, `${lang}:${key}`).toBe(PLURAL_ORDER[lang].length);

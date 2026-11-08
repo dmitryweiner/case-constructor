@@ -6,7 +6,16 @@ import type { LoftSpec } from '../src/geo/loft';
 
 const dims = { w: 100, d: 70, h: 30 };
 const box: LoftSpec = {
-  cx: 50, cy: 35, hw: 48, hd: 33, cornerR: 2, z0: 2, z1: 28, edgeR: 0, filletBottom: true, filletTop: true,
+  cx: 50,
+  cy: 35,
+  hw: 48,
+  hd: 33,
+  cornerR: 2,
+  z0: 2,
+  z1: 28,
+  edgeR: 0,
+  filletBottom: true,
+  filletTop: true,
 };
 
 function bounds(poly: Vec2[]): [number, number, number, number] {
@@ -67,7 +76,12 @@ describe('loftSlice', () => {
 
 describe('clipHalfPlane', () => {
   it('cuts a square in half', () => {
-    const square: Vec2[] = [[0, 0], [2, 0], [2, 2], [0, 2]];
+    const square: Vec2[] = [
+      [0, 0],
+      [2, 0],
+      [2, 2],
+      [0, 2],
+    ];
     expect(polygonArea(clipHalfPlane(square, 1, 0, -1))).toBeCloseTo(2);
     expect(clipHalfPlane(square, 1, 0, -5)).toEqual([]);
   });

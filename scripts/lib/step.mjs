@@ -27,7 +27,14 @@ export function readEntities(text) {
       if (c === "'") quoted = !quoted;
       else if (c === ';' && !quoted) break;
     }
-    if (Number.isFinite(id)) ent.set(id, data.slice(eq + 1, j).replace(/\s+/g, ' ').trim());
+    if (Number.isFinite(id))
+      ent.set(
+        id,
+        data
+          .slice(eq + 1, j)
+          .replace(/\s+/g, ' ')
+          .trim(),
+      );
     i = j + 1;
   }
   return ent;
@@ -46,7 +53,12 @@ function refsOf(s) {
 }
 
 function numbersOf(s) {
-  return [...s.replace(STRING, '').replace(/#\d+/g, '').matchAll(/-?\d+\.?\d*(?:E[-+]?\d+)?/gi)].map((m) => Number(m[0]));
+  return [
+    ...s
+      .replace(STRING, '')
+      .replace(/#\d+/g, '')
+      .matchAll(/-?\d+\.?\d*(?:E[-+]?\d+)?/gi),
+  ].map((m) => Number(m[0]));
 }
 
 function nameOf(s) {
@@ -241,7 +253,8 @@ export function readStep(text) {
     while (stack.length) {
       const { pd, T, path } = stack.pop();
       out.push({ path, name: pdName.get(pd), pd, T });
-      for (const { child, T: Tc } of children.get(pd) ?? []) stack.push({ pd: child, T: mmul(T, Tc), path: `${path}/${pdName.get(child)}` });
+      for (const { child, T: Tc } of children.get(pd) ?? [])
+        stack.push({ pd: child, T: mmul(T, Tc), path: `${path}/${pdName.get(child)}` });
     }
     return out;
   };

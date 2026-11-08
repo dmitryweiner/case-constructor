@@ -27,7 +27,13 @@ interface PartEntry {
   extents: number[];
 }
 
-type Entry = Record<'body' | 'lid', PartEntry> & { clamp?: PartEntry; lidClamp?: PartEntry; hinge?: PartEntry; rails?: PartEntry; lidRails?: PartEntry };
+type Entry = Record<'body' | 'lid', PartEntry> & {
+  clamp?: PartEntry;
+  lidClamp?: PartEntry;
+  hinge?: PartEntry;
+  rails?: PartEntry;
+  lidRails?: PartEntry;
+};
 
 /** The M0 base: no boards, the manual 100 × 70 × 35 size. */
 function base(): AppState {
@@ -43,8 +49,8 @@ function variant(patch: (base: AppState) => unknown): AppState {
 const STATES: Record<string, AppState> = {
   'default-box': base(),
   'box-fillet': variant((s) => ({ ...s, shape: { ...s.shape, cornerR: 8, edgeR: 5 } })),
-  'cylinder': variant((s) => ({ ...s, shape: { ...s.shape, kind: 'cylinder', edgeR: 3 } })),
-  'console': variant((s) => ({ ...s, shape: { ...s.shape, kind: 'console' }, lid: { ...s.lid, face: 'bottom' } })),
+  cylinder: variant((s) => ({ ...s, shape: { ...s.shape, kind: 'cylinder', edgeR: 3 } })),
+  console: variant((s) => ({ ...s, shape: { ...s.shape, kind: 'console' }, lid: { ...s.lid, face: 'bottom' } })),
   'bottom-lid': variant((s) => ({ ...s, lid: { ...s.lid, face: 'bottom', depth: 5 } })),
   'side-lid-deep': variant((s) => ({ ...s, shape: { ...s.shape, edgeR: 3 }, lid: { ...s.lid, face: 'right', depth: 12 } })),
   // M2: boards
@@ -172,7 +178,15 @@ const STATES: Record<string, AppState> = {
   }),
   'battery-lipo-pack-raised': sanitizeState({
     ...defaultState(),
-    boards: [{ board: 'battery', battery: { kind: 'pack', pack: { w: 50, d: 34, h: 6 }, press: -1 }, z: 3, rot: 90, mount: { size: 'M2.5', hole: 'nut' } }],
+    boards: [
+      {
+        board: 'battery',
+        battery: { kind: 'pack', pack: { w: 50, d: 34, h: 6 }, press: -1 },
+        z: 3,
+        rot: 90,
+        mount: { size: 'M2.5', hole: 'nut' },
+      },
+    ],
   }),
   'holder-bh2aaa-beside-pi': sanitizeState({
     ...defaultState(),
@@ -182,12 +196,22 @@ const STATES: Record<string, AppState> = {
   'countersunk-head-6.5': sanitizeState({
     ...defaultState(),
     shape: { ...defaultState().shape, floor: 3 },
-    lid: { ...defaultState().lid, fastening: 'screws', screw: { size: 'M3', hole: 'tap', head: 'countersunk' }, head: { d: 6.5, depth: null } },
+    lid: {
+      ...defaultState().lid,
+      fastening: 'screws',
+      screw: { size: 'M3', hole: 'tap', head: 'countersunk' },
+      head: { d: 6.5, depth: null },
+    },
   }),
   'counterbore-deep': sanitizeState({
     ...defaultState(),
     shape: { ...defaultState().shape, floor: 4 },
-    lid: { ...defaultState().lid, fastening: 'screws', screw: { size: 'M3', hole: 'insert', head: 'counterbore' }, head: { d: 6, depth: 3 } },
+    lid: {
+      ...defaultState().lid,
+      fastening: 'screws',
+      screw: { size: 'M3', hole: 'insert', head: 'counterbore' },
+      head: { d: 6, depth: 3 },
+    },
   }),
   // D2: a display hung from the lid (plans/PLAN-DISPLAYS.md)
   'msp2807-hung-top-lid-inserts': sanitizeState({
@@ -223,7 +247,15 @@ const STATES: Record<string, AppState> = {
   'td2-7-pi5-back': sanitizeState({
     ...defaultState(),
     lid: { ...defaultState().lid, fastening: 'screws' },
-    boards: [{ board: 'raspberry-pi-touch-display-2-7', on: 'ceiling', z: 0, mount: { size: 'M3', hole: 'insert' }, back: { board: 'raspberry-pi-5', rot: 90 } }],
+    boards: [
+      {
+        board: 'raspberry-pi-touch-display-2-7',
+        on: 'ceiling',
+        z: 0,
+        mount: { size: 'M3', hole: 'insert' },
+        back: { board: 'raspberry-pi-5', rot: 90 },
+      },
+    ],
   }),
   // D9: a HAT display carried by the board under it
   'hyperpixel-on-pi4-top-lid': sanitizeState({
@@ -233,7 +265,7 @@ const STATES: Record<string, AppState> = {
   'lcd1602-box': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'lcd-1602-i2c', on: 'ceiling', z: 0.3, mount: { size: 'M2.5', hole: 'nut' } }],
-  }),  // K2: a keyboard hung from the lid (plans/PLAN-KEYBOARDS.md), the test keypad
+  }), // K2: a keyboard hung from the lid (plans/PLAN-KEYBOARDS.md), the test keypad
   'keypad-hung-top-lid': sanitizeState({
     ...defaultState(),
     lid: { ...defaultState().lid, fastening: 'screws' },
@@ -244,11 +276,21 @@ const STATES: Record<string, AppState> = {
     shape: { ...defaultState().shape, kind: 'console', console: { frontH: 20, backH: 40 } },
     lid: { ...defaultState().lid, face: 'bottom', fastening: 'screws' },
     boards: [{ board: 'custom', custom: { ...KEYPAD, id: 'custom' }, on: 'ceiling', z: 0.3, mount: { size: 'M3', hole: 'insert' } }],
-  }),  // K3: one chamfered window over the keys (the holes are the keypad's default)
+  }), // K3: one chamfered window over the keys (the holes are the keypad's default)
   'keypad-window-top-lid': sanitizeState({
     ...defaultState(),
-    boards: [{ board: 'custom', custom: { ...KEYPAD, id: 'custom' }, on: 'ceiling', z: 0.3, keys: 'window', keyFit: 1, mount: { size: 'M3', hole: 'tap' } }],
-  }),  // K6a: the CardKB in its window, the Grove plug's slot; the MacroPad on the floor, the ceiling at its switch plate line
+    boards: [
+      {
+        board: 'custom',
+        custom: { ...KEYPAD, id: 'custom' },
+        on: 'ceiling',
+        z: 0.3,
+        keys: 'window',
+        keyFit: 1,
+        mount: { size: 'M3', hole: 'tap' },
+      },
+    ],
+  }), // K6a: the CardKB in its window, the Grove plug's slot; the MacroPad on the floor, the ceiling at its switch plate line
   'cardkb-hung-top-lid': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0.3 }],
@@ -261,7 +303,7 @@ const STATES: Record<string, AppState> = {
   'cardkb-caps-top-lid': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'm5stack-cardkb-v1.1', on: 'ceiling', z: 0.3, keys: 'caps' }],
-  }),  // K5: rests under the BBQ20KBD's free corners, on the floor and hung from a top lid
+  }), // K5: rests under the BBQ20KBD's free corners, on the floor and hung from a top lid
   'bbq20kbd-floor-rests': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'solderparty-bbq20kbd', z: 12.8, mount: { size: 'M2.5', hole: 'tap' } }],
@@ -269,7 +311,7 @@ const STATES: Record<string, AppState> = {
   'bbq20kbd-hung-rests': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'solderparty-bbq20kbd', on: 'ceiling', z: 0.3, mount: { size: 'M2.5', hole: 'insert' } }],
-  }),  // K4: the KeebDeck's flange pressed by the plate, a hole per key; K6c: the FeatherWing's two windows
+  }), // K4: the KeebDeck's flange pressed by the plate, a hole per key; K6c: the FeatherWing's two windows
   'keebdeck-hung-flange': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'solderparty-keebdeck-basic', on: 'ceiling', z: 0, mount: { size: 'M2.5', hole: 'insert' } }],
@@ -277,10 +319,12 @@ const STATES: Record<string, AppState> = {
   'keyboard-featherwing-floor': sanitizeState({
     ...defaultState(),
     boards: [{ board: 'solderparty-keyboard-featherwing', z: 11.69, mount: { size: 'M2.5', hole: 'tap' } }],
-  }),  // review: square caps with rounded corners, on the CardKB2
+  }), // review: square caps with rounded corners, on the CardKB2
   'cardkb2-square-caps': sanitizeState({
     ...defaultState(),
-    boards: [{ board: 'm5stack-cardkb2', on: 'ceiling', z: 0.3, keys: 'caps', capShape: 'square', capR: 0.6, mount: { size: 'M2', hole: 'tap' } }],
+    boards: [
+      { board: 'm5stack-cardkb2', on: 'ceiling', z: 0.3, keys: 'caps', capShape: 'square', capR: 0.6, mount: { size: 'M2', hole: 'tap' } },
+    ],
   }),
   // review: the CardKB held by clamp bars across its back instead of rails
   'cardkb-clamp-top-lid': sanitizeState({
@@ -328,7 +372,10 @@ const STATES: Record<string, AppState> = {
     shape: { ...defaultState().shape, kind: 'hinged' },
     hinge: {
       layout: 'full',
-      cables: [{ x: 50, kind: 'flat', w: 16, t: 0.3, plugW: 0, plugH: 4 }, { x: 20, kind: 'round', w: 5 }],
+      cables: [
+        { x: 50, kind: 'flat', w: 16, t: 0.3, plugW: 0, plugH: 4 },
+        { x: 20, kind: 'round', w: 5 },
+      ],
       b: { boards: [] },
     },
   }),
@@ -376,7 +423,15 @@ const STATES: Record<string, AppState> = {
   }),
   'heltec-v4-rails-along-hung': sanitizeState({
     ...defaultState(),
-    boards: [{ board: 'heltec-wifi-lora-32-v4', railScrews: true, railEars: 'along', on: 'ceiling', mount: { size: 'M2', hole: 'nut', head: 'none' } }],
+    boards: [
+      {
+        board: 'heltec-wifi-lora-32-v4',
+        railScrews: true,
+        railEars: 'along',
+        on: 'ceiling',
+        mount: { size: 'M2', hole: 'nut', head: 'none' },
+      },
+    ],
   }),
   // N3: printed caps over a board's buttons (the lid's holes; the caps are not the worker's)
   'heltec-v4-button-caps': sanitizeState({
@@ -412,12 +467,23 @@ const STATES: Record<string, AppState> = {
   // T2: through bolts (plans/PLAN-THROUGH-BOLTS.md)
   'through-bolts-recessed': sanitizeState({
     ...defaultState(),
-    lid: { ...defaultState().lid, fastening: 'through', screw: { size: 'M3', hole: 'tap', head: 'countersunk' }, nut: { place: 'recessed' } },
+    lid: {
+      ...defaultState().lid,
+      fastening: 'through',
+      screw: { size: 'M3', hole: 'tap', head: 'countersunk' },
+      nut: { place: 'recessed' },
+    },
   }),
   'through-bolts-cylinder-surface': sanitizeState({
     ...defaultState(),
     shape: { ...defaultState().shape, kind: 'cylinder' },
-    lid: { ...defaultState().lid, face: 'bottom', fastening: 'through', screw: { size: 'M4', hole: 'tap', head: 'counterbore' }, nut: { kind: 'nyloc', place: 'surface' } },
+    lid: {
+      ...defaultState().lid,
+      face: 'bottom',
+      fastening: 'through',
+      screw: { size: 'M4', hole: 'tap', head: 'counterbore' },
+      nut: { kind: 'nyloc', place: 'surface' },
+    },
   }),
 };
 
@@ -439,10 +505,13 @@ describe('golden cases', () => {
       for (const { half, state } of casesOf(whole)) {
         const built = buildCase(csg, state, SEGMENTS, () => {}, [], half ? halfHinge(whole, half) : null);
         actual[half ? `${name}:${half}` : name] = {
-          body: part(built.body), lid: part(built.lid),
-          ...(built.clamps ? { clamp: part(built.clamps) } : {}), ...(built.lidClamps ? { lidClamp: part(built.lidClamps) } : {}),
+          body: part(built.body),
+          lid: part(built.lid),
+          ...(built.clamps ? { clamp: part(built.clamps) } : {}),
+          ...(built.lidClamps ? { lidClamp: part(built.lidClamps) } : {}),
           ...(built.hinge ? { hinge: part(built.hinge) } : {}),
-          ...(built.railsPrint ? { rails: part(built.railsPrint) } : {}), ...(built.lidRailsPrint ? { lidRails: part(built.lidRailsPrint) } : {}),
+          ...(built.railsPrint ? { rails: part(built.railsPrint) } : {}),
+          ...(built.lidRailsPrint ? { lidRails: part(built.lidRailsPrint) } : {}),
         };
       }
     }
@@ -453,7 +522,9 @@ describe('golden cases', () => {
       const added = Object.keys(actual).filter((name) => !before[name]);
       const removed = Object.keys(before).filter((name) => !actual[name]);
       // vitest hides a passing test's console output; the terminal gets it directly
-      process.stdout.write(`golden: ${changed.length} changed${changed.length ? ` (${changed.join(', ')})` : ''}, ${added.length} added${added.length ? ` (${added.join(', ')})` : ''}, ${removed.length} removed${removed.length ? ` (${removed.join(', ')})` : ''}\n`);
+      process.stdout.write(
+        `golden: ${changed.length} changed${changed.length ? ` (${changed.join(', ')})` : ''}, ${added.length} added${added.length ? ` (${added.join(', ')})` : ''}, ${removed.length} removed${removed.length ? ` (${removed.join(', ')})` : ''}\n`,
+      );
       writeFileSync(GOLDEN_PATH, `${JSON.stringify(actual, null, 2)}\n`);
       return;
     }

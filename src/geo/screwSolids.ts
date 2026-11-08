@@ -40,16 +40,30 @@ export function screwSolid(csg: CsgApi, scope: CsgScope, shape: ScrewShape, n: n
   });
   const knurled = scope.keep(disc.subtract(scope.keep(csg.CrossSection.union(grooves))));
   const headSolid = scope.keep(scope.keep(knurled.extrude(shape.headH)).translate([0, 0, -shape.headH]));
-  const slot = scope.keep(scope.keep(csg.Manifold.cube([shape.headD + 2, shape.slotW, shape.slotDepth + 1], true))
-    .translate([0, 0, -shape.headH + (shape.slotDepth - 1) / 2]));
+  const slot = scope.keep(
+    scope
+      .keep(csg.Manifold.cube([shape.headD + 2, shape.slotW, shape.slotDepth + 1], true))
+      .translate([0, 0, -shape.headH + (shape.slotDepth - 1) / 2]),
+  );
   const head = scope.keep(headSolid.subtract(slot));
 
   // the thread starts inside the head, so the two never meet on a plane
   const thread = threadSolid(csg, scope, shape.form, 0, -0.5, shape.shank, n);
   const chamfer = R - r + 1;
-  const outline = scope.keep(new csg.CrossSection([[
-    [0, -1], [R + 0.5, -1], [R + 0.5, shape.shank - chamfer], [r - 0.5, shape.shank], [0, shape.shank],
-  ]], 'Positive'));
+  const outline = scope.keep(
+    new csg.CrossSection(
+      [
+        [
+          [0, -1],
+          [R + 0.5, -1],
+          [R + 0.5, shape.shank - chamfer],
+          [r - 0.5, shape.shank],
+          [0, shape.shank],
+        ],
+      ],
+      'Positive',
+    ),
+  );
   const mask = scope.keep(outline.revolve(n));
   const shank = scope.keep(thread.intersect(mask));
   return scope.keep(head.add(shank));

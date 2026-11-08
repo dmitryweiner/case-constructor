@@ -44,9 +44,24 @@ import { inline } from './lib/boardJson.mjs';
 import { compareHoles, readEntry } from './lib/compare.mjs';
 
 const file = process.argv[2];
-const flags = parseArgs(process.argv.slice(3), ['png', 'min', 'max', 'layer', 'origin', 'page', 'scale', 'fit', 'rotate', 'eps', 'tol', 'compare']);
+const flags = parseArgs(process.argv.slice(3), [
+  'png',
+  'min',
+  'max',
+  'layer',
+  'origin',
+  'page',
+  'scale',
+  'fit',
+  'rotate',
+  'eps',
+  'tol',
+  'compare',
+]);
 if (!file) {
-  console.error('usage: node scripts/dxf.mjs <file.dxf|file.pdf> [--png out.png] [--min d] [--max d] [--layer name] [--layers] [--boxes] [--origin x,y] [--page n] [--scale k] [--fit w,d] [--flip] [--rotate deg] [--outline] [--eps mm]');
+  console.error(
+    'usage: node scripts/dxf.mjs <file.dxf|file.pdf> [--png out.png] [--min d] [--max d] [--layer name] [--layers] [--boxes] [--origin x,y] [--page n] [--scale k] [--fit w,d] [--flip] [--rotate deg] [--outline] [--eps mm]',
+  );
   process.exit(2);
 }
 
@@ -89,7 +104,10 @@ const box = extents(shapes);
 const origin = flags.get('origin');
 if (origin) {
   const [ox, oy] = String(origin).split(',').map(Number);
-  box.x1 -= box.x0 - ox; box.y1 -= box.y0 - oy; box.x0 = ox; box.y0 = oy;
+  box.x1 -= box.x0 - ox;
+  box.y1 -= box.y0 - oy;
+  box.x0 = ox;
+  box.y0 = oy;
 }
 if (!Number.isFinite(box.x0)) {
   console.log(`${shapes.length} drawable entities: nothing to show`);
@@ -106,15 +124,21 @@ if (flags.has('outline')) {
     const outline = toOutline(loop, corner, Number(flags.get('eps') ?? 0.15));
     const xs = outline.map(([x]) => x);
     const ys = outline.map(([, y]) => y);
-    const where = origin ? 'relative to --origin' : `relative to its own corner, at ${round(corner.x0 - box.x0)}, ${round(corner.y0 - box.y0)} in the coordinates above`;
-    console.log(`outline ${round(Math.max(...xs) - Math.min(...xs))} × ${round(Math.max(...ys) - Math.min(...ys))}, ${outline.length} points, ${where}:`);
+    const where = origin
+      ? 'relative to --origin'
+      : `relative to its own corner, at ${round(corner.x0 - box.x0)}, ${round(corner.y0 - box.y0)} in the coordinates above`;
+    console.log(
+      `outline ${round(Math.max(...xs) - Math.min(...xs))} × ${round(Math.max(...ys) - Math.min(...ys))}, ${outline.length} points, ${where}:`,
+    );
     console.log(`"outline": ${inline(outline)},`);
   }
 }
 if (flags.get('compare')) {
   const holes = shapes.filter((s) => s.kind === 'circle').map((c) => ({ x: c.x - x0, y: c.y - y0, d: 2 * c.r }));
   // the same circle is often drawn twice (pad and drill): one is enough
-  const unique = holes.filter((h, i) => holes.findIndex((o) => Math.hypot(o.x - h.x, o.y - h.y) < 0.05 && Math.abs(o.d - h.d) < 0.05) === i);
+  const unique = holes.filter(
+    (h, i) => holes.findIndex((o) => Math.hypot(o.x - h.x, o.y - h.y) < 0.05 && Math.abs(o.d - h.d) < 0.05) === i,
+  );
   // the board's size from its outline when one closes, else the extents
   const loop = largestLoop(chainLoops(polylines(shapes), Number(flags.get('tol') ?? 0.02)));
   const lx = loop ? loop.map(([x]) => x) : [x0, x1];
@@ -124,7 +148,8 @@ if (flags.get('compare')) {
 }
 const min = Number(flags.get('min') ?? 0);
 const max = Number(flags.get('max') ?? Infinity);
-const circles = shapes.filter((s) => s.kind === 'circle' && 2 * s.r >= min && 2 * s.r <= max)
+const circles = shapes
+  .filter((s) => s.kind === 'circle' && 2 * s.r >= min && 2 * s.r <= max)
   .sort((a, b) => b.r - a.r || a.y - b.y || a.x - b.x);
 const seen = new Set();
 for (const c of circles) {
@@ -162,13 +187,18 @@ if (png) {
   for (const sh of shapes) {
     if (sh.kind === 'line') parts.push(`<line x1="${X(sh.x1)}" y1="${Y(sh.y1)}" x2="${X(sh.x2)}" y2="${Y(sh.y2)}"/>`);
     if (sh.kind === 'circle') parts.push(`<circle cx="${X(sh.x)}" cy="${Y(sh.y)}" r="${sh.r * s}"/>`);
-    if (sh.kind === 'poly') parts.push(`<polyline points="${sh.pts.map(([x, y]) => `${X(x)},${Y(y)}`).join(' ')}${sh.closed ? ` ${X(sh.pts[0][0])},${Y(sh.pts[0][1])}` : ''}"/>`);
+    if (sh.kind === 'poly')
+      parts.push(
+        `<polyline points="${sh.pts.map(([x, y]) => `${X(x)},${Y(y)}`).join(' ')}${sh.closed ? ` ${X(sh.pts[0][0])},${Y(sh.pts[0][1])}` : ''}"/>`,
+      );
     if (sh.kind === 'arc') {
       const a0 = (sh.a0 * Math.PI) / 180;
       let a1 = (sh.a1 * Math.PI) / 180;
       if (a1 < a0) a1 += 2 * Math.PI;
       const large = a1 - a0 > Math.PI ? 1 : 0;
-      parts.push(`<path d="M ${X(sh.x + sh.r * Math.cos(a0))} ${Y(sh.y + sh.r * Math.sin(a0))} A ${sh.r * s} ${sh.r * s} 0 ${large} 0 ${X(sh.x + sh.r * Math.cos(a1))} ${Y(sh.y + sh.r * Math.sin(a1))}"/>`);
+      parts.push(
+        `<path d="M ${X(sh.x + sh.r * Math.cos(a0))} ${Y(sh.y + sh.r * Math.sin(a0))} A ${sh.r * s} ${sh.r * s} 0 ${large} 0 ${X(sh.x + sh.r * Math.cos(a1))} ${Y(sh.y + sh.r * Math.sin(a1))}"/>`,
+      );
     }
   }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="100%" height="100%" fill="#fff"/><g fill="none" stroke="#000" stroke-width="1.2">${parts.join('')}</g></svg>`;

@@ -7,8 +7,21 @@
 // fails on a file that is not in this layout.
 
 const ORDER = [
-  'id', 'name', 'vendor', 'kind', 'size', 'outline', 'mount', 'topHeight', 'bottomHeight',
-  'pins', 'back', 'ports', 'variants', 'source', 'verified',
+  'id',
+  'name',
+  'vendor',
+  'kind',
+  'size',
+  'outline',
+  'mount',
+  'topHeight',
+  'bottomHeight',
+  'pins',
+  'back',
+  'ports',
+  'variants',
+  'source',
+  'verified',
 ];
 
 /** A value on one line, `{ "a": 1 }` and `[1, 2]` style. */
@@ -51,7 +64,8 @@ export function formatBoard(entry) {
     const v = entry[k];
     let text;
     if (k === 'mount') text = mountText(v);
-    else if (k === 'ports' && Array.isArray(v)) text = v.length === 0 ? '[]' : `[\n${v.map((port) => `    ${portText(port, 4)}`).join(',\n')}\n  ]`;
+    else if (k === 'ports' && Array.isArray(v))
+      text = v.length === 0 ? '[]' : `[\n${v.map((port) => `    ${portText(port, 4)}`).join(',\n')}\n  ]`;
     else if (k === 'variants' && Array.isArray(v)) text = list(v, 2);
     else text = inline(v);
     return `  ${JSON.stringify(k)}: ${text}`;

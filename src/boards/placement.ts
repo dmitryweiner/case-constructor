@@ -6,7 +6,18 @@
 import type { FastenerSpec } from '../geo/fasteners';
 import { bossDiameter, sanitizeFastener } from '../geo/fasteners';
 import type { BoardDef, Edge, KeysOpen, MountKind, PortDef, TopPort } from './schema';
-import { EDGES, KEYS_OPEN, autoPortId, bottomPartsH, isAutoPortId, keyFields, keysOf, onFace, resolveVariant, sanitizeBoard } from './schema';
+import {
+  EDGES,
+  KEYS_OPEN,
+  autoPortId,
+  bottomPartsH,
+  isAutoPortId,
+  keyFields,
+  keysOf,
+  onFace,
+  resolveVariant,
+  sanitizeBoard,
+} from './schema';
 import { CATALOG, catalogBoard } from './catalog';
 import type { BatterySpec } from './battery';
 import { PRESS_MAX, PRESS_MIN, batteryDef, defaultBattery, sanitizeBattery } from './battery';
@@ -182,11 +193,13 @@ export function holesAmongKeys(def: BoardDef): boolean {
   const r = bossDiameter({ size: def.mount.screw, hole: 'tap', head: 'none' }) / 2;
   // a field without rows is keys all over
   const keys = keyFields(def).flatMap((field) => (field.rows ? keysOf(field) : [{ x: field.x, y: field.y, w: field.w, d: field.d }]));
-  return def.mount.holes.some((hole) => keys.some((key) => {
-    const dx = Math.max(key.x - key.w / 2 - hole.x, 0, hole.x - key.x - key.w / 2);
-    const dy = Math.max(key.y - key.d / 2 - hole.y, 0, hole.y - key.y - key.d / 2);
-    return Math.hypot(dx, dy) < r;
-  }));
+  return def.mount.holes.some((hole) =>
+    keys.some((key) => {
+      const dx = Math.max(key.x - key.w / 2 - hole.x, 0, hole.x - key.x - key.w / 2);
+      const dy = Math.max(key.y - key.d / 2 - hole.y, 0, hole.y - key.y - key.d / 2);
+      return Math.hypot(dx, dy) < r;
+    }),
+  );
 }
 
 /** Whether the plate presses on the board by design: a clamped panel's back bars, a keypad's flange. */
@@ -218,7 +231,8 @@ export function buttonsOpen(def: Pick<BoardDef, 'ports'>, placement: Pick<BoardP
 /** The buttons printed caps go over (those whose opening is on), as the keys of `capSizes`, with their ports. */
 export function capButtons(def: Pick<BoardDef, 'ports'>, placement: BoardPlacement): (CapKey & { port: TopPort })[] {
   if (buttonsOpen(def, placement) !== 'caps') return [];
-  return topButtons(def).filter((port) => portCut(placement, port.id, port.cut))
+  return topButtons(def)
+    .filter((port) => portCut(placement, port.id, port.cut))
     .map((port) => ({ x: port.x, y: port.y, w: port.w, d: port.shape === 'round' ? port.w : port.d, port }));
 }
 
@@ -245,13 +259,16 @@ export function keyFit(def: BoardDef, placement: Pick<BoardPlacement, 'keys' | '
  */
 export function frontHeight(def: BoardDef, placement: Pick<BoardPlacement, 'keys'> & Partial<Pick<BoardPlacement, 'cuts'>>): number {
   const open = keysOpen(def, placement);
-  return Math.max(def.topHeight, ...keyFields(def).map((field) => {
-    if (!(placement.cuts?.[field.id] ?? field.cut)) return field.h;
-    // a cap's flange lies on its key, the plate the gap above it
-    if (open === 'caps' && field.rows) return field.h + CAP_FLANGE_T;
-    // a keypad's flange lies under the plate whatever opens over it
-    return open === 'holes' || field.glass ? field.base ?? field.h : 0;
-  }));
+  return Math.max(
+    def.topHeight,
+    ...keyFields(def).map((field) => {
+      if (!(placement.cuts?.[field.id] ?? field.cut)) return field.h;
+      // a cap's flange lies on its key, the plate the gap above it
+      if (open === 'caps' && field.rows) return field.h + CAP_FLANGE_T;
+      // a keypad's flange lies under the plate whatever opens over it
+      return open === 'holes' || field.glass ? (field.base ?? field.h) : 0;
+    }),
+  );
 }
 
 /**
@@ -321,11 +338,14 @@ export function sanitizePlacement(raw: unknown): BoardPlacement {
   const id: unknown = Reflect.get(r, 'board');
   const loaded = id === 'custom' ? sanitizeBoard(Reflect.get(r, 'custom'), 'custom') : undefined;
   const renamed = loaded ? legacyPortIds(loaded) : new Map<string, string>();
-  const custom = loaded && renamed.size > 0
-    ? { ...loaded, ports: loaded.ports.map((port) => ({ ...port, id: renamed.get(port.id) ?? port.id })) } : loaded;
+  const custom =
+    loaded && renamed.size > 0
+      ? { ...loaded, ports: loaded.ports.map((port) => ({ ...port, id: renamed.get(port.id) ?? port.id })) }
+      : loaded;
   const oldId = new Map([...renamed].map(([from, to]) => [to, from]));
   const battery = id === 'battery' ? sanitizeBattery(Reflect.get(r, 'battery')) : undefined;
-  const entry = custom ?? (battery ? batteryDef(battery) : undefined) ?? (typeof id === 'string' ? catalogBoard(id) : undefined) ?? CATALOG[0];
+  const entry =
+    custom ?? (battery ? batteryDef(battery) : undefined) ?? (typeof id === 'string' ? catalogBoard(id) : undefined) ?? CATALOG[0];
   const variantRaw: unknown = Reflect.get(r, 'variant');
   const variant = entry.variants?.find((item) => item.id === variantRaw)?.id ?? entry.variants?.[0].id;
   const plain = resolveVariant(entry, variant);
@@ -433,8 +453,8 @@ export function withPortType(placement: BoardPlacement, index: number, type: Por
   const custom = placement.custom;
   const port = custom?.ports[index];
   if (!custom || !port) return placement;
-  const id = isAutoPortId(port.id, port.type) && port.type !== type
-    ? autoPortId(type, new Set(custom.ports.map((item) => item.id))) : port.id;
+  const id =
+    isAutoPortId(port.id, port.type) && port.type !== type ? autoPortId(type, new Set(custom.ports.map((item) => item.id))) : port.id;
   const along = onFace(port) ? undefined : port.along;
   const z = onFace(port) ? undefined : port.z;
   const x = onFace(port) ? port.x : undefined;
@@ -492,7 +512,12 @@ function withBackBoard(parent: BoardDef, raw: unknown): { back?: BackPlacement }
     back: {
       board: entry.id,
       rot: turns.find((turn) => turn === rot) ?? turns[0],
-      standoff: num(Reflect.get(raw, 'standoff'), backStandoffMin(parent, child), BACK_STANDOFF_MAX, Math.max(parent.back.standoff, backStandoffMin(parent, child))),
+      standoff: num(
+        Reflect.get(raw, 'standoff'),
+        backStandoffMin(parent, child),
+        BACK_STANDOFF_MAX,
+        Math.max(parent.back.standoff, backStandoffMin(parent, child)),
+      ),
       ...(variant !== undefined ? { variant } : {}),
       cuts,
     },

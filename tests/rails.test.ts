@@ -39,7 +39,10 @@ function shared(a: SurfaceMesh, b: SurfaceMesh): number {
 
 describe('the placement', () => {
   it('keeps rails on screws only for a board held by rails, and the ears only along', () => {
-    expect(sanitizePlacement({ board: HELTEC, railScrews: true, railEars: 'along' })).toMatchObject({ railScrews: true, railEars: 'along' });
+    expect(sanitizePlacement({ board: HELTEC, railScrews: true, railEars: 'along' })).toMatchObject({
+      railScrews: true,
+      railEars: 'along',
+    });
     expect(sanitizePlacement({ board: HELTEC, railScrews: true, railEars: 'out' })).not.toHaveProperty('railEars');
     expect(sanitizePlacement({ board: HELTEC, railScrews: 'yes' })).not.toHaveProperty('railScrews');
     expect(sanitizePlacement({ board: HELTEC, railEars: 'along' })).not.toHaveProperty('railEars');
@@ -62,7 +65,10 @@ describe('the footprint', () => {
     const along = caseLayout(state({ railEars: 'along' })).boards[0];
     const r = railEarR(out.placement.mount);
     // the V4's rails run along its long edges, front and back
-    expect(out.footprint.y1 - out.outline.y1).toBeCloseTo(Math.max(plain.footprint.y1 - plain.outline.y1, earReach(out.def, out.placement).back ?? 0), 6);
+    expect(out.footprint.y1 - out.outline.y1).toBeCloseTo(
+      Math.max(plain.footprint.y1 - plain.outline.y1, earReach(out.def, out.placement).back ?? 0),
+      6,
+    );
     expect(out.footprint.y1 - out.footprint.y0).toBeGreaterThan(plain.footprint.y1 - plain.footprint.y0 + 2 * r);
     expect(out.footprint.x1 - out.footprint.x0).toBeCloseTo(plain.footprint.x1 - plain.footprint.x0, 6);
     expect(along.footprint.y1 - along.footprint.y0).toBeCloseTo(plain.footprint.y1 - plain.footprint.y0, 6);

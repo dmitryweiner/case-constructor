@@ -54,8 +54,13 @@ function buttonCaps(layout: CaseLayout, shape: ShapeState): KeyCap[] {
       const { port } = buttons[i];
       const depth = -keysProud(board, port, shape, layout.dims, layout.console.frontH, layout.console.backH);
       return {
-        board: board.index, port: port.id, frame: composeAffine(board.toCase, translation(cap.x, cap.y, board.def.size.t + port.h)),
-        stemR: cap.stemR, flangeR: cap.flangeR, corner: capCorner(style.shape, style.r, cap.stemR), length: Math.max(CAP_FLANGE_T + 1, depth + CAP_PROUD),
+        board: board.index,
+        port: port.id,
+        frame: composeAffine(board.toCase, translation(cap.x, cap.y, board.def.size.t + port.h)),
+        stemR: cap.stemR,
+        flangeR: cap.flangeR,
+        corner: capCorner(style.shape, style.r, cap.stemR),
+        length: Math.max(CAP_FLANGE_T + 1, depth + CAP_PROUD),
       };
     });
   });
@@ -72,8 +77,13 @@ function fieldCaps(layout: CaseLayout, shape: ShapeState): KeyCap[] {
       const top = board.def.size.t + field.h;
       const style = capStyle(board.placement);
       return capSizes(field, { size: board.placement.capSize, fit: keyFit(board.def, board.placement, field) }).map((cap): KeyCap => ({
-        board: board.index, port: field.id, frame: composeAffine(board.toCase, translation(cap.x, cap.y, top)),
-        stemR: cap.stemR, flangeR: cap.flangeR, corner: capCorner(style.shape, style.r, cap.stemR), length,
+        board: board.index,
+        port: field.id,
+        frame: composeAffine(board.toCase, translation(cap.x, cap.y, top)),
+        stemR: cap.stemR,
+        flangeR: cap.flangeR,
+        corner: capCorner(style.shape, style.r, cap.stemR),
+        length,
       }));
     });
   });
@@ -88,7 +98,12 @@ function outline(half: number, r: number, k = CAP_QUARTER): [number, number][] {
   const out: [number, number][] = [];
   const c = half - r;
   for (let q = 0; q < 4; q++) {
-    const [sx, sy] = [[1, 1], [-1, 1], [-1, -1], [1, -1]][q];
+    const [sx, sy] = [
+      [1, 1],
+      [-1, 1],
+      [-1, -1],
+      [1, -1],
+    ][q];
     for (let i = 0; i <= k; i++) {
       const a = (Math.PI / 2) * (q + i / k);
       // a circle: the quarters' shared points spread out evenly instead
@@ -109,7 +124,12 @@ export function capMesh(cap: Pick<KeyCap, 'stemR' | 'flangeR' | 'corner' | 'leng
   const corner = Math.min(cap.corner, cap.stemR);
   const flange = outline(cap.flangeR, Math.min(cap.flangeR, corner + cap.flangeR - cap.stemR));
   const stem = outline(cap.stemR, corner);
-  const rings: [[number, number][], number][] = [[flange, 0], [flange, CAP_FLANGE_T], [stem, CAP_FLANGE_T], [stem, cap.length]];
+  const rings: [[number, number][], number][] = [
+    [flange, 0],
+    [flange, CAP_FLANGE_T],
+    [stem, CAP_FLANGE_T],
+    [stem, cap.length],
+  ];
   const n = stem.length;
   const positions: number[] = [0, 0, 0, 0, 0, cap.length];
   for (const [points, z] of rings) for (const [x, y] of points) positions.push(x, y, z);
@@ -139,16 +159,23 @@ export function capsWithLid(face: string): boolean {
 /** The caps in their holes, case frame; `lift` moves them along the lid's normal `n` (the exploded view). */
 export function capsInCase(caps: readonly KeyCap[], n: readonly [number, number, number] = [0, 0, 1], lift = 0): SurfaceMesh | null {
   if (caps.length === 0) return null;
-  return mergeMeshes(caps.map((cap) => transformMesh(capMesh(cap), composeAffine(translation(n[0] * lift, n[1] * lift, n[2] * lift), cap.frame))));
+  return mergeMeshes(
+    caps.map((cap) => transformMesh(capMesh(cap), composeAffine(translation(n[0] * lift, n[1] * lift, n[2] * lift), cap.frame))),
+  );
 }
 
 /** The caps as they print: flange down, in rows along x from (x0, y0). */
 export function capsForPrint(caps: readonly KeyCap[], x0: number, y0 = 0): SurfaceMesh | null {
   if (caps.length === 0) return null;
   const step = 2 * Math.max(...caps.map((cap) => cap.flangeR)) + CAP_BED_GAP;
-  return mergeMeshes(caps.map((cap, i) => transformMesh(capMesh(cap), translation(
-    x0 + step / 2 + (i % CAPS_PER_ROW) * step, y0 + step / 2 + Math.floor(i / CAPS_PER_ROW) * step, 0,
-  ))));
+  return mergeMeshes(
+    caps.map((cap, i) =>
+      transformMesh(
+        capMesh(cap),
+        translation(x0 + step / 2 + (i % CAPS_PER_ROW) * step, y0 + step / 2 + Math.floor(i / CAPS_PER_ROW) * step, 0),
+      ),
+    ),
+  );
 }
 
 /** Parts already on the bed, then the caps to their right, `gap` apart. */
