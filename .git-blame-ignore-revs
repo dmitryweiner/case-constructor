@@ -1,5 +1,7 @@
 # Commits that only reformat; git blame skips them
 # (git config blame.ignoreRevsFile .git-blame-ignore-revs; GitHub reads it).
 
-# Format the code with prettier
-53049c118d8cb21efd23bd2b3d6dd7682679d3b0
+# TypeScript 7, oxlint, prettier, .node-version (#11). Squash-merged, so the
+# prettier reformatting (53049c1 on the branch) is not on main by itself:
+# this skips the whole PR, its few real lint fixes included.
+ae68a400c30c6b41b0cb77912aed5f8b17257589
