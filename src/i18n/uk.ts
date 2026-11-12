@@ -201,7 +201,6 @@ export const uk: Record<Key, string> = {
 
   'error.build': 'Не вдалося зібрати корпус: {error}',
   'error.export': 'Вивантаження не вдалося: {error}',
-  'error.notPreset': '«{name}» — не файл проєкту Case Constructor.',
   'error.presetSave': 'Не вдалося зберегти пресет: сховище браузера недоступне.',
   'error.presetSaveFull': 'Не вдалося зберегти пресет: сховище браузера заповнене. Видаліть непотрібні пресети й спробуйте знову.',
   'error.presetDelete': 'Не вдалося видалити пресет: сховище браузера недоступне.',

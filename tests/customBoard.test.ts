@@ -42,8 +42,9 @@ describe('custom board', () => {
   it('travels inside the project file', () => {
     const state = sanitizeState({ ...defaultState(), boards: [{ board: 'custom', custom: customBoard(), x: 0, y: 0, z: 5 }] });
     const decoded = decodePresetFile(encodePresetFile('mine', state));
-    expect(decoded?.state).toEqual(state);
-    expect(decoded?.state.boards[0].custom?.name).toBe('My Sensor Board');
+    if (!decoded.ok) throw new Error(decoded.reason);
+    expect(decoded.state).toEqual(state);
+    expect(decoded.state.boards[0].custom?.name).toBe('My Sensor Board');
   });
 
   it('the signature changes with the structure, not with values', () => {

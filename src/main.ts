@@ -1383,8 +1383,8 @@ document.addEventListener('drop', (event) => {
 /** An opened file applies like any state but does not join "Mine": that is a separate 💾. */
 async function openPresetFile(file: File): Promise<void> {
   const decoded = decodePresetFile(await file.text().catch(() => ''));
-  if (!decoded) {
-    blockersEl.textContent = t('error.notPreset', { name: file.name });
+  if (!decoded.ok) {
+    blockersEl.textContent = t(`kit.file.${decoded.reason}`);
     return;
   }
   applyState(decoded.state);

@@ -1061,7 +1061,7 @@ const junk = join(tmpdir(), `case-smoke-junk-${Date.now()}.json`);
 writeFileSync(junk, '{"hello": "world"}');
 await page.setInputFiles('#fileInput', junk);
 await page.waitForTimeout(100);
-if (!(await page.locator('#blockers').textContent()).includes('not a Case Constructor')) {
+if (!(await page.locator('#blockers').textContent()).includes('not a project of this app')) {
   errors.push('[file] a foreign JSON was not refused');
 }
 // a user's project (tests/fixtures/korpus-1.json): its messages name the wall and the board in the way; notes are grey, not counted

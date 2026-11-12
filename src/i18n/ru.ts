@@ -201,7 +201,6 @@ export const ru: Record<Key, string> = {
 
   'error.build': 'Не удалось собрать корпус: {error}',
   'error.export': 'Выгрузка не удалась: {error}',
-  'error.notPreset': '«{name}» — не файл проекта Case Constructor.',
   'error.presetSave': 'Не удалось сохранить пресет: хранилище браузера недоступно.',
   'error.presetSaveFull': 'Не удалось сохранить пресет: хранилище браузера заполнено. Удалите ненужные пресеты и попробуйте снова.',
   'error.presetDelete': 'Не удалось удалить пресет: хранилище браузера недоступно.',

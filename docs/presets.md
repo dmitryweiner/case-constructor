@@ -21,8 +21,9 @@ deleted is reported on the same line (✕ hides that note).
   one of yours (tap twice).
 - 💾 saves the current case as a preset in this browser.
 - ⬇️ saves the whole project to a JSON file; 📂 opens one (or drop the file
-  onto the window). A file that is not a Case Constructor project is refused
-  and nothing changes.
+  onto the window). A file that is not a Case Constructor project, cannot
+  be read or comes from a newer version of the app is refused with the
+  reason, and nothing changes.
 - ↩️ / ↪️ undo and redo (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z).
 
 Built-in presets (their names are the same in every language; the

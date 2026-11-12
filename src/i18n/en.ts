@@ -213,7 +213,6 @@ export const en = {
   // --- errors ---
   'error.build': 'Could not build the case: {error}',
   'error.export': 'Export failed: {error}',
-  'error.notPreset': '“{name}” is not a Case Constructor project file.',
   'error.presetSave': 'Could not save the preset: the browser storage is unavailable.',
   'error.presetSaveFull': 'Could not save the preset: the browser storage is full. Delete presets you no longer need and try again.',
   'error.presetDelete': 'Could not delete the preset: the browser storage is unavailable.',

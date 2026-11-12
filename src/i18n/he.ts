@@ -197,7 +197,6 @@ export const he: Record<Key, string> = {
 
   'error.build': 'לא ניתן לבנות את המארז: {error}',
   'error.export': 'הייצוא נכשל: {error}',
-  'error.notPreset': '„{name}” אינו קובץ פרויקט של Case Constructor.',
   'error.presetSave': 'לא ניתן לשמור את התבנית: אחסון הדפדפן אינו זמין.',
   'error.presetSaveFull': 'לא ניתן לשמור את התבנית: אחסון הדפדפן מלא. מחקו תבניות שאינן נחוצות ונסו שוב.',
   'error.presetDelete': 'לא ניתן למחוק את התבנית: אחסון הדפדפן אינו זמין.',
