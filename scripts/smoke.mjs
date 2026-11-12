@@ -990,15 +990,31 @@ for (const mode of ['body', 'lid', 'both']) {
 
 // undo / redo
 label('undo');
-const wallBefore = await page.locator('#case_wall').inputValue();
+const wall = () => page.locator('#case_wall').inputValue();
+const wallBefore = await wall();
+// each released slider is a step of its own, however quick: no pause merges them
+await setRange('case_wall', 3);
 await setRange('case_wall', 3.5);
-await page.waitForTimeout(700);
 await page.click('#undoBtn');
 await page.waitForTimeout(100);
-if ((await page.locator('#case_wall').inputValue()) !== wallBefore) errors.push('[undo] the wall did not come back');
+if ((await wall()) !== '3') errors.push(`[undo] two quick edits were one step: the wall is ${await wall()}, not 3`);
+await page.click('#undoBtn');
+await page.waitForTimeout(100);
+if ((await wall()) !== wallBefore) errors.push('[undo] the wall did not come back');
+await page.click('#redoBtn');
 await page.click('#redoBtn');
 await page.waitForTimeout(100);
-if ((await page.locator('#case_wall').inputValue()) !== '3.5') errors.push('[redo] the wall did not return to 3.5');
+if ((await wall()) !== '3.5') errors.push('[redo] the wall did not return to 3.5');
+// + is a step on the slider's grid, one undo step; the exact field takes a typed value
+await page.click('#case_wall_inc');
+if ((await page.locator('#case_wall_n').inputValue()) !== (await wall())) errors.push('[stepper] the field does not follow +');
+await page.click('#undoBtn');
+await page.waitForTimeout(100);
+if ((await wall()) !== '3.5') errors.push(`[stepper] undo after + left the wall at ${await wall()}`);
+await page.fill('#case_wall_n', '3.4');
+await page.press('#case_wall_n', 'Enter');
+if ((await wall()) !== '3.4') errors.push(`[exact] the typed wall is ${await wall()}, not 3.4`);
+await setRange('case_wall', 3.5);
 
 // a preset saved to localStorage comes back after a reload
 label('user-preset');

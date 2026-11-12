@@ -2,7 +2,7 @@
 // font and place on that face.
 
 import { make } from './dom';
-import type { Control, ControlsHandle } from './controls';
+import type { Change, Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';
 import { FACES } from '../geo/face';
@@ -169,7 +169,7 @@ export interface LabelsCardHandle {
   sync(state: AppState): void;
 }
 
-export function renderLabelsCard(container: HTMLElement, read: () => AppState, onChange: (next: AppState) => void): LabelsCardHandle {
+export function renderLabelsCard(container: HTMLElement, read: () => AppState, onChange: Change<AppState>): LabelsCardHandle {
   let handles: ControlsHandle<AppState>[] = [];
   let count = -1;
 

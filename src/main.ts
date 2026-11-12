@@ -39,7 +39,6 @@ import { HEAD_FLOOR, hasHead, headSeat, lidFaces } from './geo/lidSpec';
 import { headLimitsOf, lidPosts, nutHeads, throughNotes } from './geo/lidPosts';
 import { throughHardware } from './geo/hardware';
 import { postCollisions, postsInOpenings, printedScrewWarnings } from './geo/fastening';
-import { setupAdjustmentButtons } from './ui/adjust';
 import { createProgress } from './ui/progress';
 import type { StorageStatus } from './ui/storageNote';
 import { renderStorageNote } from './ui/storageNote';
@@ -111,8 +110,6 @@ import { CsgClient } from './worker/client';
 const PREVIEW_SEGMENTS = 12;
 /** Pause after the last edit before the worker rebuilds the case. */
 const PREVIEW_DELAY_MS = 120;
-/** Quiet time before a change becomes an undo step: a slider drag is one action. */
-const HISTORY_DELAY_MS = 500;
 /** How far the lid floats off the case in the exploded view, mm. */
 const LIFT_MM = 30;
 
@@ -209,8 +206,6 @@ const opened: CurrentProject = loadRecord(storage, projectRecord) ?? firstPreset
 const history = new History<AppState>(opened.state);
 let state: AppState = history.state;
 
-setupAdjustmentButtons(panel);
-
 // --- the panel: built at startup and again on every language switch ---
 
 let caseRows: ControlsHandle<AppState>;
@@ -230,8 +225,8 @@ function edited(from: AppState = state): AppState {
 }
 
 /** What a card did to the case it edits, into the state. */
-function applyEdit(next: AppState): void {
-  applyState(isHinged(state) ? withHalf(state, halfView.half, next) : next);
+function applyEdit(next: AppState, final = true): void {
+  applyState(isHinged(state) ? withHalf(state, halfView.half, next) : next, final);
 }
 
 function setHalfView(next: HalfView): void {
@@ -287,25 +282,9 @@ let labelRows: LabelsCardHandle;
 let extraRows: ExtrasHandle;
 
 function renderPanel(): void {
-  caseRows = renderControls(
-    caseParams,
-    caseControls(),
-    () => state,
-    (next) => applyState(next),
-    'case',
-  );
-  hingeRows = renderControls(
-    hingeParams,
-    hingeControls(),
-    () => state,
-    (next) => applyState(next),
-    'hinge',
-  );
-  cableRows = renderCablesCard(
-    cableCards,
-    () => state,
-    (next) => applyState(next),
-  );
+  caseRows = renderControls(caseParams, caseControls(), () => state, applyState, 'case');
+  hingeRows = renderControls(hingeParams, hingeControls(), () => state, applyState, 'hinge');
+  cableRows = renderCablesCard(cableCards, () => state, applyState);
   halfRows = renderControls(halfParams, halfControls(), () => halfView, setHalfView, 'edit');
   angleRows = renderControls(angleParams, angleControls(), () => halfView, setHalfView, 'view');
   boardRows = renderBoardsCard(
@@ -318,20 +297,20 @@ function renderPanel(): void {
   labelRows = renderLabelsCard(labelCards, () => edited(), applyEdit);
   extraRows = renderExtras(extraOpenings, extraMounting, () => edited(), applyEdit);
   lidRows = renderControls(lidParams, lidControls(), () => edited(), applyEdit, 'lid');
-  printRows = renderControls(
-    printParams,
-    printControls(),
-    () => state,
-    (next) => applyState(next),
-    'print',
-  );
+  printRows = renderControls(printParams, printControls(), () => state, applyState, 'print');
 }
 renderPanel();
 
-/** `record`: an edit, shown at once and a step after a pause; false: a state the history already holds (undo, the start). */
-function applyState(next: AppState, record = true): void {
+/** An edit: `final` false is a frame of a gesture (a drag, typing, −/+ held), shown but not a step; true is one undo step. */
+function applyState(next: AppState, final = true): void {
   state = sanitizeState(next);
-  if (record) rememberLater(state);
+  if (final) history.commit(state);
+  else history.live(state);
+  showState();
+}
+
+/** The state as it is now, everywhere: storage, the panel, the view (after an edit, undo, redo, at the start). */
+function showState(): void {
   keepProject();
   syncPanel();
 }
@@ -371,19 +350,6 @@ function syncCards(): void {
   cutAdd.disabled = one.extraCuts.length >= MAX_EXTRA_CUTS;
   labelRows.sync(one);
   labelAdd.disabled = one.labels.length >= LABELS_MAX;
-}
-
-let historyTimer: ReturnType<typeof setTimeout> | null = null;
-
-/** A frame of the edit now, one step once the edits pause (until the controls report their final changes). */
-function rememberLater(next: AppState): void {
-  history.live(next);
-  if (historyTimer) clearTimeout(historyTimer);
-  historyTimer = setTimeout(() => {
-    historyTimer = null;
-    history.commit(next);
-    updateHistoryButtons();
-  }, HISTORY_DELAY_MS);
 }
 
 function updateHistoryButtons(): void {
@@ -1403,14 +1369,10 @@ undoBtn.addEventListener('click', () => stepHistory('undo'));
 redoBtn.addEventListener('click', () => stepHistory('redo'));
 
 function stepHistory(direction: 'undo' | 'redo'): void {
-  // a pending batch becomes an entry first, or undo would skip it
-  if (historyTimer) {
-    clearTimeout(historyTimer);
-    historyTimer = null;
-    history.commit(state);
-  }
   const restored = direction === 'undo' ? history.undo() : history.redo();
-  if (restored) applyState(restored, false);
+  if (!restored) return;
+  state = restored;
+  showState();
 }
 
 window.addEventListener('keydown', (event) => {
@@ -1578,4 +1540,4 @@ if (import.meta.env.DEV) {
 }
 
 setPresetRef(opened.ref, opened.name);
-applyState(state, false);
+showState();

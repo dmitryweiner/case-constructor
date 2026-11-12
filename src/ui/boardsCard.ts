@@ -5,7 +5,7 @@
 // each box a way to line it up with another board (geo/arrange.ts).
 
 import { make } from './dom';
-import type { Control, ControlsHandle } from './controls';
+import type { Change, Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';
 import type { BackPlacement, BoardPlacement } from '../boards/placement';
@@ -749,7 +749,7 @@ function signatureOf(state: AppState): string {
 export function renderBoardsCard(
   container: HTMLElement,
   read: () => AppState,
-  onChange: (next: AppState) => void,
+  onChange: Change<AppState>,
   download: (text: string, name: string) => void,
 ): BoardsCardHandle {
   let handles: ControlsHandle<AppState>[] = [];

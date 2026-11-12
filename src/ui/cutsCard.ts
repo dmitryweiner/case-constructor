@@ -2,7 +2,7 @@
 // position and size in the face's own coordinates.
 
 import { make } from './dom';
-import type { Control, ControlsHandle } from './controls';
+import type { Change, Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';
 import type { ExtraCut } from '../geo/cutters';
@@ -69,7 +69,7 @@ export interface CutsCardHandle {
   sync(state: AppState): void;
 }
 
-export function renderCutsCard(container: HTMLElement, read: () => AppState, onChange: (next: AppState) => void): CutsCardHandle {
+export function renderCutsCard(container: HTMLElement, read: () => AppState, onChange: Change<AppState>): CutsCardHandle {
   let handles: ControlsHandle<AppState>[] = [];
   let count = -1;
 

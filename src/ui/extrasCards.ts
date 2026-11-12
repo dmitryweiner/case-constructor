@@ -4,7 +4,7 @@
 
 import type { CardHandle } from './card';
 import { createCard } from './card';
-import type { Control, ControlsHandle } from './controls';
+import type { Change, Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { make } from './dom';
 import { FACES } from '../geo/face';
@@ -285,12 +285,7 @@ export interface ExtrasHandle {
   sync(state: AppState): void;
 }
 
-export function renderExtras(
-  openings: HTMLElement,
-  mounting: HTMLElement,
-  read: () => AppState,
-  onChange: (next: AppState) => void,
-): ExtrasHandle {
+export function renderExtras(openings: HTMLElement, mounting: HTMLElement, read: () => AppState, onChange: Change<AppState>): ExtrasHandle {
   openings.replaceChildren();
   mounting.replaceChildren();
   const cards: { card: CardHandle; on: (state: AppState) => boolean; rows: ControlsHandle<AppState> }[] = [];

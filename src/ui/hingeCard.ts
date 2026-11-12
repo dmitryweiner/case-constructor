@@ -2,7 +2,7 @@
 // half being edited and the view's angle are view settings, not the
 // project's: their rows are built over `HalfView`.
 
-import type { Control, ControlsHandle } from './controls';
+import type { Change, Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { make } from './dom';
 import { t } from '../i18n';
@@ -319,7 +319,7 @@ export interface CablesCardHandle {
 }
 
 /** The cables between the halves: a box per cable, like the openings' cards. */
-export function renderCablesCard(container: HTMLElement, read: () => AppState, onChange: (next: AppState) => void): CablesCardHandle {
+export function renderCablesCard(container: HTMLElement, read: () => AppState, onChange: Change<AppState>): CablesCardHandle {
   let handles: ControlsHandle<AppState>[] = [];
   let count = -1;
 
