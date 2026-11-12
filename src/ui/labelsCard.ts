@@ -181,7 +181,7 @@ export function renderLabelsCard(container: HTMLElement, read: () => AppState, o
       box.id = `label${index}`;
       const head = make('div', 'board-head');
       head.append(make('span', 'board-name', t('label.title', { n: index + 1 })));
-      const remove = make('button', 'tb-btn board-del', '✕');
+      const remove = make('button', 'btn board-del', '✕');
       remove.type = 'button';
       remove.id = `label${index}_remove`;
       remove.title = t('label.remove');

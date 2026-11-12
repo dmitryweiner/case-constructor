@@ -130,7 +130,7 @@ function selectInput(
 
 function labelled(label: Key, control: HTMLElement): HTMLElement {
   const row = make('label', 'row');
-  row.append(make('span', 'row-label', t(label)), control);
+  row.append(make('span', 'row-name', t(label)), control);
   return row;
 }
 
@@ -296,7 +296,7 @@ export function renderCustomEditor(
           ),
         );
       }
-      const del = make('button', 'tb-btn row-del', '✕');
+      const del = make('button', 'btn row-del', '✕');
       del.type = 'button';
       del.id = `${prefix}_hole${h}_remove`;
       del.title = t('custom.remove');
@@ -304,7 +304,7 @@ export function renderCustomEditor(
       row.append(del);
       box.append(row);
     });
-    const add = make('button', 'tb-btn', t('custom.hole.add'));
+    const add = make('button', 'btn', t('custom.hole.add'));
     add.type = 'button';
     add.id = `${prefix}_hole_add`;
     add.addEventListener('click', () =>
@@ -318,7 +318,7 @@ export function renderCustomEditor(
 
   box.append(make('p', 'sub-title', t('custom.ports')));
   def.ports.forEach((port, p) => box.append(portRow(port, p)));
-  const addPort = make('button', 'tb-btn', t('custom.port.add'));
+  const addPort = make('button', 'btn', t('custom.port.add'));
   addPort.type = 'button';
   addPort.id = `${prefix}_port_add`;
   addPort.addEventListener('click', () =>
@@ -334,7 +334,7 @@ export function renderCustomEditor(
   );
   box.append(addPort);
 
-  const save = make('button', 'tb-btn wide', t('custom.save'));
+  const save = make('button', 'btn wide', t('custom.save'));
   save.type = 'button';
   save.id = `${prefix}_save`;
   save.title = t('custom.save.title');
@@ -382,7 +382,7 @@ export function renderCustomEditor(
         (value) => setPort((item) => ({ ...item, edge: value })),
       ),
     );
-    const del = make('button', 'tb-btn row-del', '✕');
+    const del = make('button', 'btn row-del', '✕');
     del.type = 'button';
     del.id = `${prefix}_port${p}_remove`;
     del.title = t('custom.remove');

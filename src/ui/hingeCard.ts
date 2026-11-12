@@ -330,7 +330,7 @@ export function renderCablesCard(container: HTMLElement, read: () => AppState, o
       box.id = `cable${index}`;
       const head = make('div', 'board-head');
       head.append(make('span', 'board-name', t('cable.title', { n: index + 1 })));
-      const remove = make('button', 'tb-btn board-del', '✕');
+      const remove = make('button', 'btn board-del', '✕');
       remove.type = 'button';
       remove.id = `cable${index}_remove`;
       remove.title = t('cable.remove');

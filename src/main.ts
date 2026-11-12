@@ -5,6 +5,7 @@
 // (PREVIEW_DELAY_MS) and draws what comes back. The preview is the exact
 // case at a coarser arc resolution — the same pipeline that goes to the STL.
 
+import 'maker-kit/styles/kit.css';
 import './style.css';
 import { el, make } from './ui/dom';
 import { createScene } from './render/scene';
