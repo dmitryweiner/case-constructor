@@ -1,49 +1,34 @@
-// User presets in localStorage. Every read is guarded: storage may be
-// unavailable (private mode) or hold garbage from older versions — the app
-// must open regardless.
+// User presets in localStorage, a maker-kit storage record. Every read is
+// guarded: storage may be unavailable (private mode) or hold garbage from
+// older versions — the app must open regardless.
 
+import type { StoredRecord } from 'maker-kit/core/storage';
+import type { UserPreset } from 'maker-kit/core/presets';
+import { addUserPreset, readUserPresets } from 'maker-kit/core/presets';
 import type { AppState } from './schema';
 import { sanitizeState } from './schema';
-import type { StorageWrite } from './storage';
-import { writeStorage } from './storage';
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 
 export const USER_PRESETS_KEY = 'caseconstructor_user_presets_v1';
 
-export interface UserPreset {
-  name: string;
-  state: AppState;
-}
+/** Version 1 is `{ presets }` with ids; before maker-kit the key held a bare list by name (version 0), which gets ids. */
+export const userPresetsRecord: StoredRecord<UserPreset<AppState>[]> = {
+  key: USER_PRESETS_KEY,
+  version: 1,
+  write: (presets) => ({ presets }),
+  read: (data, version) => readUserPresets(version === 0 ? data : isRecord(data) ? data.presets : null, sanitizeState),
+};
 
-export function loadUserPresets(): UserPreset[] {
-  try {
-    const raw = localStorage.getItem(USER_PRESETS_KEY);
-    if (!raw) return [];
-    return parseUserPresets(raw);
-  } catch {
-    return [];
-  }
-}
-
-export function parseUserPresets(raw: string): UserPreset[] {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return [];
-  }
-  if (!Array.isArray(parsed)) return [];
-  const presets: UserPreset[] = [];
-  for (const item of parsed) {
-    if (typeof item !== 'object' || item === null) continue;
-    const name: unknown = Reflect.get(item, 'name');
-    if (typeof name !== 'string' || name.length === 0) continue;
-    presets.push({ name, state: sanitizeState(Reflect.get(item, 'state')) });
-  }
-  return presets;
-}
-
-export function saveUserPresets(presets: UserPreset[], storage: () => Pick<Storage, 'setItem'> = () => localStorage): StorageWrite {
-  return writeStorage(storage, USER_PRESETS_KEY, JSON.stringify(presets));
+/** 💾 under a name: one already saved by that name gets the state and keeps its id and place; another is added. */
+export function storePreset(
+  list: readonly UserPreset<AppState>[],
+  name: string,
+  state: AppState,
+): { list: UserPreset<AppState>[]; id: string } {
+  const same = list.find((preset) => preset.name === name);
+  if (!same) return addUserPreset(list, name, state);
+  return { list: list.map((preset) => (preset === same ? { ...preset, state } : preset)), id: same.id };
 }
 
 /**
@@ -51,7 +36,7 @@ export function saveUserPresets(presets: UserPreset[], storage: () => Pick<Stora
  * language: after a language switch the numbering would otherwise restart
  * from one and muddle the list.
  */
-export function nextPresetNumber(presets: UserPreset[], prefixes: readonly string[]): number {
+export function nextPresetNumber(presets: readonly { name: string }[], prefixes: readonly string[]): number {
   let highest = 0;
   for (const preset of presets) {
     for (const prefix of prefixes) {

@@ -8,12 +8,13 @@
 // deletes. A system confirm would block the page (and the smoke with it),
 // and on a phone a finger easily lands on the next row.
 
+import type { PresetRef } from 'maker-kit/core/presets';
 import { make } from './dom';
 import { t } from '../i18n';
 
 export interface PresetRow {
-  /** 'u:<name>' — mine, 'b:<id>' — built-in */
-  ref: string;
+  /** 'u:<id>' — mine, 'b:<id>' — built-in */
+  ref: PresetRef;
   name: string;
   /** tooltip: what the preset is good for */
   note?: string;
@@ -22,14 +23,14 @@ export interface PresetRow {
 }
 
 export interface PresetListHandlers {
-  onPick(ref: string): void;
-  onDelete(ref: string): void;
+  onPick(ref: PresetRef): void;
+  onDelete(ref: PresetRef): void;
 }
 
 /** How long "Delete?" waits for the second tap before turning back into 🗑. */
 const CONFIRM_MS = 3000;
 
-export function renderPresetList(root: HTMLElement, rows: PresetRow[], current: string, handlers: PresetListHandlers): void {
+export function renderPresetList(root: HTMLElement, rows: PresetRow[], current: PresetRef, handlers: PresetListHandlers): void {
   root.replaceChildren();
   const mine = rows.filter((row) => row.mine);
   const builtin = rows.filter((row) => !row.mine);

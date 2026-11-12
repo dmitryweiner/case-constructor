@@ -94,12 +94,14 @@ import type { AppState, ExportMode } from './state/schema';
 import { sanitizeState, RESOLUTIONS } from './state/schema';
 import { PRESETS, presetById, presetSignature } from './state/presets';
 import { encodePresetFile, decodePresetFile, presetFileName } from './state/presetFile';
-import type { UserPreset } from './state/userPresets';
-import { loadUserPresets, saveUserPresets, nextPresetNumber } from './state/userPresets';
+import type { PresetRef, UserPreset } from 'maker-kit/core/presets';
+import { presetRef as refOf, removeUserPreset } from 'maker-kit/core/presets';
+import { browserStorage, loadRecord, saveRecord } from 'maker-kit/core/storage';
+import type { StorageWrite } from 'maker-kit/core/storage';
+import { nextPresetNumber, storePreset, userPresetsRecord } from './state/userPresets';
 import { History } from 'maker-kit/core/history';
 import type { CurrentProject } from './state/currentProject';
-import { loadCurrentProject, saveCurrentProject } from './state/currentProject';
-import type { StorageWrite } from './state/storage';
+import { currentProjectRecord } from './state/currentProject';
 import type { Half } from './state/hinged';
 import { casesOf, foldOfState, halfHinge, halfState, halfStrip, hingeNotes, isHinged, withHalf } from './state/hinged';
 import type { JobPart } from './worker/protocol';
@@ -200,7 +202,10 @@ const progress = createProgress({
 const scene = createScene(view, el('portCaptions', HTMLDivElement));
 const csg = new CsgClient();
 /** The project the last visit left (kept on every change), or the first preset on a first visit. */
-const opened: CurrentProject = loadCurrentProject() ?? firstPreset();
+const storage = browserStorage();
+let userPresets: UserPreset<AppState>[] = loadRecord(storage, userPresetsRecord) ?? [];
+const projectRecord = currentProjectRecord(userPresets);
+const opened: CurrentProject = loadRecord(storage, projectRecord) ?? firstPreset();
 const history = new History<AppState>(opened.state);
 let state: AppState = history.state;
 
@@ -1209,11 +1214,10 @@ function download(data: BlobPart, filename: string, type = 'model/stl'): void {
 
 // --- presets ---
 
-let userPresets: UserPreset[] = loadUserPresets();
 /** Name of the last opened preset — the suggestion when saving to a file. */
 let presetName = '';
-/** Which preset the project came from: 'b:<id>', 'u:<name>' or empty. */
-let presetRef = '';
+/** Which preset the project came from: 'b:<id>', 'u:<id>' or empty. */
+let presetRef: PresetRef = '';
 /** That preset's `presetSignature`, '' when there is none: while the project's matches, the preset is shown as open. */
 let presetBase = '';
 
@@ -1223,9 +1227,9 @@ function builtinName(id: string): string {
 
 function presetRows(): PresetRow[] {
   return [
-    ...userPresets.map((preset) => ({ ref: `u:${preset.name}`, name: preset.name, mine: true })),
+    ...userPresets.map((preset) => ({ ref: refOf('u', preset.id), name: preset.name, mine: true })),
     ...PRESETS.map((preset) => ({
-      ref: `b:${preset.id}`,
+      ref: refOf('b', preset.id),
       name: builtinName(preset.id),
       note: tDynamic(`preset.${preset.id}.note`),
       mine: false,
@@ -1233,14 +1237,14 @@ function presetRows(): PresetRow[] {
   ];
 }
 
-function setPresetRef(ref: string, name: string): void {
+function setPresetRef(ref: PresetRef, name: string): void {
   presetRef = ref;
   presetName = name;
   const id = ref.slice(2);
   const source = ref.startsWith('b:')
     ? presetById(id)?.build()
     : ref.startsWith('u:')
-      ? userPresets.find((item) => item.name === id)?.state
+      ? userPresets.find((item) => item.id === id)?.state
       : undefined;
   presetBase = source ? presetSignature(source) : '';
   keepProject();
@@ -1266,7 +1270,7 @@ function firstPreset(): CurrentProject {
 
 /** The current project into localStorage: on every change, and once more when the page goes. */
 function keepProject(): void {
-  const project = saveCurrentProject({ name: presetName, ref: presetRef, state });
+  const project = saveRecord(storage, projectRecord, { name: presetName, ref: presetRef, state });
   if (project !== storageStatus.project) setStorageStatus({ ...storageStatus, project });
 }
 
@@ -1302,26 +1306,25 @@ function closePresets(): void {
   presetsPanel.hidden = true;
 }
 
-function openPreset(ref: string): void {
+function openPreset(ref: PresetRef): void {
   closePresets();
-  const name = ref.slice(2);
+  const id = ref.slice(2);
   if (ref.startsWith('b:')) {
-    const preset = presetById(name);
+    const preset = presetById(id);
     if (!preset) return;
     applyState(preset.build());
-    setPresetRef(ref, builtinName(name));
+    setPresetRef(ref, builtinName(id));
   } else {
-    const preset = userPresets.find((item) => item.name === name);
+    const preset = userPresets.find((item) => item.id === id);
     if (!preset) return;
     applyState(preset.state);
-    setPresetRef(ref, name);
+    setPresetRef(ref, preset.name);
   }
 }
 
-function deletePreset(ref: string): void {
-  const name = ref.slice(2);
-  const next = userPresets.filter((item) => item.name !== name);
-  if (!presetWritten('delete', saveUserPresets(next))) return;
+function deletePreset(ref: PresetRef): void {
+  const next = removeUserPreset(userPresets, ref.slice(2));
+  if (!presetWritten('delete', saveRecord(storage, userPresetsRecord, next))) return;
   userPresets = next;
   if (presetRef === ref) setPresetRef('', '');
   showPreset();
@@ -1342,11 +1345,11 @@ window.addEventListener('keydown', (event) => {
 saveBtn.addEventListener('click', () => {
   const name = prompt(t('presets.prompt'), autoPresetName())?.trim();
   if (!name) return;
-  const next = [...userPresets.filter((item) => item.name !== name), { name, state }];
+  const { list: next, id } = storePreset(userPresets, name, state);
   // the list changes only when it is stored: a preset that is not there must not show in "Mine"
-  if (!presetWritten('save', saveUserPresets(next))) return;
+  if (!presetWritten('save', saveRecord(storage, userPresetsRecord, next))) return;
   userPresets = next;
-  setPresetRef(`u:${name}`, name);
+  setPresetRef(`u:${id}`, name);
   flash(saveBtn, '✓');
 });
 

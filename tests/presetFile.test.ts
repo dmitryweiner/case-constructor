@@ -1,5 +1,5 @@
 import { decodePresetFile, encodePresetFile, presetFileName } from '../src/state/presetFile';
-import { nextPresetNumber, parseUserPresets } from '../src/state/userPresets';
+import { nextPresetNumber } from '../src/state/userPresets';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import { PRESETS, presetById, presetSignature } from '../src/state/presets';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -46,14 +46,6 @@ describe('project file', () => {
 });
 
 describe('user presets', () => {
-  it('garbage in storage gives an empty or cleaned list, never a throw', () => {
-    expect(parseUserPresets('nope')).toEqual([]);
-    expect(parseUserPresets('{}')).toEqual([]);
-    const list = parseUserPresets(JSON.stringify([{ name: 'a', state: { shape: { wall: -1 } } }, { name: '' }, 5]));
-    expect(list).toHaveLength(1);
-    expect(list[0].state.shape.wall).toBe(1.2);
-  });
-
   it('auto-names count across all language prefixes', () => {
     const presets = [
       { name: 'Case 2', state: defaultState() },

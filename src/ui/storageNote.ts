@@ -3,7 +3,7 @@
 // preset that could not be saved or deleted (until dismissed or done). It
 // lives outside the build's blockers line, which every rebuild rewrites.
 
-import type { StorageWrite } from '../state/storage';
+import type { StorageWrite } from 'maker-kit/core/storage';
 import type { Key } from '../i18n';
 import { t } from '../i18n';
 
