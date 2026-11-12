@@ -197,6 +197,12 @@ freely; a temporary script that turns out useful becomes a permanent one.
 
 ## Architectural invariants
 
+- **maker-kit** (`~/projects/maker-kit`, by git tag in `package.json`) is
+  the shared library of the 3D tools: what it has is used, not copied
+  (M3 moves the app onto it: maker-kit's `plans/PLAN.md`, "M3 in detail").
+  Its TypeScript sources: `optimizeDeps.exclude` and vitest's
+  `server.deps.inline` in `vite.config.ts`. Its `kit.*` strings are spread
+  into the four dictionaries. For joint work: `npm link ../maker-kit`.
 - `src/geo/` is a pure geometry core and **never imports Three.js**.
 - The core works **in millimetres**, z-up, the outer bottom of the case at
   z = 0, the outer bounding box from the origin. The renderer turns it y-up.
@@ -556,7 +562,7 @@ Add a state when a feature lands, never edit an old one.
 ## Presets
 
 Built-in presets: one JSON file each in `src/state/presets/<id>.json`
-(`{ id, name, state }`; `state` is laid over the default — objects
+(`{ id, state }`; `state` is laid over the default (maker-kit's `overlay`) — objects
 merge, lists and values replace — and sanitized), imported in the menu's
 order by `src/state/presets.ts`. `tests/presetFile.test.ts` fails on a file
 that is not imported, not named after its id, or has a key the sanitizer
@@ -564,24 +570,30 @@ would drop (a typo). `pi4-desktop`, `esp32-sensor-box`,
 `esp32-18650-box`, `arduino-uno-box`, `klipperscreen-console`,
 `ha-wall-panel`, `repair-station-clamshell`, `plain-box`. Each is
 built by `tests/presetsBuild.test.ts` (closed, no slivers, no overlap, no
-layout warnings; a hinged one per half, with no hinge warnings). A preset's name is one English string in its file
-(not translated: the review asked for one name); its note is the
-dictionary key `preset.<id>.note`.
+layout warnings; a hinged one per half, with no hinge warnings). A preset's name is the dictionary key
+`preset.<id>.name`, the same English string in every language (not
+translated: the review asked for one name; `tests/i18n.test.ts` holds it);
+its note is `preset.<id>.note`, translated. User presets
+(`state/userPresets.ts`, key `caseconstructor_user_presets_v1`) are
+maker-kit's: ids `u<n>` (a ref is `u:<id>`), stored as `{ version: 1,
+presets }`; the bare list by name before maker-kit is read with ids. 💾
+under a saved name replaces that preset (its id and place kept).
 
-The current project (`state/currentProject.ts`, key
-`caseconstructor_current_v1`: the state, the open preset's name and ref) is
+The current project (`state/currentProject.ts`, a maker-kit storage record,
+key `caseconstructor_current_v1`, version 2: the state, the open preset's
+name and ref; version 1's ref by a user preset's name becomes its id) is
 written on every `applyState` and `setPresetRef`, and again on `pagehide` /
 a hidden tab. Startup opens it, or the first preset (`PRESETS[0]`) when
 there is none; so a fresh browser — the smoke's, snap's — starts from
-`pi4-desktop`, not `defaultState()`. A failed write (`state/storage.ts`:
-`writeStorage` → `'ok' | 'blocked' | 'full'`, the user presets' too) is
+`pi4-desktop`, not `defaultState()`. A failed write (maker-kit's `saveRecord` →
+`'ok' | 'blocked' | 'full'`, the user presets' too) is
 shown in the banner `#storageNote` under the top bar (`ui/storageNote.ts`):
 the project's line while it fails, a preset's until ✕ or a successful
 preset action. Never in `#blockers`: every rebuild rewrites it.
 The preset is shown as open (the button's name, the list's
-`aria-current`) only while `presetSignature(state)` — the state without
-the parts tab, resolution and print layout — equals the preset's
-(`presetBase`, computed from the ref); undo back to it shows it again. A
+`aria-current`) only while maker-kit's `presetStatus` is `same`:
+`presetSignature(state)` — the state without the parts tab, resolution and
+print layout — equals the preset's; undo back to it shows it again. A
 project file's name (no ref) has nothing to compare with and stays.
 
 ## What is not in v1
