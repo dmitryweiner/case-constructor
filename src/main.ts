@@ -95,10 +95,10 @@ import { sanitizeState, RESOLUTIONS } from './state/schema';
 import { PRESETS, presetById, presetSignature } from './state/presets';
 import { encodePresetFile, decodePresetFile, presetFileName } from './state/presetFile';
 import type { PresetRef, UserPreset } from 'maker-kit/core/presets';
-import { presetRef as refOf, removeUserPreset } from 'maker-kit/core/presets';
+import { nextPresetName, presetRef as refOf, presetStatus, removeUserPreset } from 'maker-kit/core/presets';
 import { browserStorage, loadRecord, saveRecord } from 'maker-kit/core/storage';
 import type { StorageWrite } from 'maker-kit/core/storage';
-import { nextPresetNumber, storePreset, userPresetsRecord } from './state/userPresets';
+import { storePreset, userPresetsRecord } from './state/userPresets';
 import { History } from 'maker-kit/core/history';
 import type { CurrentProject } from './state/currentProject';
 import { currentProjectRecord } from './state/currentProject';
@@ -1218,11 +1218,9 @@ function download(data: BlobPart, filename: string, type = 'model/stl'): void {
 let presetName = '';
 /** Which preset the project came from: 'b:<id>', 'u:<id>' or empty. */
 let presetRef: PresetRef = '';
-/** That preset's `presetSignature`, '' when there is none: while the project's matches, the preset is shown as open. */
-let presetBase = '';
 
 function builtinName(id: string): string {
-  return presetById(id)?.name ?? id;
+  return tDynamic(`preset.${id}.name`);
 }
 
 function presetRows(): PresetRow[] {
@@ -1240,15 +1238,14 @@ function presetRows(): PresetRow[] {
 function setPresetRef(ref: PresetRef, name: string): void {
   presetRef = ref;
   presetName = name;
-  const id = ref.slice(2);
-  const source = ref.startsWith('b:')
-    ? presetById(id)?.build()
-    : ref.startsWith('u:')
-      ? userPresets.find((item) => item.id === id)?.state
-      : undefined;
-  presetBase = source ? presetSignature(source) : '';
   keepProject();
   showPreset();
+}
+
+/** The state a preset opens with: a built-in one's built, a user one's kept. */
+function presetState(ref: PresetRef): AppState | undefined {
+  const id = ref.slice(2);
+  return ref.startsWith('b:') ? presetById(id)?.build() : userPresets.find((item) => item.id === id)?.state;
 }
 
 /**
@@ -1257,7 +1254,7 @@ function setPresetRef(ref: PresetRef, name: string): void {
  * is again). A project file's name has nothing to compare with and stays.
  */
 function showPreset(): void {
-  const open = presetRef !== '' && presetSignature(state) === presetBase;
+  const open = presetStatus(presetRef, state, presetState, presetSignature) === 'same';
   presetBtn.textContent = (presetRef === '' || open ? presetName : '') || t('topbar.presets');
   if (!presetsPanel.hidden)
     renderPresetList(presetList, presetRows(), open ? presetRef : '', { onPick: openPreset, onDelete: deletePreset });
@@ -1265,7 +1262,7 @@ function showPreset(): void {
 
 function firstPreset(): CurrentProject {
   const first = PRESETS[0];
-  return { name: first.name, ref: `b:${first.id}`, state: first.build() };
+  return { name: builtinName(first.id), ref: `b:${first.id}`, state: first.build() };
 }
 
 /** The current project into localStorage: on every change, and once more when the page goes. */
@@ -1294,7 +1291,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 function autoPresetName(): string {
-  return t('presets.auto', { n: nextPresetNumber(userPresets, autoPresetPrefixes()) });
+  return nextPresetName(userPresets, autoPresetPrefixes(), t('presets.auto', { n: '' }).trim());
 }
 
 function openPresets(): void {

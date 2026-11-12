@@ -30,20 +30,3 @@ export function storePreset(
   if (!same) return addUserPreset(list, name, state);
   return { list: list.map((preset) => (preset === same ? { ...preset, state } : preset)), id: same.id };
 }
-
-/**
- * Next free number for the auto-name "<prefix> N". There is one prefix per
- * language: after a language switch the numbering would otherwise restart
- * from one and muddle the list.
- */
-export function nextPresetNumber(presets: readonly { name: string }[], prefixes: readonly string[]): number {
-  let highest = 0;
-  for (const preset of presets) {
-    for (const prefix of prefixes) {
-      if (!preset.name.startsWith(`${prefix} `)) continue;
-      const tail = preset.name.slice(prefix.length + 1);
-      if (/^\d+$/.test(tail)) highest = Math.max(highest, Number(tail));
-    }
-  }
-  return highest + 1;
-}

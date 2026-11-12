@@ -628,17 +628,25 @@ export const en = {
   'progress.extras': 'Ears and label',
 
   // --- built-in presets ---
+  'preset.pi4-desktop.name': 'Pi 4 desktop case',
   'preset.pi4-desktop.note':
     'Against all four walls, the connectors flush with the outside; vents at the back, the lid on snaps, an engraved label',
+  'preset.esp32-sensor-box.name': 'ESP32 sensor box',
   'preset.esp32-sensor-box.note':
     'Hung from the top on rails on screws, printed caps over the buttons, hex vents, the lid underneath on snaps, ears for the wall',
+  'preset.esp32-18650-box.name': 'ESP32 on 18650 cells',
   'preset.esp32-18650-box.note': 'Two 18650 cells in cradles under printed clamps, the lid on countersunk screws',
+  'preset.arduino-uno-box.name': 'Arduino Uno box',
   'preset.arduino-uno-box.note': 'Headers open for jumper wires, the lid on M3 screws',
+  'preset.klipperscreen-console.name': 'KlipperScreen console',
   'preset.klipperscreen-console.note':
     'A BTT Pi TFT50 on the slope on clamp tabs, a Pi 4 on its back, the lid underneath, vents at the back',
+  'preset.ha-wall-panel.name': 'Home Assistant wall panel',
   'preset.ha-wall-panel.note': 'Touch Display 2 7-inch held by the lid, a Pi 5 on its back, side vents, keyholes for the wall',
+  'preset.repair-station-clamshell.name': 'Repair station clamshell',
   'preset.repair-station-clamshell.note':
     'A case that folds open: an M5Stack CardKB with printed caps on screwed rails below, a 4-inch touch TFT above, a cable through the hinge, a printed hinge on screw axles, both lids underneath on M3 screws',
+  'preset.plain-box.name': 'Plain box',
   'preset.plain-box.note': 'An empty rounded box with a flat lid on snaps',
   'show.what': 'Parts — shown and exported',
   'show.how': 'View',

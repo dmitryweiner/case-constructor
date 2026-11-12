@@ -1,6 +1,5 @@
 {
   "id": "esp32-18650-box",
-  "name": "ESP32 on 18650 cells",
   "state": {
     "version": 1,
     "shape": {

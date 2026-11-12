@@ -62,11 +62,14 @@ describe('dictionaries', () => {
     }
   });
 
-  it('a built-in preset has one name in every language, and a translated note', () => {
-    const names = PRESETS.map((preset) => preset.name);
-    for (const name of names) expect(name.trim()).not.toBe('');
+  it('a built-in preset has one name in every language (it goes into file names), and a translated note', () => {
+    const names = PRESETS.map((preset) => Reflect.get(DICTS.en, `preset.${preset.id}.name`));
+    for (const name of names) expect(typeof name === 'string' && name.trim(), String(name)).toBeTruthy();
     expect(new Set(names).size).toBe(names.length);
-    for (const preset of PRESETS) expect(hasKey(`preset.${preset.id}`), preset.id).toBe(false);
+    for (const preset of PRESETS) {
+      for (const lang of LANGS)
+        expect(Reflect.get(DICTS[lang], `preset.${preset.id}.name`), `${lang}:${preset.id}`).toBe(names[PRESETS.indexOf(preset)]);
+    }
   });
 
   it('every built-in preset note, face, shape and fastening has a label', () => {

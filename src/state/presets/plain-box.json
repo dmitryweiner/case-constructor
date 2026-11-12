@@ -1,6 +1,5 @@
 {
   "id": "plain-box",
-  "name": "Plain box",
   "state": {
     "boards": [],
     "shape": { "auto": false, "size": { "w": 100, "d": 70, "h": 35 } }

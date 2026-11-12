@@ -1,5 +1,6 @@
 import { decodePresetFile, encodePresetFile, presetFileName } from '../src/state/presetFile';
-import { nextPresetNumber } from '../src/state/userPresets';
+import { nextPresetName } from 'maker-kit/core/presets';
+import { autoPresetPrefixes } from '../src/i18n';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import { PRESETS, presetById, presetSignature } from '../src/state/presets';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -58,14 +59,10 @@ describe('project file', () => {
 });
 
 describe('user presets', () => {
-  it('auto-names count across all language prefixes', () => {
-    const presets = [
-      { name: 'Case 2', state: defaultState() },
-      { name: 'Корпус 5', state: defaultState() },
-      { name: 'Case x', state: defaultState() },
-    ];
-    expect(nextPresetNumber(presets, ['Case', 'Корпус'])).toBe(6);
-    expect(nextPresetNumber([], ['Case'])).toBe(1);
+  it("auto-names count across every language's prefix", () => {
+    const presets = [{ name: 'Case 2' }, { name: 'Корпус 5' }, { name: 'מארז 3' }, { name: 'Case x' }];
+    expect(nextPresetName(presets, autoPresetPrefixes(), 'Case')).toBe('Case 6');
+    expect(nextPresetName([], autoPresetPrefixes(), 'Корпус')).toBe('Корпус 1');
   });
 });
 

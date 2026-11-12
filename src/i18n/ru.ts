@@ -609,16 +609,24 @@ export const ru: Record<Key, string> = {
   'progress.extras': 'Ушки и надпись',
 
   // --- built-in presets ---
+  'preset.pi4-desktop.name': 'Pi 4 desktop case',
   'preset.pi4-desktop.note':
     'К стенкам со всех четырёх сторон, разъёмы вровень с поверхностью; вентиляция сзади, крышка на защёлках, вдавленная надпись',
+  'preset.esp32-sensor-box.name': 'ESP32 sensor box',
   'preset.esp32-sensor-box.note':
     'Подвешена к верху на направляющих на винтах, печатные колпачки над кнопками, соты, крышка снизу на защёлках, ушки для стены',
+  'preset.esp32-18650-box.name': 'ESP32 on 18650 cells',
   'preset.esp32-18650-box.note': 'Два элемента 18650 в ложементах под печатными прижимами, крышка на потайных винтах',
+  'preset.arduino-uno-box.name': 'Arduino Uno box',
   'preset.arduino-uno-box.note': 'Разъёмы открыты под провода, крышка на винтах M3',
+  'preset.klipperscreen-console.name': 'KlipperScreen console',
   'preset.klipperscreen-console.note': 'BTT Pi TFT50 на скате на прижимных лапках, Pi 4 на его спине, крышка снизу, вентиляция сзади',
+  'preset.ha-wall-panel.name': 'Home Assistant wall panel',
   'preset.ha-wall-panel.note': 'Touch Display 2 7″ в крышке, Pi 5 на его спине, вентиляция по бокам, замочные петли для стены',
+  'preset.repair-station-clamshell.name': 'Repair station clamshell',
   'preset.repair-station-clamshell.note':
     'Раскладной корпус: внизу M5Stack CardKB с печатными колпачками на направляющих на винтах, сверху 4-дюймовый сенсорный TFT, кабель через петлю, печатная петля на винтовых осях, обе крышки снизу на винтах M3',
+  'preset.plain-box.name': 'Plain box',
   'preset.plain-box.note': 'Пустая скруглённая коробка с плоской крышкой на защёлках',
   'show.what': 'Детали — показ и выгрузка',
   'show.how': 'Вид',

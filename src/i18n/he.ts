@@ -592,15 +592,23 @@ export const he: Record<Key, string> = {
   'progress.extras': 'אוזניים וכיתוב',
 
   // --- built-in presets ---
+  'preset.pi4-desktop.name': 'Pi 4 desktop case',
   'preset.pi4-desktop.note': 'צמוד לכל ארבע הדפנות, המחברים בגובה פני המארז; אוורור מאחור, מכסה על תפסים, כיתוב חרוט',
+  'preset.esp32-sensor-box.name': 'ESP32 sensor box',
   'preset.esp32-sensor-box.note':
     'תלוי מלמעלה על מסילות על ברגים, כיפות מודפסות מעל הכפתורים, אוורור משושים, המכסה מלמטה על תפסים, אוזניים לקיר',
+  'preset.esp32-18650-box.name': 'ESP32 on 18650 cells',
   'preset.esp32-18650-box.note': 'שני תאי 18650 בעריסות מתחת לתפסים מודפסים, המכסה על ברגים שקועים',
+  'preset.arduino-uno-box.name': 'Arduino Uno box',
   'preset.arduino-uno-box.note': 'המחברים פתוחים לחוטים, מכסה על ברגי M3',
+  'preset.klipperscreen-console.name': 'KlipperScreen console',
   'preset.klipperscreen-console.note': 'BTT Pi TFT50 על השיפוע על לשוניות לחיצה, Pi 4 על גבו, המכסה מלמטה, אוורור מאחור',
+  'preset.ha-wall-panel.name': 'Home Assistant wall panel',
   'preset.ha-wall-panel.note': 'Touch Display 2 בגודל 7 אינץ׳ במכסה, Pi 5 על גבו, אוורור בצדדים, חורי תלייה לקיר',
+  'preset.repair-station-clamshell.name': 'Repair station clamshell',
   'preset.repair-station-clamshell.note':
     "מארז נפתח: למטה M5Stack CardKB עם כיפות מודפסות על מסילות מוברגות, למעלה TFT מגע בגודל 4 אינץ', כבל דרך הציר, ציר מודפס על צירי ברגים, שני המכסים מלמטה על ברגי M3",
+  'preset.plain-box.name': 'Plain box',
   'preset.plain-box.note': 'קופסה מעוגלת ריקה עם מכסה שטוח על תפסים',
   'show.what': 'חלקים — תצוגה וייצוא',
   'show.how': 'תצוגה',
