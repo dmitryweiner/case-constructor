@@ -96,7 +96,7 @@ import { PRESETS, presetById, presetSignature } from './state/presets';
 import { encodePresetFile, decodePresetFile, presetFileName } from './state/presetFile';
 import type { UserPreset } from './state/userPresets';
 import { loadUserPresets, saveUserPresets, nextPresetNumber } from './state/userPresets';
-import { History } from './state/history';
+import { History } from 'maker-kit/core/history';
 import type { CurrentProject } from './state/currentProject';
 import { loadCurrentProject, saveCurrentProject } from './state/currentProject';
 import type { StorageWrite } from './state/storage';
@@ -202,7 +202,7 @@ const csg = new CsgClient();
 /** The project the last visit left (kept on every change), or the first preset on a first visit. */
 const opened: CurrentProject = loadCurrentProject() ?? firstPreset();
 const history = new History<AppState>(opened.state);
-let state: AppState = history.value;
+let state: AppState = history.state;
 
 setupAdjustmentButtons(panel);
 
@@ -323,10 +323,10 @@ function renderPanel(): void {
 }
 renderPanel();
 
+/** `record`: an edit, shown at once and a step after a pause; false: a state the history already holds (undo, the start). */
 function applyState(next: AppState, record = true): void {
   state = sanitizeState(next);
   if (record) rememberLater(state);
-  else history.replace(state);
   keepProject();
   syncPanel();
 }
@@ -370,10 +370,13 @@ function syncCards(): void {
 
 let historyTimer: ReturnType<typeof setTimeout> | null = null;
 
+/** A frame of the edit now, one step once the edits pause (until the controls report their final changes). */
 function rememberLater(next: AppState): void {
+  history.live(next);
   if (historyTimer) clearTimeout(historyTimer);
   historyTimer = setTimeout(() => {
-    history.push(next);
+    historyTimer = null;
+    history.commit(next);
     updateHistoryButtons();
   }, HISTORY_DELAY_MS);
 }
@@ -1404,7 +1407,7 @@ function stepHistory(direction: 'undo' | 'redo'): void {
   if (historyTimer) {
     clearTimeout(historyTimer);
     historyTimer = null;
-    history.push(state);
+    history.commit(state);
   }
   const restored = direction === 'undo' ? history.undo() : history.redo();
   if (restored) applyState(restored, false);
