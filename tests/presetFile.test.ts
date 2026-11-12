@@ -1,5 +1,6 @@
 import { decodePresetFile, encodePresetFile, presetFileName } from '../src/state/presetFile';
-import { nextPresetNumber, parseUserPresets } from '../src/state/userPresets';
+import { nextPresetName } from 'maker-kit/core/presets';
+import { autoPresetPrefixes } from '../src/i18n';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import { PRESETS, presetById, presetSignature } from '../src/state/presets';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -16,52 +17,52 @@ describe('project file', () => {
   it('round-trips the state and the name', () => {
     const state = sanitizeState({ shape: { kind: 'cylinder', wall: 3 }, lid: { face: 'bottom', depth: 4 } });
     const decoded = decodePresetFile(encodePresetFile('My case', state, new Date(0)));
-    expect(decoded).toEqual({ name: 'My case', state });
+    expect(decoded).toEqual({ ok: true, name: 'My case', state });
+  });
+
+  it('is the wrapper maker-kit writes, with this app and version 1', () => {
+    expect(JSON.parse(encodePresetFile('x', defaultState(), new Date(0)))).toEqual({
+      app: 'case-constructor',
+      version: 1,
+      name: 'x',
+      savedAt: '1970-01-01T00:00:00.000Z',
+      state: defaultState(),
+    });
   });
 
   it('takes a bare state too, and sanitizes it', () => {
     const decoded = decodePresetFile(JSON.stringify({ shape: { kind: 'console', wall: 99 } }));
-    expect(decoded?.state.shape.kind).toBe('console');
-    expect(decoded?.state.shape.wall).toBe(6);
+    expect(decoded.ok && decoded.state.shape.kind).toBe('console');
+    expect(decoded.ok && decoded.state.shape.wall).toBe(6);
   });
 
-  it('refuses anything else instead of resetting the work', () => {
-    for (const text of [
-      '',
-      'not json',
-      '[]',
-      '42',
-      '{"hello":"world"}',
-      '{"app":"clayform","state":{}}',
-      '{"app":"case-constructor","state":null}',
+  it('refuses anything else with the reason, instead of resetting the work', () => {
+    for (const [text, reason] of [
+      ['', 'broken'],
+      ['not json', 'broken'],
+      ['[]', 'foreign'],
+      ['42', 'foreign'],
+      ['{"hello":"world"}', 'foreign'],
+      ['{"app":"clayform","state":{}}', 'foreign'],
+      ['{"app":"case-constructor","version":1,"state":null}', 'broken'],
+      ['{"app":"case-constructor","version":2,"state":{}}', 'newer'],
     ]) {
-      expect(decodePresetFile(text), text).toBeNull();
+      expect(decodePresetFile(text), text).toEqual({ ok: false, reason });
     }
   });
 
   it('file names are safe', () => {
-    expect(presetFileName('Pi 4: desk/case')).toBe('case-constructor-Pi-4-desk-case.json');
+    expect(presetFileName('Pi 4: desk/case')).toBe('case-constructor-pi-4-desk-case.json');
+    expect(presetFileName('Корпус 2')).toBe('case-constructor-корпус-2.json');
     expect(presetFileName('   ')).toBe('case-constructor-preset.json');
   });
 });
 
 describe('user presets', () => {
-  it('garbage in storage gives an empty or cleaned list, never a throw', () => {
-    expect(parseUserPresets('nope')).toEqual([]);
-    expect(parseUserPresets('{}')).toEqual([]);
-    const list = parseUserPresets(JSON.stringify([{ name: 'a', state: { shape: { wall: -1 } } }, { name: '' }, 5]));
-    expect(list).toHaveLength(1);
-    expect(list[0].state.shape.wall).toBe(1.2);
-  });
-
-  it('auto-names count across all language prefixes', () => {
-    const presets = [
-      { name: 'Case 2', state: defaultState() },
-      { name: 'Корпус 5', state: defaultState() },
-      { name: 'Case x', state: defaultState() },
-    ];
-    expect(nextPresetNumber(presets, ['Case', 'Корпус'])).toBe(6);
-    expect(nextPresetNumber([], ['Case'])).toBe(1);
+  it("auto-names count across every language's prefix", () => {
+    const presets = [{ name: 'Case 2' }, { name: 'Корпус 5' }, { name: 'מארז 3' }, { name: 'Case x' }];
+    expect(nextPresetName(presets, autoPresetPrefixes(), 'Case')).toBe('Case 6');
+    expect(nextPresetName([], autoPresetPrefixes(), 'Корпус')).toBe('Корпус 1');
   });
 });
 

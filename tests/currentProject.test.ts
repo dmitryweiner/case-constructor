@@ -1,10 +1,14 @@
-import { CURRENT_PROJECT_KEY, loadCurrentProject, saveCurrentProject } from '../src/state/currentProject';
+import { loadRecord, saveRecord } from 'maker-kit/core/storage';
+import { CURRENT_PROJECT_KEY, currentProjectRecord } from '../src/state/currentProject';
 import { defaultState } from '../src/state/schema';
+import type { UserPreset } from 'maker-kit/core/presets';
+import type { AppState } from '../src/state/schema';
 
-/** A Map behind the two Storage methods the module uses. */
+/** A Map behind the Storage methods the kit uses. */
 function fakeStorage(initial: Record<string, string> = {}): {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
+  removeItem(key: string): void;
   data: Map<string, string>;
 } {
   const data = new Map(Object.entries(initial));
@@ -14,60 +18,70 @@ function fakeStorage(initial: Record<string, string> = {}): {
     setItem: (key, value) => {
       data.set(key, value);
     },
+    removeItem: (key) => {
+      data.delete(key);
+    },
   };
 }
 
-const broken = {
-  getItem(): string | null {
-    throw new Error('SecurityError');
-  },
-  setItem(): void {
-    throw new Error('QuotaExceededError');
-  },
-};
+const record = currentProjectRecord([]);
+const stored = (value: unknown): ReturnType<typeof fakeStorage> => fakeStorage({ [CURRENT_PROJECT_KEY]: JSON.stringify(value) });
 
 describe('the current project in storage', () => {
   it('is null when nothing was saved', () => {
-    expect(loadCurrentProject(() => fakeStorage())).toBeNull();
+    expect(loadRecord(fakeStorage(), record)).toBeNull();
   });
 
-  it('comes back as it was saved: state, name and the open preset', () => {
+  it('comes back as it was saved: state, name and the open preset, under its key', () => {
     const storage = fakeStorage();
     const state = { ...defaultState(), exportMode: 'lid' as const };
-    expect(saveCurrentProject({ name: 'Mine', ref: 'u:Mine', state }, () => storage)).toBe('ok');
-    expect(storage.data.has(CURRENT_PROJECT_KEY)).toBe(true);
-    expect(loadCurrentProject(() => storage)).toEqual({ name: 'Mine', ref: 'u:Mine', state });
+    expect(saveRecord(storage, record, { name: 'Mine', ref: 'u:u2', state })).toBe('ok');
+    expect(JSON.parse(storage.data.get(CURRENT_PROJECT_KEY) ?? '')).toEqual({ version: 2, name: 'Mine', ref: 'u:u2', state });
+    expect(loadRecord(storage, record)).toEqual({ name: 'Mine', ref: 'u:u2', state });
   });
 
   it('passes the stored state through the sanitizer', () => {
-    const raw = JSON.stringify({ version: 1, name: 'x', ref: 'b:plain-box', state: { shape: { kind: 'box', wall: 999 } } });
-    const project = loadCurrentProject(() => fakeStorage({ [CURRENT_PROJECT_KEY]: raw }));
+    const project = loadRecord(stored({ version: 2, name: 'x', ref: 'b:plain-box', state: { shape: { kind: 'box', wall: 999 } } }), record);
     expect(project?.state.shape.wall).toBeLessThan(999);
     expect(project?.state.shape.kind).toBe('box');
   });
 
   it('drops a bad name or preset reference but keeps the state', () => {
-    const raw = JSON.stringify({ version: 1, name: 42, ref: 'nonsense', state: defaultState() });
-    expect(loadCurrentProject(() => fakeStorage({ [CURRENT_PROJECT_KEY]: raw }))).toEqual({ name: '', ref: '', state: defaultState() });
+    expect(loadRecord(stored({ version: 2, name: 42, ref: 'nonsense', state: defaultState() }), record)).toEqual({
+      name: '',
+      ref: '',
+      state: defaultState(),
+    });
   });
 
   it.each([
-    ['not JSON', '{'],
-    ['a list', '[]'],
-    ['no state', JSON.stringify({ version: 1, name: 'x' })],
-    ['a state that is not an object', JSON.stringify({ version: 1, state: 'box' })],
-    ['another version', JSON.stringify({ version: 2, state: defaultState() })],
-  ])('is null for %s', (_, raw) => {
-    expect(loadCurrentProject(() => fakeStorage({ [CURRENT_PROJECT_KEY]: raw }))).toBeNull();
+    ['a list', []],
+    ['no state', { version: 2, name: 'x' }],
+    ['a state that is not an object', { version: 2, state: 'box' }],
+    ['no version', { state: defaultState() }],
+  ])('is null for %s', (_, value) => {
+    expect(loadRecord(stored(value), record)).toBeNull();
   });
 
-  it('never throws when storage is unavailable or full', () => {
-    expect(loadCurrentProject(() => broken)).toBeNull();
-    expect(saveCurrentProject({ name: '', ref: '', state: defaultState() }, () => broken)).toBe('blocked');
-    const missing = (): Storage => {
-      throw new Error('localStorage is blocked');
-    };
-    expect(loadCurrentProject(missing)).toBeNull();
-    expect(saveCurrentProject({ name: '', ref: '', state: defaultState() }, missing)).toBe('blocked');
+  describe('as the app before maker-kit kept it (version 1: a user preset by its name)', () => {
+    const presets: UserPreset<AppState>[] = [
+      { id: 'u1', name: 'Desk', state: defaultState() },
+      { id: 'u2', name: 'Shelf', state: defaultState() },
+    ];
+
+    it('points at the user preset of that name by its id', () => {
+      const project = loadRecord(
+        stored({ version: 1, name: 'Shelf', ref: 'u:Shelf', state: defaultState() }),
+        currentProjectRecord(presets),
+      );
+      expect(project?.ref).toBe('u:u2');
+    });
+
+    it('opens no preset when none has that name; a built-in one stays', () => {
+      expect(loadRecord(stored({ version: 1, ref: 'u:Gone', state: defaultState() }), currentProjectRecord(presets))?.ref).toBe('');
+      expect(loadRecord(stored({ version: 1, ref: 'b:plain-box', state: defaultState() }), currentProjectRecord(presets))?.ref).toBe(
+        'b:plain-box',
+      );
+    });
   });
 });

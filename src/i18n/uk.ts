@@ -2,9 +2,11 @@
 // checks), the template parameters the same (tests/i18n.test.ts).
 // Plurals: `{n|one|few|many}`.
 
+import { kitUk } from 'maker-kit/i18n/uk';
 import type { Key } from '.';
 
 export const uk: Record<Key, string> = {
+  ...kitUk,
   'app.title': 'Case Constructor — корпуси для плат під 3D-друк',
   'lang.label': 'Мова',
   'topbar.presets': 'Пресети…',
@@ -199,7 +201,6 @@ export const uk: Record<Key, string> = {
 
   'error.build': 'Не вдалося зібрати корпус: {error}',
   'error.export': 'Вивантаження не вдалося: {error}',
-  'error.notPreset': '«{name}» — не файл проєкту Case Constructor.',
   'error.presetSave': 'Не вдалося зберегти пресет: сховище браузера недоступне.',
   'error.presetSaveFull': 'Не вдалося зберегти пресет: сховище браузера заповнене. Видаліть непотрібні пресети й спробуйте знову.',
   'error.presetDelete': 'Не вдалося видалити пресет: сховище браузера недоступне.',
@@ -611,16 +612,24 @@ export const uk: Record<Key, string> = {
   'progress.extras': 'Вушка й напис',
 
   // --- built-in presets ---
+  'preset.pi4-desktop.name': 'Pi 4 desktop case',
   'preset.pi4-desktop.note':
     'До стінок з усіх чотирьох боків, роз’єми врівень з поверхнею; вентиляція ззаду, кришка на клямках, вдавлений напис',
+  'preset.esp32-sensor-box.name': 'ESP32 sensor box',
   'preset.esp32-sensor-box.note':
     'Підвішена до верху на напрямних на гвинтах, друковані ковпачки над кнопками, стільники, кришка знизу на клямках, вушка для стіни',
+  'preset.esp32-18650-box.name': 'ESP32 on 18650 cells',
   'preset.esp32-18650-box.note': 'Два елементи 18650 у ложементах під друкованими притисками, кришка на потайних гвинтах',
+  'preset.arduino-uno-box.name': 'Arduino Uno box',
   'preset.arduino-uno-box.note': 'Роз’єми відкриті під дроти, кришка на гвинтах M3',
+  'preset.klipperscreen-console.name': 'KlipperScreen console',
   'preset.klipperscreen-console.note': 'BTT Pi TFT50 на схилі на притискних лапках, Pi 4 на його спині, кришка знизу, вентиляція ззаду',
+  'preset.ha-wall-panel.name': 'Home Assistant wall panel',
   'preset.ha-wall-panel.note': 'Touch Display 2 7″ у кришці, Pi 5 на його спині, вентиляція з боків, замкові петлі для стіни',
+  'preset.repair-station-clamshell.name': 'Repair station clamshell',
   'preset.repair-station-clamshell.note':
     'Розкладний корпус: унизу M5Stack CardKB з друкованими ковпачками на напрямних на гвинтах, угорі 4-дюймовий сенсорний TFT, кабель через петлю, друкована петля на гвинтових осях, обидві кришки знизу на гвинтах M3',
+  'preset.plain-box.name': 'Plain box',
   'preset.plain-box.note': 'Порожня заокруглена коробка з пласкою кришкою на клямках',
   'show.what': 'Деталі — показ і вивантаження',
   'show.how': 'Вигляд',

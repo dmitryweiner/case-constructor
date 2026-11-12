@@ -1,6 +1,6 @@
 // Interface language. A tiny binding instead of a library: tsc checks the
 // keys (`Key` comes from the English reference dictionary, the others must
-// repeat it key for key), and substitutions and plurals fit in one regexp.
+// repeat it key for key); templates are maker-kit's core/format.
 //
 // Template: `{name}` substitutes a parameter; `{n|form|form…}` picks a word
 // by the number n, the forms in the order of the language's plural
@@ -9,6 +9,8 @@
 // The language lives here, not in AppState: it never goes into a preset
 // file — whoever opens someone else's file sees it in their own language.
 
+import { format } from 'maker-kit/core/format';
+import type { Params } from 'maker-kit/core/message';
 import { en } from './en';
 import { ru } from './ru';
 import { uk } from './uk';
@@ -18,7 +20,8 @@ import type { Message } from '../geo/message';
 export type Lang = 'en' | 'ru' | 'uk' | 'he';
 export const LANGS: readonly Lang[] = ['en', 'ru', 'uk', 'he'];
 export type Key = keyof typeof en;
-export type Params = Readonly<Record<string, string | number>>;
+export type { Params };
+export { format, placeholders } from 'maker-kit/core/format';
 
 export const DICTS: Readonly<Record<Lang, Readonly<Record<Key, string>>>> = { en, ru, uk, he };
 
@@ -35,7 +38,8 @@ export const LANG_KEY = 'caseconstructor_lang';
 
 /**
  * Order of the forms in `{n|…}`: the plural categories the language uses for
- * whole numbers (fractions are never counted here).
+ * whole numbers (fractions are never counted here). The kit's format reads
+ * them from Intl; this table is what tests/i18n.test.ts counts forms by.
  */
 export const PLURAL_ORDER: Readonly<Record<Lang, readonly Intl.LDMLPluralRule[]>> = {
   en: ['one', 'other'],
@@ -142,23 +146,4 @@ function messageParams(params: Params): Params {
 /** Auto-name prefixes of presets in every language: the numbering is shared. */
 export function autoPresetPrefixes(): string[] {
   return LANGS.map((language) => DICTS[language]['presets.auto'].replace(/\s*\{n\}\s*/, ''));
-}
-
-const PLACEHOLDER = /\{(\w+)(?:\|([^}]*))?\}/g;
-
-export function format(template: string, params: Params | undefined, language: Lang): string {
-  return template.replace(PLACEHOLDER, (whole, name: string, forms: string | undefined) => {
-    const value = params?.[name];
-    if (value === undefined) return whole;
-    if (forms === undefined) return String(value);
-    const variants = forms.split('|');
-    const category = new Intl.PluralRules(language).select(Number(value));
-    const index = PLURAL_ORDER[language].indexOf(category);
-    return variants[index >= 0 ? index : variants.length - 1] ?? whole;
-  });
-}
-
-/** Parameter names of a template — for the test that every language has the same. */
-export function placeholders(template: string): string[] {
-  return [...template.matchAll(PLACEHOLDER)].map((match) => match[1]).sort();
 }

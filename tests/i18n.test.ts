@@ -10,6 +10,7 @@ import { PRESETS } from '../src/state/presets';
 import { FACES } from '../src/geo/face';
 import { SHAPE_KINDS } from '../src/geo/shape';
 import { FASTENINGS } from '../src/geo/lidSpec';
+import { kitMessages } from 'maker-kit/i18n/index';
 
 const KEYS = Object.keys(DICTS.en).filter(hasKey);
 const FOREIGN = /[А-Яа-яЁёЇїІіЄєҐґ֐-׿]/;
@@ -17,6 +18,12 @@ const FOREIGN = /[А-Яа-яЁёЇїІіЄєҐґ֐-׿]/;
 describe('dictionaries', () => {
   it('every language has exactly the keys of English', () => {
     for (const lang of LANGS) expect(Object.keys(DICTS[lang]).sort(), lang).toEqual([...KEYS].sort());
+  });
+
+  it("every language carries maker-kit's strings as the kit has them", () => {
+    for (const lang of LANGS) {
+      for (const [key, text] of Object.entries(kitMessages[lang])) expect(Reflect.get(DICTS[lang], key), `${lang}:${key}`).toBe(text);
+    }
   });
 
   it('no empty strings', () => {
@@ -55,11 +62,14 @@ describe('dictionaries', () => {
     }
   });
 
-  it('a built-in preset has one name in every language, and a translated note', () => {
-    const names = PRESETS.map((preset) => preset.name);
-    for (const name of names) expect(name.trim()).not.toBe('');
+  it('a built-in preset has one name in every language (it goes into file names), and a translated note', () => {
+    const names = PRESETS.map((preset) => Reflect.get(DICTS.en, `preset.${preset.id}.name`));
+    for (const name of names) expect(typeof name === 'string' && name.trim(), String(name)).toBeTruthy();
     expect(new Set(names).size).toBe(names.length);
-    for (const preset of PRESETS) expect(hasKey(`preset.${preset.id}`), preset.id).toBe(false);
+    for (const preset of PRESETS) {
+      for (const lang of LANGS)
+        expect(Reflect.get(DICTS[lang], `preset.${preset.id}.name`), `${lang}:${preset.id}`).toBe(names[PRESETS.indexOf(preset)]);
+    }
   });
 
   it('every built-in preset note, face, shape and fastening has a label', () => {

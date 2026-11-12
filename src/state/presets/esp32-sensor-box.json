@@ -1,6 +1,5 @@
 {
   "id": "esp32-sensor-box",
-  "name": "ESP32 sensor box",
   "state": {
     "version": 1,
     "shape": {

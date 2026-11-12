@@ -1,6 +1,5 @@
 {
   "id": "ha-wall-panel",
-  "name": "Home Assistant wall panel",
   "state": {
     "shape": { "cornerR": 8 },
     "lid": { "fastening": "screws", "screw": { "size": "M3", "hole": "insert", "head": "countersunk" } },

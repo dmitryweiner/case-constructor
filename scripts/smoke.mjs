@@ -1011,7 +1011,8 @@ if ((await page.locator('#case_wall').inputValue()) !== '3.5') errors.push('[cur
 const reloadedPreset = (await page.locator('#presetBtn').textContent()).trim();
 if (reloadedPreset !== 'Smoke preset') errors.push(`[current-project] the open preset is "${reloadedPreset}" after the reload`);
 await page.click('#presetBtn');
-await page.click('#presetList [data-preset="u:Smoke preset"]');
+// a user preset's ref is its id (u:u1), not its name
+await page.locator('#presetList [data-preset^="u:"]', { hasText: 'Smoke preset' }).click();
 await page.waitForTimeout(100);
 if ((await page.locator('#case_wall').inputValue()) !== '3.5') errors.push('[user-preset] the wall is not 3.5');
 
@@ -1033,7 +1034,8 @@ page.once('dialog', (dialog) => dialog.accept('Unsaved preset'));
 await page.click('#saveBtn');
 if (!(await storageText()).includes('Could not save the preset')) errors.push('[storage-note] no note for the preset');
 await page.click('#presetBtn');
-if (await page.locator('#presetList [data-preset="u:Unsaved preset"]').count()) errors.push('[storage-note] an unsaved preset is listed');
+if (await page.locator('#presetList [data-preset^="u:"]', { hasText: 'Unsaved preset' }).count())
+  errors.push('[storage-note] an unsaved preset is listed');
 await page.click('#presetsClose');
 await page.click('#storageNote .storage-close');
 if ((await storageText()).includes('Could not save the preset')) errors.push('[storage-note] the preset note was not dismissed');
@@ -1059,7 +1061,7 @@ const junk = join(tmpdir(), `case-smoke-junk-${Date.now()}.json`);
 writeFileSync(junk, '{"hello": "world"}');
 await page.setInputFiles('#fileInput', junk);
 await page.waitForTimeout(100);
-if (!(await page.locator('#blockers').textContent()).includes('not a Case Constructor')) {
+if (!(await page.locator('#blockers').textContent()).includes('not a project of this app')) {
   errors.push('[file] a foreign JSON was not refused');
 }
 // a user's project (tests/fixtures/korpus-1.json): its messages name the wall and the board in the way; notes are grey, not counted

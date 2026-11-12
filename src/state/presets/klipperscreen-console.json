@@ -1,6 +1,5 @@
 {
   "id": "klipperscreen-console",
-  "name": "KlipperScreen console",
   "state": {
     "shape": { "kind": "console", "cornerR": 4, "console": { "frontH": 25, "backH": 55 } },
     "lid": {
