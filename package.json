@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "earcut": "^3.2.4",
+    "maker-kit": "github:dmitryweiner/maker-kit#v0.4.1",
     "manifold-3d": "^3.5.4",
     "three": "^0.186.1"
   },

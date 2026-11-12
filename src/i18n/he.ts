@@ -3,9 +3,11 @@
 // text-only RTL: each text renders right-to-left inside the usual
 // left-to-right layout. Plurals: `{n|one|two|other}`.
 
+import { kitHe } from 'maker-kit/i18n/he';
 import type { Key } from '.';
 
 export const he: Record<Key, string> = {
+  ...kitHe,
   'app.title': 'Case Constructor — מארזים ללוחות להדפסה בתלת־ממד',
   'lang.label': 'שפה',
   'topbar.presets': 'תבניות…',

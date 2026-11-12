@@ -1,10 +1,15 @@
 // The English dictionary is the reference: the key type (`Key`) comes from
-// it, and every other dictionary must repeat it key for key.
+// it, and every other dictionary must repeat it key for key. maker-kit's
+// `kit.*` strings come spread in, as the kit has them.
 //
 // Templates: `{name}` is a parameter, `{n|form|form}` a word by the number n
 // in the order one/other.
 
+import { kitEn } from 'maker-kit/i18n/en';
+
 export const en = {
+  // maker-kit's strings (`kit.*`): its controls, file refusals, banner, dialogs
+  ...kitEn,
   // --- page and top bar ---
   'app.title': 'Case Constructor — 3D-printable enclosures for boards',
   'lang.label': 'Language',

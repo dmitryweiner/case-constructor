@@ -2,9 +2,11 @@
 // checks), the template parameters the same (tests/i18n.test.ts).
 // Plurals: `{n|one|few|many}`.
 
+import { kitRu } from 'maker-kit/i18n/ru';
 import type { Key } from '.';
 
 export const ru: Record<Key, string> = {
+  ...kitRu,
   'app.title': 'Case Constructor — корпуса для плат под 3D-печать',
   'lang.label': 'Язык',
   'topbar.presets': 'Пресеты…',

@@ -2,7 +2,9 @@
 // parameters, never as a phrase. The core does not know the language (nor
 // does the worker: the language may change mid-job); the UI turns the code
 // into text (`tm` in src/i18n). Every code must be a dictionary key — `tm`
-// makes tsc check that.
+// makes tsc check that. The shape is maker-kit's core/message.
+
+import type { Message as KitMessage } from 'maker-kit/core/message';
 
 export type MessageCode =
   // mesh checks before export (validate)
@@ -121,9 +123,8 @@ export interface MessageSpot {
   holder: 'body' | 'lid' | { board: number };
 }
 
-export interface Message {
-  code: MessageCode;
-  params?: Readonly<Record<string, string | number>>;
+/** maker-kit's message (a code and parameters) with the place it points at. */
+export interface Message extends KitMessage<MessageCode> {
   spot?: MessageSpot;
 }
 

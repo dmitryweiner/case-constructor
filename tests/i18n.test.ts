@@ -10,6 +10,7 @@ import { PRESETS } from '../src/state/presets';
 import { FACES } from '../src/geo/face';
 import { SHAPE_KINDS } from '../src/geo/shape';
 import { FASTENINGS } from '../src/geo/lidSpec';
+import { kitMessages } from 'maker-kit/i18n/index';
 
 const KEYS = Object.keys(DICTS.en).filter(hasKey);
 const FOREIGN = /[А-Яа-яЁёЇїІіЄєҐґ֐-׿]/;
@@ -17,6 +18,12 @@ const FOREIGN = /[А-Яа-яЁёЇїІіЄєҐґ֐-׿]/;
 describe('dictionaries', () => {
   it('every language has exactly the keys of English', () => {
     for (const lang of LANGS) expect(Object.keys(DICTS[lang]).sort(), lang).toEqual([...KEYS].sort());
+  });
+
+  it("every language carries maker-kit's strings as the kit has them", () => {
+    for (const lang of LANGS) {
+      for (const [key, text] of Object.entries(kitMessages[lang])) expect(Reflect.get(DICTS[lang], key), `${lang}:${key}`).toBe(text);
+    }
   });
 
   it('no empty strings', () => {
