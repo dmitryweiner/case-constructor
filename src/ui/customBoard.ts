@@ -8,6 +8,7 @@
 // fields) rebuilds the editor — the card decides that by a signature.
 
 import { make } from './dom';
+import type { Change } from './controls';
 import type { Key } from '../i18n';
 import { t, tDynamic } from '../i18n';
 import type { BoardDef, PortDef, PortType } from '../boards/schema';
@@ -93,16 +94,19 @@ export function catalogJson(def: BoardDef): string {
   )}\n`;
 }
 
-function numberInput(id: string, value: number, step: number, onInput: (value: number) => void): HTMLInputElement {
+/** A number typed: live while typing, final when the field is left (one undo step). */
+function numberInput(id: string, value: number, step: number, onInput: (value: number, final: boolean) => void): HTMLInputElement {
   const input = make('input', 'num');
   input.type = 'number';
   input.id = id;
   input.step = String(step);
   input.value = String(+value.toFixed(2));
-  input.addEventListener('input', () => {
+  const report = (final: boolean) => (): void => {
     const next = Number(input.value);
-    if (input.value !== '' && Number.isFinite(next)) onInput(next);
-  });
+    if (input.value !== '' && Number.isFinite(next)) onInput(next, final);
+  };
+  input.addEventListener('input', report(false));
+  input.addEventListener('change', report(true));
   return input;
 }
 
@@ -126,7 +130,7 @@ function selectInput(
 
 function labelled(label: Key, control: HTMLElement): HTMLElement {
   const row = make('label', 'row');
-  row.append(make('span', 'row-label', t(label)), control);
+  row.append(make('span', 'row-name', t(label)), control);
   return row;
 }
 
@@ -150,20 +154,23 @@ export function renderCustomEditor(
   container: HTMLElement,
   index: number,
   read: () => AppState,
-  onChange: (next: AppState) => void,
+  onChange: Change<AppState>,
   download: (text: string, name: string) => void,
 ): CustomEditorHandle {
   const prefix = `board${index}_custom`;
   const current = (): BoardDef => read().boards[index].custom ?? defaultCustomBoard();
-  const updatePlacement = (change: (placement: BoardPlacement) => BoardPlacement): void => {
+  const updatePlacement = (change: (placement: BoardPlacement) => BoardPlacement, final = true): void => {
     const state = read();
-    onChange({ ...state, boards: state.boards.map((board, i) => (i === index ? change(board) : board)) });
+    onChange({ ...state, boards: state.boards.map((board, i) => (i === index ? change(board) : board)) }, final);
   };
-  const update = (change: (def: BoardDef) => BoardDef): void =>
-    updatePlacement((board) => ({
-      ...board,
-      custom: change(board.custom ?? defaultCustomBoard()),
-    }));
+  const update = (change: (def: BoardDef) => BoardDef, final = true): void =>
+    updatePlacement(
+      (board) => ({
+        ...board,
+        custom: change(board.custom ?? defaultCustomBoard()),
+      }),
+      final,
+    );
   const def = current();
   const box = make('div', 'custom-editor');
   const inputs = new Map<string, (def: BoardDef) => number | string>();
@@ -178,7 +185,8 @@ export function renderCustomEditor(
   name.maxLength = 60;
   name.value = def.name;
   name.dir = 'auto';
-  name.addEventListener('input', () => update((d) => ({ ...d, name: name.value })));
+  name.addEventListener('input', () => update((d) => ({ ...d, name: name.value }), false));
+  name.addEventListener('change', () => update((d) => ({ ...d, name: name.value })));
   inputs.set(name.id, (d) => d.name);
   box.append(labelled('custom.name', name));
 
@@ -188,7 +196,9 @@ export function renderCustomEditor(
     cell.append(
       make('span', undefined, t(label)),
       track(
-        numberInput(`${prefix}_${key}`, def.size[key], step, (value) => update((d) => ({ ...d, size: { ...d.size, [key]: value } }))),
+        numberInput(`${prefix}_${key}`, def.size[key], step, (value, final) =>
+          update((d) => ({ ...d, size: { ...d.size, [key]: value } }), final),
+        ),
         (d) => d.size[key],
       ),
     );
@@ -208,7 +218,7 @@ export function renderCustomEditor(
     cell.append(
       make('span', undefined, t(label)),
       track(
-        numberInput(`${prefix}_${key}`, def[key], 0.5, (value) => update((d) => ({ ...d, [key]: value }))),
+        numberInput(`${prefix}_${key}`, def[key], 0.5, (value, final) => update((d) => ({ ...d, [key]: value }), final)),
         (d) => d[key],
       ),
     );
@@ -273,17 +283,20 @@ export function renderCustomEditor(
       for (const key of ['x', 'y', 'd'] as const) {
         row.append(
           track(
-            numberInput(`${prefix}_hole${h}_${key}`, hole[key], key === 'd' ? 0.1 : 0.5, (value) =>
-              update((d) => ({
-                ...d,
-                mount: { ...d.mount, holes: d.mount.holes.map((item, i) => (i === h ? { ...item, [key]: value } : item)) },
-              })),
+            numberInput(`${prefix}_hole${h}_${key}`, hole[key], key === 'd' ? 0.1 : 0.5, (value, final) =>
+              update(
+                (d) => ({
+                  ...d,
+                  mount: { ...d.mount, holes: d.mount.holes.map((item, i) => (i === h ? { ...item, [key]: value } : item)) },
+                }),
+                final,
+              ),
             ),
             (d) => d.mount.holes[h]?.[key] ?? 0,
           ),
         );
       }
-      const del = make('button', 'tb-btn row-del', '✕');
+      const del = make('button', 'btn row-del', '✕');
       del.type = 'button';
       del.id = `${prefix}_hole${h}_remove`;
       del.title = t('custom.remove');
@@ -291,7 +304,7 @@ export function renderCustomEditor(
       row.append(del);
       box.append(row);
     });
-    const add = make('button', 'tb-btn', t('custom.hole.add'));
+    const add = make('button', 'btn', t('custom.hole.add'));
     add.type = 'button';
     add.id = `${prefix}_hole_add`;
     add.addEventListener('click', () =>
@@ -305,7 +318,7 @@ export function renderCustomEditor(
 
   box.append(make('p', 'sub-title', t('custom.ports')));
   def.ports.forEach((port, p) => box.append(portRow(port, p)));
-  const addPort = make('button', 'tb-btn', t('custom.port.add'));
+  const addPort = make('button', 'btn', t('custom.port.add'));
   addPort.type = 'button';
   addPort.id = `${prefix}_port_add`;
   addPort.addEventListener('click', () =>
@@ -321,7 +334,7 @@ export function renderCustomEditor(
   );
   box.append(addPort);
 
-  const save = make('button', 'tb-btn wide', t('custom.save'));
+  const save = make('button', 'btn wide', t('custom.save'));
   save.type = 'button';
   save.id = `${prefix}_save`;
   save.title = t('custom.save.title');
@@ -338,11 +351,14 @@ export function renderCustomEditor(
   function portRow(port: PortDef, p: number): HTMLElement {
     const wrap = make('div', 'port-edit');
     const head = make('div', 'table-row');
-    const setPort = (change: (item: Record<string, unknown>) => Record<string, unknown>): void =>
-      update((d) => ({
-        ...d,
-        ports: d.ports.map((item, i) => (i === p ? portFrom(change({ ...item }), d.size) : item)),
-      }));
+    const setPort = (change: (item: Record<string, unknown>) => Record<string, unknown>, final = true): void =>
+      update(
+        (d) => ({
+          ...d,
+          ports: d.ports.map((item, i) => (i === p ? portFrom(change({ ...item }), d.size) : item)),
+        }),
+        final,
+      );
     head.append(
       selectInput(
         `${prefix}_port${p}_type`,
@@ -366,7 +382,7 @@ export function renderCustomEditor(
         (value) => setPort((item) => ({ ...item, edge: value })),
       ),
     );
-    const del = make('button', 'tb-btn row-del', '✕');
+    const del = make('button', 'btn row-del', '✕');
     del.type = 'button';
     del.id = `${prefix}_port${p}_remove`;
     del.title = t('custom.remove');
@@ -404,7 +420,7 @@ export function renderCustomEditor(
       cell.append(
         make('span', undefined, t(label)),
         track(
-          numberInput(`${prefix}_port${p}_${key}`, value, 0.1, (next) => setPort((item) => ({ ...item, [key]: next }))),
+          numberInput(`${prefix}_port${p}_${key}`, value, 0.1, (next, final) => setPort((item) => ({ ...item, [key]: next }), final)),
           (d) => Number(Reflect.get(d.ports[p] ?? {}, key) ?? 0),
         ),
       );

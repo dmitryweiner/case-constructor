@@ -5,7 +5,7 @@
 // each box a way to line it up with another board (geo/arrange.ts).
 
 import { make } from './dom';
-import type { Control, ControlsHandle } from './controls';
+import type { Change, Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';
 import type { BackPlacement, BoardPlacement } from '../boards/placement';
@@ -684,7 +684,7 @@ function portControls(index: number, state: AppState): Control<AppState>[] {
 /** A row of plain action buttons under a label, styled like a segmented control. */
 function actionRow(label: Key, hint: Key | null, buttons: { id: string; text: string; title?: string; run: () => void }[]): HTMLElement {
   const row = make('div', 'row');
-  const name = make('span', 'row-label', t(label));
+  const name = make('span', 'row-name', t(label));
   if (hint) name.title = t(hint);
   const group = make('div', 'segmented');
   for (const spec of buttons) {
@@ -749,7 +749,7 @@ function signatureOf(state: AppState): string {
 export function renderBoardsCard(
   container: HTMLElement,
   read: () => AppState,
-  onChange: (next: AppState) => void,
+  onChange: Change<AppState>,
   download: (text: string, name: string) => void,
 ): BoardsCardHandle {
   let handles: ControlsHandle<AppState>[] = [];
@@ -808,7 +808,7 @@ export function renderBoardsCard(
     details.id = `board${index}_align`;
     details.append(make('summary', undefined, t('board.align')));
     const refRow = make('label', 'row');
-    refRow.append(make('span', 'row-label', t('board.align.ref')));
+    refRow.append(make('span', 'row-name', t('board.align.ref')));
     const select = make('select');
     select.id = `board${index}_alignRef`;
     state.boards.forEach((other, i) => {
@@ -849,7 +849,7 @@ export function renderBoardsCard(
         mark.title = t('board.unverified');
         head.append(mark);
       }
-      const remove = make('button', 'tb-btn board-del', '✕');
+      const remove = make('button', 'btn board-del', '✕');
       remove.type = 'button';
       remove.id = `board${index}_remove`;
       remove.title = t('board.remove');

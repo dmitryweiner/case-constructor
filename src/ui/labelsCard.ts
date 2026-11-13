@@ -2,7 +2,7 @@
 // font and place on that face.
 
 import { make } from './dom';
-import type { Control, ControlsHandle } from './controls';
+import type { Change, Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';
 import { FACES } from '../geo/face';
@@ -169,7 +169,7 @@ export interface LabelsCardHandle {
   sync(state: AppState): void;
 }
 
-export function renderLabelsCard(container: HTMLElement, read: () => AppState, onChange: (next: AppState) => void): LabelsCardHandle {
+export function renderLabelsCard(container: HTMLElement, read: () => AppState, onChange: Change<AppState>): LabelsCardHandle {
   let handles: ControlsHandle<AppState>[] = [];
   let count = -1;
 
@@ -181,7 +181,7 @@ export function renderLabelsCard(container: HTMLElement, read: () => AppState, o
       box.id = `label${index}`;
       const head = make('div', 'board-head');
       head.append(make('span', 'board-name', t('label.title', { n: index + 1 })));
-      const remove = make('button', 'tb-btn board-del', '✕');
+      const remove = make('button', 'btn board-del', '✕');
       remove.type = 'button';
       remove.id = `label${index}_remove`;
       remove.title = t('label.remove');

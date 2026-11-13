@@ -55,7 +55,7 @@
             <h2 data-i18n="panel.hinge">Hinge</h2>
             <div id="hingeParams"></div>
             <div id="cableCards"></div>
-            <button id="cableAdd" class="tb-btn wide" type="button" data-i18n="cable.add">+ Add cable</button>
+            <button id="cableAdd" class="btn wide" type="button" data-i18n="cable.add">+ Add cable</button>
           </section>
 
           <!-- a hinged case: the cards that edit one half, under one switch -->
@@ -67,8 +67,8 @@
               <h2 data-i18n="panel.boards">Boards</h2>
               <div id="boardCards"></div>
               <div class="button-row">
-                <button id="boardAdd" class="tb-btn" type="button" data-i18n="boards.add">+ Add board</button>
-                <button id="boardCustom" class="tb-btn" type="button" data-i18n="boards.custom">+ Custom board</button>
+                <button id="boardAdd" class="btn" type="button" data-i18n="boards.add">+ Add board</button>
+                <button id="boardCustom" class="btn" type="button" data-i18n="boards.custom">+ Custom board</button>
               </div>
             </section>
 
@@ -81,13 +81,13 @@
               <h2 data-i18n="panel.openings">Openings</h2>
               <div id="extraOpenings"></div>
               <div id="cutCards"></div>
-              <button id="cutAdd" class="tb-btn wide" type="button" data-i18n="cuts.add">+ Add opening</button>
+              <button id="cutAdd" class="btn wide" type="button" data-i18n="cuts.add">+ Add opening</button>
             </section>
 
             <section class="card">
               <h2 data-i18n="panel.labels">Labels</h2>
               <div id="labelCards"></div>
-              <button id="labelAdd" class="tb-btn wide" type="button" data-i18n="labels.add">+ Add label</button>
+              <button id="labelAdd" class="btn wide" type="button" data-i18n="labels.add">+ Add label</button>
             </section>
           </div>
 
@@ -182,12 +182,14 @@
                 ><input type="checkbox" id="viewXray" /> <span data-i18n="view.xray">X-ray</span></label
               >
             </div>
-            <label class="row">
-              <span class="row-label" data-i18n="panel.resolution" data-i18n-title="panel.resolution.hint">Resolution</span>
+            <div class="row">
+              <label class="row-name" for="resolution" data-i18n="panel.resolution" data-i18n-title="panel.resolution.hint"
+                >Resolution</label
+              >
               <select id="resolution"></select>
-            </label>
+            </div>
             <ul id="partList" class="part-list"></ul>
-            <button id="exportBtn" class="tb-btn primary wide" data-i18n="export.button">Export STL</button>
+            <button id="exportBtn" class="btn primary wide" data-i18n="export.button">Export STL</button>
             <p id="status"></p>
             <p id="audit"></p>
             <div id="warnings"></div>
