@@ -57,6 +57,9 @@ npm run smoke     # browser smoke; --preview for the production build
 npm run build     # production build → ./dist
 ```
 
+Tests run in Node; a test of the page's own pieces (`tests/boxList.test.ts`)
+takes jsdom by its first line, `// @vitest-environment jsdom`.
+
 ## Tools: permanent scripts instead of throw-away ones
 
 Do not write temporary Playwright/Node scripts with `cat > tmp.mjs <<EOF` —
