@@ -46,7 +46,10 @@ import type { StorageStatus } from 'maker-kit/ui/banner';
 import { renderBanner } from 'maker-kit/ui/banner';
 import { bindHistory } from 'maker-kit/ui/historyKeys';
 import { createLanguagePicker } from 'maker-kit/ui/languagePicker';
+import { renderMessages } from 'maker-kit/ui/messageList';
 import { createModal } from 'maker-kit/ui/modal';
+import type { Blocker, Notice } from './ui/messages';
+import { messageCounts, messageLines, numberNotices } from './ui/messages';
 import { renderPresetList } from 'maker-kit/ui/presetList';
 import { applyStaticText } from './ui/staticText';
 import { LANGS, initLang, lang, onLangChange, setLang, t, tDynamic, tm, autoPresetPrefixes } from './i18n';
@@ -157,10 +160,11 @@ const exportBtn = el('exportBtn', HTMLButtonElement);
 const partList = el('partList', HTMLUListElement);
 const statusEl = el('status', HTMLParagraphElement);
 const auditEl = el('audit', HTMLParagraphElement);
-const warningsEl = el('warnings', HTMLDivElement);
-const blockersEl = el('blockers', HTMLParagraphElement);
+/** The blockers, warnings and notes: one list (maker-kit's ui/messageList), the counts over it. */
+const messageList = el('messages', HTMLUListElement);
+const messageCount = el('messageCount', HTMLParagraphElement);
 const storageNote = el('storageNote', HTMLDivElement);
-/** What browser storage failed to keep: shown under the top bar, never in the blockers line a rebuild rewrites. */
+/** What browser storage failed to keep: shown under the top bar, never in the message list a rebuild rewrites. */
 let storageStatus: StorageStatus = { project: 'ok', preset: null };
 const presetBtn = el('presetBtn', HTMLButtonElement);
 /** The presets dialog: Esc, the backdrop and ✕ close it (maker-kit's ui/modal). */
@@ -387,26 +391,18 @@ let lastParts: { state: AppState; cases: BuiltCase[] } | null = null;
 let currentLabels: Record<Half, (LabelRaster | null)[]> = { a: [], b: [] };
 /** Board ghosts and their port captions per case — drawn at once, the case follows from the worker. */
 let ghostGroups: GhostGroup[] = [];
-/** A line of the warnings list: its text, and whether it only informs (grey, ℹ, not counted). */
-interface Notice {
-  text: string;
-  info: boolean;
-  /** where it points on the model */
-  spot?: MessageSpot;
-  /** its badge's number, given in list order to the lines with a spot */
-  n?: number;
-  /** a hinged case: the half whose frame the spot is in */
-  half?: Half;
-}
 const notice = (message: Message): Notice => ({
   text: tm(message),
   info: message.code.startsWith('info.'),
+  code: message.code,
   ...(message.spot ? { spot: message.spot } : {}),
 });
 const said = (key: Key, params?: Readonly<Record<string, string | number>>): Notice => ({
   text: t(key, params),
   info: key.startsWith('info.'),
+  code: key,
 });
+const blocker = (message: Message): Blocker => ({ text: tm(message), code: message.code });
 /** Warnings the panel computes itself, before the worker answers. */
 let baseWarnings: Notice[] = [];
 
@@ -567,32 +563,52 @@ let hoveredWarning: number | null = null;
 let pickedWarning: number | null = null;
 const activeWarning = (): number | null => hoveredWarning ?? pickedWarning;
 
+/** What stops the export now: the last build's or export's, or a refused file's. */
+let blockers: Blocker[] = [];
+
 function showWarnings(extra: Notice[]): void {
-  let count = 0;
-  shownNotices = [...baseWarnings, ...extra].map((line) => (line.spot ? { ...line, n: ++count } : line));
+  shownNotices = numberNotices([...baseWarnings, ...extra]);
+  const count = shownNotices.filter((line) => line.n !== undefined).length;
   if (pickedWarning !== null && pickedWarning > count) pickedWarning = null;
-  const all = shownNotices;
-  const warned = all.filter((line) => !line.info).length;
-  const noted = all.length - warned;
-  const counts = [...(warned ? [t('status.warnings', { n: warned })] : []), ...(noted ? [t('status.notes', { n: noted })] : [])];
-  warningsEl.replaceChildren(
-    ...(all.length > 1 ? [make('div', 'warn-head', counts.join(' · '))] : []),
-    ...all.map((line) => {
-      const row = make('div', line.info ? 'warn-line info' : 'warn-line');
-      if (line.n !== undefined) {
-        const n = line.n;
-        row.dataset.warn = String(n);
-        row.append(make('span', line.info ? 'warn-num info' : 'warn-num', `${line.info ? 'ℹ' : '⚠'} ${n}`));
-        row.addEventListener('mouseenter', () => hoverWarning(n));
-        row.addEventListener('mouseleave', () => hoverWarning(null));
-        row.addEventListener('click', () => pickWarning(n));
-      }
-      row.append(line.info && line.n === undefined ? `ℹ ${line.text}` : line.text);
-      return row;
-    }),
-  );
+  showMessages();
   drawWarnings();
 }
+
+function setBlockers(next: Blocker[]): void {
+  blockers = next;
+  showMessages();
+}
+
+/** The list: the blockers first, then the notices; a line with a badge carries its number (`data-warn`). */
+function showMessages(): void {
+  renderMessages(messageList, messageLines(blockers, shownNotices));
+  const counts = messageCounts(shownNotices);
+  messageCount.textContent = counts;
+  messageCount.hidden = counts === '';
+  // the kit keeps the same lines: the numbers go on again either way
+  const rows = messageList.children;
+  shownNotices.forEach((line, i) => {
+    const row = rows[blockers.length + i];
+    if (row instanceof HTMLElement && line.n !== undefined) row.dataset.warn = String(line.n);
+  });
+}
+
+/** The line under the pointer or the finger: its badge's number, if it has one. */
+function lineNumber(event: Event): number | null {
+  const row = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-warn]') : null;
+  return row ? Number(row.dataset.warn) : null;
+}
+
+// a hover on a line opens its badge; a tap picks it (a touch has no hover)
+messageList.addEventListener('mousemove', (event) => {
+  const n = lineNumber(event);
+  if (n !== hoveredWarning) hoverWarning(n);
+});
+messageList.addEventListener('mouseleave', () => hoverWarning(null));
+messageList.addEventListener('click', (event) => {
+  const n = lineNumber(event);
+  if (n !== null) pickWarning(n);
+});
 
 function hoverWarning(n: number | null): void {
   hoveredWarning = n;
@@ -614,7 +630,7 @@ let shownPortCaptions: SceneCaption[] = [];
 function drawWarnings(): void {
   const place = viewWarnings.checked ? placeInView : null;
   const active = activeWarning();
-  for (const row of warningsEl.querySelectorAll<HTMLElement>('[data-warn]'))
+  for (const row of messageList.querySelectorAll<HTMLElement>('[data-warn]'))
     row.classList.toggle('hot', Number(row.dataset.warn) === active);
   const spotted = place
     ? shownNotices.flatMap((line) => (line.spot && line.n !== undefined ? [{ ...line, spot: line.spot, n: line.n }] : []))
@@ -679,7 +695,7 @@ async function showPreview(stamp: number): Promise<void> {
     if (stamp !== generation) return;
     settled = stamp;
     auditEl.textContent = '';
-    blockersEl.textContent = t('error.build', { error: message(error) });
+    setBlockers([{ text: t('error.build', { error: message(error) }), code: 'error.build' }]);
     exportBtn.disabled = true;
   }
 }
@@ -1030,7 +1046,7 @@ function audit(meshes: SurfaceMesh[], ms: number): void {
     ? t('audit.watertight', { k: (triangles / 1000).toFixed(1), ms: Math.round(ms) })
     : t('audit.open');
   showWarnings(assessments.flatMap((assessment) => assessment.warnings).map(notice));
-  blockersEl.textContent = blocking.map(tm).join('\n');
+  setBlockers(blocking.map(blocker));
   exportBtn.disabled = blocking.length > 0;
 }
 
@@ -1142,17 +1158,14 @@ async function runExport(): Promise<void> {
     );
     if (!result) return;
     const blocking = result.parts.flatMap((part) => part.blocking);
-    if (blocking.length > 0) {
-      blockersEl.textContent = blocking.map(tm).join('\n');
-      return;
-    }
-    blockersEl.textContent = '';
+    setBlockers(blocking.map(blocker));
+    if (blocking.length > 0) return;
     // printed screws travel with the lid, battery clamps with the body: same print job, same material
     const placed = printAll(requested, builtCases(result.parts));
     const mesh = mergeMeshes(placed.map((part) => part.mesh));
     download(`case-constructor-${requested.exportMode}.stl`, encodeSTL(mesh, { name: requested.exportMode }), 'model/stl');
   } catch (error) {
-    blockersEl.textContent = t('error.export', { error: message(error) });
+    setBlockers([{ text: t('error.export', { error: message(error) }), code: 'error.export' }]);
   } finally {
     exportBtn.textContent = t('export.button');
     exportBtn.disabled = false;
@@ -1327,7 +1340,7 @@ document.addEventListener('drop', (event) => {
 async function openPresetFile(file: File): Promise<void> {
   const decoded = decodePresetFile(await file.text().catch(() => ''));
   if (!decoded.ok) {
-    blockersEl.textContent = t(`kit.file.${decoded.reason}`);
+    setBlockers([{ text: t(`kit.file.${decoded.reason}`), code: `kit.file.${decoded.reason}` }]);
     return;
   }
   applyState(decoded.state);

@@ -189,8 +189,9 @@
             <button id="exportBtn" class="btn primary wide" data-i18n="export.button">Export STL</button>
             <p id="status"></p>
             <p id="audit"></p>
-            <div id="warnings"></div>
-            <p id="blockers" class="blockers"></p>
+            <!-- the blockers, warnings and notes (maker-kit's ui/messageList), the counts over them -->
+            <p id="messageCount" class="message-count" hidden></p>
+            <ul id="messages" class="messages" hidden></ul>
           </section>
         </aside>
         <main id="viewWrap">
