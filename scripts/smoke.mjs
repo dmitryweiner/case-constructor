@@ -57,6 +57,15 @@ async function unfold(id) {
   if (await page.locator(`#card_${id}.collapsed`).count()) await page.click(`#card_${id} .fcard-head`);
 }
 
+/** The ref of the user preset of this name in the open presets dialog (its name is a field), or null. */
+const userPresetRef = (name) =>
+  page.evaluate(
+    (name) =>
+      [...document.querySelectorAll('#presetList [data-ref^="u:"]')].find((row) => row.querySelector('input')?.value === name)?.dataset
+        .ref ?? null,
+    name,
+  );
+
 /** Roles drawn last (dev builds): 'body,board,…,lid'. */
 async function drawn() {
   await page.waitForTimeout(150);
@@ -117,7 +126,7 @@ label('low-case');
 if ((await page.locator('#case_h').getAttribute('min')) !== '10') errors.push('[low-case] the height slider does not start at 10');
 // the plain box (manual size, no boards) with the extremes above undone
 await page.click('#presetBtn');
-await page.click('#presetList [data-preset="b:plain-box"]');
+await page.click('#presetList [data-ref="b:plain-box"] .preset-pick');
 await setRange('case_h', 10);
 await expectWatertight('low-case');
 if ((await page.locator('#case_h').inputValue()) !== '10')
@@ -598,7 +607,7 @@ await expectWatertight('boards:none');
 // each lid face (the console has no lid on its slope, the cylinder only top and bottom)
 label('lid-faces');
 await page.click('#presetBtn');
-await page.click('#presetList [data-preset="b:plain-box"]');
+await page.click('#presetList [data-ref="b:plain-box"] .preset-pick');
 await expectWatertight('preset:plain-box');
 for (const face of ['top', 'bottom', 'front', 'back', 'left', 'right']) {
   label(`lid:${face}`);
@@ -615,12 +624,12 @@ await expectWatertight('lid:console');
 // the hinged preset: two halves, a printed hinge, a cable
 label('preset:repair-station-clamshell');
 await page.click('#presetBtn');
-await page.click('#presetList [data-preset="b:repair-station-clamshell"]');
+await page.click('#presetList [data-ref="b:repair-station-clamshell"] .preset-pick');
 await expectWatertight('preset:repair-station-clamshell');
 if ((await page.locator('#warnings .warn-line:not(.info)').count()) > 0) errors.push('[preset:repair-station-clamshell] warnings');
 if (!(await drawn()).includes('hinge')) errors.push('[preset:repair-station-clamshell] no printed hinge drawn');
 await page.click('#presetBtn');
-await page.click('#presetList [data-preset="b:plain-box"]');
+await page.click('#presetList [data-ref="b:plain-box"] .preset-pick');
 
 // a hinged case: two halves, each with its own boards and lid (plans/PLAN-HINGED.md)
 label('hinged');
@@ -1015,6 +1024,22 @@ await page.fill('#case_wall_n', '3.4');
 await page.press('#case_wall_n', 'Enter');
 if ((await wall()) !== '3.4') errors.push(`[exact] the typed wall is ${await wall()}, not 3.4`);
 await setRange('case_wall', 3.5);
+// the keys: Ctrl+Z right after a slider (the focus stays on it), Shift redoes; a Cyrillic layout's я is Z by its place
+label('undo-keys');
+await setRange('case_wall', 3);
+await page.press('#case_wall', 'Control+z');
+await page.waitForTimeout(100);
+if ((await wall()) !== '3.5') errors.push(`[undo-keys] Ctrl+Z after a slider left the wall at ${await wall()}`);
+await page.press('#case_wall', 'Control+Shift+z');
+await page.waitForTimeout(100);
+if ((await wall()) !== '3') errors.push(`[undo-keys] Ctrl+Shift+Z left the wall at ${await wall()}`);
+await page.evaluate(() =>
+  document
+    .querySelector('#case_wall')
+    .dispatchEvent(new KeyboardEvent('keydown', { key: 'я', code: 'KeyZ', ctrlKey: true, bubbles: true })),
+);
+await page.waitForTimeout(100);
+if ((await wall()) !== '3.5') errors.push(`[undo-keys] Ctrl+Я on a Cyrillic layout left the wall at ${await wall()}`);
 
 // a preset saved to localStorage comes back after a reload
 label('user-preset');
@@ -1028,8 +1053,19 @@ const reloadedPreset = (await page.locator('#presetBtn').textContent()).trim();
 if (reloadedPreset !== 'Smoke preset') errors.push(`[current-project] the open preset is "${reloadedPreset}" after the reload`);
 await page.click('#presetBtn');
 // a user preset's ref is its id (u:u1), not its name
-await page.locator('#presetList [data-preset^="u:"]', { hasText: 'Smoke preset' }).click();
+const smokeRef = await userPresetRef('Smoke preset');
+if (smokeRef !== 'u:u1') errors.push(`[user-preset] the saved preset is ${smokeRef}`);
+// renamed in the dialog: the button follows the open preset, and the name outlives a reload
+await page.fill(`#presetList [data-ref="${smokeRef}"] input`, 'Smoke renamed');
+await page.press(`#presetList [data-ref="${smokeRef}"] input`, 'Enter');
+if ((await page.locator('#presetBtn').textContent()).trim() !== 'Smoke renamed') errors.push('[user-preset] the button misses the rename');
+await page.reload();
+await verdict();
+await page.click('#presetBtn');
+if ((await userPresetRef('Smoke renamed')) !== smokeRef) errors.push('[user-preset] the rename was not kept');
+await page.click(`#presetList [data-ref="${smokeRef}"] .preset-open`);
 await page.waitForTimeout(100);
+if (await page.locator('#presets').isVisible()) errors.push('[user-preset] ↗ left the dialog open');
 if ((await page.locator('#case_wall').inputValue()) !== '3.5') errors.push('[user-preset] the wall is not 3.5');
 
 // storage that refuses: the banner says so and outlives rebuilds; a preset's note is dismissed; it goes once writes work
@@ -1050,10 +1086,9 @@ page.once('dialog', (dialog) => dialog.accept('Unsaved preset'));
 await page.click('#saveBtn');
 if (!(await storageText()).includes('Could not save the preset')) errors.push('[storage-note] no note for the preset');
 await page.click('#presetBtn');
-if (await page.locator('#presetList [data-preset^="u:"]', { hasText: 'Unsaved preset' }).count())
-  errors.push('[storage-note] an unsaved preset is listed');
+if (await userPresetRef('Unsaved preset')) errors.push('[storage-note] an unsaved preset is listed');
 await page.click('#presetsClose');
-await page.click('#storageNote .storage-close');
+await page.click('#storageNote .link-button');
 if ((await storageText()).includes('Could not save the preset')) errors.push('[storage-note] the preset note was not dismissed');
 await page.evaluate(() => {
   Storage.prototype.setItem = window.__setItem;
@@ -1110,7 +1145,7 @@ await page.check('#viewWarnings');
 // view modes and export tabs: what is drawn follows both
 label('view');
 await page.click('#presetBtn');
-await page.click('#presetList [data-preset="b:pi4-desktop"]');
+await page.click('#presetList [data-ref="b:pi4-desktop"] .preset-pick');
 await expectWatertight('view:preset');
 // a preset is shown as open only while the project still is it; undo brings it back
 label('preset-changed');
@@ -1118,7 +1153,9 @@ const presetShown = async () => ({
   button: (await page.locator('#presetBtn').textContent()).trim(),
   current: await page.evaluate(async () => {
     document.querySelector('#presetBtn').click();
-    const ref = document.querySelector('#presetList [aria-current="true"]')?.dataset.preset ?? '';
+    // the dialog marks the open preset, and "changed" once the project differs from it
+    const row = document.querySelector('#presetList .preset-row.current');
+    const ref = `${row?.dataset.ref ?? ''}${row?.querySelector('.preset-changed') ? ' changed' : ''}`;
     document.querySelector('#presetsClose').click();
     return ref;
   }),
@@ -1131,7 +1168,7 @@ if (shown.button !== 'Pi 4 desktop case' || shown.current !== 'b:pi4-desktop')
 await setRange('case_wall', 2.5);
 await page.waitForTimeout(700);
 shown = await presetShown();
-if (shown.button !== 'Presets…' || shown.current !== '')
+if (shown.button !== 'Presets…' || shown.current !== 'b:pi4-desktop changed')
   errors.push(`[preset-changed] changed, still shown as open: ${JSON.stringify(shown)}`);
 await page.click('#undoBtn');
 shown = await presetShown();
@@ -1245,7 +1282,7 @@ await page.click('#viewExploded');
 label('lang');
 const expected = { en: 'Case', ru: 'Корпус', uk: 'Корпус', he: 'מארז' };
 for (const [code, title] of Object.entries(expected)) {
-  await page.selectOption('#langSel', code);
+  await page.selectOption('.lang-field select', code);
   await page.waitForTimeout(80);
   const heading = (await page.locator('#panel h2').first().textContent()).trim();
   if (heading !== title) errors.push(`[lang:${code}] heading "${heading}"`);
@@ -1256,8 +1293,8 @@ for (const [code, title] of Object.entries(expected)) {
 }
 await page.reload();
 await page.waitForTimeout(200);
-if ((await page.locator('#langSel').inputValue()) !== 'he') errors.push('[lang] the choice was not remembered');
-await page.selectOption('#langSel', 'en');
+if ((await page.locator('.lang-field select').inputValue()) !== 'he') errors.push('[lang] the choice was not remembered');
+await page.selectOption('.lang-field select', 'en');
 
 // a fresh Hebrew browser: Hebrew text, layout still left-to-right
 label('lang:he-IL');
