@@ -77,9 +77,8 @@ export const uk: Record<Key, string> = {
   'hinge.leafHole': 'У що',
   'hinge.leafHole.hint':
     'У що входять гвинти стулок усередині стінки: нарізний отвір, вплавна вставка або гайка, вкладена в кишеню зсередини',
-  'cable.add': '+ Додати шлейф',
+  'cable.add': 'Додати шлейф',
   'cable.title': 'Шлейф {n}',
-  'cable.remove': 'Прибрати шлейф',
   'cable.kind': 'Шлейф',
   'cable.kind.flat': 'плаский',
   'cable.kind.round': 'круглий',
@@ -207,7 +206,7 @@ export const uk: Record<Key, string> = {
 
   // --- boards ---
   'panel.boards': 'Плати',
-  'boards.add': '+ Додати плату',
+  'boards.add': 'Додати плату',
   'boards.empty': 'Плат немає — корпус лишає невелику порожню порожнину.',
   'board.x': 'X',
   'board.y': 'Y',
@@ -295,7 +294,6 @@ export const uk: Record<Key, string> = {
   'hole.tap': 'саморіз',
   'hole.insert': 'термовставка',
   'hole.nut': 'гайка',
-  'board.remove': 'Прибрати плату',
   'board.unverified': 'Розміри ще не звірені з офіційним кресленням',
   'board.rails': 'Кріпильних отворів немає: плату тримають дві напрямні з пазом — вставляється під кутом.',
   'board.rails.screwed':
@@ -344,7 +342,7 @@ export const uk: Record<Key, string> = {
 
   // --- openings ---
   'panel.openings': 'Отвори',
-  'cuts.add': '+ Додати отвір',
+  'cuts.add': 'Додати отвір',
   'cut.face': 'Грань',
   'cut.shape': 'Форма',
   'cutshape.rect': 'прямокутник',
@@ -356,7 +354,6 @@ export const uk: Record<Key, string> = {
   'cut.h': 'Висота',
   'cut.d': 'Діаметр',
   'cut.r': 'Радіус кутів',
-  'cut.remove': 'Прибрати отвір',
   'cut.title': 'Отвір {n}',
   'board.ports': 'Отвори під роз’єми',
   'board.ports.hint': 'для яких роз’ємів прорізати отвір у корпусі',
@@ -484,7 +481,7 @@ export const uk: Record<Key, string> = {
     'Наскрізним болтам потрібна кришка зверху або знизу на коробці, циліндрі чи половинці розкладачки: поки що кришка тримається на гвинтах, а болти повернуться, коли форма й кришка дозволять.',
 
   // --- custom board ---
-  'boards.custom': '+ Власна плата',
+  'boards.custom': 'Власна плата',
   'custom.edit': 'Редагувати плату',
   'custom.name': 'Назва',
   'custom.w': 'Ширина',
@@ -562,9 +559,8 @@ export const uk: Record<Key, string> = {
   'mount.screwD': 'Гвинт у стіну',
   'mount.screwD.hint': 'діаметр стрижня гвинта в стіні, мм',
   'label.text': 'Текст',
-  'labels.add': '+ Додати напис',
+  'labels.add': 'Додати напис',
   'label.title': 'Напис {n}',
-  'label.remove': 'Прибрати напис',
   'label.face': 'Грань',
   'label.face.hint':
     'грань, на якій напис, — корпусу або кришки; у циліндра пласкі грані лише верх і низ, верх пульта — його похила панель',

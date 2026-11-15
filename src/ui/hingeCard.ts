@@ -2,9 +2,10 @@
 // half being edited and the view's angle are view settings, not the
 // project's: their rows are built over `HalfView`.
 
-import type { Change, Control, ControlsHandle } from './controls';
+import type { Change, Control } from './controls';
 import { renderControls } from './controls';
-import { make } from 'maker-kit/ui/dom';
+import type { BoxListHandle } from './boxList';
+import { renderBoxList } from './boxList';
 import { t } from '../i18n';
 import type { AppState } from '../state/schema';
 import type { Half, HingeState } from '../state/hinged';
@@ -314,49 +315,19 @@ function cableControls(index: number): Control<AppState>[] {
   ];
 }
 
-export interface CablesCardHandle {
-  sync(state: AppState): void;
-}
+export type CablesCardHandle = BoxListHandle;
 
 /** The cables between the halves: a box per cable, like the openings' cards. */
-export function renderCablesCard(container: HTMLElement, read: () => AppState, onChange: Change<AppState>): CablesCardHandle {
-  let handles: ControlsHandle<AppState>[] = [];
-  let count = -1;
-
-  function build(state: AppState): void {
-    container.replaceChildren();
-    handles = state.hinge.cables.map((_, index) => {
-      const box = make('div', 'board-box');
-      box.id = `cable${index}`;
-      const head = make('div', 'board-head');
-      head.append(make('span', 'board-name', t('cable.title', { n: index + 1 })));
-      const remove = make('button', 'btn board-del', '✕');
-      remove.type = 'button';
-      remove.id = `cable${index}_remove`;
-      remove.title = t('cable.remove');
-      remove.setAttribute('aria-label', t('cable.remove'));
-      remove.addEventListener('click', () => {
-        const current = read();
-        onChange(hingeOf(current, { cables: current.hinge.cables.filter((__, i) => i !== index) }));
-      });
-      head.append(remove);
-      const controls = make('div');
-      box.append(head, controls);
-      container.append(box);
-      return renderControls(controls, cableControls(index), read, onChange, `cable${index}`);
-    });
-  }
-
-  function sync(state: AppState): void {
-    if (state.hinge.cables.length !== count) {
-      count = state.hinge.cables.length;
-      build(state);
-    }
-    for (const handle of handles) handle.sync(state);
-  }
-
-  sync(read());
-  return { sync };
+export function renderCablesCard(list: HTMLUListElement, read: () => AppState, onChange: Change<AppState>): CablesCardHandle {
+  return renderBoxList(list, {
+    idPrefix: 'cable',
+    read,
+    onChange,
+    count: (state) => state.hinge.cables.length,
+    title: (_state, index) => t('cable.title', { n: index + 1 }),
+    fill: (body, index) => renderControls(body, cableControls(index), read, onChange, `cable${index}`),
+    remove: (state, index) => hingeOf(state, { cables: state.hinge.cables.filter((_, i) => i !== index) }),
+  });
 }
 
 /** A new cable in the middle of the hinge edge `w` long. */

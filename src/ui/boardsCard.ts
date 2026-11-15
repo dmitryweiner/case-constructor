@@ -1,12 +1,15 @@
 // The Boards card: one box per placed board — position, height, rotation,
-// how it is held — and a remove button. The list is rebuilt when boards are
-// added or removed; otherwise only synced, so a slider keeps its focus.
-// With two boards or more: arrange buttons for all of them on top, and in
-// each box a way to line it up with another board (geo/arrange.ts).
+// how it is held — and ✕ (the box list on maker-kit's list card). The boxes
+// are filled again when boards are added or removed or change their kind;
+// otherwise only synced, so a slider keeps its focus. With two boards or
+// more: arrange buttons for all of them above the list, and in each box a
+// way to line it up with another board (geo/arrange.ts).
 
 import { make } from 'maker-kit/ui/dom';
 import type { Change, Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
+import type { BoxListHandle } from './boxList';
+import { renderBoxList } from './boxList';
 import { t } from '../i18n';
 import type { BackPlacement, BoardPlacement } from '../boards/placement';
 import {
@@ -717,9 +720,7 @@ const ALIGN_LABELS: Record<Align, Key> = {
   height: 'align.height',
 };
 
-export interface BoardsCardHandle {
-  sync(state: AppState): void;
-}
+export type BoardsCardHandle = BoxListHandle;
 
 /** The cap widths a board's every field (and its top buttons) allow at a fit: the widest key at least, the tightest room at most. */
 function capRange(def: BoardDef, fit: number): { min: number; max: number } {
@@ -747,13 +748,13 @@ function signatureOf(state: AppState): string {
 }
 
 export function renderBoardsCard(
-  container: HTMLElement,
+  /** above the list: the arrange buttons, or the note of an empty case */
+  tools: HTMLElement,
+  list: HTMLUListElement,
   read: () => AppState,
   onChange: Change<AppState>,
   download: (text: string, name: string) => void,
 ): BoardsCardHandle {
-  let handles: ControlsHandle<AppState>[] = [];
-  let signature = '';
   /** the gap the arrange and "beside" buttons keep between footprints, mm — a tool setting, not part of the case */
   let gap = NEW_BOARD_GAP;
 
@@ -835,78 +836,71 @@ export function renderBoardsCard(
     return details;
   }
 
-  function build(state: AppState): void {
-    container.replaceChildren();
-    if (state.boards.length >= 2) container.append(arrangeBox());
-    handles = state.boards.map((placement, index) => {
-      const def = boardOf(placement);
-      const box = make('div', 'board-box');
-      box.id = `board${index}`;
-      const head = make('div', 'board-head');
-      head.append(make('span', 'board-name', `${index + 1}. ${def.battery?.kind === 'pack' ? t('battery.kind.pack') : def.name}`));
-      if (!def.verified) {
-        const mark = make('span', 'unverified', '≈');
-        mark.title = t('board.unverified');
-        head.append(mark);
-      }
-      const remove = make('button', 'btn board-del', '✕');
-      remove.type = 'button';
-      remove.id = `board${index}_remove`;
-      remove.title = t('board.remove');
-      remove.setAttribute('aria-label', t('board.remove'));
-      remove.addEventListener('click', () => {
-        const current = read();
-        onChange({ ...current, boards: current.boards.filter((_, i) => i !== index) });
-      });
-      head.append(remove);
-      box.append(head);
-      if (def.mount.kind === 'rails')
-        box.append(make('p', 'board-note', t(railsScrewed(def, placement) ? 'board.rails.screwed' : 'board.rails')));
-      if (def.battery) box.append(make('p', 'board-note', t('battery.note')));
-      const controls = make('div');
-      box.append(controls);
-      if (state.boards.length >= 2) box.append(alignBox(index, state));
-      let editor: CustomEditorHandle | null = null;
-      if (placement.board === 'custom') {
-        const details = make('details', 'custom-details');
-        details.open = true;
-        details.id = `board${index}_editor`;
-        details.append(make('summary', undefined, t('custom.edit')));
-        box.append(details);
-        editor = renderCustomEditor(details, index, read, onChange, download);
-      }
-      const ports = portControls(index, state);
-      let portRows: ControlsHandle<AppState> | null = null;
-      if (ports.length > 0) {
-        const title = make('p', 'sub-title', t('board.ports'));
-        title.title = t('board.ports.hint');
-        const list = make('div', 'port-list');
-        box.append(title, list);
-        portRows = renderControls(list, ports, read, onChange, `board${index}`);
-      }
-      container.append(box);
-      const main = renderControls(controls, boardControls(index, entryOf(placement)), read, onChange, `board${index}`);
-      return {
-        sync: (current: AppState) => {
-          main.sync(current);
-          portRows?.sync(current);
-          editor?.sync(boardOf(current.boards[index]));
-        },
-      };
-    });
-    if (state.boards.length === 0) container.append(make('p', 'board-note', t('boards.empty')));
+  /** A board's box: how it is held, its rows, the align tools, the custom editor, its ports. */
+  function fill(box: HTMLElement, index: number, state: AppState): { sync(state: AppState): void } {
+    const placement = state.boards[index];
+    const def = boardOf(placement);
+    if (def.mount.kind === 'rails')
+      box.append(make('p', 'board-note', t(railsScrewed(def, placement) ? 'board.rails.screwed' : 'board.rails')));
+    if (def.battery) box.append(make('p', 'board-note', t('battery.note')));
+    const controls = make('div');
+    box.append(controls);
+    if (state.boards.length >= 2) box.append(alignBox(index, state));
+    let editor: CustomEditorHandle | null = null;
+    if (placement.board === 'custom') {
+      const details = make('details', 'custom-details');
+      details.open = true;
+      details.id = `board${index}_editor`;
+      details.append(make('summary', undefined, t('custom.edit')));
+      box.append(details);
+      editor = renderCustomEditor(details, index, read, onChange, download);
+    }
+    const ports = portControls(index, state);
+    let portRows: ControlsHandle<AppState> | null = null;
+    if (ports.length > 0) {
+      const title = make('p', 'sub-title', t('board.ports'));
+      title.title = t('board.ports.hint');
+      const portBox = make('div', 'port-list');
+      box.append(title, portBox);
+      portRows = renderControls(portBox, ports, read, onChange, `board${index}`);
+    }
+    const main = renderControls(controls, boardControls(index, entryOf(placement)), read, onChange, `board${index}`);
+    return {
+      sync: (current: AppState) => {
+        main.sync(current);
+        portRows?.sync(current);
+        editor?.sync(boardOf(current.boards[index]));
+      },
+    };
   }
+
+  let toolsFor = -1;
+  const boxes = renderBoxList(list, {
+    idPrefix: 'board',
+    read,
+    onChange,
+    count: (state) => state.boards.length,
+    title: (state, index) => {
+      const def = boardOf(state.boards[index]);
+      return `${index + 1}. ${def.battery?.kind === 'pack' ? t('battery.kind.pack') : def.name}`;
+    },
+    hint: (state, index) => (boardOf(state.boards[index]).verified ? undefined : { text: '≈', title: t('board.unverified') }),
+    signature: signatureOf,
+    fill,
+    remove: (state, index) => ({ ...state, boards: state.boards.filter((_, i) => i !== index) }),
+  });
 
   function sync(state: AppState): void {
-    const next = signatureOf(state);
-    if (next !== signature) {
-      signature = next;
-      build(state);
+    // the arrange buttons with two boards or more, a word on an empty case
+    const count = state.boards.length;
+    const shape = count === 0 ? 0 : count >= 2 ? 2 : 1;
+    if (shape !== toolsFor) {
+      toolsFor = shape;
+      tools.replaceChildren(...(shape === 2 ? [arrangeBox()] : shape === 0 ? [make('p', 'board-note', t('boards.empty'))] : []));
     }
-    for (const handle of handles) handle.sync(state);
+    boxes.sync(state);
   }
 
-  signature = signatureOf(read());
-  build(read());
+  sync(read());
   return { sync };
 }

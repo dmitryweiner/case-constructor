@@ -129,7 +129,8 @@ applyStaticText(document);
 const view = el('view', HTMLCanvasElement);
 const panel = el('panel', HTMLElement);
 const caseParams = el('caseParams', HTMLDivElement);
-const boardCards = el('boardCards', HTMLDivElement);
+const boardTools = el('boardTools', HTMLDivElement);
+const boardCards = el('boardCards', HTMLUListElement);
 const boardAdd = el('boardAdd', HTMLButtonElement);
 const boardCustom = el('boardCustom', HTMLButtonElement);
 const boardPicker = el('boardPicker', HTMLDivElement);
@@ -137,8 +138,8 @@ const pickerDialog = createModal(boardPicker, { close: el('boardPickerClose', HT
 const boardSearch = el('boardSearch', HTMLInputElement);
 const boardList = el('boardList', HTMLDivElement);
 const viewBoards = el('viewBoards', HTMLInputElement);
-const cutCards = el('cutCards', HTMLDivElement);
-const labelCards = el('labelCards', HTMLDivElement);
+const cutCards = el('cutCards', HTMLUListElement);
+const labelCards = el('labelCards', HTMLUListElement);
 const extraOpenings = el('extraOpenings', HTMLDivElement);
 const extraMounting = el('extraMounting', HTMLDivElement);
 const cutAdd = el('cutAdd', HTMLButtonElement);
@@ -152,7 +153,7 @@ const halfGroup = el('halfGroup', HTMLDivElement);
 const halfBar = el('halfBar', HTMLDivElement);
 const halfParams = el('halfParams', HTMLDivElement);
 const angleParams = el('angleParams', HTMLDivElement);
-const cableCards = el('cableCards', HTMLDivElement);
+const cableCards = el('cableCards', HTMLUListElement);
 const cableAdd = el('cableAdd', HTMLButtonElement);
 const printParams = el('printParams', HTMLDivElement);
 const resolutionSel = el('resolution', HTMLSelectElement);
@@ -298,6 +299,7 @@ function renderPanel(): void {
   halfRows = renderControls(halfParams, halfControls(), () => halfView, setHalfView, 'edit');
   angleRows = renderControls(angleParams, angleControls(), () => halfView, setHalfView, 'view');
   boardRows = renderBoardsCard(
+    boardTools,
     boardCards,
     () => edited(),
     applyEdit,

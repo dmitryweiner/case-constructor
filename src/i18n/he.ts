@@ -73,9 +73,8 @@ export const he: Record<Key, string> = {
   'hinge.leafScrew.hint': 'דרך הכנפיים ודופן הציר אל משטח בתוך הדופן: שניים לכל כנף וגוש (אחד בגוש קצר)',
   'hinge.leafHole': 'לתוך',
   'hinge.leafHole.hint': 'לתוך מה נכנסים ברגי הכנפיים בתוך הדופן: חור לתבריג, תותב מוחדר בחום, או אום שמונח בכיס מבפנים',
-  'cable.add': '+ הוספת כבל',
+  'cable.add': 'הוספת כבל',
   'cable.title': 'כבל {n}',
-  'cable.remove': 'הסרת הכבל',
   'cable.kind': 'כבל',
   'cable.kind.flat': 'שטוח',
   'cable.kind.round': 'עגול',
@@ -203,7 +202,7 @@ export const he: Record<Key, string> = {
 
   // --- boards ---
   'panel.boards': 'לוחות',
-  'boards.add': '+ הוספת לוח',
+  'boards.add': 'הוספת לוח',
   'boards.empty': 'אין לוחות — המארז שומר חלל ריק קטן.',
   'board.x': 'X',
   'board.y': 'Y',
@@ -288,7 +287,6 @@ export const he: Record<Key, string> = {
   'hole.tap': 'הברגה עצמית',
   'hole.insert': 'תותב חום',
   'hole.nut': 'אום',
-  'board.remove': 'הסרת הלוח',
   'board.unverified': 'המידות עדיין לא נבדקו מול שרטוט רשמי',
   'board.rails': 'אין חורי הרכבה: הלוח מוחזק בשתי מסילות עם חריץ — מכניסים אותו באלכסון.',
   'board.rails.screwed':
@@ -337,7 +335,7 @@ export const he: Record<Key, string> = {
 
   // --- openings ---
   'panel.openings': 'פתחים',
-  'cuts.add': '+ הוספת פתח',
+  'cuts.add': 'הוספת פתח',
   'cut.face': 'צד',
   'cut.shape': 'צורה',
   'cutshape.rect': 'מלבן',
@@ -349,7 +347,6 @@ export const he: Record<Key, string> = {
   'cut.h': 'גובה',
   'cut.d': 'קוטר',
   'cut.r': 'רדיוס פינות',
-  'cut.remove': 'הסרת הפתח',
   'cut.title': 'פתח {n}',
   'board.ports': 'פתחים למחברים',
   'board.ports.hint': 'לאילו מחברים לחתוך פתח במארז',
@@ -466,7 +463,7 @@ export const he: Record<Key, string> = {
     'ברגים עוברים דורשים מכסה עליון או תחתון על קופסה, גליל או חצי של מארז מתקפל: כרגע המכסה מוחזק בברגים, והברגים העוברים יחזרו כשהצורה והמכסה יאפשרו.',
 
   // --- custom board ---
-  'boards.custom': '+ לוח משלך',
+  'boards.custom': 'לוח משלך',
   'custom.edit': 'עריכת הלוח',
   'custom.name': 'שם',
   'custom.w': 'רוחב',
@@ -542,9 +539,8 @@ export const he: Record<Key, string> = {
   'mount.screwD': 'בורג לקיר',
   'mount.screwD.hint': 'קוטר גוף הבורג שבקיר, מ״מ',
   'label.text': 'טקסט',
-  'labels.add': '+ הוספת כיתוב',
+  'labels.add': 'הוספת כיתוב',
   'label.title': 'כיתוב {n}',
-  'label.remove': 'הסרת הכיתוב',
   'label.face': 'דופן',
   'label.face.hint':
     'הדופן שעליה הכיתוב — של גוף המארז או של המכסה; לגליל יש דפנות שטוחות רק למעלה ולמטה, החלק העליון של הקונסולה הוא המשטח המשופע שלה',

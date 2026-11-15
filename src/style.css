@@ -328,7 +328,8 @@ input[type='text'] {
   cursor: not-allowed;
 }
 
-/* an add button under a card's list */
+/* an add button under a card's list, a wide one under its rows */
+.add-button,
 .btn.wide {
   margin-block-start: var(--space-2);
 }
@@ -360,37 +361,10 @@ input[type='text'] {
 
 /* --- Boards --- */
 
-.board-box {
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  padding: 6px 8px;
-  margin: 6px 0;
-}
-
-.board-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-
-.board-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.board-del {
-  flex: none;
-  padding: 2px 8px;
-}
-
-.board-del:hover {
-  color: var(--bad);
-  border-color: var(--bad);
+/* an unverified board's ≈ after its name: the warn colour, its tooltip says why */
+#boardCards .item-hint {
+  color: var(--warn);
+  cursor: help;
 }
 
 .board-note {

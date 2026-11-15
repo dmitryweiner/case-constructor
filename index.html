@@ -51,8 +51,8 @@
           <section class="card" id="hingeCard" hidden>
             <h2 data-i18n="panel.hinge">Hinge</h2>
             <div id="hingeParams"></div>
-            <div id="cableCards"></div>
-            <button id="cableAdd" class="btn wide" type="button" data-i18n="cable.add">+ Add cable</button>
+            <ul id="cableCards" class="item-list"></ul>
+            <button id="cableAdd" class="btn add-button" type="button" data-i18n="cable.add">Add cable</button>
           </section>
 
           <!-- a hinged case: the cards that edit one half, under one switch -->
@@ -62,10 +62,11 @@
             </div>
             <section class="card">
               <h2 data-i18n="panel.boards">Boards</h2>
-              <div id="boardCards"></div>
+              <div id="boardTools"></div>
+              <ul id="boardCards" class="item-list"></ul>
               <div class="button-row">
-                <button id="boardAdd" class="btn" type="button" data-i18n="boards.add">+ Add board</button>
-                <button id="boardCustom" class="btn" type="button" data-i18n="boards.custom">+ Custom board</button>
+                <button id="boardAdd" class="btn add-button" type="button" data-i18n="boards.add">Add board</button>
+                <button id="boardCustom" class="btn add-button" type="button" data-i18n="boards.custom">Custom board</button>
               </div>
             </section>
 
@@ -77,14 +78,14 @@
             <section class="card">
               <h2 data-i18n="panel.openings">Openings</h2>
               <div id="extraOpenings"></div>
-              <div id="cutCards"></div>
-              <button id="cutAdd" class="btn wide" type="button" data-i18n="cuts.add">+ Add opening</button>
+              <ul id="cutCards" class="item-list"></ul>
+              <button id="cutAdd" class="btn add-button" type="button" data-i18n="cuts.add">Add opening</button>
             </section>
 
             <section class="card">
               <h2 data-i18n="panel.labels">Labels</h2>
-              <div id="labelCards"></div>
-              <button id="labelAdd" class="btn wide" type="button" data-i18n="labels.add">+ Add label</button>
+              <ul id="labelCards" class="item-list"></ul>
+              <button id="labelAdd" class="btn add-button" type="button" data-i18n="labels.add">Add label</button>
             </section>
           </div>
 

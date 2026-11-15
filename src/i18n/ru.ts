@@ -77,9 +77,8 @@ export const ru: Record<Key, string> = {
   'hinge.leafHole': 'Во что',
   'hinge.leafHole.hint':
     'Во что входят винты створок внутри стенки: нарезаемое отверстие, вплавляемая вставка или гайка, вложенная в карман изнутри',
-  'cable.add': '+ Добавить шлейф',
+  'cable.add': 'Добавить шлейф',
   'cable.title': 'Шлейф {n}',
-  'cable.remove': 'Убрать шлейф',
   'cable.kind': 'Шлейф',
   'cable.kind.flat': 'плоский',
   'cable.kind.round': 'круглый',
@@ -207,7 +206,7 @@ export const ru: Record<Key, string> = {
 
   // --- boards ---
   'panel.boards': 'Платы',
-  'boards.add': '+ Добавить плату',
+  'boards.add': 'Добавить плату',
   'boards.empty': 'Плат нет — корпус оставляет небольшую пустую полость.',
   'board.x': 'X',
   'board.y': 'Y',
@@ -295,7 +294,6 @@ export const ru: Record<Key, string> = {
   'hole.tap': 'саморез',
   'hole.insert': 'термовставка',
   'hole.nut': 'гайка',
-  'board.remove': 'Убрать плату',
   'board.unverified': 'Размеры ещё не сверены с официальным чертежом',
   'board.rails': 'Крепёжных отверстий нет: плату держат две направляющие с пазом — вставляется под углом.',
   'board.rails.screwed':
@@ -344,7 +342,7 @@ export const ru: Record<Key, string> = {
 
   // --- openings ---
   'panel.openings': 'Отверстия',
-  'cuts.add': '+ Добавить отверстие',
+  'cuts.add': 'Добавить отверстие',
   'cut.face': 'Грань',
   'cut.shape': 'Форма',
   'cutshape.rect': 'прямоугольник',
@@ -356,7 +354,6 @@ export const ru: Record<Key, string> = {
   'cut.h': 'Высота',
   'cut.d': 'Диаметр',
   'cut.r': 'Радиус углов',
-  'cut.remove': 'Убрать отверстие',
   'cut.title': 'Отверстие {n}',
   'board.ports': 'Отверстия под разъёмы',
   'board.ports.hint': 'для каких разъёмов прорезать отверстие в корпусе',
@@ -481,7 +478,7 @@ export const ru: Record<Key, string> = {
     'Сквозным болтам нужна крышка сверху или снизу на коробке, цилиндре или половинке раскладушки: пока крышка держится на винтах, а болты вернутся, когда форма и крышка позволят.',
 
   // --- custom board ---
-  'boards.custom': '+ Своя плата',
+  'boards.custom': 'Своя плата',
   'custom.edit': 'Редактировать плату',
   'custom.name': 'Название',
   'custom.w': 'Ширина',
@@ -559,9 +556,8 @@ export const ru: Record<Key, string> = {
   'mount.screwD': 'Винт в стену',
   'mount.screwD.hint': 'диаметр стержня винта в стене, мм',
   'label.text': 'Текст',
-  'labels.add': '+ Добавить надпись',
+  'labels.add': 'Добавить надпись',
   'label.title': 'Надпись {n}',
-  'label.remove': 'Убрать надпись',
   'label.face': 'Грань',
   'label.face.hint':
     'грань, на которой надпись, — корпуса или крышки; у цилиндра плоские грани только верх и низ, верх пульта — его наклонная панель',
