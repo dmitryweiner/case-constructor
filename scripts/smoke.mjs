@@ -38,11 +38,14 @@ async function verdict() {
   return (await page.locator('#audit').textContent()).trim();
 }
 
+/** The blockers' text: the bad lines of the message list. */
+const blockerText = async () => (await page.locator('#messages .message.bad').allTextContents()).join('\n').trim();
+
 /** Expects a watertight build and no blockers at the current step. */
 async function expectWatertight(step) {
   const text = await verdict();
   if (!text.includes('watertight ✓')) errors.push(`[${step}] audit="${text}"`);
-  const blockers = (await page.locator('#blockers').textContent()).trim();
+  const blockers = await blockerText();
   if (blockers) errors.push(`[${step}] blockers="${blockers}"`);
 }
 
@@ -357,7 +360,7 @@ await page.uncheck('#board1_bevel');
 await expectWatertight('window:plain');
 await page.check('#board1_bevel');
 await setRange('board1_gap', 0);
-if (!(await page.textContent('#warnings'))?.includes('0.3')) errors.push('[hang] no warning for a gap under 0.3 mm');
+if (!(await page.textContent('#messages'))?.includes('0.3')) errors.push('[hang] no warning for a gap under 0.3 mm');
 await page.click('#lid_face_bottom');
 await expectWatertight('hang:bottom-lid');
 // on a console it hangs from the slope; a tilted edge cannot stand against the front or back wall
@@ -388,15 +391,15 @@ if (!(await page.locator('#board1_on_ceiling').getAttribute('class'))?.includes(
   errors.push('[keyboards] the CardKB is not hung when added');
 if (!(await page.locator('#board1_keys_window').getAttribute('class'))?.includes('active'))
   errors.push('[keyboards] the CardKB does not open a window');
-if (!(await page.textContent('#warnings'))?.includes('under the lid')) errors.push('[keyboards] no word on how deep the keys sit');
+if (!(await page.textContent('#messages'))?.includes('under the lid')) errors.push('[keyboards] no word on how deep the keys sit');
 // its keys are too low for holes: a hole per key says so
 await page.click('#board1_keys_holes');
 await expectWatertight('keys:holes');
-if (!(await page.textContent('#warnings'))?.includes('a finger will not press'))
+if (!(await page.textContent('#messages'))?.includes('a finger will not press'))
   errors.push('[keyboards] no warning for keys under the face in their holes');
 await setRange('board1_keyFit', 2);
 await expectWatertight('keys:fit');
-if (!(await page.textContent('#warnings'))?.includes('of lid between')) errors.push('[keyboards] no warning for a thin web between holes');
+if (!(await page.textContent('#messages'))?.includes('of lid between')) errors.push('[keyboards] no warning for a thin web between holes');
 // printed caps over the keys: drawn in their holes, and on the Lid tab next to the lid
 await page.click('#board1_keys_caps');
 await expectWatertight('keys:caps');
@@ -415,7 +418,7 @@ await setRange('board1_capR', 0.3);
 await setRange('board1_keyFit', 0.25);
 await setRange('board1_capSize', await page.getAttribute('#board1_capSize', 'max'));
 await expectWatertight('keys:caps-widest');
-if ((await page.textContent('#warnings'))?.includes('may slip out')) errors.push('[keyboards] the widest caps slip out');
+if ((await page.textContent('#messages'))?.includes('may slip out')) errors.push('[keyboards] the widest caps slip out');
 await page.waitForTimeout(200);
 if (Number(await page.evaluate(() => window.__case.state().boards[1].capR)) < 0.3)
   errors.push("[keyboards] a square cap's corner went sharp");
@@ -432,14 +435,14 @@ const floorBefore = await page.inputValue('#case_floor');
 await setRange('case_floor', 2);
 await setRange('board1_gap', 1.3);
 await expectWatertight('keys:cardkb-pads');
-const sinkTo = (await page.textContent('#warnings'))?.match(
+const sinkTo = (await page.textContent('#messages'))?.match(
   /the socket stands [0-9.]+ mm out of the lid through its slot; a Gap to the ceiling of ([0-9.]+) mm/,
 )?.[1];
 if (!sinkTo) errors.push('[keyboards] no word on how far the Grove socket stands out');
 else {
   await setRange('board1_gap', sinkTo);
   await expectWatertight('keys:cardkb-sunk');
-  if ((await page.textContent('#warnings'))?.includes('the socket stands'))
+  if ((await page.textContent('#messages'))?.includes('the socket stands'))
     errors.push(`[keyboards] the Grove socket still stands out at ${sinkTo} mm`);
 }
 await setRange('case_floor', floorBefore);
@@ -472,7 +475,7 @@ await page.fill('#boardSearch', 'keebdeck');
 await page.click('#boardList [data-board="solderparty-keebdeck-basic"]');
 await expectWatertight('keys:keebdeck');
 if (Number(await page.inputValue('#board1_gap')) !== 0) errors.push('[keyboards] the KeebDeck is not pressed on its flange');
-if ((await page.textContent('#warnings'))?.includes('glass thicker')) errors.push('[keyboards] a pressed flange warns about the gap');
+if ((await page.textContent('#messages'))?.includes('glass thicker')) errors.push('[keyboards] a pressed flange warns about the gap');
 await page.click('#board1_remove');
 // a clamped panel: always hung, a clamp gap, its bars printed with the lid that holds it
 label('clamp');
@@ -575,13 +578,13 @@ label('boards:overlap');
 await page.click('#board1_on_floor');
 await setRange('board1_x', 0);
 await page.waitForTimeout(100);
-if (!(await page.locator('#warnings').textContent()).includes('overlap')) errors.push('[boards:overlap] no warning');
+if (!(await page.locator('#messages').textContent()).includes('overlap')) errors.push('[boards:overlap] no warning');
 label('boards:arrange');
 const boardXY = () => page.evaluate(() => window.__case.state().boards.map((b) => [b.x, b.y]));
 for (const mode of ['row', 'column', 'compact']) {
   await page.click(`#boardsArrange_${mode}`);
   await expectWatertight(`boards:arrange:${mode}`);
-  if ((await page.locator('#warnings').textContent()).includes('overlap')) errors.push(`[boards:arrange] ${mode} leaves an overlap`);
+  if ((await page.locator('#messages').textContent()).includes('overlap')) errors.push(`[boards:arrange] ${mode} leaves an overlap`);
 }
 await setRange('boards_gap', 10);
 await page.click('#boardsArrange_row');
@@ -595,7 +598,7 @@ await page.click('#board1_align_left');
 await expectWatertight('boards:align');
 const [[ax0, ay0], [ax1, ay1]] = await boardXY();
 if (Math.abs(ax0 - ax1) > 1e-6 || !(ay1 > ay0)) errors.push(`[boards:align] behind and left: ${[ax0, ay0, ax1, ay1]}`);
-if ((await page.locator('#warnings').textContent()).includes('overlap')) errors.push('[boards:align] an overlap');
+if ((await page.locator('#messages').textContent()).includes('overlap')) errors.push('[boards:align] an overlap');
 await page.click('#undoBtn');
 const [, [ux1]] = await boardXY();
 if (Math.abs(ux1 - ax1) < 1e-6) errors.push('[boards:align] undo does not take the alignment back');
@@ -626,7 +629,7 @@ label('preset:repair-station-clamshell');
 await page.click('#presetBtn');
 await page.click('#presetList [data-ref="b:repair-station-clamshell"] .preset-pick');
 await expectWatertight('preset:repair-station-clamshell');
-if ((await page.locator('#warnings .warn-line:not(.info)').count()) > 0) errors.push('[preset:repair-station-clamshell] warnings');
+if ((await page.locator('#messages .message.warn').count()) > 0) errors.push('[preset:repair-station-clamshell] warnings');
 if (!(await drawn()).includes('hinge')) errors.push('[preset:repair-station-clamshell] no printed hinge drawn');
 await page.click('#presetBtn');
 await page.click('#presetList [data-ref="b:plain-box"] .preset-pick');
@@ -662,7 +665,7 @@ if (halves !== '0,1,top,bottom,2') errors.push(`[hinged] boards, lids, built hal
 // both lids on the bottom: knuckles printed with the halves would hang under the bed
 await page.click('#edit_half_a');
 await page.click('#lid_face_bottom');
-if (!(await page.textContent('#warnings'))?.includes('below the bed'))
+if (!(await page.textContent('#messages'))?.includes('below the bed'))
   errors.push('[hinged] no warning for knuckles with both lids on the bottom');
 await page.click('#lid_face_top');
 await page.click('#hinge_layout_full');
@@ -675,11 +678,11 @@ await expectWatertight('hinged:knuckles-3mm');
 await page.click('#hinge_axle_screw');
 await page.click('#hinge_screw_M3');
 if (await page.locator('#hinge_pinD').isVisible()) errors.push('[hinged] a screw axle offers a pin diameter');
-if (!(await page.textContent('#warnings'))?.includes('× M3 screw')) errors.push('[hinged] no word on the hinge screws to buy');
+if (!(await page.textContent('#messages'))?.includes('× M3 screw')) errors.push('[hinged] no word on the hinge screws to buy');
 await expectWatertight('hinged:screw');
 await page.click('#hinge_axle_snap');
 if (await page.locator('#hinge_screw').isVisible()) errors.push('[hinged] a snap offers a screw');
-if (!(await page.textContent('#warnings'))?.includes('split rings')) errors.push('[hinged] no word on how a snap goes together');
+if (!(await page.textContent('#messages'))?.includes('split rings')) errors.push('[hinged] no word on how a snap goes together');
 await expectWatertight('hinged:snap');
 await page.click('#hinge_axle_pin');
 await page.click('#cableAdd');
@@ -690,7 +693,7 @@ await setRange('cable0_plugH', 5);
 await page.click('#cable0_through_face');
 await expectWatertight('hinged:cable-face');
 await page.click('#cable0_through_wall');
-if (!(await page.textContent('#warnings'))?.includes('from slot to slot')) errors.push("[hinged] no word on the cable's length");
+if (!(await page.textContent('#messages'))?.includes('from slot to slot')) errors.push("[hinged] no word on the cable's length");
 await expectWatertight('hinged:cable');
 await page.click('#cable0_remove');
 // a printed hinge on screws: any lids, cones printed in place
@@ -702,9 +705,9 @@ await page.click('#edit_half_a');
 await page.click('#lid_face_bottom');
 await page.click('#edit_half_b');
 await page.click('#lid_face_bottom');
-if ((await page.textContent('#warnings'))?.includes('below the bed'))
+if ((await page.textContent('#messages'))?.includes('below the bed'))
   errors.push('[hinged] a printed hinge warns about lids on the bottom');
-if (!(await page.textContent('#warnings'))?.includes('Printed hinge:')) errors.push("[hinged] no word on the printed hinge's screws");
+if (!(await page.textContent('#messages'))?.includes('Printed hinge:')) errors.push("[hinged] no word on the printed hinge's screws");
 await expectWatertight('hinged:leaves');
 if (!(await drawn()).includes('hinge')) errors.push('[hinged] the printed hinge is not drawn');
 await page.click('#viewPrint');
@@ -820,9 +823,9 @@ label('fastening:printed');
 await page.click('#lid_fastening_printed');
 await page.selectOption('#lid_thread', 'P4');
 await expectWatertight('fastening:printed:P4');
-if (!(await page.locator('#warnings').textContent()).includes('may strip')) errors.push('[printed] no warning about the 4 mm thread');
+if (!(await page.locator('#messages').textContent()).includes('may strip')) errors.push('[printed] no warning about the 4 mm thread');
 await page.selectOption('#lid_thread', 'P8');
-if ((await page.locator('#warnings').textContent()).includes('may strip')) errors.push('[printed] the 4 mm warning stays for 8 mm');
+if ((await page.locator('#messages').textContent()).includes('may strip')) errors.push('[printed] the 4 mm warning stays for 8 mm');
 await setRange('lid_threadFit', 0.25);
 await expectWatertight('fastening:printed');
 if (!(await drawn()).includes('screw')) errors.push(`[printed] the screws are not drawn: ${await drawn()}`);
@@ -843,14 +846,14 @@ await page.click('#lid_fastening_through');
 await expectWatertight('fastening:through');
 if (await page.locator('#lid_hole_tap').isVisible()) errors.push('[through] bolts offer a hole kind');
 if (!(await page.locator('#lid_nutPlace_recessed').isVisible())) errors.push('[through] no nut controls');
-if (!(await page.locator('#warnings').textContent()).includes('sit'))
+if (!(await page.locator('#messages').textContent()).includes('sit'))
   errors.push('[through] no note on the bolts and how deep the nuts sit');
 if (!(await drawn()).includes('hardware')) errors.push(`[through] the bolts are not drawn: ${await drawn()}`);
 await page.click('#lid_nut_nyloc');
 await page.click('#lid_nutPlace_surface');
 await page.click('#lid_head_countersunk');
 await expectWatertight('fastening:through:surface');
-if (!(await page.locator('#warnings').textContent()).includes('stands out'))
+if (!(await page.locator('#messages').textContent()).includes('stands out'))
   errors.push('[through] no note on how far the bolts stand out');
 await setRange('lid_nutAF', 7);
 if (!(await page.locator('#lid_nutReset').isVisible())) errors.push('[through] no nut reset after a change');
@@ -868,7 +871,7 @@ await page.click('#tabBoth');
 await page.click('#lid_face_left');
 await expectWatertight('fastening:through:left');
 if (!(await page.locator('#lid_fastening_through').isDisabled())) errors.push('[through] offered with a side lid');
-if (!(await page.locator('#warnings').textContent()).includes('holds on screws'))
+if (!(await page.locator('#messages').textContent()).includes('holds on screws'))
   errors.push('[through] no note that a side lid holds on screws');
 await page.click('#lid_face_top');
 await page.click('#case_kind_cylinder');
@@ -877,12 +880,12 @@ await page.click('#case_kind_console');
 await expectWatertight('fastening:through:console');
 if (!(await page.locator('#lid_fastening_through').isDisabled())) errors.push('[through] offered on a console');
 await page.click('#case_kind_box');
-if ((await page.locator('#warnings').textContent()).includes('holds on screws'))
+if ((await page.locator('#messages').textContent()).includes('holds on screws'))
   errors.push('[through] the screws note stays on a box with a top lid');
 await page.click('#lid_fastening_snaps');
 await setRange('case_edgeR', 4);
 await expectWatertight('fastening:snaps:fillet');
-if (!(await page.locator('#warnings').textContent()).includes('rounded corners end'))
+if (!(await page.locator('#messages').textContent()).includes('rounded corners end'))
   errors.push('[fastening] no note about the raised lid depth');
 await setRange('case_edgeR', 0);
 
@@ -910,14 +913,14 @@ await page.click('#mount_kind_keyholes');
 await expectWatertight('keyholes');
 await page.click('#mount_keyhole_closed');
 await expectWatertight('keyholes:closed');
-if (!(await page.locator('#warnings').textContent()).includes('supports'))
+if (!(await page.locator('#messages').textContent()).includes('supports'))
   errors.push('[keyholes:closed] no warning about the pads on the bed');
 await page.click('#mount_face_back');
 await expectWatertight('keyholes:closed:back');
 // the lid's face: allowed, with a warning (the lid holds the weight)
 await page.click('#mount_face_top');
 await expectWatertight('keyholes:closed:lid');
-if (!(await page.locator('#warnings').textContent()).includes('on the lid'))
+if (!(await page.locator('#messages').textContent()).includes('on the lid'))
   errors.push('[keyholes:lid] no warning about the mount on the lid');
 await page.click('#mount_face_bottom');
 await page.click('#mount_keyhole_through');
@@ -941,7 +944,7 @@ if (!(await page.locator('#mount_earWalls_frontBack').isDisabled())) errors.push
 await expectWatertight('ears:back');
 await page.click('#mount_earWalls_topBottom');
 await expectWatertight('ears:back:topBottom');
-if (!(await page.locator('#warnings').textContent()).includes('under the bed'))
+if (!(await page.locator('#messages').textContent()).includes('under the bed'))
   errors.push('[ears:back:topBottom] no warning about the ear under the bed');
 await page.click('#mount_earWalls_leftRight');
 await page.click('#mount_face_bottom');
@@ -978,7 +981,7 @@ const bodyAfter = await page.evaluate(() => window.__case.parts()?.body.indices.
 if (bodyAfter <= bodyBefore) errors.push('[label:front] the body did not change');
 await page.selectOption('#label1_face', 'top');
 await expectWatertight('label:overlap');
-if (!(await page.locator('#warnings').textContent()).includes('Labels 1 and 2 overlap')) errors.push('[label:overlap] no overlap warning');
+if (!(await page.locator('#messages').textContent()).includes('Labels 1 and 2 overlap')) errors.push('[label:overlap] no overlap warning');
 await page.click('#label0_remove');
 await expectWatertight('label:removed');
 const left = await page.evaluate(() => window.__case.state().labels);
@@ -1112,7 +1115,7 @@ const junk = join(tmpdir(), `case-smoke-junk-${Date.now()}.json`);
 writeFileSync(junk, '{"hello": "world"}');
 await page.setInputFiles('#fileInput', junk);
 await page.waitForTimeout(100);
-if (!(await page.locator('#blockers').textContent()).includes('not a project of this app')) {
+if (!(await blockerText()).includes('not a project of this app')) {
   errors.push('[file] a foreign JSON was not refused');
 }
 // a user's project (tests/fixtures/korpus-1.json): its messages name the wall and the board in the way; notes are grey, not counted
@@ -1120,21 +1123,21 @@ label('file:user');
 await page.setInputFiles('#fileInput', join(process.cwd(), 'tests/fixtures/korpus-1.json'));
 await page.waitForTimeout(150);
 await expectWatertight('file:user');
-const userLines = await page.locator('#warnings .warn-line').allTextContents();
+const userLines = await page.locator('#messages .message:not(.bad)').allTextContents();
 if (!userLines.some((line) => line.includes('not against the right wall: board 3 “KaRadio ESP32”')))
   errors.push(`[file:user] ${userLines.join(' | ').slice(0, 200)}`);
-if ((await page.locator('#warnings .warn-line.info').count()) !== 2) errors.push('[file:user] not two notes');
-if ((await page.locator('#warnings .warn-head').textContent()) !== '3 warnings · 2 notes')
-  errors.push(`[file:user] head ${await page.locator('#warnings .warn-head').textContent()}`);
+if ((await page.locator('#messages .message.info').count()) !== 2) errors.push('[file:user] not two notes');
+if ((await page.locator('#messageCount').textContent()) !== '3 warnings · 2 notes')
+  errors.push(`[file:user] head ${await page.locator('#messageCount').textContent()}`);
 // on the model: a badge per message with a place, a hover on a line opens its badge, the toggle hides them
 label('file:user:spots');
 await page.waitForTimeout(150);
 const badges = await page.evaluate(() => window.__case.warnings());
 if (badges.length !== 5) errors.push(`[file:user:spots] ${badges.length} badges: ${JSON.stringify(badges).slice(0, 200)}`);
-await page.hover('#warnings [data-warn="1"]');
+await page.hover('#messages [data-warn="1"]');
 const opened = await page.evaluate(() => window.__case.warnings().find((badge) => badge.n === 1));
 if (!opened?.open || !opened.text.includes('right wall')) errors.push(`[file:user:spots] hover: ${JSON.stringify(opened)}`);
-if (!(await page.locator('#warnings [data-warn="1"]').evaluate((row) => row.classList.contains('hot'))))
+if (!(await page.locator('#messages [data-warn="1"]').evaluate((row) => row.classList.contains('hot'))))
   errors.push('[file:user:spots] the hovered line is not lit');
 await page.mouse.move(0, 0);
 await page.uncheck('#viewWarnings');
