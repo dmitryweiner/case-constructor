@@ -798,3 +798,9 @@ review pass and wait for the user's.
   one reformatting commit listed in `.git-blame-ignore-revs`; Markdown,
   the board catalog and the golden file are not its. Node is pinned in
   `.node-version` instead of `.nvmrc`.
+- **2026-11-15, M3 ui** (maker-kit's plan, "M3 in detail"). Hebrew is no
+  longer text-only RTL (§6 above): the whole page mirrors (`dir="rtl"`), as
+  every app on maker-kit does; the CSS is in logical properties. The panel
+  stands beside the view from 1024 px (was 760) and is a bottom sheet below
+  that. The frame and its pieces — top bar, dialogs, preset list (rename in
+  place), banner, progress bar, one message list, list cards — are the kit's.

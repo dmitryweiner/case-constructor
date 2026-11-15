@@ -288,7 +288,7 @@ The review page's "Копировать отчёт" gives one line per marked bo
 ## 6. See it in a case
 
 ```bash
-node scripts/snap.mjs --out shots/<id>-case.png --click '#board0_remove' --click '#boardAdd' \
+node scripts/snap.mjs --out shots/<id>-case.png --click '#board_0_remove' --click '#boardAdd' \
   --click '[data-board="<id>"]' --click '#tabBody' --view
 ```
 

@@ -520,8 +520,15 @@ freely; a temporary script that turns out useful becomes a permanent one.
   reference and gives `Key`. The core and the worker speak in message codes
   (`geo/message.ts`). A test fails on any Cyrillic or Hebrew in a string
   literal under `src/` outside `src/i18n/`.
-- Hebrew is text-only RTL: `<html dir>` stays `ltr`; `style.css` gives every
-  text element `unicode-bidi: plaintext` (= `dir="auto"`).
+- Hebrew mirrors the whole page: `<html dir="rtl">` (`direction()` in
+  `src/i18n`, set by `ui/staticText.ts`), the panel on the start side, the
+  right. `style.css` uses logical properties only; physical are the port
+  captions and warning badges over the view (placed by their pixels) and the
+  label's anchor grid (`direction: ltr`: a picture of the face).
+- The page's frame and its pieces are maker-kit's (`maker-kit/ui/*`,
+  `styles/kit.css`): the top bar, the sheet, dialogs, the banner, the bar
+  over the view, the message list, the list cards; `style.css` holds only
+  the app's own pieces, mobile first.
 - No `as` casts (oxlint `typescript/consistent-type-assertions`, `.oxlintrc.json`);
   `as const` is allowed. Every rule turned off there says why.
 
@@ -591,11 +598,12 @@ a hidden tab. Startup opens it, or the first preset (`PRESETS[0]`) when
 there is none; so a fresh browser — the smoke's, snap's — starts from
 `pi4-desktop`, not `defaultState()`. A failed write (maker-kit's `saveRecord` →
 `'ok' | 'blocked' | 'full'`, the user presets' too) is
-shown in the banner `#storageNote` under the top bar (`ui/storageNote.ts`):
-the project's line while it fails, a preset's until ✕ or a successful
-preset action. Never in `#blockers`: every rebuild rewrites it.
-The preset is shown as open (the button's name, the list's
-`aria-current`) only while maker-kit's `presetStatus` is `same`:
+shown in the banner `#storageNote` under the top bar (maker-kit's
+`ui/banner`): the project's line while it fails, a preset's until its
+Dismiss or a successful preset action. Never in the message list: every
+rebuild rewrites it.
+The preset is shown as open on the button only while maker-kit's
+`presetStatus` is `same` (the dialog keeps it current, marked "changed"):
 `presetSignature(state)` — the state without the parts tab, resolution and
 print layout — equals the preset's; undo back to it shows it again. A
 project file's name (no ref) has nothing to compare with and stays.
@@ -613,7 +621,7 @@ per board
 `#board<i>_x|_y|_z`, `#board<i>_on_floor|ceiling` (not a battery; on a console the ceiling is the slope), `#board<i>_gap` (hung; instead of `_z`), `#board<i>_bevel` (a hung display), `#board<i>_clampPress` (a clamped panel), `#board<i>_back` (select; a display with a back pattern), `#board<i>_back_rot_0|90|180|270`, `#board<i>_back_standoff`, `#board<i>_back_cut_<port>`, `#board<i>_top` (select; a floor board with holes), `#board<i>_top_rot_0|90|180|270`, `#board<i>_top_standoff`, `#board<i>_top_cut_<port>`, alignment (two boards or more) `#board<i>_align`
 (details), `#board<i>_alignRef`,
 `#board<i>_align_left|centreX|right|nextX|front|centreY|back|nextY|height`, `#board<i>_rot_0|90|180|270`, `#board<i>_wall_front|back|left|right` (toggles; not on a cylinder), `#board<i>_wallOffset`, `#board<i>_screw`,
-`#board<i>_hole_tap|insert|nut` (also rails on screws), `#board<i>_railScrews` (boards held by rails), `#board<i>_railEars_out|along`, `#board<i>_buttons_hole|caps` (boards with top buttons; the cap controls below then show), `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, `#board<i>_remove`, port toggles
+`#board<i>_hole_tap|insert|nut` (also rails on screws), `#board<i>_railScrews` (boards held by rails), `#board<i>_railEars_out|along`, `#board<i>_buttons_hole|caps` (boards with top buttons; the cap controls below then show), `#board<i>_pins` (boards with header rows), `#board<i>_variant` (family entries), batteries `#board<i>_battery` (select), `#board<i>_cells_1…4`, `#board<i>_pack_w|_d|_h`, port toggles
 `#board<i>_cut_<portId>`.
 Custom board: `#boardCustom`; editor ids `#board<i>_custom_name|_w|_d|_t|_topHeight|_bottomHeight`,
 `#board<i>_keys_window|holes|caps`, `#board<i>_keyFit`, `#board<i>_capShape_round|square`, `#board<i>_capR`, `#board<i>_capSize`, `#board<i>_hold_holes|rails|clamp` (keyboards),
@@ -629,9 +637,9 @@ Extras: folding cards `#card_vents`, `#card_fan` (no checkbox: on while a face i
 `#mount_earCount_1…4`, `#mount_earWalls_leftRight|frontBack|topBottom|one` (the pairs next to the face against the wall),
 `#mount_earWall` (select), `#mount_earAlong_centre|ends`, `#mount_spacing`, `#mount_screwD`; labels
 `#labelAdd` (up to 8), per label `#label<i>_face` (select), `#label<i>_text`, `#label<i>_font`, `#label<i>_size`, `#label<i>_raised`, `#label<i>_depth`,
-`#label<i>_anchor_<anchor>` (a 3 × 3 grid: topLeft … bottomRight), `#label<i>_margin` (off the centre), `#label<i>_x|_y`, `#label<i>_turn_0|90|180|270`, `#label<i>_angle`, `#label<i>_remove`.
+`#label<i>_anchor_<anchor>` (a 3 × 3 grid: topLeft … bottomRight), `#label<i>_margin` (off the centre), `#label<i>_x|_y`, `#label<i>_turn_0|90|180|270`, `#label<i>_angle`.
 Openings: `#cutAdd`; per cut `#cut<i>_face` (select), `#cut<i>_shape_rect|round`,
-`#cut<i>_x|_y|_w|_d|_h|_r` (`_d` is the diameter of a round cut), `#cut<i>_remove`.
+`#cut<i>_x|_y|_w|_d|_h|_r` (`_d` is the diameter of a round cut).
 Case card: `#case_kind_box|cylinder|console|hinged`, `#case_cornerR`, `#case_edgeR`,
 `#case_wall`, `#case_floor`, `#case_auto`, `#case_w`, `#case_diameter`,
 `#case_d`, `#case_h`, `#case_hA|_hB` (hinged), `#case_frontH`, `#case_backH`.
@@ -640,7 +648,7 @@ Hinged: the card `#hingeCard` (`#hinge_gapAuto`, `#hinge_gap`, `#hinge_magnets`,
 `#hinge_clearance`, `#hinge_axle_pin|screw|snap|cones`, `#hinge_pinD`, `#hinge_pinFit` (a pin),
 `#hinge_screw_M2|M2.5|M3` (a screw), `#hinge_kind_knuckles|leaves`, `#hinge_place_back|sides`,
 `#hinge_axle_cones` (leaves only), `#hinge_leafScrew_M2|M2.5|M3`, `#hinge_leafHole_tap|insert|nut` (leaves)), cables `#cableAdd`, per cable
-`#cable<i>_kind_flat|round`, `#cable<i>_through_wall|face`, `#cable<i>_x|_w|_t|_d|_plugW|_plugH|_remove`, the half switch `#halfBar`
+`#cable<i>_kind_flat|round`, `#cable<i>_through_wall|face`, `#cable<i>_x|_w|_t|_d|_plugW|_plugH`, the half switch `#halfBar`
 heading the frame `#halfGroup` (class `on` when hinged) round the Boards, Lid,
 Openings and Labels cards (`#edit_half_a|b`; the wall mount's card `#mountCard`, the whole case's, stands after it and hides when hinged), the view's angle `#view_angle` (in the View and export
 card).
@@ -655,7 +663,7 @@ Lid card: `#lid_face_<face>`, `#lid_depth`, `#lid_fastening_snaps|screws|magnets
 `#lid_lipT`, `#lid_fit`.
 View and export card (`#exportCard`): parts `#tabBoth` (first, default),
 `#tabBody`, `#tabLid`; view `#viewExploded` (default), `#viewAssembled`,
-`#viewPrint`; the lid's place in the Both STL (Both only) `#print_lid_auto|right|behind`, `#print_gap`; `#viewBoards`, `#viewPortNames` (connector names over the ghosts), `#viewWarnings` (badges and red boxes where the warnings point: `Message.spot`, `scene.setSpots`; list lines `#warnings [data-warn="<n>"]`; `window.__case.warnings()`), `#viewXray`; `#resolution`, `#exportBtn`. The
+`#viewPrint`; the lid's place in the Both STL (Both only) `#print_lid_auto|right|behind`, `#print_gap`; `#viewBoards`, `#viewPortNames` (connector names over the ghosts), `#viewWarnings` (badges and red boxes where the warnings point: `Message.spot`, `scene.setSpots`; list lines `#messages [data-warn="<n>"]`; `window.__case.warnings()`), `#viewXray`; `#resolution`, `#exportBtn`. The
 caption over the canvas `#viewCaption` says what is shown and scrolls to the
 card. Dev builds: `window.__case.drawn()` lists the roles drawn last,
 `drawnParts()` the meshes with their offsets. Port captions (`#portCaptions`, an overlay over
@@ -676,11 +684,23 @@ Idle rotation (`scene.ts`): after `IDLE_MS` (30 s) with no pointer, wheel,
 key, touch or input event the view turns around the case (a turn per
 `IDLE_TURN_S`, easing in), and stops at the next one; none with
 `prefers-reduced-motion`.
-The canvas stays live under the open sheet (no backdrop): drags turn the
-case, pinches zoom it, and a tap (one pointer, short, still) on the canvas
-closes the sheet (`main.ts`, `TAP_MOVE_PX` / `TAP_MS`).
-Top bar: `#presetBtn` (list `#presetList [data-preset="b:<id>"|"u:<name>"]`),
+Below 1024 px the panel is maker-kit's bottom sheet (`ui/sheet`): `#panelBtn`
+opens it, its handle `#sheetClose` or a tap on the view closes it; from
+1024 px it stands beside the view. The canvas stays live under the open
+sheet (no backdrop): drags turn the case, pinches zoom it; the view's taps
+stay the app's (`main.ts`, `TAP_MOVE_PX` / `TAP_MS`): a caption toggles its
+port, a badge opens, an empty tap closes the sheet.
+Top bar: `#presetBtn` (the dialog `#presets`, its list `#presetList
+[data-ref="b:<id>"|"u:<id>"]`: `.preset-pick` a built-in one, a user one's
+name field renamed on change, `.preset-open` ↗, `.preset-delete`),
 `#saveBtn`, `#fileOpenBtn`, `#fileSaveBtn`, `#fileInput`, `#undoBtn`,
-`#redoBtn`,
-`#langSel`, `#panelBtn`.
-Under the top bar, the storage banner `#storageNote` (`.storage-close` dismisses a preset's note).
+`#redoBtn` (maker-kit's `ui/historyKeys`), the language `.lang-field select`.
+Under the top bar, the storage banner `#storageNote` (its `.link-button` dismisses a preset's note).
+The lists (boards, openings, labels, cables) are maker-kit's list cards
+through `ui/boxList.ts`: rows `#board_<i>`, `#cut_<i>`, `#label_<i>`,
+`#cable_<i>`, each with ✕ `…_<i>_remove`; the controls inside keep
+`#board<i>_…`. The board picker is a dialog `#boardPicker` (`#boardSearch`,
+`#boardList [data-board="<id>"]`).
+The messages: one list `#messages` (maker-kit's `ui/messageList`), the
+blockers first (`.message.bad`), then `.message.warn` and `.message.info`
+(`data-code`); the counts over it `#messageCount`.
