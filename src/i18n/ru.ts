@@ -8,7 +8,6 @@ import type { Key } from '.';
 export const ru: Record<Key, string> = {
   ...kitRu,
   'app.title': 'Case Constructor — корпуса для плат под 3D-печать',
-  'lang.label': 'Язык',
   'topbar.presets': 'Пресеты…',
   'topbar.presets.title': 'Готовые и свои пресеты',
   'topbar.save.title': 'Сохранить как пресет',
@@ -201,24 +200,8 @@ export const ru: Record<Key, string> = {
 
   'error.build': 'Не удалось собрать корпус: {error}',
   'error.export': 'Выгрузка не удалась: {error}',
-  'error.presetSave': 'Не удалось сохранить пресет: хранилище браузера недоступно.',
-  'error.presetSaveFull': 'Не удалось сохранить пресет: хранилище браузера заполнено. Удалите ненужные пресеты и попробуйте снова.',
-  'error.presetDelete': 'Не удалось удалить пресет: хранилище браузера недоступно.',
-  'storage.project.blocked':
-    'Этот браузер не сохраняет проект: его хранилище недоступно (приватное окно или запрещённые данные сайтов). Сохраните проект в файл кнопкой ⬇️, прежде чем закрыть страницу.',
-  'storage.project.full':
-    'Последние изменения не сохраняются в браузере: его хранилище заполнено. Удалите ненужные пресеты или сохраните проект в файл кнопкой ⬇️.',
-  'storage.dismiss': 'Скрыть',
 
   'presets.title': 'Пресеты',
-  'presets.close': 'Закрыть',
-  'presets.close.title': 'Закрыть (Esc)',
-  'presets.mine': 'Мои',
-  'presets.builtin': 'Встроенные',
-  'presets.empty': 'Пока ничего — 💾 в шапке сохраняет текущий корпус.',
-  'presets.delete.title': 'Удалить «{name}»',
-  'presets.delete.aria': 'Удалить пресет {name}',
-  'presets.delete.confirm': 'Удалить?',
   'presets.prompt': 'Название пресета',
   'presets.auto': 'Корпус {n}',
 

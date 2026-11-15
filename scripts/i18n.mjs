@@ -1,8 +1,10 @@
 // Adds keys to all four dictionaries at once, each after an anchor key that
 // is already there — the dictionaries keep one order, so a new key lands at
-// the same place in each.
+// the same place in each. `--remove` takes keys out of all four (a value
+// over several lines included): the strings a maker-kit piece now says.
 //
 //   node scripts/i18n.mjs --file keys.json
+//   node scripts/i18n.mjs --remove storage.dismiss,presets.mine
 //
 // keys.json: [{ "after": "shape.console", "key": "shape.hinged",
 //               "en": "Hinged", "ru": "…", "uk": "…", "he": "…" }, …]
@@ -15,13 +17,14 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from './lib/harness.mjs';
 
 const LANGS = ['en', 'ru', 'uk', 'he'];
-const flags = parseArgs(process.argv.slice(2), ['file']);
+const flags = parseArgs(process.argv.slice(2), ['file', 'remove']);
 const file = flags.get('file');
-if (!file) {
-  console.error('usage: node scripts/i18n.mjs --file keys.json');
+const removed = flags.get('remove')?.split(',').filter(Boolean) ?? [];
+if (!file && removed.length === 0) {
+  console.error('usage: node scripts/i18n.mjs --file keys.json | --remove key,key');
   process.exit(2);
 }
-const entries = JSON.parse(readFileSync(file, 'utf8'));
+const entries = file ? JSON.parse(readFileSync(file, 'utf8')) : [];
 
 const literal = (text) => (text.includes("'") ? JSON.stringify(text) : `'${text.replaceAll('\\', '\\\\')}'`);
 const lineOf = (key) => new RegExp(`^  '${key.replaceAll('.', '\\.')}': .*$`, 'm');
@@ -52,7 +55,17 @@ for (const lang of LANGS) {
     const end = text.indexOf(',\n', anchor.index) + 2;
     text = `${text.slice(0, end)}${line}\n${text.slice(end)}`;
   }
+  for (const key of removed) {
+    const start = text.indexOf(`\n  '${key}':`);
+    if (start < 0) {
+      console.error(`${lang}: no ${key} to remove`);
+      failed = true;
+      continue;
+    }
+    // the value is one literal, on this line or the next: it ends at the first comma that ends a line
+    text = text.slice(0, start + 1) + text.slice(text.indexOf(',\n', start) + 2);
+  }
   writeFileSync(path, text);
 }
-console.log(`${entries.length} keys × ${LANGS.length} dictionaries`);
+console.log(`${entries.length} keys added, ${removed.length} removed × ${LANGS.length} dictionaries`);
 process.exit(failed ? 1 : 0);

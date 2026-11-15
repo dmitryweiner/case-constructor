@@ -25,14 +25,6 @@ export { format, placeholders } from 'maker-kit/core/format';
 
 export const DICTS: Readonly<Record<Lang, Readonly<Record<Key, string>>>> = { en, ru, uk, he };
 
-/** The language's own name, for the picker. */
-export const ENDONYMS: Readonly<Record<Lang, string>> = {
-  en: 'English',
-  ru: 'Русский',
-  uk: 'Українська',
-  he: 'עברית',
-};
-
 /** localStorage key: a manual choice beats the browser settings. */
 export const LANG_KEY = 'caseconstructor_lang';
 

@@ -8,7 +8,6 @@ import type { Key } from '.';
 export const uk: Record<Key, string> = {
   ...kitUk,
   'app.title': 'Case Constructor — корпуси для плат під 3D-друк',
-  'lang.label': 'Мова',
   'topbar.presets': 'Пресети…',
   'topbar.presets.title': 'Готові та власні пресети',
   'topbar.save.title': 'Зберегти як пресет',
@@ -201,24 +200,8 @@ export const uk: Record<Key, string> = {
 
   'error.build': 'Не вдалося зібрати корпус: {error}',
   'error.export': 'Вивантаження не вдалося: {error}',
-  'error.presetSave': 'Не вдалося зберегти пресет: сховище браузера недоступне.',
-  'error.presetSaveFull': 'Не вдалося зберегти пресет: сховище браузера заповнене. Видаліть непотрібні пресети й спробуйте знову.',
-  'error.presetDelete': 'Не вдалося видалити пресет: сховище браузера недоступне.',
-  'storage.project.blocked':
-    'Цей браузер не зберігає проєкт: його сховище недоступне (приватне вікно або заборонені дані сайтів). Збережіть проєкт у файл кнопкою ⬇️, перш ніж закрити сторінку.',
-  'storage.project.full':
-    'Останні зміни не зберігаються в браузері: його сховище заповнене. Видаліть непотрібні пресети або збережіть проєкт у файл кнопкою ⬇️.',
-  'storage.dismiss': 'Сховати',
 
   'presets.title': 'Пресети',
-  'presets.close': 'Закрити',
-  'presets.close.title': 'Закрити (Esc)',
-  'presets.mine': 'Мої',
-  'presets.builtin': 'Вбудовані',
-  'presets.empty': 'Поки нічого — 💾 у шапці зберігає поточний корпус.',
-  'presets.delete.title': 'Видалити «{name}»',
-  'presets.delete.aria': 'Видалити пресет {name}',
-  'presets.delete.confirm': 'Видалити?',
   'presets.prompt': 'Назва пресета',
   'presets.auto': 'Корпус {n}',
 

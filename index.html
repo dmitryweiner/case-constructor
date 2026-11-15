@@ -37,13 +37,10 @@
         <button id="panelBtn" class="tb-btn" data-i18n="topbar.panel" data-i18n-title="topbar.panel.title" title="Settings" hidden>
           ⚙ Settings
         </button>
-        <label class="tb-field" id="langField" data-i18n-title="lang.label" title="Language">
-          <span class="lang-globe" aria-hidden="true">🌐</span>
-          <select id="langSel" data-i18n-aria="lang.label" aria-label="Language"></select>
-        </label>
+        <!-- the language picker (maker-kit's ui/languagePicker) is appended here -->
       </header>
-      <!-- what browser storage failed to keep (ui/storageNote.ts) -->
-      <div id="storageNote" role="alert" hidden></div>
+      <!-- what browser storage failed to keep (maker-kit's ui/banner) -->
+      <div id="storageNote" class="banner" hidden></div>
       <div id="content">
         <aside id="panel" class="open">
           <section class="card">
@@ -200,45 +197,43 @@
           <canvas id="view"></canvas>
           <div id="portCaptions" aria-hidden="true"></div>
           <button id="viewCaption" type="button" aria-live="polite" data-i18n-title="caption.title"></button>
-          <div id="presets" hidden>
-            <div id="presetsBox" role="dialog" aria-labelledby="presetsTitle">
+          <div id="presets" class="modal" hidden>
+            <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="presetsTitle">
+              <h2 id="presetsTitle" data-i18n="presets.title">Presets</h2>
               <button
                 id="presetsClose"
-                class="panel-close"
+                class="icon-button modal-close"
                 type="button"
-                data-i18n-title="presets.close.title"
-                data-i18n-aria="presets.close"
-                title="Close (Esc)"
+                data-i18n-title="kit.modal.close"
+                data-i18n-aria="kit.modal.close"
+                title="Close"
                 aria-label="Close"
               >
                 ✕
               </button>
-              <h2 id="presetsTitle" data-i18n="presets.title">Presets</h2>
-              <div id="presetList"></div>
+              <div class="modal-body"><div id="presetList"></div></div>
             </div>
           </div>
           <div id="boardPicker" class="modal" hidden>
-            <div class="modal-box" role="dialog" aria-labelledby="boardPickerTitle">
+            <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="boardPickerTitle">
+              <h2 id="boardPickerTitle" data-i18n="picker.title">Add a board</h2>
               <button
                 id="boardPickerClose"
-                class="panel-close"
+                class="icon-button modal-close"
                 type="button"
-                data-i18n-title="presets.close.title"
-                data-i18n-aria="presets.close"
-                title="Close (Esc)"
+                data-i18n-title="kit.modal.close"
+                data-i18n-aria="kit.modal.close"
+                title="Close"
                 aria-label="Close"
               >
                 ✕
               </button>
-              <h2 id="boardPickerTitle" data-i18n="picker.title">Add a board</h2>
-              <input type="search" id="boardSearch" data-i18n-aria="picker.search" aria-label="Search" />
-              <div id="boardList"></div>
+              <input type="search" id="boardSearch" autofocus data-i18n-aria="picker.search" aria-label="Search" />
+              <div id="boardList" class="modal-body"></div>
             </div>
           </div>
-          <div id="progressWrap" hidden>
-            <div id="progressBar"><div id="progressFill"></div></div>
-            <span id="progressLabel"></span>
-          </div>
+          <!-- the bar over the view (maker-kit's ui/progress) -->
+          <div id="progressWrap" class="view-progress" hidden></div>
         </main>
       </div>
     </div>

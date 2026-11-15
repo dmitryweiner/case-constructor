@@ -12,7 +12,6 @@ export const en = {
   ...kitEn,
   // --- page and top bar ---
   'app.title': 'Case Constructor — 3D-printable enclosures for boards',
-  'lang.label': 'Language',
   'topbar.presets': 'Presets…',
   'topbar.presets.title': 'Built-in and saved presets',
   'topbar.save.title': 'Save as a preset',
@@ -213,25 +212,9 @@ export const en = {
   // --- errors ---
   'error.build': 'Could not build the case: {error}',
   'error.export': 'Export failed: {error}',
-  'error.presetSave': 'Could not save the preset: the browser storage is unavailable.',
-  'error.presetSaveFull': 'Could not save the preset: the browser storage is full. Delete presets you no longer need and try again.',
-  'error.presetDelete': 'Could not delete the preset: the browser storage is unavailable.',
-  'storage.project.blocked':
-    'This browser does not keep your project: its storage is unavailable (a private window or blocked site data). Save the project to a file with ⬇️ before closing the page.',
-  'storage.project.full':
-    'Your latest changes are not kept in this browser: its storage is full. Delete presets you no longer need, or save the project to a file with ⬇️.',
-  'storage.dismiss': 'Dismiss',
 
   // --- presets ---
   'presets.title': 'Presets',
-  'presets.close': 'Close',
-  'presets.close.title': 'Close (Esc)',
-  'presets.mine': 'Mine',
-  'presets.builtin': 'Built-in',
-  'presets.empty': 'Nothing saved yet — 💾 in the top bar saves the current case.',
-  'presets.delete.title': 'Delete “{name}”',
-  'presets.delete.aria': 'Delete preset {name}',
-  'presets.delete.confirm': 'Delete?',
   'presets.prompt': 'Preset name',
   'presets.auto': 'Case {n}',
 

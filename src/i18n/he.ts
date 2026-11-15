@@ -9,7 +9,6 @@ import type { Key } from '.';
 export const he: Record<Key, string> = {
   ...kitHe,
   'app.title': 'Case Constructor — מארזים ללוחות להדפסה בתלת־ממד',
-  'lang.label': 'שפה',
   'topbar.presets': 'תבניות…',
   'topbar.presets.title': 'תבניות מוכנות ושמורות',
   'topbar.save.title': 'שמירה כתבנית',
@@ -197,24 +196,8 @@ export const he: Record<Key, string> = {
 
   'error.build': 'לא ניתן לבנות את המארז: {error}',
   'error.export': 'הייצוא נכשל: {error}',
-  'error.presetSave': 'לא ניתן לשמור את התבנית: אחסון הדפדפן אינו זמין.',
-  'error.presetSaveFull': 'לא ניתן לשמור את התבנית: אחסון הדפדפן מלא. מחקו תבניות שאינן נחוצות ונסו שוב.',
-  'error.presetDelete': 'לא ניתן למחוק את התבנית: אחסון הדפדפן אינו זמין.',
-  'storage.project.blocked':
-    'הדפדפן הזה אינו שומר את הפרויקט: האחסון שלו אינו זמין (חלון פרטי או נתוני אתרים חסומים). שמרו את הפרויקט לקובץ בכפתור ⬇️ לפני סגירת הדף.',
-  'storage.project.full':
-    'השינויים האחרונים אינם נשמרים בדפדפן: האחסון שלו מלא. מחקו תבניות שאינן נחוצות, או שמרו את הפרויקט לקובץ בכפתור ⬇️.',
-  'storage.dismiss': 'הסתרה',
 
   'presets.title': 'תבניות',
-  'presets.close': 'סגירה',
-  'presets.close.title': 'סגירה (Esc)',
-  'presets.mine': 'שלי',
-  'presets.builtin': 'מובנות',
-  'presets.empty': 'עדיין לא נשמר דבר — 💾 בסרגל העליון שומר את המארז הנוכחי.',
-  'presets.delete.title': 'מחיקת „{name}”',
-  'presets.delete.aria': 'מחיקת התבנית {name}',
-  'presets.delete.confirm': 'למחוק?',
   'presets.prompt': 'שם התבנית',
   'presets.auto': 'מארז {n}',
 

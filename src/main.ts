@@ -41,13 +41,15 @@ import { HEAD_FLOOR, hasHead, headSeat, lidFaces } from './geo/lidSpec';
 import { headLimitsOf, lidPosts, nutHeads, throughNotes } from './geo/lidPosts';
 import { throughHardware } from './geo/hardware';
 import { postCollisions, postsInOpenings, printedScrewWarnings } from './geo/fastening';
-import { createProgress } from './ui/progress';
-import type { StorageStatus } from './ui/storageNote';
-import { renderStorageNote } from './ui/storageNote';
-import { renderPresetList } from './ui/presetList';
-import type { PresetRow } from './ui/presetList';
+import { createProgress } from 'maker-kit/ui/progress';
+import type { StorageStatus } from 'maker-kit/ui/banner';
+import { renderBanner } from 'maker-kit/ui/banner';
+import { bindHistory } from 'maker-kit/ui/historyKeys';
+import { createLanguagePicker } from 'maker-kit/ui/languagePicker';
+import { createModal } from 'maker-kit/ui/modal';
+import { renderPresetList } from 'maker-kit/ui/presetList';
 import { applyStaticText } from './ui/staticText';
-import { ENDONYMS, LANGS, initLang, isLang, lang, onLangChange, setLang, t, tDynamic, tm, autoPresetPrefixes } from './i18n';
+import { LANGS, initLang, lang, onLangChange, setLang, t, tDynamic, tm, autoPresetPrefixes } from './i18n';
 import type { Key } from './i18n';
 import type { Message, MessageSpot } from './geo/message';
 import { faceFrame } from './geo/face';
@@ -96,7 +98,7 @@ import { sanitizeState, RESOLUTIONS } from './state/schema';
 import { PRESETS, presetById, presetSignature } from './state/presets';
 import { encodePresetFile, decodePresetFile, presetFileName } from './state/presetFile';
 import type { PresetRef, UserPreset } from 'maker-kit/core/presets';
-import { nextPresetName, presetRef as refOf, presetStatus, removeUserPreset } from 'maker-kit/core/presets';
+import { nextPresetName, presetRef as refOf, presetStatus, removeUserPreset, renameUserPreset } from 'maker-kit/core/presets';
 import { browserStorage, loadRecord, saveRecord } from 'maker-kit/core/storage';
 import type { StorageWrite } from 'maker-kit/core/storage';
 import { storePreset, userPresetsRecord } from './state/userPresets';
@@ -128,7 +130,7 @@ const boardCards = el('boardCards', HTMLDivElement);
 const boardAdd = el('boardAdd', HTMLButtonElement);
 const boardCustom = el('boardCustom', HTMLButtonElement);
 const boardPicker = el('boardPicker', HTMLDivElement);
-const boardPickerClose = el('boardPickerClose', HTMLButtonElement);
+const pickerDialog = createModal(boardPicker, { close: el('boardPickerClose', HTMLButtonElement) });
 const boardSearch = el('boardSearch', HTMLInputElement);
 const boardList = el('boardList', HTMLDivElement);
 const viewBoards = el('viewBoards', HTMLInputElement);
@@ -161,15 +163,13 @@ const storageNote = el('storageNote', HTMLDivElement);
 /** What browser storage failed to keep: shown under the top bar, never in the blockers line a rebuild rewrites. */
 let storageStatus: StorageStatus = { project: 'ok', preset: null };
 const presetBtn = el('presetBtn', HTMLButtonElement);
-const presetsPanel = el('presets', HTMLDivElement);
-const presetsClose = el('presetsClose', HTMLButtonElement);
+/** The presets dialog: Esc, the backdrop and ✕ close it (maker-kit's ui/modal). */
+const presetsDialog = createModal(el('presets', HTMLDivElement), { close: el('presetsClose', HTMLButtonElement) });
 const presetList = el('presetList', HTMLDivElement);
 const saveBtn = el('saveBtn', HTMLButtonElement);
 const fileOpenBtn = el('fileOpenBtn', HTMLButtonElement);
 const fileSaveBtn = el('fileSaveBtn', HTMLButtonElement);
 const fileInput = el('fileInput', HTMLInputElement);
-const undoBtn = el('undoBtn', HTMLButtonElement);
-const redoBtn = el('redoBtn', HTMLButtonElement);
 const viewButtons: Record<ViewMode, HTMLButtonElement> = {
   exploded: el('viewExploded', HTMLButtonElement),
   assembled: el('viewAssembled', HTMLButtonElement),
@@ -186,17 +186,12 @@ const viewPortNames = el('viewPortNames', HTMLInputElement);
 const viewWarnings = el('viewWarnings', HTMLInputElement);
 const viewWarningsLabel = el('viewWarningsLabel', HTMLLabelElement);
 const viewPortNamesLabel = el('viewPortNamesLabel', HTMLLabelElement);
-const langSel = el('langSel', HTMLSelectElement);
 const tabs: Record<ExportMode, HTMLButtonElement> = {
   body: el('tabBody', HTMLButtonElement),
   lid: el('tabLid', HTMLButtonElement),
   both: el('tabBoth', HTMLButtonElement),
 };
-const progress = createProgress({
-  wrap: el('progressWrap', HTMLDivElement),
-  fill: el('progressFill', HTMLDivElement),
-  label: el('progressLabel', HTMLSpanElement),
-});
+const progress = createProgress(el('progressWrap', HTMLDivElement), { t });
 
 const scene = createScene(view, el('portCaptions', HTMLDivElement));
 const csg = new CsgClient();
@@ -207,6 +202,15 @@ const projectRecord = currentProjectRecord(userPresets);
 const opened: CurrentProject = loadRecord(storage, projectRecord) ?? firstPreset();
 const history = new History<AppState>(opened.state);
 let state: AppState = history.state;
+/** ↩️ ↪️ and Ctrl/⌘+Z, Shift+Ctrl/⌘+Z, Ctrl/⌘+Y on any layout, right after a slider too (maker-kit's ui/historyKeys). */
+const historyKeys = bindHistory({
+  undo: el('undoBtn', HTMLButtonElement),
+  redo: el('redoBtn', HTMLButtonElement),
+  onUndo: () => stepHistory('undo'),
+  onRedo: () => stepHistory('redo'),
+  canUndo: () => history.canUndo,
+  canRedo: () => history.canRedo,
+});
 
 // --- the panel: built at startup and again on every language switch ---
 
@@ -335,7 +339,7 @@ function syncPanel(): void {
   for (const [mode, tab] of Object.entries(tabs)) tab.setAttribute('aria-selected', String(mode === state.exportMode));
   syncView();
   resolutionSel.value = String(state.resolution);
-  updateHistoryButtons();
+  historyKeys.refresh();
   showPreset();
   refresh();
 }
@@ -352,11 +356,6 @@ function syncCards(): void {
   cutAdd.disabled = one.extraCuts.length >= MAX_EXTRA_CUTS;
   labelRows.sync(one);
   labelAdd.disabled = one.labels.length >= LABELS_MAX;
-}
-
-function updateHistoryButtons(): void {
-  undoBtn.disabled = !history.canUndo;
-  redoBtn.disabled = !history.canRedo;
 }
 
 // --- preview ---
@@ -1080,17 +1079,13 @@ viewBoards.addEventListener('change', () => {
 function openPicker(): void {
   boardSearch.value = '';
   renderBoardList(boardList, '', addBoard);
-  boardPicker.hidden = false;
-  boardSearch.focus();
-}
-
-function closePicker(): void {
-  boardPicker.hidden = true;
+  // the search has the focus (autofocus), the add button gets it back
+  pickerDialog.open(boardAdd);
 }
 
 /** A new board goes to the right of the ones already placed. */
 function addBoard(def: BoardDef): void {
-  closePicker();
+  pickerDialog.close();
   const one = edited();
   const placed = placeBoards(one);
   const x = placed.length > 0 ? Math.max(...placed.map((board) => board.footprint.x1)) + NEW_BOARD_GAP + 3 : 0;
@@ -1108,14 +1103,7 @@ boardCustom.addEventListener('click', () => {
 cutAdd.addEventListener('click', () => applyEdit(addCut(edited())));
 labelAdd.addEventListener('click', () => applyEdit(addLabel(edited())));
 cableAdd.addEventListener('click', () => applyState(addCable(state, caseLayout(halfState(state, 'a')).dims.w)));
-boardPickerClose.addEventListener('click', closePicker);
-boardPicker.addEventListener('click', (event) => {
-  if (event.target === boardPicker) closePicker();
-});
 boardSearch.addEventListener('input', () => renderBoardList(boardList, boardSearch.value, addBoard));
-window.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && !boardPicker.hidden) closePicker();
-});
 viewXray.addEventListener('change', () => scene.setXray(viewXray.checked));
 viewPortNames.addEventListener('change', drawParts);
 viewWarnings.addEventListener('change', drawWarnings);
@@ -1182,18 +1170,6 @@ function builtinName(id: string): string {
   return tDynamic(`preset.${id}.name`);
 }
 
-function presetRows(): PresetRow[] {
-  return [
-    ...userPresets.map((preset) => ({ ref: refOf('u', preset.id), name: preset.name, mine: true })),
-    ...PRESETS.map((preset) => ({
-      ref: refOf('b', preset.id),
-      name: builtinName(preset.id),
-      note: tDynamic(`preset.${preset.id}.note`),
-      mine: false,
-    })),
-  ];
-}
-
 function setPresetRef(ref: PresetRef, name: string): void {
   presetRef = ref;
   presetName = name;
@@ -1208,15 +1184,25 @@ function presetState(ref: PresetRef): AppState | undefined {
 }
 
 /**
- * The preset on the button and highlighted in the list only while the project
- * still is it: changed, it is no longer that preset (undo back to it, and it
- * is again). A project file's name has nothing to compare with and stays.
+ * The preset on the button only while the project still is it: changed, it
+ * is no longer that preset (undo back to it, and it is again); the dialog
+ * marks it "changed". A project file's name has nothing to compare with and
+ * stays.
  */
 function showPreset(): void {
-  const open = presetStatus(presetRef, state, presetState, presetSignature) === 'same';
-  presetBtn.textContent = (presetRef === '' || open ? presetName : '') || t('topbar.presets');
-  if (!presetsPanel.hidden)
-    renderPresetList(presetList, presetRows(), open ? presetRef : '', { onPick: openPreset, onDelete: deletePreset });
+  const status = presetStatus(presetRef, state, presetState, presetSignature);
+  presetBtn.textContent = (presetRef === '' || status === 'same' ? presetName : '') || t('topbar.presets');
+  if (!presetsDialog.isOpen()) return;
+  renderPresetList(presetList, {
+    builtIn: PRESETS.map((preset) => ({ id: preset.id, label: builtinName(preset.id), note: tDynamic(`preset.${preset.id}.note`) })),
+    user: userPresets.map(({ id, name }) => ({ id, name })),
+    current: presetRef,
+    status,
+    t,
+    open: openPreset,
+    rename: renamePreset,
+    remove: (id) => deletePreset(refOf('u', id)),
+  });
 }
 
 function firstPreset(): CurrentProject {
@@ -1232,7 +1218,11 @@ function keepProject(): void {
 
 function setStorageStatus(next: StorageStatus): void {
   storageStatus = next;
-  renderStorageNote(storageNote, storageStatus, () => setStorageStatus({ ...storageStatus, preset: null }));
+  renderBanner(storageNote, storageStatus, {
+    t,
+    advice: { blocked: 'kit.storage.advice.file', full: 'kit.storage.advice.fileFull' },
+    onDismiss: () => setStorageStatus({ ...storageStatus, preset: null }),
+  });
 }
 
 /** A preset written or deleted: its note goes on success, and the project gets another try (deleting frees space). */
@@ -1254,16 +1244,12 @@ function autoPresetName(): string {
 }
 
 function openPresets(): void {
-  presetsPanel.hidden = false;
+  presetsDialog.open(presetBtn);
   showPreset();
 }
 
-function closePresets(): void {
-  presetsPanel.hidden = true;
-}
-
 function openPreset(ref: PresetRef): void {
-  closePresets();
+  presetsDialog.close();
   const id = ref.slice(2);
   if (ref.startsWith('b:')) {
     const preset = presetById(id);
@@ -1278,6 +1264,17 @@ function openPreset(ref: PresetRef): void {
   }
 }
 
+/** Renamed in the dialog: the button follows when it is the open one. */
+function renamePreset(id: string, name: string): void {
+  const next = renameUserPreset(userPresets, id, name);
+  if (!presetWritten('save', saveRecord(storage, userPresetsRecord, next))) return;
+  userPresets = next;
+  const ref = refOf('u', id);
+  const renamed = next.find((preset) => preset.id === id);
+  if (presetRef === ref && renamed) setPresetRef(ref, renamed.name);
+  else showPreset();
+}
+
 function deletePreset(ref: PresetRef): void {
   const next = removeUserPreset(userPresets, ref.slice(2));
   if (!presetWritten('delete', saveRecord(storage, userPresetsRecord, next))) return;
@@ -1286,17 +1283,7 @@ function deletePreset(ref: PresetRef): void {
   showPreset();
 }
 
-presetBtn.addEventListener('click', () => {
-  if (presetsPanel.hidden) openPresets();
-  else closePresets();
-});
-presetsClose.addEventListener('click', closePresets);
-presetsPanel.addEventListener('click', (event) => {
-  if (event.target === presetsPanel) closePresets();
-});
-window.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && !presetsPanel.hidden) closePresets();
-});
+presetBtn.addEventListener('click', openPresets);
 
 saveBtn.addEventListener('click', () => {
   const name = prompt(t('presets.prompt'), autoPresetName())?.trim();
@@ -1358,22 +1345,12 @@ function flash(button: HTMLButtonElement, mark: string): void {
 
 // --- undo / redo ---
 
-undoBtn.addEventListener('click', () => stepHistory('undo'));
-redoBtn.addEventListener('click', () => stepHistory('redo'));
-
 function stepHistory(direction: 'undo' | 'redo'): void {
   const restored = direction === 'undo' ? history.undo() : history.redo();
   if (!restored) return;
   state = restored;
   showState();
 }
-
-window.addEventListener('keydown', (event) => {
-  if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'z') return;
-  if (event.target instanceof HTMLInputElement && event.target.type === 'text') return;
-  event.preventDefault();
-  stepHistory(event.shiftKey ? 'redo' : 'undo');
-});
 
 // --- mobile panel ---
 
@@ -1480,20 +1457,12 @@ setPanelOpen(true);
 
 // --- language ---
 
-for (const code of LANGS) {
-  const option = document.createElement('option');
-  option.value = code;
-  option.textContent = ENDONYMS[code];
-  langSel.append(option);
-}
-langSel.value = lang();
-langSel.addEventListener('change', () => {
-  if (isLang(langSel.value)) setLang(langSel.value);
-});
+// 🌐 at the end of the top bar, the languages by their own names
+const langPicker = createLanguagePicker(el('topbar', HTMLElement), { locales: LANGS, current: lang(), t, onChange: setLang });
 
 onLangChange(() => {
   applyStaticText(document);
-  langSel.value = lang();
+  langPicker.set(lang());
   const scroll = panel.scrollTop;
   renderPanel();
   panel.scrollTop = scroll;
