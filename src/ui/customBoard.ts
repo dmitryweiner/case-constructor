@@ -7,7 +7,7 @@
 // adding or removing a row (or changing a port's edge, which changes its
 // fields) rebuilds the editor — the card decides that by a signature.
 
-import { make } from './dom';
+import { make } from 'maker-kit/ui/dom';
 import type { Change } from './controls';
 import type { Key } from '../i18n';
 import { t, tDynamic } from '../i18n';

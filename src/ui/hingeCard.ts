@@ -4,7 +4,7 @@
 
 import type { Change, Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
-import { make } from './dom';
+import { make } from 'maker-kit/ui/dom';
 import { t } from '../i18n';
 import type { AppState } from '../state/schema';
 import type { Half, HingeState } from '../state/hinged';

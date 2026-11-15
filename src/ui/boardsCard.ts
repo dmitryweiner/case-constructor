@@ -4,7 +4,7 @@
 // With two boards or more: arrange buttons for all of them on top, and in
 // each box a way to line it up with another board (geo/arrange.ts).
 
-import { make } from './dom';
+import { make } from 'maker-kit/ui/dom';
 import type { Change, Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';

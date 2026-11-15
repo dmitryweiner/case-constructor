@@ -1,7 +1,7 @@
 // The Openings card: user-defined cuts on any face — rectangle or circle,
 // position and size in the face's own coordinates.
 
-import { make } from './dom';
+import { make } from 'maker-kit/ui/dom';
 import type { Change, Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';

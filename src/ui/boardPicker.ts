@@ -2,7 +2,7 @@
 // (displays, keyboards, holders and batteries in groups of their own), unverified
 // entries marked. A modal like the preset list.
 
-import { make } from './dom';
+import { make } from 'maker-kit/ui/dom';
 import { t } from '../i18n';
 import { CATALOG } from '../boards/catalog';
 import type { BoardDef } from '../boards/schema';

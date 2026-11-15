@@ -9,7 +9,7 @@
 // and on a phone a finger easily lands on the next row.
 
 import type { PresetRef } from 'maker-kit/core/presets';
-import { make } from './dom';
+import { make } from 'maker-kit/ui/dom';
 import { t } from '../i18n';
 
 export interface PresetRow {

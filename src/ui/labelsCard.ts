@@ -1,7 +1,7 @@
 // The labels: a list like the openings, each label its own face, text,
 // font and place on that face.
 
-import { make } from './dom';
+import { make } from 'maker-kit/ui/dom';
 import type { Change, Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
 import { t } from '../i18n';

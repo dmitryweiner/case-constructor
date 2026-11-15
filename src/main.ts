@@ -7,7 +7,8 @@
 
 import 'maker-kit/styles/kit.css';
 import './style.css';
-import { el, make } from './ui/dom';
+import { el, make } from 'maker-kit/ui/dom';
+import { download } from 'maker-kit/ui/files';
 import { createScene } from './render/scene';
 import type { SceneCaption, ScenePart, SceneSpot } from './render/scene';
 import { renderControls } from './ui/controls';
@@ -292,7 +293,7 @@ function renderPanel(): void {
     boardCards,
     () => edited(),
     applyEdit,
-    (text, name) => download(text, name, 'application/json'),
+    (text, name) => download(name, text, 'application/json'),
   );
   cutRows = renderCutsCard(cutCards, () => edited(), applyEdit);
   labelRows = renderLabelsCard(labelCards, () => edited(), applyEdit);
@@ -1161,22 +1162,13 @@ async function runExport(): Promise<void> {
     // printed screws travel with the lid, battery clamps with the body: same print job, same material
     const placed = printAll(requested, builtCases(result.parts));
     const mesh = mergeMeshes(placed.map((part) => part.mesh));
-    download(encodeSTL(mesh, { name: requested.exportMode }), `case-constructor-${requested.exportMode}.stl`);
+    download(`case-constructor-${requested.exportMode}.stl`, encodeSTL(mesh, { name: requested.exportMode }), 'model/stl');
   } catch (error) {
     blockersEl.textContent = t('error.export', { error: message(error) });
   } finally {
     exportBtn.textContent = t('export.button');
     exportBtn.disabled = false;
   }
-}
-
-function download(data: BlobPart, filename: string, type = 'model/stl'): void {
-  const url = URL.createObjectURL(new Blob([data], { type }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
 }
 
 // --- presets ---
@@ -1322,7 +1314,7 @@ saveBtn.addEventListener('click', () => {
 fileSaveBtn.addEventListener('click', () => {
   const name = prompt(t('presets.prompt'), presetName || autoPresetName())?.trim();
   if (!name) return;
-  download(encodePresetFile(name, state), presetFileName(name), 'application/json');
+  download(presetFileName(name), encodePresetFile(name, state), 'application/json');
   setPresetRef(presetRef, name);
   flash(fileSaveBtn, '✓');
 });
