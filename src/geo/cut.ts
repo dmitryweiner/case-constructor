@@ -3,7 +3,7 @@
 // differences cost far more than one big one.
 
 import type { CrossSection, Manifold } from 'manifold-3d';
-import type { CsgApi, CsgScope } from './csg';
+import type { CsgApi, CsgScope } from 'maker-kit/csg/manifold';
 import { extrude, transformSolid, unionAll } from './csg';
 import type { CutterSpec } from './cutters';
 import { flareAt } from './cutters';

@@ -183,13 +183,6 @@ export const en = {
   'warn.depthClamped': 'Lid depth limited to {max} mm by the case size.',
 
   // --- mesh checks ---
-  'mesh.nonFinite': 'The mesh has non-finite coordinates.',
-  'mesh.badIndices': 'The mesh has broken triangle indices.',
-  'mesh.empty': 'The part is empty.',
-  'mesh.flat': 'The part is flat.',
-  'mesh.open': 'The mesh is not closed — a slicer would not print it.',
-  'mesh.inverted': 'The mesh is inside out.',
-  'mesh.degenerate': '{count} degenerate triangles ({pct} %).',
   'mesh.tooLarge': 'The part is larger than {max} mm.',
 
   // --- worker stages ---

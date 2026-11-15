@@ -1,8 +1,8 @@
 // The lid and the body, assembled, must not overlap anywhere (the fit gap is
 // real), and the lid must carry a skirt that reaches into the body.
 
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import { buildCase } from '../src/geo/build';
 import { faceFrame } from '../src/geo/face';
 import { lidFaces, throughAllowed } from '../src/geo/lidSpec';
@@ -11,7 +11,7 @@ import { applyAffine, meshBounds } from '../src/geo/surface';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import type { ShapeKind } from '../src/geo/shape';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 
 let csg: CsgApi;
 beforeAll(async () => {
@@ -67,8 +67,8 @@ describe('parting', () => {
   it.each(CASES)('%s, lid %s, depth %d: lid and body do not overlap', (kind, face, depth) => {
     const state = stateFor(kind, face, depth);
     const built = buildCase(csg, state, 8);
-    const body = toManifold(csg, built.body);
-    const lid = toManifold(csg, built.lid);
+    const body = toManifold(csg, built.body, { merge: true });
+    const lid = toManifold(csg, built.lid, { merge: true });
     const overlap = body.intersect(lid);
     expect(overlap.volume()).toBeLessThan(1e-3);
     overlap.delete();
@@ -135,8 +135,8 @@ describe('a low case', () => {
       expect(report.degenerateTriangles, name).toBe(0);
       expect(membranes(mesh, frame.toFace), name).toEqual([]);
     }
-    const body = toManifold(csg, built.body);
-    const lid = toManifold(csg, built.lid);
+    const body = toManifold(csg, built.body, { merge: true });
+    const lid = toManifold(csg, built.lid, { merge: true });
     const overlap = body.intersect(lid);
     expect(overlap.volume()).toBeLessThan(1e-3);
     overlap.delete();

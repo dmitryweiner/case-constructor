@@ -3,8 +3,8 @@
 // locates it and steps aside for the board's other parts, the board's own
 // standoffs step aside for the glass.
 
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, collisions } from '../src/geo/layout';
@@ -12,7 +12,7 @@ import { cutterContains } from '../src/geo/cutters';
 import type { CutterSpec } from '../src/geo/cutters';
 import { cutWarnings, cutterCorners, portCutters } from '../src/geo/ports';
 import { RIM_FIT, RIM_W, rimsOf } from '../src/geo/rim';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { applyAffine } from '../src/geo/surface';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
@@ -70,7 +70,7 @@ describe('the window', () => {
     const built = buildCase(csg, state, 8);
     expect(validateMesh(built.lid).watertight).toBe(true);
     expect(validateMesh(built.lid).degenerateTriangles).toBe(0);
-    const lid = toManifold(csg, built.lid);
+    const lid = toManifold(csg, built.lid, { merge: true });
     const cutter = windowOf(state);
     const { h } = caseLayout(state).dims;
     const [x, y] = cutter.origin;
@@ -97,7 +97,7 @@ describe('the rim', () => {
     const built = buildCase(csg, state, 8);
     expect(validateMesh(built.lid).watertight).toBe(true);
     expect(validateMesh(built.lid).degenerateTriangles).toBe(0);
-    const lid = toManifold(csg, built.lid);
+    const lid = toManifold(csg, built.lid, { merge: true });
     const board = caseLayout(state).boards[0];
     const [rim] = rimsOf(board);
     const mid = (rim.z0 + rim.z1) / 2;
@@ -112,7 +112,7 @@ describe('the rim', () => {
     const state = hung('lcdwiki-msp1281', {}, { kind: 'cylinder' });
     const built = buildCase(csg, state, 8);
     expect(validateMesh(built.lid).watertight).toBe(true);
-    const lid = toManifold(csg, built.lid);
+    const lid = toManifold(csg, built.lid, { merge: true });
     const board = caseLayout(state).boards[0];
     const [rim] = rimsOf(board);
     const ring = rim.glass.w / 2 + RIM_FIT + RIM_W / 2;
@@ -137,7 +137,7 @@ describe('standoffs and the glass', () => {
     const state = hung('lcd-1602-i2c');
     expect(collisions(caseLayout(state))).toEqual([]);
     const built = buildCase(csg, state, 8);
-    const lid = toManifold(csg, built.lid);
+    const lid = toManifold(csg, built.lid, { merge: true });
     const board = caseLayout(state).boards[0];
     // inside the bezel's corner, within the boss's reach: air; beside the hole, away from the bezel: material
     expect(solidAt(lid, ...applyAffine(board.toCase, [4.8, 3.8, board.def.size.t + 2]))).toBe(false);

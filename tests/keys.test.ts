@@ -14,13 +14,13 @@ import {
 } from '../src/boards/placement';
 import { CEILING_GAP } from '../src/boards/placement';
 import { RAW_BOARDS, catalogBoard } from '../src/boards/catalog';
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, collisions } from '../src/geo/layout';
 import type { Message } from '../src/geo/message';
 import { WINDOW_FLARE, cutWarnings, plugNotes, portAxis, keyNotes, keysProud, portCutters, thinnestWeb } from '../src/geo/ports';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import { garbageLike, KEYPAD, boxMesh, rng } from './helpers';
@@ -389,7 +389,7 @@ describe('a plug’s slot through the lid', () => {
     if (!grove || onFace(grove)) throw new Error('grove');
     const { face, dir } = portAxis(board, grove);
     const built = buildCase(csg, s, 8);
-    const lid = toManifold(csg, built.lid);
+    const lid = toManifold(csg, built.lid, { merge: true });
     const at = (s1: number): boolean => {
       const probe = csg.Manifold.cube([0.1, 0.1, 0.1], true).translate([
         face[0] + dir[0] * s1,
@@ -521,8 +521,8 @@ describe('printed caps over the keys (K3b)', () => {
     }
     const caps = capsInCase(keyCaps(layout, { ...s.shape, console: layout.console }));
     if (!caps) throw new Error('caps');
-    const lid = toManifold(csg, built.lid);
-    const solid = toManifold(csg, caps);
+    const lid = toManifold(csg, built.lid, { merge: true });
+    const solid = toManifold(csg, caps, { merge: true });
     const common = lid.intersect(solid);
     expect(common.volume()).toBeLessThan(1e-3);
     // the Grove socket's body under the plate: an opening over it
@@ -595,7 +595,7 @@ describe('rests under a keyboard that rocks (K5)', () => {
         expect(report.watertight).toBe(true);
         expect(report.degenerateTriangles).toBe(0);
       }
-      const body = toManifold(csg, built.body);
+      const body = toManifold(csg, built.body, { merge: true });
       expect(solid(body, rest.cx, rest.cy, rest.top - 0.2)).toBe(true);
       expect(solid(body, rest.cx, rest.cy, rest.top + 0.1)).toBe(false);
       body.delete();
@@ -806,7 +806,7 @@ describe('pads between a clamped keyboard and the lid (review)', () => {
       const [bx, by] = hold.across === 'x' ? [across, pad.at] : [pad.at, across];
       const top = placed.def.size.t;
       const at = applyAffine(placed.toCase, [bx, by, top + Math.max(z, 0.3) / 2]);
-      const lid = toManifold(csg, built.lid);
+      const lid = toManifold(csg, built.lid, { merge: true });
       const probe = csg.Manifold.cube([0.1, 0.1, 0.1], true).translate(at);
       const common = lid.intersect(probe);
       if (z > 0) expect(common.volume(), `${board} pad`).toBeGreaterThan(0.0009);

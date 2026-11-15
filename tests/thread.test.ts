@@ -2,9 +2,9 @@
 // the screw in its hole — turned to the right angle it goes in without
 // touching the post.
 
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
-import { CsgScope } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
+import { CsgScope } from 'maker-kit/csg/manifold';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, effectiveLid } from '../src/geo/layout';
 import { faceFrame } from '../src/geo/face';
@@ -12,11 +12,12 @@ import { openingPolygon } from '../src/geo/opening';
 import { postSpots, printedScrewWarnings } from '../src/geo/fastening';
 import { plateOf, shapeSpec } from '../src/geo/shape';
 import { screwsInCase } from '../src/geo/print';
-import { screwSolid, threadHole, threadSolid } from '../src/geo/screwSolids';
+import { screwSolid } from '../src/geo/screwSolids';
+import { threadHole, threadRod, threadSection } from 'maker-kit/csg/thread';
 import type { Manifold } from 'manifold-3d';
-import { THREADS, THREAD_SIZES, minorRadius, screwShape, threadEngagement, threadSection } from '../src/geo/thread';
+import { THREADS, THREAD_SIZES, formOf, minorRadius, perPoint, screwShape, threadEngagement, threadForm } from '../src/geo/thread';
 import { transformMesh } from '../src/geo/surface';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 
@@ -36,9 +37,13 @@ function printedState(face: string, size: string): AppState {
 }
 
 describe('thread section', () => {
+  it('takes a slice per point of the section and turn: the vertices run along the helix', () => {
+    expect(perPoint(16)).toEqual({ points: 16, slicesPerTurn: 16 });
+  });
+
   it('runs between the minor and the major radius, grown by the fit, counter-clockwise', () => {
     for (const size of THREAD_SIZES) {
-      const points = threadSection(size, 0.2, 48);
+      const points = threadSection(threadForm(size), 0.2, 48);
       const radii = points.map(([x, y]) => Math.hypot(x, y));
       expect(Math.max(...radii)).toBeCloseTo(THREADS[size].d / 2 + 0.2, 6);
       expect(Math.min(...radii)).toBeCloseTo(minorRadius(size) + 0.2, 6);
@@ -55,7 +60,7 @@ describe('thread section', () => {
     const scope = new CsgScope();
     try {
       const { pitch, d } = THREADS.P8;
-      const rod = threadSolid(csg, scope, 'P8', 0, 0, 4 * pitch, 32);
+      const rod = threadRod(csg, scope, formOf('P8'), 0, 0, 4 * pitch, perPoint(32));
       // the crest at z = 0 spans angles just below 0; a quarter pitch up it has turned by +90°
       const radiusAt = (z: number, degrees: number): number => {
         const a = (degrees * Math.PI) / 180;
@@ -120,8 +125,8 @@ describe('printed screws', () => {
       const plate = plateOf(state.shape, lid.face);
       const opening = openingPolygon(shapeSpec(state.shape, layout.dims), frame, -(plate + lid.depth), lid.lip.h, 8);
       const spot = postSpots(opening, lid, state.shape.wall)[0];
-      const body = toManifold(csg, built.body);
-      const lidSolid = toManifold(csg, built.lid);
+      const body = toManifold(csg, built.body, { merge: true });
+      const lidSolid = toManifold(csg, built.lid, { merge: true });
       let best = Infinity;
       let worst = 0;
       for (let step = 0; step < 48; step++) {
@@ -129,7 +134,7 @@ describe('printed screws', () => {
         const turned = transformMesh(built.screw, [Math.cos(a), -Math.sin(a), 0, 0, Math.sin(a), Math.cos(a), 0, 0, 0, 0, 1, 0]);
         const placed = screwsInCase(turned, [spot.centre], lid.face, layout.dims);
         if (!placed) throw new Error('no screw placed');
-        const screw = toManifold(csg, placed);
+        const screw = toManifold(csg, placed, { merge: true });
         const inBody = body.intersect(screw);
         best = Math.min(best, inBody.volume());
         worst = Math.max(worst, inBody.volume());
@@ -193,8 +198,8 @@ describe('asymmetric forms (test prints)', () => {
       // the screw, shank down, its head's underside at z = 0.5 over a block whose top is z = 0
       const screw = scope.keep(scope.keep(screwSolid(csg, scope, shape, 32).rotate([180, 0, 0])).translate([0, 0, 0.5]));
       const block = scope.keep(scope.keep(csg.Manifold.cube([16, 16, 12], true)).translate([0, 0, -6]));
-      const good = scope.keep(block.subtract(threadHole(csg, scope, form, 0.05, 13, 1, 32)));
-      const wrong = scope.keep(block.subtract(threadSolid(csg, scope, form, 0.05, -13, 1, 32)));
+      const good = scope.keep(block.subtract(threadHole(csg, scope, form, 0.05, 13, 1, perPoint(32))));
+      const wrong = scope.keep(block.subtract(threadRod(csg, scope, form, 0.05, -13, 1, perPoint(32))));
       const [best, worst] = bestAndWorst(good, screw);
       expect(best).toBeLessThan(1e-3);
       expect(worst).toBeGreaterThan(1);

@@ -3,8 +3,8 @@
 // its back along the short side — screwed to the panel's own back holes, or
 // pressing it through foam.
 
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, collisions } from '../src/geo/layout';
@@ -12,7 +12,7 @@ import { CLAMP_BAR_T, CLAMP_BAR_W, clampHold, postReach } from '../src/geo/clamp
 import { defaultPlacement, sanitizePlacement } from '../src/boards/placement';
 import { catalogBoard, CATALOG } from '../src/boards/catalog';
 import { sanitizeBoard } from '../src/boards/schema';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { applyAffine } from '../src/geo/surface';
 import type { Vec3 } from '../src/geo/surface';
 import { defaultState, sanitizeState } from '../src/state/schema';
@@ -135,13 +135,13 @@ describe('built', () => {
     expect(validateMesh(built.lidClamps).watertight).toBe(true);
     const board = caseLayout(state).boards[0];
     const hold = clampHold(board.def, board.placement);
-    const lid = toManifold(csg, built.lid);
+    const lid = toManifold(csg, built.lid, { merge: true });
     // a post's wall halfway down to the bar, beside the panel
     // the wall of the post, between its insert's hole and its outside
     const post = applyAffine(board.toCase, [hold.bars[0].posts[0] + 3.2, hold.bars[0].at, board.def.size.t / 2]);
     expect(solidAt(lid, post)).toBe(true);
     lid.delete();
-    const bars = toManifold(csg, built.lidClamps);
+    const bars = toManifold(csg, built.lidClamps, { merge: true });
     // a tab between its post and its bracket, its hole at the bracket, nothing under the panel's middle
     const tab = hold.bars[0];
     const between = (tab.posts[0] + tab.holes[0]) / 2;

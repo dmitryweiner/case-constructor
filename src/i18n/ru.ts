@@ -173,13 +173,6 @@ export const ru: Record<Key, string> = {
   'audit.open': 'меш не замкнут ✗',
   'warn.depthClamped': 'Глубина крышки ограничена размером корпуса: {max} мм.',
 
-  'mesh.nonFinite': 'В меше есть нечисловые координаты.',
-  'mesh.badIndices': 'В меше испорчены индексы треугольников.',
-  'mesh.empty': 'Деталь пустая.',
-  'mesh.flat': 'Деталь плоская.',
-  'mesh.open': 'Меш не замкнут — слайсер его не напечатает.',
-  'mesh.inverted': 'Меш вывернут наизнанку.',
-  'mesh.degenerate': 'Вырожденных треугольников: {count} ({pct} %).',
   'mesh.tooLarge': 'Деталь больше {max} мм.',
 
   'progress.loading': 'Загружаю геометрическое ядро…',

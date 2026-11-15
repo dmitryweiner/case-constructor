@@ -1,8 +1,8 @@
 // Shared test helpers: a tiny closed mesh, an STL decoder and garbage for
 // fuzzing the sanitizers.
 
-import type { SurfaceMesh } from '../src/geo/surface';
-import { meshNormals } from '../src/geo/normals';
+import type { SurfaceMesh } from 'maker-kit/3d/mesh';
+import { meshNormals } from 'maker-kit/3d/mesh';
 
 /** An axis-aligned box from (0,0,0) to (w,d,h), outward winding. */
 export function boxMesh(w = 10, d = 8, h = 6): SurfaceMesh {

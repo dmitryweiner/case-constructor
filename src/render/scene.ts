@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
-import type { SurfaceMesh } from '../geo/surface';
+import type { SurfaceMesh } from 'maker-kit/3d/mesh';
 
 export type PartRole = 'body' | 'lid' | 'screw' | 'clamp' | 'cap' | 'hinge' | 'board' | 'port' | 'glass' | 'hardware';
 

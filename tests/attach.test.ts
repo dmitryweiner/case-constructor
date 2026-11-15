@@ -2,15 +2,15 @@
 // shared hole pattern, held on the display's own standoffs, its room
 // reserved and its edge ports opened; no supports of its own.
 
-import { initCSG } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, collisions } from '../src/geo/layout';
 import { attachTurns, attachTransform } from '../src/geo/attach';
 import { portCutters } from '../src/geo/ports';
 import { sanitizePlacement } from '../src/boards/placement';
 import { catalogBoard, CATALOG } from '../src/boards/catalog';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { applyAffine, composeAffine } from '../src/geo/surface';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';

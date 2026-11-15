@@ -92,12 +92,14 @@ import {
 } from './geo/print';
 import { capsInCase, capsWithLid, keyCaps, withCaps } from './geo/caps';
 import { restWarnings } from './geo/rests';
-import type { Affine, SurfaceMesh } from './geo/surface';
+import type { Affine } from './geo/surface';
+import type { SurfaceMesh } from 'maker-kit/3d/mesh';
 import { IDENTITY, applyAffine, composeAffine, meshBounds, mergeMeshes, rotateVec, transformMesh, translation } from './geo/surface';
 import type { HalfHinge } from './geo/hinge';
 import { ANGLE_DEFAULT, MAX_CABLES, upperPose } from './geo/hinge';
-import { encodeSTL } from './geo/stl';
-import { assessExport, validateMesh } from './geo/validate';
+import { encodeSTL, stlFileName } from 'maker-kit/3d/stl';
+import { validateMesh } from 'maker-kit/3d/validate';
+import { assessPart, STL_BRAND } from './geo/validate';
 import type { AppState, ExportMode } from './state/schema';
 import { sanitizeState, RESOLUTIONS } from './state/schema';
 import { PRESETS, presetById, presetSignature } from './state/presets';
@@ -1043,15 +1045,15 @@ function syncView(): void {
 /** Verdict over both parts: closed, and nothing that would block the export. */
 function audit(meshes: SurfaceMesh[], ms: number): void {
   const reports = meshes.map((mesh) => validateMesh(mesh));
-  const assessments = reports.map((report) => assessExport(report, true));
+  const assessments = reports.map((report) => assessPart(report));
   const triangles = reports.reduce((sum, report) => sum + report.triangleCount, 0);
-  const blocking = assessments.flatMap((assessment) => assessment.blocking);
+  const blockers = assessments.flatMap((assessment) => assessment.blockers);
   auditEl.textContent = reports.every((report) => report.watertight)
     ? t('audit.watertight', { k: (triangles / 1000).toFixed(1), ms: Math.round(ms) })
     : t('audit.open');
   showWarnings(assessments.flatMap((assessment) => assessment.warnings).map(notice));
-  setBlockers(blocking.map(blocker));
-  exportBtn.disabled = blocking.length > 0;
+  setBlockers(blockers.map(blocker));
+  exportBtn.disabled = blockers.length > 0;
 }
 
 function renderPartList(): void {
@@ -1161,13 +1163,17 @@ async function runExport(): Promise<void> {
       { label: 'progress.export', delayMs: 0 },
     );
     if (!result) return;
-    const blocking = result.parts.flatMap((part) => part.blocking);
-    setBlockers(blocking.map(blocker));
-    if (blocking.length > 0) return;
+    const blockers = result.parts.flatMap((part) => part.blockers);
+    setBlockers(blockers.map(blocker));
+    if (blockers.length > 0) return;
     // printed screws travel with the lid, battery clamps with the body: same print job, same material
     const placed = printAll(requested, builtCases(result.parts));
     const mesh = mergeMeshes(placed.map((part) => part.mesh));
-    download(`case-constructor-${requested.exportMode}.stl`, encodeSTL(mesh, { name: requested.exportMode }), 'model/stl');
+    download(
+      stlFileName(`case-constructor-${requested.exportMode}`),
+      encodeSTL(mesh, { brand: STL_BRAND, name: requested.exportMode }),
+      'model/stl',
+    );
   } catch (error) {
     setBlockers([{ text: t('error.export', { error: message(error) }), code: 'error.export' }]);
   } finally {

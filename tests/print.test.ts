@@ -14,7 +14,7 @@ import { faceFrame } from '../src/geo/face';
 import { applyAffine, transformMesh, translation } from '../src/geo/surface';
 import { FACES } from '../src/geo/face';
 import { meshBounds } from '../src/geo/surface';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { boxMesh } from './helpers';
 
 const dims = { w: 10, d: 8, h: 6 };
@@ -129,7 +129,7 @@ describe('printed screws', () => {
 
 describe('console with a bottom lid', () => {
   it('lies on its slope: a large flat face on the bed, not an edge', async () => {
-    const { initCSG } = await import('../src/geo/csg');
+    const { initCSG } = await import('maker-kit/csg/manifold');
     const { buildCase } = await import('../src/geo/build');
     const { caseLayout } = await import('../src/geo/layout');
     const { defaultState, sanitizeState } = await import('../src/state/schema');

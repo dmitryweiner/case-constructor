@@ -45,7 +45,7 @@ export interface JobPart {
   indices: Uint32Array;
   normals: Float32Array;
   /** what keeps the part out of the STL; always empty for a preview */
-  blocking: Message[];
+  blockers: Message[];
   /** a hinged case: the half the part belongs to, in that half's own frame */
   half?: Half;
 }

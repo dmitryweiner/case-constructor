@@ -3,15 +3,15 @@
 // sides), the warnings, and the standoffs built down from the ceiling plate —
 // to the lid with a top lid, to the body with a bottom one.
 
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, collisions, heldByLid, standoffColumns } from '../src/geo/layout';
 import { CEILING_GAP, defaultPlacement, sanitizePlacement, placementMinZ } from '../src/boards/placement';
 import { catalogBoard, CATALOG } from '../src/boards/catalog';
 import { HOLE_SKIN } from '../src/geo/standoffs';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 
@@ -107,8 +107,8 @@ describe('standoffs from the ceiling', () => {
     const built = buildCase(csg, state, 8);
     expect(validateMesh(built.body).watertight).toBe(true);
     expect(validateMesh(built.lid).watertight).toBe(true);
-    const lid = toManifold(csg, built.lid);
-    const body = toManifold(csg, built.body);
+    const lid = toManifold(csg, built.lid, { merge: true });
+    const body = toManifold(csg, built.body, { merge: true });
     const layout = caseLayout(state);
     const board = layout.boards[0];
     const pcbTop = board.z0 + board.def.size.t;
@@ -126,7 +126,7 @@ describe('standoffs from the ceiling', () => {
     const state = hung({ lid: { ...defaultState().lid, face: 'bottom' } });
     const built = buildCase(csg, state, 8);
     expect(validateMesh(built.body).watertight).toBe(true);
-    const body = toManifold(csg, built.body);
+    const body = toManifold(csg, built.body, { merge: true });
     const board = caseLayout(state).boards[0];
     const [column] = standoffColumns(board);
     expect(solidAt(body, column.x + column.r - 0.3, column.y, board.z0 + board.def.size.t + 1)).toBe(true);
@@ -143,7 +143,7 @@ describe('standoffs from the ceiling', () => {
     const state = sanitizeState({ ...defaultState(), boards: [{ board: 'heltec-wifi-lora-32-v3', on: 'ceiling', z: 1 }] });
     const built = buildCase(csg, state, 8);
     expect(validateMesh(built.lid).watertight).toBe(true);
-    const lid = toManifold(csg, built.lid);
+    const lid = toManifold(csg, built.lid, { merge: true });
     const board = caseLayout(state).boards[0];
     const { w, t } = board.def.size;
     const [x, y] = [board.toCase[3] + w / 2, board.toCase[7] + 0.6];

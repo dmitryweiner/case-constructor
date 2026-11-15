@@ -2,8 +2,8 @@
 // the body; screw posts stand under the lid's holes; every variant stays
 // closed, free of slivers and of overlaps between the parts.
 
-import { fromManifold, initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { fromManifold, initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, effectiveLid } from '../src/geo/layout';
@@ -17,7 +17,7 @@ import { cutterContains } from '../src/geo/cutters';
 import { MAGNETS, SCREWS } from '../src/geo/fasteners';
 import { sanitizeLid } from '../src/geo/lidSpec';
 import { plateOf, shapeSpec } from '../src/geo/shape';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { applyAffine } from '../src/geo/surface';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
@@ -80,8 +80,8 @@ describe('fastening variants', () => {
       expect(report.watertight, name).toBe(true);
       expect(report.degenerateTriangles, name).toBe(0);
     }
-    const body = toManifold(csg, built.body);
-    const lid = toManifold(csg, built.lid);
+    const body = toManifold(csg, built.body, { merge: true });
+    const lid = toManifold(csg, built.lid, { merge: true });
     const common = body.intersect(lid);
     expect(common.volume()).toBeLessThan(1e-3);
     common.delete();
@@ -102,8 +102,8 @@ describe('snaps', () => {
     const spots = snapSpots(g.opening, g.frame, g.zp, g.lid, kind === 'cylinder');
     expect(spots.length).toBeGreaterThanOrEqual(kind === 'cylinder' ? 4 : 3);
     const built = buildCase(csg, state, 8);
-    const body = toManifold(csg, built.body);
-    const lid = toManifold(csg, built.lid);
+    const body = toManifold(csg, built.body, { merge: true });
+    const lid = toManifold(csg, built.lid, { merge: true });
     for (const spot of spots) {
       const { origin, ex } = spot.bump;
       // ex is the outward normal; the rod's axis sits SNAP_SINK inside the skirt
@@ -132,8 +132,8 @@ describe('screw posts', () => {
     const spots = postSpots(g.opening, g.lid, state.shape.wall);
     expect(spots).toHaveLength(4);
     const built = buildCase(csg, state, 8);
-    const body = toManifold(csg, built.body);
-    const lid = toManifold(csg, built.lid);
+    const body = toManifold(csg, built.body, { merge: true });
+    const lid = toManifold(csg, built.lid, { merge: true });
     const toCase = (u: number, v: number, z: number) => applyAffine(g.frame.fromFace, [u, v, z]);
     for (const spot of spots) {
       const [u, v] = spot.centre;
@@ -226,8 +226,8 @@ describe('magnets', () => {
     // the lid keeps a skin over its pocket
     expect(pockets.lidMouth + magnet.h).toBeCloseTo(Math.min(-MAGNET_SKIN, -g.plate + magnet.h));
     const built = buildCase(csg, state, 8);
-    const body = toManifold(csg, built.body);
-    const lid = toManifold(csg, built.lid);
+    const body = toManifold(csg, built.body, { merge: true });
+    const lid = toManifold(csg, built.lid, { merge: true });
     const at = (u: number, v: number, z: number) => applyAffine(g.frame.fromFace, [u, v, z]);
     for (const spot of spots) {
       const [u, v] = spot.centre;

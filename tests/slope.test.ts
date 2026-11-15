@@ -3,14 +3,14 @@
 // standoffs, rim and window follow the slope's normal; the console's heights
 // rise until it clears the floor and the boards under it.
 
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, collisions, standoffColumns } from '../src/geo/layout';
 import { portCutters, cutWarnings } from '../src/geo/ports';
 import { slopePlane } from '../src/geo/shape';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { applyAffine, rotateVec } from '../src/geo/surface';
 import type { Vec3 } from '../src/geo/surface';
 import { defaultState, sanitizeState } from '../src/state/schema';
@@ -109,7 +109,7 @@ describe('a board on the slope', () => {
       expect(report.watertight).toBe(true);
       expect(report.degenerateTriangles).toBe(0);
     }
-    const body = toManifold(csg, built.body);
+    const body = toManifold(csg, built.body, { merge: true });
     const board = caseLayout(state).boards[0];
     const t = board.def.size.t;
     // the standoff's wall just above the PCB, along the normal

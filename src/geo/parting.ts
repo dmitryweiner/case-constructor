@@ -3,7 +3,7 @@
 // skirt that drops into the body's opening. Worker only.
 
 import type { CrossSection, Manifold } from 'manifold-3d';
-import type { CsgApi, CsgScope } from './csg';
+import type { CsgApi, CsgScope } from 'maker-kit/csg/manifold';
 import { extrude, splitByPlane, transformSolid } from './csg';
 import type { FaceFrame } from './face';
 import type { LidState } from './lidSpec';

@@ -1,8 +1,8 @@
 // Extras: vents thin out where they must, the fan seat and keyholes are
 // where they are asked to be, ears and the label change the right part.
 
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, effectiveLid, standoffColumns } from '../src/geo/layout';
 import { portCutters, outerTopAt } from '../src/geo/ports';
@@ -38,7 +38,7 @@ import { labelPlacement, labelSurface, labelWarnings, rasterRuns, sanitizeLabelR
 import { extraCutters } from '../src/geo/cutters';
 import { addLabel } from '../src/ui/labelsCard';
 import { boardOf } from '../src/boards/placement';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import { garbageLike, rng } from './helpers';
@@ -488,7 +488,7 @@ describe('fan, keyholes, ears', () => {
     expect(report.watertight).toBe(true);
     expect(report.degenerateTriangles).toBe(0);
     // one solid: every tab fused with the wall
-    const body = toManifold(csg, built.body);
+    const body = toManifold(csg, built.body, { merge: true });
     expect(body.decompose().length).toBe(1);
     body.delete();
   });
@@ -697,7 +697,7 @@ describe('label', () => {
     expect(plain - e.volume).toBeCloseTo(inkArea * base.labels[0].depth, 0);
     expect(r.volume - plain).toBeCloseTo(inkArea * base.labels[0].depth, 0);
     // the engraving is on the lid's outer face, not through it
-    const lid = toManifold(csg, engraved);
+    const lid = toManifold(csg, engraved, { merge: true });
     expect(lid.genus()).toBeGreaterThanOrEqual(0);
     lid.delete();
   });

@@ -9,12 +9,12 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { initCSG } from '../src/geo/csg';
+import { initCSG } from 'maker-kit/csg/manifold';
 import { buildCase } from '../src/geo/build';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
-import type { SurfaceMesh } from '../src/geo/surface';
+import type { SurfaceMesh } from 'maker-kit/3d/mesh';
 import { KEYPAD } from './helpers';
 import { casesOf, halfHinge } from '../src/state/hinged';
 

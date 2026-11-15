@@ -1,11 +1,11 @@
 // Every built-in preset builds a closed, sliver-free case whose lid and body
 // do not overlap, and produces no layout warnings a user would have to fix.
 
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, collisions } from '../src/geo/layout';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { PRESETS } from '../src/state/presets';
 import { casesOf, halfHinge, hingeNotes } from '../src/state/hinged';
 
@@ -28,8 +28,8 @@ describe('built-in presets', () => {
         expect(report.watertight).toBe(true);
         expect(report.degenerateTriangles).toBe(0);
       }
-      const body = toManifold(csg, built.body);
-      const lid = toManifold(csg, built.lid);
+      const body = toManifold(csg, built.body, { merge: true });
+      const lid = toManifold(csg, built.lid, { merge: true });
       const common = body.intersect(lid);
       expect(common.volume()).toBeLessThan(1e-3);
       common.delete();

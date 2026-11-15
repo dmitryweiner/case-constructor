@@ -10,12 +10,13 @@ import type { BoardDef, Glass, PortDef } from '../boards/schema';
 import { keyFields, keysOf, onFace } from '../boards/schema';
 import type { PlacedBoard } from './layout';
 import { KEY_SLAB, PIN_SPACER, PIN_SPACER_W, pinEdges, portBlock } from './layout';
-import type { Affine, SurfaceMesh, Vec3 } from './surface';
+import type { Affine, Vec3 } from './surface';
+import type { SurfaceMesh } from 'maker-kit/3d/mesh';
 import { applyAffine, composeAffine, mergeMeshes } from './surface';
 import type { BatterySpec } from '../boards/battery';
 import type { MessageSpot } from './message';
 import { batterySize, cellCentres } from '../boards/battery';
-import { meshNormals } from './normals';
+import { meshNormals } from 'maker-kit/3d/mesh';
 
 /** An axis-aligned box in a frame (a board's), mapped to the case frame. */
 function boxMesh(toCase: Affine, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): SurfaceMesh {

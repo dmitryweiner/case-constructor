@@ -7,15 +7,17 @@ import { it } from 'vitest';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Manifold } from 'manifold-3d';
-import { CsgScope, fromManifold, initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
-import { screwSolid, threadHole } from '../src/geo/screwSolids';
-import type { ThreadForm } from '../src/geo/thread';
-import { minorRadius, screwShape, threadEngagement, threadForm } from '../src/geo/thread';
+import { CsgScope, fromManifold, initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
+import { screwSolid } from '../src/geo/screwSolids';
+import { threadHole } from 'maker-kit/csg/thread';
+import type { ThreadForm } from 'maker-kit/csg/thread';
+import { minorRadius, perPoint, screwShape, threadEngagement, threadForm } from '../src/geo/thread';
 import { buildCase } from '../src/geo/build';
 import { casesOf, halfHinge } from '../src/state/hinged';
-import { encodeSTL } from '../src/geo/stl';
-import { validateMesh } from '../src/geo/validate';
+import { encodeSTL } from 'maker-kit/3d/stl';
+import { STL_BRAND } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { decodePresetFile } from '../src/state/presetFile';
 import { presetById } from '../src/state/presets';
 import { defaultState, sanitizeState } from '../src/state/schema';
@@ -107,7 +109,7 @@ function threadTest(csg: CsgApi, dir: string): void {
       TEST_FITS.forEach((fit, k) => {
         const x = pitch * (k + 0.5);
         const y = form.d / 2 + 3;
-        const hole = scope.keep(threadHole(csg, scope, form, fit, h + 1, 1, n).translate([x, y, h]));
+        const hole = scope.keep(threadHole(csg, scope, form, fit, h + 1, 1, perPoint(n)).translate([x, y, h]));
         // a 0.5 mm chamfer at the mouth, as on the case's posts
         const R = form.d / 2;
         const sink = R - minorRadius(form) + 0.5;
@@ -131,7 +133,7 @@ function threadTest(csg: CsgApi, dir: string): void {
       ] as const) {
         const r = validateMesh(mesh);
         const file = join(dir, `thread-${id}-${part}.stl`);
-        writeFileSync(file, new Uint8Array(encodeSTL(mesh, { name: `thread-${id}-${part}` })));
+        writeFileSync(file, new Uint8Array(encodeSTL(mesh, { brand: STL_BRAND, name: `thread-${id}-${part}` })));
         console.log(`${file}: ${r.triangleCount} tri, watertight ${r.watertight}, ${r.degenerateTriangles} degenerate`);
       }
       console.log(
@@ -240,13 +242,16 @@ it('inspect', async () => {
       }
       if (args.stl) {
         mkdirSync(args.stl, { recursive: true });
-        writeFileSync(join(args.stl, `${half ? `${half}-` : ''}${id}.stl`), new Uint8Array(encodeSTL(mesh, { name: id })));
+        writeFileSync(
+          join(args.stl, `${half ? `${half}-` : ''}${id}.stl`),
+          new Uint8Array(encodeSTL(mesh, { brand: STL_BRAND, name: id })),
+        );
       }
     }
     if (args.overlap) {
       // the assembled lid and body must not share any volume: report where they do
-      const body = toManifold(csg, built.body);
-      const lid = toManifold(csg, built.lid);
+      const body = toManifold(csg, built.body, { merge: true });
+      const lid = toManifold(csg, built.lid, { merge: true });
       const common = body.intersect(lid);
       console.log(`overlap: ${common.volume().toFixed(4)} mm³`);
       for (const piece of common.decompose()) {

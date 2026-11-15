@@ -5,7 +5,7 @@
 // pocket from bolts.ts.
 
 import type { CrossSection, Manifold } from 'manifold-3d';
-import type { CsgApi, CsgScope } from './csg';
+import type { CsgApi, CsgScope } from 'maker-kit/csg/manifold';
 import { extrude, hullOf, transformSolid, trimByPlane, unionAll } from './csg';
 import { cutterSolid } from './cut';
 import { throughBolt } from './bolts';
@@ -14,8 +14,8 @@ import type { FaceFrame } from './face';
 import { NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE } from './fasteners';
 import type { PostSpot } from './fastening';
 import { magnetPockets, postLength, snapSpots } from './fastening';
-import { threadSolid } from './screwSolids';
-import { THREADS, minorRadius, threadEngagement, threadPoints } from './thread';
+import { threadRod } from 'maker-kit/csg/thread';
+import { THREADS, formOf, minorRadius, perPoint, threadEngagement, threadPoints } from './thread';
 import type { LidState } from './lidSpec';
 import { HEAD_FLOOR, headSeat, nutSize } from './lidSpec';
 import type { Vec2 } from './section';
@@ -174,7 +174,7 @@ export function postSolids(
       const { size, fit } = lid.thread;
       const R = THREADS[size].d / 2;
       const holeDepth = Math.min(threadEngagement(size) + 0.5, depth);
-      const thread = threadSolid(csg, scope, size, fit, top - holeDepth, top + EPS, threadPoints(segments));
+      const thread = threadRod(csg, scope, formOf(size), fit, top - holeDepth, top + EPS, perPoint(threadPoints(segments)));
       postHoles.push(scope.keep(thread.translate([c[0], c[1], 0])));
       const sink = R - minorRadius(size) + 0.5;
       postHoles.push(column(csg, scope, c, minorRadius(size) + fit, top - sink, top + EPS, n, R + fit + 0.5 + EPS));

@@ -2,7 +2,7 @@
 // the numbers are in clamp.ts.
 
 import type { Manifold } from 'manifold-3d';
-import type { CsgApi, CsgScope } from './csg';
+import type { CsgApi, CsgScope } from 'maker-kit/csg/manifold';
 import { transformSolid, unionAll } from './csg';
 import { SCREWS, THROUGH_CLEARANCE, bossDiameter } from './fasteners';
 import type { PlacedBoard } from './layout';

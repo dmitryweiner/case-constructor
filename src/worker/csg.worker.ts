@@ -3,8 +3,8 @@
 // thread, and the tab does not freeze even on a fine export. No DOM and no
 // Three.js: the worker sees pure geometry only.
 
-import type { CsgApi } from '../geo/csg';
-import { initCSG } from '../geo/csg';
+import type { CsgApi } from 'maker-kit/csg/manifold';
+import { initCSG } from 'maker-kit/csg/manifold';
 import type { CaseBuild } from '../geo/build';
 import { BUILD_STAGES, buildCase } from '../geo/build';
 import type { LabelRaster } from '../geo/label';
@@ -13,9 +13,10 @@ import type { AppState } from '../state/schema';
 import type { Half } from '../state/hinged';
 import { casesOf, halfHinge } from '../state/hinged';
 import type { Message } from '../geo/message';
-import type { SurfaceMesh } from '../geo/surface';
+import type { SurfaceMesh } from 'maker-kit/3d/mesh';
 import { meshBounds } from '../geo/surface';
-import { assessExport, validateMesh } from '../geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
+import { assessPart } from '../geo/validate';
 import { sanitizeState } from '../state/schema';
 import { sanitizeLabelRasters } from '../geo/label';
 import type { CsgJob, JobPart, PartId, WorkerIn, WorkerOut } from './protocol';
@@ -149,8 +150,8 @@ function previewSegments(value: unknown): number {
 }
 
 function part(id: PartId, mesh: SurfaceMesh, check: boolean): JobPart {
-  const blocking = check ? assessExport(validateMesh(mesh), true).blocking : [];
-  return { id, note: sizeNote(mesh), positions: mesh.positions, indices: mesh.indices, normals: mesh.normals, blocking };
+  const blockers = check ? assessPart(validateMesh(mesh)).blockers : [];
+  return { id, note: sizeNote(mesh), positions: mesh.positions, indices: mesh.indices, normals: mesh.normals, blockers };
 }
 
 function sizeNote(mesh: SurfaceMesh): string {

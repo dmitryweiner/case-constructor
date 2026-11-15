@@ -4,14 +4,14 @@
 // widen the board's footprint where they are; the rails and the case never
 // share volume, the board sits in their grooves, and they print top down.
 
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import { buildCase } from '../src/geo/build';
 import { RAIL_GAP, RAIL_GRIP, RAIL_THICK, caseLayout } from '../src/geo/layout';
 import { RAIL_EAR_CLEAR, RAIL_SEAT, earCentres, earReach, railEarR, railScrewSpec } from '../src/geo/rails';
 import { meshBounds } from '../src/geo/surface';
-import type { SurfaceMesh } from '../src/geo/surface';
-import { validateMesh } from '../src/geo/validate';
+import type { SurfaceMesh } from 'maker-kit/3d/mesh';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { sanitizePlacement } from '../src/boards/placement';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
@@ -29,8 +29,8 @@ function state(board: Record<string, unknown>, patch: Partial<AppState> = {}): A
 
 /** The volume two meshes share. */
 function shared(a: SurfaceMesh, b: SurfaceMesh): number {
-  const ma = toManifold(csg, a);
-  const mb = toManifold(csg, b);
+  const ma = toManifold(csg, a, { merge: true });
+  const mb = toManifold(csg, b, { merge: true });
   const common = ma.intersect(mb);
   const volume = common.volume();
   for (const solid of [ma, mb, common]) solid.delete();
@@ -134,7 +134,7 @@ describe('the build', () => {
     const pcb = csg.Manifold.cube([x1 - x0, y1 - y0, t]).translate([x0, y0, board.z0]);
     const rails = built.rails;
     if (!rails) throw new Error('no rails');
-    const solid = toManifold(csg, rails);
+    const solid = toManifold(csg, rails, { merge: true });
     const common = solid.intersect(pcb);
     expect(common.volume()).toBeLessThan(1e-3);
     // the rails' grooves overlap the PCB in plan: they grip its edges

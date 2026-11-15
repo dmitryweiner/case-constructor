@@ -8,8 +8,9 @@ import { COUNTERSUNK_HEAD_D, SCREWS } from './fasteners';
 import { lidPosts } from './lidPosts';
 import type { LidState } from './lidSpec';
 import { nutSize } from './lidSpec';
-import { meshNormals } from './normals';
-import type { Affine, SurfaceMesh } from './surface';
+import { meshNormals } from 'maker-kit/3d/mesh';
+import type { Affine } from './surface';
+import type { SurfaceMesh } from 'maker-kit/3d/mesh';
 import { composeAffine, mergeMeshes, transformMesh, translation } from './surface';
 import type { AppState } from '../state/schema';
 

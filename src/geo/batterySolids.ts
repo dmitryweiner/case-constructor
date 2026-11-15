@@ -4,7 +4,7 @@
 // boards/battery.ts.
 
 import type { Manifold } from 'manifold-3d';
-import type { CsgApi, CsgScope } from './csg';
+import type { CsgApi, CsgScope } from 'maker-kit/csg/manifold';
 import { transformSolid, unionAll } from './csg';
 import { THROUGH_CLEARANCE, SCREWS, bossDiameter } from './fasteners';
 import type { PlacedBoard } from './layout';

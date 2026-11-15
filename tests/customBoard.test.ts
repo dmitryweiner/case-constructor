@@ -7,9 +7,9 @@ import { autoPortId, isAutoPortId, sanitizeBoard } from '../src/boards/schema';
 import { sanitizePlacement, withPortType } from '../src/boards/placement';
 import { decodePresetFile, encodePresetFile } from '../src/state/presetFile';
 import { defaultState, sanitizeState } from '../src/state/schema';
-import { initCSG } from '../src/geo/csg';
+import { initCSG } from 'maker-kit/csg/manifold';
 import { buildCase } from '../src/geo/build';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 
 function customBoard() {
   return sanitizeBoard({

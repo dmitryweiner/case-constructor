@@ -13,14 +13,14 @@ import {
   sanitizeBattery,
 } from '../src/boards/battery';
 import type { BatterySpec } from '../src/boards/battery';
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import { buildCase } from '../src/geo/build';
 import type { Manifold } from 'manifold-3d';
 import { boardOf, defaultPlacement } from '../src/boards/placement';
 import { WALL_GAP, caseLayout, collisions } from '../src/geo/layout';
 import { boardGhost } from '../src/geo/ghost';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 
 describe('battery spec', () => {
@@ -119,7 +119,7 @@ describe('cradles and the clamp', () => {
   /** The battery itself as a solid, case frame: its cells, or its pack. */
   function batterySolid(state: ReturnType<typeof stateWith>): Manifold {
     const ghost = boardGhost(caseLayout(state).boards[0]);
-    return toManifold(csg, ghost.pcb);
+    return toManifold(csg, ghost.pcb, { merge: true });
   }
 
   it.each([
@@ -136,8 +136,8 @@ describe('cradles and the clamp', () => {
       expect(report.watertight).toBe(true);
       expect(report.degenerateTriangles).toBe(0);
     }
-    const body = toManifold(csg, built.body);
-    const clamp = toManifold(csg, built.clamps);
+    const body = toManifold(csg, built.body, { merge: true });
+    const clamp = toManifold(csg, built.clamps, { merge: true });
     const cells = batterySolid(state);
     // the clamp rests on the posts: no shared volume with the body
     const onBody = clamp.intersect(body);

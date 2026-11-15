@@ -3,7 +3,7 @@
 
 import { GHOST_CIRCLE, ghostHoles, boardGhost, pinBlocks, portCaptionAnchor } from '../src/geo/ghost';
 import { caseLayout } from '../src/geo/layout';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { catalogBoard, CATALOG } from '../src/boards/catalog';
 import { signedArea2 } from '../src/boards/schema';
 import { defaultState, sanitizeState } from '../src/state/schema';

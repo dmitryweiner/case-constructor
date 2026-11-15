@@ -8,9 +8,10 @@ import { keyFields } from '../boards/schema';
 import { buttonFit, capButtons, capStyle, keyFit, keysOpen, portCut } from '../boards/placement';
 import type { CaseLayout } from './layout';
 import type { ShapeState } from './shape';
-import type { Affine, SurfaceMesh } from './surface';
+import type { Affine } from './surface';
+import type { SurfaceMesh } from 'maker-kit/3d/mesh';
 import { composeAffine, meshBounds, mergeMeshes, transformMesh, translation } from './surface';
-import { meshNormals } from './normals';
+import { meshNormals } from 'maker-kit/3d/mesh';
 import { CAP_FLANGE_T, CAP_PROUD, capCorner, capSizes } from './capSize';
 import { keysProud } from './ports';
 

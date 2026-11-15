@@ -1,8 +1,8 @@
-import { initCSG } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import { buildCase } from '../src/geo/build';
 import { SPLIT_OFFSET } from '../src/geo/parting';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 

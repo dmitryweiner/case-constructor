@@ -1,8 +1,8 @@
 // A display carried by the board under it (plans/PLAN-DISPLAYS.md D9): a HAT
 // display on a Pi that stands on the floor, the window flush above it.
 
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, collisions } from '../src/geo/layout';
@@ -11,7 +11,7 @@ import { portCutters } from '../src/geo/ports';
 import { rimsOf } from '../src/geo/rim';
 import { CEILING_GAP, sanitizePlacement } from '../src/boards/placement';
 import { catalogBoard, CATALOG } from '../src/boards/catalog';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { applyAffine, composeAffine } from '../src/geo/surface';
 import type { Vec3 } from '../src/geo/surface';
 import { defaultState, sanitizeState } from '../src/state/schema';
@@ -90,7 +90,7 @@ describe('built', () => {
       expect(validateMesh(part).watertight).toBe(true);
       expect(validateMesh(part).degenerateTriangles).toBe(0);
     }
-    const lid = toManifold(csg, built.lid);
+    const lid = toManifold(csg, built.lid, { merge: true });
     const display = caseLayout(state).boards[1];
     const port = display.def.ports.find((p) => p.id === 'display');
     if (!port || port.edge !== 'top') throw new Error('no window');
