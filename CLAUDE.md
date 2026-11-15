@@ -94,7 +94,7 @@ freely; a temporary script that turns out useful becomes a permanent one.
   back on undo), project file round trip and a foreign JSON
   refused, the view modes per parts tab and the caption (the Lid tab's lid
   on its outer face), all four languages (switch, memory, the open preset
-  keeps its name, a fresh `he-IL` browser keeps the panel on the left), the
+  keeps its name, a fresh `he-IL` browser mirrors the page, the panel on the right), the
   mobile sheet (the case on screen keeps its size and proportions). Browser in
   `en-US`. Flags: `--preview`, `--shots <dir>`.
 - `scripts/snap.mjs` — a spot screenshot in a given state; prints status,

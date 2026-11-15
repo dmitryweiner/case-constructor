@@ -44,7 +44,9 @@ import { postCollisions, postsInOpenings, printedScrewWarnings } from './geo/fas
 import { createProgress } from 'maker-kit/ui/progress';
 import type { StorageStatus } from 'maker-kit/ui/banner';
 import { renderBanner } from 'maker-kit/ui/banner';
+import { restoreCards, snapshotCards } from 'maker-kit/ui/card';
 import { bindHistory } from 'maker-kit/ui/historyKeys';
+import { setupSheet } from 'maker-kit/ui/sheet';
 import { createLanguagePicker } from 'maker-kit/ui/languagePicker';
 import { renderMessages } from 'maker-kit/ui/messageList';
 import { createModal } from 'maker-kit/ui/modal';
@@ -1084,7 +1086,7 @@ for (const [mode, button] of Object.entries(viewButtons)) {
   });
 }
 viewCaption.addEventListener('click', () => {
-  setPanelOpen(true);
+  sheet.open();
   exportCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 viewBoards.addEventListener('change', () => {
@@ -1206,7 +1208,7 @@ function presetState(ref: PresetRef): AppState | undefined {
  */
 function showPreset(): void {
   const status = presetStatus(presetRef, state, presetState, presetSignature);
-  presetBtn.textContent = (presetRef === '' || status === 'same' ? presetName : '') || t('topbar.presets');
+  presetBtn.textContent = (presetRef === '' || status === 'same' ? presetName : '') || t('kit.topbar.presets');
   if (!presetsDialog.isOpen()) return;
   renderPresetList(presetList, {
     builtIn: PRESETS.map((preset) => ({ id: preset.id, label: builtinName(preset.id), note: tDynamic(`preset.${preset.id}.note`) })),
@@ -1369,22 +1371,20 @@ function stepHistory(direction: 'undo' | 'redo'): void {
 
 // --- mobile panel ---
 
-const panelBtn = el('panelBtn', HTMLButtonElement);
+/** Below 1024 px the panel is a bottom sheet over the view (maker-kit's ui/sheet); from there it stands beside it. */
+const narrow = window.matchMedia('(max-width: 1023px)');
+// the view's taps are the app's (a caption toggles its port, a badge opens): it closes the sheet itself
+const sheet = setupSheet({
+  panel,
+  button: el('panelBtn', HTMLButtonElement),
+  close: el('sheetClose', HTMLButtonElement),
+  narrow,
+  // the sheet covers the lower part of the view: the case is centred above it
+  onInset: (px) => scene.setBottomInset(px),
+});
+// the sheet's height follows the window (max-height in dvh)
+window.addEventListener('resize', () => sheet.refresh());
 
-const narrow = window.matchMedia('(max-width: 760px)');
-
-function setPanelOpen(open: boolean): void {
-  panel.classList.toggle('open', open);
-  panelBtn.hidden = open;
-  // on a phone the sheet covers the lower part of the view: centre the case above it
-  scene.setBottomInset(open && narrow.matches ? panel.offsetHeight : 0);
-}
-
-narrow.addEventListener('change', () => setPanelOpen(panel.classList.contains('open')));
-// the sheet's height follows the window (max-height in vh)
-window.addEventListener('resize', () => setPanelOpen(panel.classList.contains('open')));
-
-panelBtn.addEventListener('click', () => setPanelOpen(true));
 /** A tap on a port's caption: its opening on or off, as its checkbox in the board card does — in the caption's half. */
 function togglePortCut(caption: string): void {
   // the upper half's captions start with 'u'
@@ -1461,14 +1461,13 @@ const release = (event: PointerEvent): void => {
   const caption = scene.captionAt(event.clientX - box.left, event.clientY - box.top);
   if (caption?.startsWith('warn:')) pickWarning(Number(caption.slice(5)));
   else if (caption) togglePortCut(caption);
-  else if (narrow.matches && panel.classList.contains('open')) setPanelOpen(false);
+  else if (narrow.matches) sheet.close();
 };
 view.addEventListener('pointerup', release);
 view.addEventListener('pointercancel', (event) => {
   pressed.delete(event.pointerId);
   if (pressed.size === 0) gesture = false;
 });
-setPanelOpen(true);
 
 // --- language ---
 
@@ -1478,8 +1477,11 @@ const langPicker = createLanguagePicker(el('topbar', HTMLElement), { locales: LA
 onLangChange(() => {
   applyStaticText(document);
   langPicker.set(lang());
+  // the panel drawn again in the new language, its scroll and its folded cards as they were
   const scroll = panel.scrollTop;
+  const folded = snapshotCards(panel);
   renderPanel();
+  restoreCards(panel, folded);
   panel.scrollTop = scroll;
   // preset names are not translated: only the button's placeholder is
   setPresetRef(presetRef, presetName);

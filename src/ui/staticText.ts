@@ -3,7 +3,7 @@
 // by attribute: `data-i18n` — text, `data-i18n-title` — tooltip,
 // `data-i18n-aria` — aria-label. An unknown key leaves the text as is.
 
-import { hasKey, lang, t } from '../i18n';
+import { direction, hasKey, lang, t } from '../i18n';
 
 const ATTRIBUTES: readonly [string, (node: HTMLElement, text: string) => void][] = [
   [
@@ -22,9 +22,9 @@ const ATTRIBUTES: readonly [string, (node: HTMLElement, text: string) => void][]
 ];
 
 export function applyStaticText(root: Document): void {
-  // Text-only RTL: `lang` follows the language, `dir` of the page stays ltr;
-  // the stylesheet lets every text pick its own direction (style.css).
+  // Hebrew mirrors the page: the panel on the right, every row from the right
   root.documentElement.lang = lang();
+  root.documentElement.dir = direction(lang());
   root.title = t('app.title');
   for (const [attribute, apply] of ATTRIBUTES) {
     for (const node of root.querySelectorAll(`[${attribute}]`)) {
