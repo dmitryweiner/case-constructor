@@ -8,16 +8,8 @@ import type { Key } from '.';
 export const uk: Record<Key, string> = {
   ...kitUk,
   'app.title': 'Case Constructor — корпуси для плат під 3D-друк',
-  'lang.label': 'Мова',
-  'topbar.presets': 'Пресети…',
   'topbar.presets.title': 'Готові та власні пресети',
-  'topbar.save.title': 'Зберегти як пресет',
   'topbar.fileOpen.title': 'Відкрити проєкт із файлу (або перетягніть файл на вікно)',
-  'topbar.fileSave.title': 'Зберегти проєкт у файл',
-  'topbar.undo.title': 'Скасувати (Ctrl/Cmd+Z)',
-  'topbar.redo.title': 'Повторити (Ctrl/Cmd+Shift+Z)',
-  'topbar.panel': '⚙ Налаштування',
-  'topbar.panel.title': 'Налаштування',
   'view.mode.title': 'Як показувати корпус: вкладки «Корпус» і «Кришка» показують одну деталь, «Обидва» — обидві',
   'view.exploded': 'рознесений',
   'view.assembled': 'зібраний',
@@ -78,9 +70,8 @@ export const uk: Record<Key, string> = {
   'hinge.leafHole': 'У що',
   'hinge.leafHole.hint':
     'У що входять гвинти стулок усередині стінки: нарізний отвір, вплавна вставка або гайка, вкладена в кишеню зсередини',
-  'cable.add': '+ Додати шлейф',
+  'cable.add': 'Додати шлейф',
   'cable.title': 'Шлейф {n}',
-  'cable.remove': 'Прибрати шлейф',
   'cable.kind': 'Шлейф',
   'cable.kind.flat': 'плаский',
   'cable.kind.round': 'круглий',
@@ -201,30 +192,14 @@ export const uk: Record<Key, string> = {
 
   'error.build': 'Не вдалося зібрати корпус: {error}',
   'error.export': 'Вивантаження не вдалося: {error}',
-  'error.presetSave': 'Не вдалося зберегти пресет: сховище браузера недоступне.',
-  'error.presetSaveFull': 'Не вдалося зберегти пресет: сховище браузера заповнене. Видаліть непотрібні пресети й спробуйте знову.',
-  'error.presetDelete': 'Не вдалося видалити пресет: сховище браузера недоступне.',
-  'storage.project.blocked':
-    'Цей браузер не зберігає проєкт: його сховище недоступне (приватне вікно або заборонені дані сайтів). Збережіть проєкт у файл кнопкою ⬇️, перш ніж закрити сторінку.',
-  'storage.project.full':
-    'Останні зміни не зберігаються в браузері: його сховище заповнене. Видаліть непотрібні пресети або збережіть проєкт у файл кнопкою ⬇️.',
-  'storage.dismiss': 'Сховати',
 
   'presets.title': 'Пресети',
-  'presets.close': 'Закрити',
-  'presets.close.title': 'Закрити (Esc)',
-  'presets.mine': 'Мої',
-  'presets.builtin': 'Вбудовані',
-  'presets.empty': 'Поки нічого — 💾 у шапці зберігає поточний корпус.',
-  'presets.delete.title': 'Видалити «{name}»',
-  'presets.delete.aria': 'Видалити пресет {name}',
-  'presets.delete.confirm': 'Видалити?',
   'presets.prompt': 'Назва пресета',
   'presets.auto': 'Корпус {n}',
 
   // --- boards ---
   'panel.boards': 'Плати',
-  'boards.add': '+ Додати плату',
+  'boards.add': 'Додати плату',
   'boards.empty': 'Плат немає — корпус лишає невелику порожню порожнину.',
   'board.x': 'X',
   'board.y': 'Y',
@@ -312,7 +287,6 @@ export const uk: Record<Key, string> = {
   'hole.tap': 'саморіз',
   'hole.insert': 'термовставка',
   'hole.nut': 'гайка',
-  'board.remove': 'Прибрати плату',
   'board.unverified': 'Розміри ще не звірені з офіційним кресленням',
   'board.rails': 'Кріпильних отворів немає: плату тримають дві напрямні з пазом — вставляється під кутом.',
   'board.rails.screwed':
@@ -361,7 +335,7 @@ export const uk: Record<Key, string> = {
 
   // --- openings ---
   'panel.openings': 'Отвори',
-  'cuts.add': '+ Додати отвір',
+  'cuts.add': 'Додати отвір',
   'cut.face': 'Грань',
   'cut.shape': 'Форма',
   'cutshape.rect': 'прямокутник',
@@ -373,7 +347,6 @@ export const uk: Record<Key, string> = {
   'cut.h': 'Висота',
   'cut.d': 'Діаметр',
   'cut.r': 'Радіус кутів',
-  'cut.remove': 'Прибрати отвір',
   'cut.title': 'Отвір {n}',
   'board.ports': 'Отвори під роз’єми',
   'board.ports.hint': 'для яких роз’ємів прорізати отвір у корпусі',
@@ -501,7 +474,7 @@ export const uk: Record<Key, string> = {
     'Наскрізним болтам потрібна кришка зверху або знизу на коробці, циліндрі чи половинці розкладачки: поки що кришка тримається на гвинтах, а болти повернуться, коли форма й кришка дозволять.',
 
   // --- custom board ---
-  'boards.custom': '+ Власна плата',
+  'boards.custom': 'Власна плата',
   'custom.edit': 'Редагувати плату',
   'custom.name': 'Назва',
   'custom.w': 'Ширина',
@@ -579,9 +552,8 @@ export const uk: Record<Key, string> = {
   'mount.screwD': 'Гвинт у стіну',
   'mount.screwD.hint': 'діаметр стрижня гвинта в стіні, мм',
   'label.text': 'Текст',
-  'labels.add': '+ Додати напис',
+  'labels.add': 'Додати напис',
   'label.title': 'Напис {n}',
-  'label.remove': 'Прибрати напис',
   'label.face': 'Грань',
   'label.face.hint':
     'грань, на якій напис, — корпусу або кришки; у циліндра пласкі грані лише верх і низ, верх пульта — його похила панель',

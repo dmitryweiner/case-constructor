@@ -113,7 +113,7 @@ const preset = flags.get('preset');
 if (preset) {
   label(`preset:${preset}`);
   await page.click('#presetBtn');
-  await page.click(`#presetList [data-preset="b:${preset}"]`);
+  await page.click(`#presetList [data-ref="b:${preset}"] .preset-pick`);
   await page.waitForTimeout(150);
   await settle();
   checkReload(`preset:${preset}`);
@@ -247,8 +247,8 @@ const evalResult = evalExpr
   : null;
 const status = await page.locator('#status').textContent();
 const audit = (await page.locator('#audit').textContent()).trim();
-const warnings = (await page.locator('#warnings').innerText()).trim();
-const blockers = (await page.locator('#blockers').textContent()).trim();
+const warnings = (await page.locator('#messages .message:not(.bad)').allInnerTexts()).join('\n').trim();
+const blockers = (await page.locator('#messages .message.bad').allTextContents()).join('\n').trim();
 await app.close();
 
 console.log(`snap → ${out}`);

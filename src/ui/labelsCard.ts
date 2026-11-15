@@ -1,9 +1,10 @@
 // The labels: a list like the openings, each label its own face, text,
 // font and place on that face.
 
-import { make } from './dom';
-import type { Change, Control, ControlsHandle } from './controls';
+import type { Change, Control } from './controls';
 import { renderControls } from './controls';
+import type { BoxListHandle } from './boxList';
+import { renderBoxList } from './boxList';
 import { t } from '../i18n';
 import { FACES } from '../geo/face';
 import type { LabelAnchor, LabelState } from '../geo/extras';
@@ -165,49 +166,19 @@ function labelControls(index: number): Control<AppState>[] {
   ];
 }
 
-export interface LabelsCardHandle {
-  sync(state: AppState): void;
-}
+export type LabelsCardHandle = BoxListHandle;
 
-export function renderLabelsCard(container: HTMLElement, read: () => AppState, onChange: Change<AppState>): LabelsCardHandle {
-  let handles: ControlsHandle<AppState>[] = [];
-  let count = -1;
-
-  // rebuilt only when the list's length changes: a text field keeps its focus while typing
-  function build(state: AppState): void {
-    container.replaceChildren();
-    handles = state.labels.map((_, index) => {
-      const box = make('div', 'board-box');
-      box.id = `label${index}`;
-      const head = make('div', 'board-head');
-      head.append(make('span', 'board-name', t('label.title', { n: index + 1 })));
-      const remove = make('button', 'btn board-del', '✕');
-      remove.type = 'button';
-      remove.id = `label${index}_remove`;
-      remove.title = t('label.remove');
-      remove.setAttribute('aria-label', t('label.remove'));
-      remove.addEventListener('click', () => {
-        const current = read();
-        onChange({ ...current, labels: current.labels.filter((__, i) => i !== index) });
-      });
-      head.append(remove);
-      const controls = make('div');
-      box.append(head, controls);
-      container.append(box);
-      return renderControls(controls, labelControls(index), read, onChange, `label${index}`);
-    });
-  }
-
-  function sync(state: AppState): void {
-    if (state.labels.length !== count) {
-      count = state.labels.length;
-      build(state);
-    }
-    for (const handle of handles) handle.sync(state);
-  }
-
-  sync(read());
-  return { sync };
+export function renderLabelsCard(list: HTMLUListElement, read: () => AppState, onChange: Change<AppState>): LabelsCardHandle {
+  // filled again only when the list's length changes: a text field keeps its focus while typing
+  return renderBoxList(list, {
+    idPrefix: 'label',
+    read,
+    onChange,
+    count: (state) => state.labels.length,
+    title: (_state, index) => t('label.title', { n: index + 1 }),
+    fill: (body, index) => renderControls(body, labelControls(index), read, onChange, `label${index}`),
+    remove: (state, index) => ({ ...state, labels: state.labels.filter((_, i) => i !== index) }),
+  });
 }
 
 /**

@@ -7,7 +7,8 @@
 
 import 'maker-kit/styles/kit.css';
 import './style.css';
-import { el, make } from './ui/dom';
+import { el, make } from 'maker-kit/ui/dom';
+import { download } from 'maker-kit/ui/files';
 import { createScene } from './render/scene';
 import type { SceneCaption, ScenePart, SceneSpot } from './render/scene';
 import { renderControls } from './ui/controls';
@@ -40,13 +41,20 @@ import { HEAD_FLOOR, hasHead, headSeat, lidFaces } from './geo/lidSpec';
 import { headLimitsOf, lidPosts, nutHeads, throughNotes } from './geo/lidPosts';
 import { throughHardware } from './geo/hardware';
 import { postCollisions, postsInOpenings, printedScrewWarnings } from './geo/fastening';
-import { createProgress } from './ui/progress';
-import type { StorageStatus } from './ui/storageNote';
-import { renderStorageNote } from './ui/storageNote';
-import { renderPresetList } from './ui/presetList';
-import type { PresetRow } from './ui/presetList';
+import { createProgress } from 'maker-kit/ui/progress';
+import type { StorageStatus } from 'maker-kit/ui/banner';
+import { renderBanner } from 'maker-kit/ui/banner';
+import { restoreCards, snapshotCards } from 'maker-kit/ui/card';
+import { bindHistory } from 'maker-kit/ui/historyKeys';
+import { setupSheet } from 'maker-kit/ui/sheet';
+import { createLanguagePicker } from 'maker-kit/ui/languagePicker';
+import { renderMessages } from 'maker-kit/ui/messageList';
+import { createModal } from 'maker-kit/ui/modal';
+import type { Blocker, Notice } from './ui/messages';
+import { messageCounts, messageLines, numberNotices } from './ui/messages';
+import { renderPresetList } from 'maker-kit/ui/presetList';
 import { applyStaticText } from './ui/staticText';
-import { ENDONYMS, LANGS, initLang, isLang, lang, onLangChange, setLang, t, tDynamic, tm, autoPresetPrefixes } from './i18n';
+import { LANGS, initLang, lang, onLangChange, setLang, t, tDynamic, tm, autoPresetPrefixes } from './i18n';
 import type { Key } from './i18n';
 import type { Message, MessageSpot } from './geo/message';
 import { faceFrame } from './geo/face';
@@ -95,7 +103,7 @@ import { sanitizeState, RESOLUTIONS } from './state/schema';
 import { PRESETS, presetById, presetSignature } from './state/presets';
 import { encodePresetFile, decodePresetFile, presetFileName } from './state/presetFile';
 import type { PresetRef, UserPreset } from 'maker-kit/core/presets';
-import { nextPresetName, presetRef as refOf, presetStatus, removeUserPreset } from 'maker-kit/core/presets';
+import { nextPresetName, presetRef as refOf, presetStatus, removeUserPreset, renameUserPreset } from 'maker-kit/core/presets';
 import { browserStorage, loadRecord, saveRecord } from 'maker-kit/core/storage';
 import type { StorageWrite } from 'maker-kit/core/storage';
 import { storePreset, userPresetsRecord } from './state/userPresets';
@@ -123,16 +131,17 @@ applyStaticText(document);
 const view = el('view', HTMLCanvasElement);
 const panel = el('panel', HTMLElement);
 const caseParams = el('caseParams', HTMLDivElement);
-const boardCards = el('boardCards', HTMLDivElement);
+const boardTools = el('boardTools', HTMLDivElement);
+const boardCards = el('boardCards', HTMLUListElement);
 const boardAdd = el('boardAdd', HTMLButtonElement);
 const boardCustom = el('boardCustom', HTMLButtonElement);
 const boardPicker = el('boardPicker', HTMLDivElement);
-const boardPickerClose = el('boardPickerClose', HTMLButtonElement);
+const pickerDialog = createModal(boardPicker, { close: el('boardPickerClose', HTMLButtonElement) });
 const boardSearch = el('boardSearch', HTMLInputElement);
 const boardList = el('boardList', HTMLDivElement);
 const viewBoards = el('viewBoards', HTMLInputElement);
-const cutCards = el('cutCards', HTMLDivElement);
-const labelCards = el('labelCards', HTMLDivElement);
+const cutCards = el('cutCards', HTMLUListElement);
+const labelCards = el('labelCards', HTMLUListElement);
 const extraOpenings = el('extraOpenings', HTMLDivElement);
 const extraMounting = el('extraMounting', HTMLDivElement);
 const cutAdd = el('cutAdd', HTMLButtonElement);
@@ -146,7 +155,7 @@ const halfGroup = el('halfGroup', HTMLDivElement);
 const halfBar = el('halfBar', HTMLDivElement);
 const halfParams = el('halfParams', HTMLDivElement);
 const angleParams = el('angleParams', HTMLDivElement);
-const cableCards = el('cableCards', HTMLDivElement);
+const cableCards = el('cableCards', HTMLUListElement);
 const cableAdd = el('cableAdd', HTMLButtonElement);
 const printParams = el('printParams', HTMLDivElement);
 const resolutionSel = el('resolution', HTMLSelectElement);
@@ -154,21 +163,20 @@ const exportBtn = el('exportBtn', HTMLButtonElement);
 const partList = el('partList', HTMLUListElement);
 const statusEl = el('status', HTMLParagraphElement);
 const auditEl = el('audit', HTMLParagraphElement);
-const warningsEl = el('warnings', HTMLDivElement);
-const blockersEl = el('blockers', HTMLParagraphElement);
+/** The blockers, warnings and notes: one list (maker-kit's ui/messageList), the counts over it. */
+const messageList = el('messages', HTMLUListElement);
+const messageCount = el('messageCount', HTMLParagraphElement);
 const storageNote = el('storageNote', HTMLDivElement);
-/** What browser storage failed to keep: shown under the top bar, never in the blockers line a rebuild rewrites. */
+/** What browser storage failed to keep: shown under the top bar, never in the message list a rebuild rewrites. */
 let storageStatus: StorageStatus = { project: 'ok', preset: null };
 const presetBtn = el('presetBtn', HTMLButtonElement);
-const presetsPanel = el('presets', HTMLDivElement);
-const presetsClose = el('presetsClose', HTMLButtonElement);
+/** The presets dialog: Esc, the backdrop and ✕ close it (maker-kit's ui/modal). */
+const presetsDialog = createModal(el('presets', HTMLDivElement), { close: el('presetsClose', HTMLButtonElement) });
 const presetList = el('presetList', HTMLDivElement);
 const saveBtn = el('saveBtn', HTMLButtonElement);
 const fileOpenBtn = el('fileOpenBtn', HTMLButtonElement);
 const fileSaveBtn = el('fileSaveBtn', HTMLButtonElement);
 const fileInput = el('fileInput', HTMLInputElement);
-const undoBtn = el('undoBtn', HTMLButtonElement);
-const redoBtn = el('redoBtn', HTMLButtonElement);
 const viewButtons: Record<ViewMode, HTMLButtonElement> = {
   exploded: el('viewExploded', HTMLButtonElement),
   assembled: el('viewAssembled', HTMLButtonElement),
@@ -185,17 +193,12 @@ const viewPortNames = el('viewPortNames', HTMLInputElement);
 const viewWarnings = el('viewWarnings', HTMLInputElement);
 const viewWarningsLabel = el('viewWarningsLabel', HTMLLabelElement);
 const viewPortNamesLabel = el('viewPortNamesLabel', HTMLLabelElement);
-const langSel = el('langSel', HTMLSelectElement);
 const tabs: Record<ExportMode, HTMLButtonElement> = {
   body: el('tabBody', HTMLButtonElement),
   lid: el('tabLid', HTMLButtonElement),
   both: el('tabBoth', HTMLButtonElement),
 };
-const progress = createProgress({
-  wrap: el('progressWrap', HTMLDivElement),
-  fill: el('progressFill', HTMLDivElement),
-  label: el('progressLabel', HTMLSpanElement),
-});
+const progress = createProgress(el('progressWrap', HTMLDivElement), { t });
 
 const scene = createScene(view, el('portCaptions', HTMLDivElement));
 const csg = new CsgClient();
@@ -206,6 +209,15 @@ const projectRecord = currentProjectRecord(userPresets);
 const opened: CurrentProject = loadRecord(storage, projectRecord) ?? firstPreset();
 const history = new History<AppState>(opened.state);
 let state: AppState = history.state;
+/** ↩️ ↪️ and Ctrl/⌘+Z, Shift+Ctrl/⌘+Z, Ctrl/⌘+Y on any layout, right after a slider too (maker-kit's ui/historyKeys). */
+const historyKeys = bindHistory({
+  undo: el('undoBtn', HTMLButtonElement),
+  redo: el('redoBtn', HTMLButtonElement),
+  onUndo: () => stepHistory('undo'),
+  onRedo: () => stepHistory('redo'),
+  canUndo: () => history.canUndo,
+  canRedo: () => history.canRedo,
+});
 
 // --- the panel: built at startup and again on every language switch ---
 
@@ -289,10 +301,11 @@ function renderPanel(): void {
   halfRows = renderControls(halfParams, halfControls(), () => halfView, setHalfView, 'edit');
   angleRows = renderControls(angleParams, angleControls(), () => halfView, setHalfView, 'view');
   boardRows = renderBoardsCard(
+    boardTools,
     boardCards,
     () => edited(),
     applyEdit,
-    (text, name) => download(text, name, 'application/json'),
+    (text, name) => download(name, text, 'application/json'),
   );
   cutRows = renderCutsCard(cutCards, () => edited(), applyEdit);
   labelRows = renderLabelsCard(labelCards, () => edited(), applyEdit);
@@ -334,7 +347,7 @@ function syncPanel(): void {
   for (const [mode, tab] of Object.entries(tabs)) tab.setAttribute('aria-selected', String(mode === state.exportMode));
   syncView();
   resolutionSel.value = String(state.resolution);
-  updateHistoryButtons();
+  historyKeys.refresh();
   showPreset();
   refresh();
 }
@@ -351,11 +364,6 @@ function syncCards(): void {
   cutAdd.disabled = one.extraCuts.length >= MAX_EXTRA_CUTS;
   labelRows.sync(one);
   labelAdd.disabled = one.labels.length >= LABELS_MAX;
-}
-
-function updateHistoryButtons(): void {
-  undoBtn.disabled = !history.canUndo;
-  redoBtn.disabled = !history.canRedo;
 }
 
 // --- preview ---
@@ -387,26 +395,18 @@ let lastParts: { state: AppState; cases: BuiltCase[] } | null = null;
 let currentLabels: Record<Half, (LabelRaster | null)[]> = { a: [], b: [] };
 /** Board ghosts and their port captions per case — drawn at once, the case follows from the worker. */
 let ghostGroups: GhostGroup[] = [];
-/** A line of the warnings list: its text, and whether it only informs (grey, ℹ, not counted). */
-interface Notice {
-  text: string;
-  info: boolean;
-  /** where it points on the model */
-  spot?: MessageSpot;
-  /** its badge's number, given in list order to the lines with a spot */
-  n?: number;
-  /** a hinged case: the half whose frame the spot is in */
-  half?: Half;
-}
 const notice = (message: Message): Notice => ({
   text: tm(message),
   info: message.code.startsWith('info.'),
+  code: message.code,
   ...(message.spot ? { spot: message.spot } : {}),
 });
 const said = (key: Key, params?: Readonly<Record<string, string | number>>): Notice => ({
   text: t(key, params),
   info: key.startsWith('info.'),
+  code: key,
 });
+const blocker = (message: Message): Blocker => ({ text: tm(message), code: message.code });
 /** Warnings the panel computes itself, before the worker answers. */
 let baseWarnings: Notice[] = [];
 
@@ -567,32 +567,52 @@ let hoveredWarning: number | null = null;
 let pickedWarning: number | null = null;
 const activeWarning = (): number | null => hoveredWarning ?? pickedWarning;
 
+/** What stops the export now: the last build's or export's, or a refused file's. */
+let blockers: Blocker[] = [];
+
 function showWarnings(extra: Notice[]): void {
-  let count = 0;
-  shownNotices = [...baseWarnings, ...extra].map((line) => (line.spot ? { ...line, n: ++count } : line));
+  shownNotices = numberNotices([...baseWarnings, ...extra]);
+  const count = shownNotices.filter((line) => line.n !== undefined).length;
   if (pickedWarning !== null && pickedWarning > count) pickedWarning = null;
-  const all = shownNotices;
-  const warned = all.filter((line) => !line.info).length;
-  const noted = all.length - warned;
-  const counts = [...(warned ? [t('status.warnings', { n: warned })] : []), ...(noted ? [t('status.notes', { n: noted })] : [])];
-  warningsEl.replaceChildren(
-    ...(all.length > 1 ? [make('div', 'warn-head', counts.join(' · '))] : []),
-    ...all.map((line) => {
-      const row = make('div', line.info ? 'warn-line info' : 'warn-line');
-      if (line.n !== undefined) {
-        const n = line.n;
-        row.dataset.warn = String(n);
-        row.append(make('span', line.info ? 'warn-num info' : 'warn-num', `${line.info ? 'ℹ' : '⚠'} ${n}`));
-        row.addEventListener('mouseenter', () => hoverWarning(n));
-        row.addEventListener('mouseleave', () => hoverWarning(null));
-        row.addEventListener('click', () => pickWarning(n));
-      }
-      row.append(line.info && line.n === undefined ? `ℹ ${line.text}` : line.text);
-      return row;
-    }),
-  );
+  showMessages();
   drawWarnings();
 }
+
+function setBlockers(next: Blocker[]): void {
+  blockers = next;
+  showMessages();
+}
+
+/** The list: the blockers first, then the notices; a line with a badge carries its number (`data-warn`). */
+function showMessages(): void {
+  renderMessages(messageList, messageLines(blockers, shownNotices));
+  const counts = messageCounts(shownNotices);
+  messageCount.textContent = counts;
+  messageCount.hidden = counts === '';
+  // the kit keeps the same lines: the numbers go on again either way
+  const rows = messageList.children;
+  shownNotices.forEach((line, i) => {
+    const row = rows[blockers.length + i];
+    if (row instanceof HTMLElement && line.n !== undefined) row.dataset.warn = String(line.n);
+  });
+}
+
+/** The line under the pointer or the finger: its badge's number, if it has one. */
+function lineNumber(event: Event): number | null {
+  const row = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-warn]') : null;
+  return row ? Number(row.dataset.warn) : null;
+}
+
+// a hover on a line opens its badge; a tap picks it (a touch has no hover)
+messageList.addEventListener('mousemove', (event) => {
+  const n = lineNumber(event);
+  if (n !== hoveredWarning) hoverWarning(n);
+});
+messageList.addEventListener('mouseleave', () => hoverWarning(null));
+messageList.addEventListener('click', (event) => {
+  const n = lineNumber(event);
+  if (n !== null) pickWarning(n);
+});
 
 function hoverWarning(n: number | null): void {
   hoveredWarning = n;
@@ -614,7 +634,7 @@ let shownPortCaptions: SceneCaption[] = [];
 function drawWarnings(): void {
   const place = viewWarnings.checked ? placeInView : null;
   const active = activeWarning();
-  for (const row of warningsEl.querySelectorAll<HTMLElement>('[data-warn]'))
+  for (const row of messageList.querySelectorAll<HTMLElement>('[data-warn]'))
     row.classList.toggle('hot', Number(row.dataset.warn) === active);
   const spotted = place
     ? shownNotices.flatMap((line) => (line.spot && line.n !== undefined ? [{ ...line, spot: line.spot, n: line.n }] : []))
@@ -679,7 +699,7 @@ async function showPreview(stamp: number): Promise<void> {
     if (stamp !== generation) return;
     settled = stamp;
     auditEl.textContent = '';
-    blockersEl.textContent = t('error.build', { error: message(error) });
+    setBlockers([{ text: t('error.build', { error: message(error) }), code: 'error.build' }]);
     exportBtn.disabled = true;
   }
 }
@@ -1030,7 +1050,7 @@ function audit(meshes: SurfaceMesh[], ms: number): void {
     ? t('audit.watertight', { k: (triangles / 1000).toFixed(1), ms: Math.round(ms) })
     : t('audit.open');
   showWarnings(assessments.flatMap((assessment) => assessment.warnings).map(notice));
-  blockersEl.textContent = blocking.map(tm).join('\n');
+  setBlockers(blocking.map(blocker));
   exportBtn.disabled = blocking.length > 0;
 }
 
@@ -1066,7 +1086,7 @@ for (const [mode, button] of Object.entries(viewButtons)) {
   });
 }
 viewCaption.addEventListener('click', () => {
-  setPanelOpen(true);
+  sheet.open();
   exportCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 viewBoards.addEventListener('change', () => {
@@ -1079,17 +1099,13 @@ viewBoards.addEventListener('change', () => {
 function openPicker(): void {
   boardSearch.value = '';
   renderBoardList(boardList, '', addBoard);
-  boardPicker.hidden = false;
-  boardSearch.focus();
-}
-
-function closePicker(): void {
-  boardPicker.hidden = true;
+  // the search has the focus (autofocus), the add button gets it back
+  pickerDialog.open(boardAdd);
 }
 
 /** A new board goes to the right of the ones already placed. */
 function addBoard(def: BoardDef): void {
-  closePicker();
+  pickerDialog.close();
   const one = edited();
   const placed = placeBoards(one);
   const x = placed.length > 0 ? Math.max(...placed.map((board) => board.footprint.x1)) + NEW_BOARD_GAP + 3 : 0;
@@ -1107,14 +1123,7 @@ boardCustom.addEventListener('click', () => {
 cutAdd.addEventListener('click', () => applyEdit(addCut(edited())));
 labelAdd.addEventListener('click', () => applyEdit(addLabel(edited())));
 cableAdd.addEventListener('click', () => applyState(addCable(state, caseLayout(halfState(state, 'a')).dims.w)));
-boardPickerClose.addEventListener('click', closePicker);
-boardPicker.addEventListener('click', (event) => {
-  if (event.target === boardPicker) closePicker();
-});
 boardSearch.addEventListener('input', () => renderBoardList(boardList, boardSearch.value, addBoard));
-window.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && !boardPicker.hidden) closePicker();
-});
 viewXray.addEventListener('change', () => scene.setXray(viewXray.checked));
 viewPortNames.addEventListener('change', drawParts);
 viewWarnings.addEventListener('change', drawWarnings);
@@ -1153,30 +1162,18 @@ async function runExport(): Promise<void> {
     );
     if (!result) return;
     const blocking = result.parts.flatMap((part) => part.blocking);
-    if (blocking.length > 0) {
-      blockersEl.textContent = blocking.map(tm).join('\n');
-      return;
-    }
-    blockersEl.textContent = '';
+    setBlockers(blocking.map(blocker));
+    if (blocking.length > 0) return;
     // printed screws travel with the lid, battery clamps with the body: same print job, same material
     const placed = printAll(requested, builtCases(result.parts));
     const mesh = mergeMeshes(placed.map((part) => part.mesh));
-    download(encodeSTL(mesh, { name: requested.exportMode }), `case-constructor-${requested.exportMode}.stl`);
+    download(`case-constructor-${requested.exportMode}.stl`, encodeSTL(mesh, { name: requested.exportMode }), 'model/stl');
   } catch (error) {
-    blockersEl.textContent = t('error.export', { error: message(error) });
+    setBlockers([{ text: t('error.export', { error: message(error) }), code: 'error.export' }]);
   } finally {
     exportBtn.textContent = t('export.button');
     exportBtn.disabled = false;
   }
-}
-
-function download(data: BlobPart, filename: string, type = 'model/stl'): void {
-  const url = URL.createObjectURL(new Blob([data], { type }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
 }
 
 // --- presets ---
@@ -1188,18 +1185,6 @@ let presetRef: PresetRef = '';
 
 function builtinName(id: string): string {
   return tDynamic(`preset.${id}.name`);
-}
-
-function presetRows(): PresetRow[] {
-  return [
-    ...userPresets.map((preset) => ({ ref: refOf('u', preset.id), name: preset.name, mine: true })),
-    ...PRESETS.map((preset) => ({
-      ref: refOf('b', preset.id),
-      name: builtinName(preset.id),
-      note: tDynamic(`preset.${preset.id}.note`),
-      mine: false,
-    })),
-  ];
 }
 
 function setPresetRef(ref: PresetRef, name: string): void {
@@ -1216,15 +1201,25 @@ function presetState(ref: PresetRef): AppState | undefined {
 }
 
 /**
- * The preset on the button and highlighted in the list only while the project
- * still is it: changed, it is no longer that preset (undo back to it, and it
- * is again). A project file's name has nothing to compare with and stays.
+ * The preset on the button only while the project still is it: changed, it
+ * is no longer that preset (undo back to it, and it is again); the dialog
+ * marks it "changed". A project file's name has nothing to compare with and
+ * stays.
  */
 function showPreset(): void {
-  const open = presetStatus(presetRef, state, presetState, presetSignature) === 'same';
-  presetBtn.textContent = (presetRef === '' || open ? presetName : '') || t('topbar.presets');
-  if (!presetsPanel.hidden)
-    renderPresetList(presetList, presetRows(), open ? presetRef : '', { onPick: openPreset, onDelete: deletePreset });
+  const status = presetStatus(presetRef, state, presetState, presetSignature);
+  presetBtn.textContent = (presetRef === '' || status === 'same' ? presetName : '') || t('kit.topbar.presets');
+  if (!presetsDialog.isOpen()) return;
+  renderPresetList(presetList, {
+    builtIn: PRESETS.map((preset) => ({ id: preset.id, label: builtinName(preset.id), note: tDynamic(`preset.${preset.id}.note`) })),
+    user: userPresets.map(({ id, name }) => ({ id, name })),
+    current: presetRef,
+    status,
+    t,
+    open: openPreset,
+    rename: renamePreset,
+    remove: (id) => deletePreset(refOf('u', id)),
+  });
 }
 
 function firstPreset(): CurrentProject {
@@ -1240,7 +1235,11 @@ function keepProject(): void {
 
 function setStorageStatus(next: StorageStatus): void {
   storageStatus = next;
-  renderStorageNote(storageNote, storageStatus, () => setStorageStatus({ ...storageStatus, preset: null }));
+  renderBanner(storageNote, storageStatus, {
+    t,
+    advice: { blocked: 'kit.storage.advice.file', full: 'kit.storage.advice.fileFull' },
+    onDismiss: () => setStorageStatus({ ...storageStatus, preset: null }),
+  });
 }
 
 /** A preset written or deleted: its note goes on success, and the project gets another try (deleting frees space). */
@@ -1262,16 +1261,12 @@ function autoPresetName(): string {
 }
 
 function openPresets(): void {
-  presetsPanel.hidden = false;
+  presetsDialog.open(presetBtn);
   showPreset();
 }
 
-function closePresets(): void {
-  presetsPanel.hidden = true;
-}
-
 function openPreset(ref: PresetRef): void {
-  closePresets();
+  presetsDialog.close();
   const id = ref.slice(2);
   if (ref.startsWith('b:')) {
     const preset = presetById(id);
@@ -1286,6 +1281,17 @@ function openPreset(ref: PresetRef): void {
   }
 }
 
+/** Renamed in the dialog: the button follows when it is the open one. */
+function renamePreset(id: string, name: string): void {
+  const next = renameUserPreset(userPresets, id, name);
+  if (!presetWritten('save', saveRecord(storage, userPresetsRecord, next))) return;
+  userPresets = next;
+  const ref = refOf('u', id);
+  const renamed = next.find((preset) => preset.id === id);
+  if (presetRef === ref && renamed) setPresetRef(ref, renamed.name);
+  else showPreset();
+}
+
 function deletePreset(ref: PresetRef): void {
   const next = removeUserPreset(userPresets, ref.slice(2));
   if (!presetWritten('delete', saveRecord(storage, userPresetsRecord, next))) return;
@@ -1294,17 +1300,7 @@ function deletePreset(ref: PresetRef): void {
   showPreset();
 }
 
-presetBtn.addEventListener('click', () => {
-  if (presetsPanel.hidden) openPresets();
-  else closePresets();
-});
-presetsClose.addEventListener('click', closePresets);
-presetsPanel.addEventListener('click', (event) => {
-  if (event.target === presetsPanel) closePresets();
-});
-window.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && !presetsPanel.hidden) closePresets();
-});
+presetBtn.addEventListener('click', openPresets);
 
 saveBtn.addEventListener('click', () => {
   const name = prompt(t('presets.prompt'), autoPresetName())?.trim();
@@ -1322,7 +1318,7 @@ saveBtn.addEventListener('click', () => {
 fileSaveBtn.addEventListener('click', () => {
   const name = prompt(t('presets.prompt'), presetName || autoPresetName())?.trim();
   if (!name) return;
-  download(encodePresetFile(name, state), presetFileName(name), 'application/json');
+  download(presetFileName(name), encodePresetFile(name, state), 'application/json');
   setPresetRef(presetRef, name);
   flash(fileSaveBtn, '✓');
 });
@@ -1348,7 +1344,7 @@ document.addEventListener('drop', (event) => {
 async function openPresetFile(file: File): Promise<void> {
   const decoded = decodePresetFile(await file.text().catch(() => ''));
   if (!decoded.ok) {
-    blockersEl.textContent = t(`kit.file.${decoded.reason}`);
+    setBlockers([{ text: t(`kit.file.${decoded.reason}`), code: `kit.file.${decoded.reason}` }]);
     return;
   }
   applyState(decoded.state);
@@ -1366,9 +1362,6 @@ function flash(button: HTMLButtonElement, mark: string): void {
 
 // --- undo / redo ---
 
-undoBtn.addEventListener('click', () => stepHistory('undo'));
-redoBtn.addEventListener('click', () => stepHistory('redo'));
-
 function stepHistory(direction: 'undo' | 'redo'): void {
   const restored = direction === 'undo' ? history.undo() : history.redo();
   if (!restored) return;
@@ -1376,31 +1369,22 @@ function stepHistory(direction: 'undo' | 'redo'): void {
   showState();
 }
 
-window.addEventListener('keydown', (event) => {
-  if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'z') return;
-  if (event.target instanceof HTMLInputElement && event.target.type === 'text') return;
-  event.preventDefault();
-  stepHistory(event.shiftKey ? 'redo' : 'undo');
-});
-
 // --- mobile panel ---
 
-const panelBtn = el('panelBtn', HTMLButtonElement);
+/** Below 1024 px the panel is a bottom sheet over the view (maker-kit's ui/sheet); from there it stands beside it. */
+const narrow = window.matchMedia('(max-width: 1023px)');
+// the view's taps are the app's (a caption toggles its port, a badge opens): it closes the sheet itself
+const sheet = setupSheet({
+  panel,
+  button: el('panelBtn', HTMLButtonElement),
+  close: el('sheetClose', HTMLButtonElement),
+  narrow,
+  // the sheet covers the lower part of the view: the case is centred above it
+  onInset: (px) => scene.setBottomInset(px),
+});
+// the sheet's height follows the window (max-height in dvh)
+window.addEventListener('resize', () => sheet.refresh());
 
-const narrow = window.matchMedia('(max-width: 760px)');
-
-function setPanelOpen(open: boolean): void {
-  panel.classList.toggle('open', open);
-  panelBtn.hidden = open;
-  // on a phone the sheet covers the lower part of the view: centre the case above it
-  scene.setBottomInset(open && narrow.matches ? panel.offsetHeight : 0);
-}
-
-narrow.addEventListener('change', () => setPanelOpen(panel.classList.contains('open')));
-// the sheet's height follows the window (max-height in vh)
-window.addEventListener('resize', () => setPanelOpen(panel.classList.contains('open')));
-
-panelBtn.addEventListener('click', () => setPanelOpen(true));
 /** A tap on a port's caption: its opening on or off, as its checkbox in the board card does — in the caption's half. */
 function togglePortCut(caption: string): void {
   // the upper half's captions start with 'u'
@@ -1477,33 +1461,27 @@ const release = (event: PointerEvent): void => {
   const caption = scene.captionAt(event.clientX - box.left, event.clientY - box.top);
   if (caption?.startsWith('warn:')) pickWarning(Number(caption.slice(5)));
   else if (caption) togglePortCut(caption);
-  else if (narrow.matches && panel.classList.contains('open')) setPanelOpen(false);
+  else if (narrow.matches) sheet.close();
 };
 view.addEventListener('pointerup', release);
 view.addEventListener('pointercancel', (event) => {
   pressed.delete(event.pointerId);
   if (pressed.size === 0) gesture = false;
 });
-setPanelOpen(true);
 
 // --- language ---
 
-for (const code of LANGS) {
-  const option = document.createElement('option');
-  option.value = code;
-  option.textContent = ENDONYMS[code];
-  langSel.append(option);
-}
-langSel.value = lang();
-langSel.addEventListener('change', () => {
-  if (isLang(langSel.value)) setLang(langSel.value);
-});
+// 🌐 at the end of the top bar, the languages by their own names
+const langPicker = createLanguagePicker(el('topbar', HTMLElement), { locales: LANGS, current: lang(), t, onChange: setLang });
 
 onLangChange(() => {
   applyStaticText(document);
-  langSel.value = lang();
+  langPicker.set(lang());
+  // the panel drawn again in the new language, its scroll and its folded cards as they were
   const scroll = panel.scrollTop;
+  const folded = snapshotCards(panel);
   renderPanel();
+  restoreCards(panel, folded);
   panel.scrollTop = scroll;
   // preset names are not translated: only the button's placeholder is
   setPresetRef(presetRef, presetName);

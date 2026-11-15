@@ -12,16 +12,8 @@ export const en = {
   ...kitEn,
   // --- page and top bar ---
   'app.title': 'Case Constructor — 3D-printable enclosures for boards',
-  'lang.label': 'Language',
-  'topbar.presets': 'Presets…',
   'topbar.presets.title': 'Built-in and saved presets',
-  'topbar.save.title': 'Save as a preset',
   'topbar.fileOpen.title': 'Open a project file (or drop the file onto the window)',
-  'topbar.fileSave.title': 'Save the project to a file',
-  'topbar.undo.title': 'Undo (Ctrl/Cmd+Z)',
-  'topbar.redo.title': 'Redo (Ctrl/Cmd+Shift+Z)',
-  'topbar.panel': '⚙ Settings',
-  'topbar.panel.title': 'Settings',
   'view.mode.title': 'How the case is shown: the Body and Lid tabs show one part, Both shows both',
   'view.exploded': 'exploded',
   'view.assembled': 'assembled',
@@ -84,9 +76,8 @@ export const en = {
   'hinge.leafHole': 'Into',
   'hinge.leafHole.hint':
     'What the leaf screws go into inside the wall: a tapped hole, a heat-set insert, or a nut dropped into its pocket from inside',
-  'cable.add': '+ Add cable',
+  'cable.add': 'Add cable',
   'cable.title': 'Cable {n}',
-  'cable.remove': 'Remove the cable',
   'cable.kind': 'Cable',
   'cable.kind.flat': 'flat',
   'cable.kind.round': 'round',
@@ -213,31 +204,15 @@ export const en = {
   // --- errors ---
   'error.build': 'Could not build the case: {error}',
   'error.export': 'Export failed: {error}',
-  'error.presetSave': 'Could not save the preset: the browser storage is unavailable.',
-  'error.presetSaveFull': 'Could not save the preset: the browser storage is full. Delete presets you no longer need and try again.',
-  'error.presetDelete': 'Could not delete the preset: the browser storage is unavailable.',
-  'storage.project.blocked':
-    'This browser does not keep your project: its storage is unavailable (a private window or blocked site data). Save the project to a file with ⬇️ before closing the page.',
-  'storage.project.full':
-    'Your latest changes are not kept in this browser: its storage is full. Delete presets you no longer need, or save the project to a file with ⬇️.',
-  'storage.dismiss': 'Dismiss',
 
   // --- presets ---
   'presets.title': 'Presets',
-  'presets.close': 'Close',
-  'presets.close.title': 'Close (Esc)',
-  'presets.mine': 'Mine',
-  'presets.builtin': 'Built-in',
-  'presets.empty': 'Nothing saved yet — 💾 in the top bar saves the current case.',
-  'presets.delete.title': 'Delete “{name}”',
-  'presets.delete.aria': 'Delete preset {name}',
-  'presets.delete.confirm': 'Delete?',
   'presets.prompt': 'Preset name',
   'presets.auto': 'Case {n}',
 
   // --- boards ---
   'panel.boards': 'Boards',
-  'boards.add': '+ Add board',
+  'boards.add': 'Add board',
   'boards.empty': 'No boards — the case keeps a small empty cavity.',
   'board.x': 'X',
   'board.y': 'Y',
@@ -328,7 +303,6 @@ export const en = {
   'hole.tap': 'tap',
   'hole.insert': 'insert',
   'hole.nut': 'nut',
-  'board.remove': 'Remove the board',
   'board.unverified': 'Dimensions not yet checked against an official drawing',
   'board.rails': 'No mounting holes: held by two grooved rails — slide it in at an angle.',
   'board.rails.screwed':
@@ -377,7 +351,7 @@ export const en = {
 
   // --- openings ---
   'panel.openings': 'Openings',
-  'cuts.add': '+ Add opening',
+  'cuts.add': 'Add opening',
   'cut.face': 'Face',
   'cut.shape': 'Shape',
   'cutshape.rect': 'rectangle',
@@ -389,7 +363,6 @@ export const en = {
   'cut.h': 'Height',
   'cut.d': 'Diameter',
   'cut.r': 'Corner radius',
-  'cut.remove': 'Remove the opening',
   'cut.title': 'Opening {n}',
   'board.ports': 'Openings for ports',
   'board.ports.hint': 'which connectors get an opening in the case',
@@ -516,7 +489,7 @@ export const en = {
     'Through bolts need a top or bottom lid on a box, a cylinder or a hinged half: for now the lid holds on screws, and the bolts come back when the shape and the lid allow them.',
 
   // --- custom board ---
-  'boards.custom': '+ Custom board',
+  'boards.custom': 'Custom board',
   'custom.edit': 'Edit the board',
   'custom.name': 'Name',
   'custom.w': 'Width',
@@ -595,9 +568,8 @@ export const en = {
   'mount.screwD': 'Wall screw',
   'mount.screwD.hint': 'shank diameter of the wall screw, mm',
   'label.text': 'Text',
-  'labels.add': '+ Add label',
+  'labels.add': 'Add label',
   'label.title': 'Label {n}',
-  'label.remove': 'Remove the label',
   'label.face': 'Face',
   'label.face.hint':
     "the face it goes on — the body's or the lid's; a cylinder has flat faces only at the top and bottom, a console's top is its slope",

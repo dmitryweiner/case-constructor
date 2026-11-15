@@ -1,9 +1,10 @@
 // The Openings card: user-defined cuts on any face — rectangle or circle,
 // position and size in the face's own coordinates.
 
-import { make } from './dom';
-import type { Change, Control, ControlsHandle } from './controls';
+import type { Change, Control } from './controls';
 import { renderControls } from './controls';
+import type { BoxListHandle } from './boxList';
+import { renderBoxList } from './boxList';
 import { t } from '../i18n';
 import type { ExtraCut } from '../geo/cutters';
 import { MAX_EXTRA_CUTS, cutFaces, defaultExtraCut } from '../geo/cutters';
@@ -65,48 +66,18 @@ function cutControls(index: number): Control<AppState>[] {
   ];
 }
 
-export interface CutsCardHandle {
-  sync(state: AppState): void;
-}
+export type CutsCardHandle = BoxListHandle;
 
-export function renderCutsCard(container: HTMLElement, read: () => AppState, onChange: Change<AppState>): CutsCardHandle {
-  let handles: ControlsHandle<AppState>[] = [];
-  let count = -1;
-
-  function build(state: AppState): void {
-    container.replaceChildren();
-    handles = state.extraCuts.map((_, index) => {
-      const box = make('div', 'board-box');
-      box.id = `cut${index}`;
-      const head = make('div', 'board-head');
-      head.append(make('span', 'board-name', t('cut.title', { n: index + 1 })));
-      const remove = make('button', 'btn board-del', '✕');
-      remove.type = 'button';
-      remove.id = `cut${index}_remove`;
-      remove.title = t('cut.remove');
-      remove.setAttribute('aria-label', t('cut.remove'));
-      remove.addEventListener('click', () => {
-        const current = read();
-        onChange({ ...current, extraCuts: current.extraCuts.filter((__, i) => i !== index) });
-      });
-      head.append(remove);
-      const controls = make('div');
-      box.append(head, controls);
-      container.append(box);
-      return renderControls(controls, cutControls(index), read, onChange, `cut${index}`);
-    });
-  }
-
-  function sync(state: AppState): void {
-    if (state.extraCuts.length !== count) {
-      count = state.extraCuts.length;
-      build(state);
-    }
-    for (const handle of handles) handle.sync(state);
-  }
-
-  sync(read());
-  return { sync };
+export function renderCutsCard(list: HTMLUListElement, read: () => AppState, onChange: Change<AppState>): CutsCardHandle {
+  return renderBoxList(list, {
+    idPrefix: 'cut',
+    read,
+    onChange,
+    count: (state) => state.extraCuts.length,
+    title: (_state, index) => t('cut.title', { n: index + 1 }),
+    fill: (body, index) => renderControls(body, cutControls(index), read, onChange, `cut${index}`),
+    remove: (state, index) => ({ ...state, extraCuts: state.extraCuts.filter((_, i) => i !== index) }),
+  });
 }
 
 /** A new cut in the middle of the front face (or the first face the shape allows). */

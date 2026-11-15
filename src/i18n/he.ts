@@ -9,16 +9,8 @@ import type { Key } from '.';
 export const he: Record<Key, string> = {
   ...kitHe,
   'app.title': 'Case Constructor — מארזים ללוחות להדפסה בתלת־ממד',
-  'lang.label': 'שפה',
-  'topbar.presets': 'תבניות…',
   'topbar.presets.title': 'תבניות מוכנות ושמורות',
-  'topbar.save.title': 'שמירה כתבנית',
   'topbar.fileOpen.title': 'פתיחת פרויקט מקובץ (או גררו את הקובץ לחלון)',
-  'topbar.fileSave.title': 'שמירת הפרויקט לקובץ',
-  'topbar.undo.title': 'ביטול (Ctrl/Cmd+Z)',
-  'topbar.redo.title': 'ביצוע מחדש (Ctrl/Cmd+Shift+Z)',
-  'topbar.panel': '⚙ הגדרות',
-  'topbar.panel.title': 'הגדרות',
   'view.mode.title': 'איך להציג את המארז: הלשוניות „גוף” ו„מכסה” מציגות חלק אחד, „שניהם” — את שניהם',
   'view.exploded': 'מפורק',
   'view.assembled': 'מורכב',
@@ -74,9 +66,8 @@ export const he: Record<Key, string> = {
   'hinge.leafScrew.hint': 'דרך הכנפיים ודופן הציר אל משטח בתוך הדופן: שניים לכל כנף וגוש (אחד בגוש קצר)',
   'hinge.leafHole': 'לתוך',
   'hinge.leafHole.hint': 'לתוך מה נכנסים ברגי הכנפיים בתוך הדופן: חור לתבריג, תותב מוחדר בחום, או אום שמונח בכיס מבפנים',
-  'cable.add': '+ הוספת כבל',
+  'cable.add': 'הוספת כבל',
   'cable.title': 'כבל {n}',
-  'cable.remove': 'הסרת הכבל',
   'cable.kind': 'כבל',
   'cable.kind.flat': 'שטוח',
   'cable.kind.round': 'עגול',
@@ -197,30 +188,14 @@ export const he: Record<Key, string> = {
 
   'error.build': 'לא ניתן לבנות את המארז: {error}',
   'error.export': 'הייצוא נכשל: {error}',
-  'error.presetSave': 'לא ניתן לשמור את התבנית: אחסון הדפדפן אינו זמין.',
-  'error.presetSaveFull': 'לא ניתן לשמור את התבנית: אחסון הדפדפן מלא. מחקו תבניות שאינן נחוצות ונסו שוב.',
-  'error.presetDelete': 'לא ניתן למחוק את התבנית: אחסון הדפדפן אינו זמין.',
-  'storage.project.blocked':
-    'הדפדפן הזה אינו שומר את הפרויקט: האחסון שלו אינו זמין (חלון פרטי או נתוני אתרים חסומים). שמרו את הפרויקט לקובץ בכפתור ⬇️ לפני סגירת הדף.',
-  'storage.project.full':
-    'השינויים האחרונים אינם נשמרים בדפדפן: האחסון שלו מלא. מחקו תבניות שאינן נחוצות, או שמרו את הפרויקט לקובץ בכפתור ⬇️.',
-  'storage.dismiss': 'הסתרה',
 
   'presets.title': 'תבניות',
-  'presets.close': 'סגירה',
-  'presets.close.title': 'סגירה (Esc)',
-  'presets.mine': 'שלי',
-  'presets.builtin': 'מובנות',
-  'presets.empty': 'עדיין לא נשמר דבר — 💾 בסרגל העליון שומר את המארז הנוכחי.',
-  'presets.delete.title': 'מחיקת „{name}”',
-  'presets.delete.aria': 'מחיקת התבנית {name}',
-  'presets.delete.confirm': 'למחוק?',
   'presets.prompt': 'שם התבנית',
   'presets.auto': 'מארז {n}',
 
   // --- boards ---
   'panel.boards': 'לוחות',
-  'boards.add': '+ הוספת לוח',
+  'boards.add': 'הוספת לוח',
   'boards.empty': 'אין לוחות — המארז שומר חלל ריק קטן.',
   'board.x': 'X',
   'board.y': 'Y',
@@ -305,7 +280,6 @@ export const he: Record<Key, string> = {
   'hole.tap': 'הברגה עצמית',
   'hole.insert': 'תותב חום',
   'hole.nut': 'אום',
-  'board.remove': 'הסרת הלוח',
   'board.unverified': 'המידות עדיין לא נבדקו מול שרטוט רשמי',
   'board.rails': 'אין חורי הרכבה: הלוח מוחזק בשתי מסילות עם חריץ — מכניסים אותו באלכסון.',
   'board.rails.screwed':
@@ -354,7 +328,7 @@ export const he: Record<Key, string> = {
 
   // --- openings ---
   'panel.openings': 'פתחים',
-  'cuts.add': '+ הוספת פתח',
+  'cuts.add': 'הוספת פתח',
   'cut.face': 'צד',
   'cut.shape': 'צורה',
   'cutshape.rect': 'מלבן',
@@ -366,7 +340,6 @@ export const he: Record<Key, string> = {
   'cut.h': 'גובה',
   'cut.d': 'קוטר',
   'cut.r': 'רדיוס פינות',
-  'cut.remove': 'הסרת הפתח',
   'cut.title': 'פתח {n}',
   'board.ports': 'פתחים למחברים',
   'board.ports.hint': 'לאילו מחברים לחתוך פתח במארז',
@@ -483,7 +456,7 @@ export const he: Record<Key, string> = {
     'ברגים עוברים דורשים מכסה עליון או תחתון על קופסה, גליל או חצי של מארז מתקפל: כרגע המכסה מוחזק בברגים, והברגים העוברים יחזרו כשהצורה והמכסה יאפשרו.',
 
   // --- custom board ---
-  'boards.custom': '+ לוח משלך',
+  'boards.custom': 'לוח משלך',
   'custom.edit': 'עריכת הלוח',
   'custom.name': 'שם',
   'custom.w': 'רוחב',
@@ -559,9 +532,8 @@ export const he: Record<Key, string> = {
   'mount.screwD': 'בורג לקיר',
   'mount.screwD.hint': 'קוטר גוף הבורג שבקיר, מ״מ',
   'label.text': 'טקסט',
-  'labels.add': '+ הוספת כיתוב',
+  'labels.add': 'הוספת כיתוב',
   'label.title': 'כיתוב {n}',
-  'label.remove': 'הסרת הכיתוב',
   'label.face': 'דופן',
   'label.face.hint':
     'הדופן שעליה הכיתוב — של גוף המארז או של המכסה; לגליל יש דפנות שטוחות רק למעלה ולמטה, החלק העליון של הקונסולה הוא המשטח המשופע שלה',

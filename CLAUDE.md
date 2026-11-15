@@ -94,7 +94,7 @@ freely; a temporary script that turns out useful becomes a permanent one.
   back on undo), project file round trip and a foreign JSON
   refused, the view modes per parts tab and the caption (the Lid tab's lid
   on its outer face), all four languages (switch, memory, the open preset
-  keeps its name, a fresh `he-IL` browser keeps the panel on the left), the
+  keeps its name, a fresh `he-IL` browser mirrors the page, the panel on the right), the
   mobile sheet (the case on screen keeps its size and proportions). Browser in
   `en-US`. Flags: `--preview`, `--shots <dir>`.
 - `scripts/snap.mjs` — a spot screenshot in a given state; prints status,
@@ -190,7 +190,8 @@ freely; a temporary script that turns out useful becomes a permanent one.
   explicit approval, subagents included.
 - `scripts/i18n.mjs --file keys.json` — adds keys to all four dictionaries,
   each after an anchor key (`[{ after, key, en, ru, uk, he }]`); a key
-  already there is replaced in place.
+  already there is replaced in place. `--remove key,key` takes keys out of
+  all four (the strings a maker-kit piece now says).
 - `scripts/lib/harness.mjs` — flags, a vite server on ports 5273 / 4273
   (not ClayForm's), console error collection, CPU throttle, browser locale.
   `CASE_BROWSER` overrides the chromium executable.

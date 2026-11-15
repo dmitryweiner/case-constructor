@@ -8,16 +8,8 @@ import type { Key } from '.';
 export const ru: Record<Key, string> = {
   ...kitRu,
   'app.title': 'Case Constructor — корпуса для плат под 3D-печать',
-  'lang.label': 'Язык',
-  'topbar.presets': 'Пресеты…',
   'topbar.presets.title': 'Готовые и свои пресеты',
-  'topbar.save.title': 'Сохранить как пресет',
   'topbar.fileOpen.title': 'Открыть проект из файла (или перетащите файл на окно)',
-  'topbar.fileSave.title': 'Сохранить проект в файл',
-  'topbar.undo.title': 'Отменить (Ctrl/Cmd+Z)',
-  'topbar.redo.title': 'Повторить (Ctrl/Cmd+Shift+Z)',
-  'topbar.panel': '⚙ Настройки',
-  'topbar.panel.title': 'Настройки',
   'view.mode.title': 'Как показывать корпус: вкладки «Корпус» и «Крышка» показывают одну деталь, «Оба» — обе',
   'view.exploded': 'разнесённый',
   'view.assembled': 'собранный',
@@ -78,9 +70,8 @@ export const ru: Record<Key, string> = {
   'hinge.leafHole': 'Во что',
   'hinge.leafHole.hint':
     'Во что входят винты створок внутри стенки: нарезаемое отверстие, вплавляемая вставка или гайка, вложенная в карман изнутри',
-  'cable.add': '+ Добавить шлейф',
+  'cable.add': 'Добавить шлейф',
   'cable.title': 'Шлейф {n}',
-  'cable.remove': 'Убрать шлейф',
   'cable.kind': 'Шлейф',
   'cable.kind.flat': 'плоский',
   'cable.kind.round': 'круглый',
@@ -201,30 +192,14 @@ export const ru: Record<Key, string> = {
 
   'error.build': 'Не удалось собрать корпус: {error}',
   'error.export': 'Выгрузка не удалась: {error}',
-  'error.presetSave': 'Не удалось сохранить пресет: хранилище браузера недоступно.',
-  'error.presetSaveFull': 'Не удалось сохранить пресет: хранилище браузера заполнено. Удалите ненужные пресеты и попробуйте снова.',
-  'error.presetDelete': 'Не удалось удалить пресет: хранилище браузера недоступно.',
-  'storage.project.blocked':
-    'Этот браузер не сохраняет проект: его хранилище недоступно (приватное окно или запрещённые данные сайтов). Сохраните проект в файл кнопкой ⬇️, прежде чем закрыть страницу.',
-  'storage.project.full':
-    'Последние изменения не сохраняются в браузере: его хранилище заполнено. Удалите ненужные пресеты или сохраните проект в файл кнопкой ⬇️.',
-  'storage.dismiss': 'Скрыть',
 
   'presets.title': 'Пресеты',
-  'presets.close': 'Закрыть',
-  'presets.close.title': 'Закрыть (Esc)',
-  'presets.mine': 'Мои',
-  'presets.builtin': 'Встроенные',
-  'presets.empty': 'Пока ничего — 💾 в шапке сохраняет текущий корпус.',
-  'presets.delete.title': 'Удалить «{name}»',
-  'presets.delete.aria': 'Удалить пресет {name}',
-  'presets.delete.confirm': 'Удалить?',
   'presets.prompt': 'Название пресета',
   'presets.auto': 'Корпус {n}',
 
   // --- boards ---
   'panel.boards': 'Платы',
-  'boards.add': '+ Добавить плату',
+  'boards.add': 'Добавить плату',
   'boards.empty': 'Плат нет — корпус оставляет небольшую пустую полость.',
   'board.x': 'X',
   'board.y': 'Y',
@@ -312,7 +287,6 @@ export const ru: Record<Key, string> = {
   'hole.tap': 'саморез',
   'hole.insert': 'термовставка',
   'hole.nut': 'гайка',
-  'board.remove': 'Убрать плату',
   'board.unverified': 'Размеры ещё не сверены с официальным чертежом',
   'board.rails': 'Крепёжных отверстий нет: плату держат две направляющие с пазом — вставляется под углом.',
   'board.rails.screwed':
@@ -361,7 +335,7 @@ export const ru: Record<Key, string> = {
 
   // --- openings ---
   'panel.openings': 'Отверстия',
-  'cuts.add': '+ Добавить отверстие',
+  'cuts.add': 'Добавить отверстие',
   'cut.face': 'Грань',
   'cut.shape': 'Форма',
   'cutshape.rect': 'прямоугольник',
@@ -373,7 +347,6 @@ export const ru: Record<Key, string> = {
   'cut.h': 'Высота',
   'cut.d': 'Диаметр',
   'cut.r': 'Радиус углов',
-  'cut.remove': 'Убрать отверстие',
   'cut.title': 'Отверстие {n}',
   'board.ports': 'Отверстия под разъёмы',
   'board.ports.hint': 'для каких разъёмов прорезать отверстие в корпусе',
@@ -498,7 +471,7 @@ export const ru: Record<Key, string> = {
     'Сквозным болтам нужна крышка сверху или снизу на коробке, цилиндре или половинке раскладушки: пока крышка держится на винтах, а болты вернутся, когда форма и крышка позволят.',
 
   // --- custom board ---
-  'boards.custom': '+ Своя плата',
+  'boards.custom': 'Своя плата',
   'custom.edit': 'Редактировать плату',
   'custom.name': 'Название',
   'custom.w': 'Ширина',
@@ -576,9 +549,8 @@ export const ru: Record<Key, string> = {
   'mount.screwD': 'Винт в стену',
   'mount.screwD.hint': 'диаметр стержня винта в стене, мм',
   'label.text': 'Текст',
-  'labels.add': '+ Добавить надпись',
+  'labels.add': 'Добавить надпись',
   'label.title': 'Надпись {n}',
-  'label.remove': 'Убрать надпись',
   'label.face': 'Грань',
   'label.face.hint':
     'грань, на которой надпись, — корпуса или крышки; у цилиндра плоские грани только верх и низ, верх пульта — его наклонная панель',

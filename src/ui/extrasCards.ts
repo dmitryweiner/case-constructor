@@ -2,11 +2,11 @@
 // (its own card). Each says whether it is on by its own controls: vents by
 // the faces pressed, the fan and the wall mount by a choice with "none".
 
-import type { CardHandle } from './card';
-import { createCard } from './card';
+import type { CardHandle } from 'maker-kit/ui/card';
+import { createCard } from 'maker-kit/ui/card';
 import type { Change, Control, ControlsHandle } from './controls';
 import { renderControls } from './controls';
-import { make } from './dom';
+import { make } from 'maker-kit/ui/dom';
 import { FACES } from '../geo/face';
 import type { FanState, VentState, WallMountState } from '../geo/extras';
 import {
@@ -26,6 +26,7 @@ import {
   mountFaces,
 } from '../geo/extras';
 import type { AppState } from '../state/schema';
+import { t } from '../i18n';
 
 const vents = (state: AppState, patch: Partial<VentState>): AppState => ({ ...state, vents: { ...state.vents, ...patch } });
 const fan = (state: AppState, patch: Partial<FanState>): AppState => ({ ...state, fan: { ...state.fan, ...patch } });
@@ -296,7 +297,7 @@ export function renderExtras(openings: HTMLElement, mounting: HTMLElement, read:
     on: (state: AppState) => boolean,
     controls: Control<AppState>[],
   ): void => {
-    const card = createCard(container, { id, title, enabled: on(read()) });
+    const card = createCard(container, { id, title, enabled: on(read()), t });
     cards.push({ card, on, rows: renderControls(card.body, controls, read, onChange, id) });
   };
   folding(openings, 'vents', 'panel.vents', (s) => s.vents.on, ventControls());

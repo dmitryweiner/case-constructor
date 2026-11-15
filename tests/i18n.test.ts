@@ -4,7 +4,7 @@
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { DICTS, LANGS, PLURAL_ORDER, detectLang, format, hasKey, placeholders } from '../src/i18n';
+import { DICTS, LANGS, PLURAL_ORDER, detectLang, direction, format, hasKey, placeholders } from '../src/i18n';
 import type { Key } from '../src/i18n';
 import { PRESETS } from '../src/state/presets';
 import { FACES } from '../src/geo/face';
@@ -98,6 +98,13 @@ describe('detectLang', () => {
     expect(detectLang(['ru-RU'], 'he')).toBe('he');
     expect(detectLang(['ru-RU'], 'klingon')).toBe('ru');
     expect(detectLang(['en-US'], 42)).toBe('en');
+  });
+});
+
+describe('direction', () => {
+  it('runs Hebrew right to left, the rest left to right', () => {
+    expect(direction('he')).toBe('rtl');
+    for (const lang of ['en', 'ru', 'uk'] as const) expect(direction(lang), lang).toBe('ltr');
   });
 });
 

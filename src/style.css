@@ -1,221 +1,10 @@
-#app {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-#topbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
-}
-
-#storageNote {
-  padding: 6px 12px;
-  background: rgba(224, 108, 92, 0.14);
-  border-bottom: 1px solid var(--bad);
-  font-size: 12.5px;
-}
-
-.storage-line {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin: 2px 0;
-}
-
-.storage-line span {
-  flex: 1;
-}
-
-.storage-close {
-  padding: 0 6px;
-  background: none;
-  color: var(--muted);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.storage-close:hover {
-  color: var(--text);
-  border-color: var(--accent);
-}
-
-#brand {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-right: 6px;
-}
-
-.tb-spacer {
-  flex: 1;
-}
-
-.tb-btn {
-  padding: 5px 12px;
-  background: var(--card);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.tb-btn:hover {
-  border-color: var(--accent);
-}
-
-/* The open preset; the button opens the list (#presets). */
-.preset-btn {
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: left;
-}
-
-/* The preset list — a modal panel over everything. */
-#presets,
-.modal {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 40;
-}
-
-#presetsBox,
-.modal-box {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: min(420px, 100%);
-  max-height: min(80vh, 80dvh);
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-}
-
-#presetsTitle {
-  margin: 0 0 8px;
-  font-size: 16px;
-}
-
-#presetList,
-#boardList {
-  overflow-y: auto;
-  min-height: 0;
-}
-
-.panel-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted);
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.panel-close:hover {
-  color: var(--text);
-}
-
-.preset-group {
-  margin: 10px 0 4px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--muted);
-}
-
-.preset-group:first-child {
-  margin-top: 0;
-}
-
-.preset-empty {
-  margin: 0 0 4px;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.preset-row {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-
-.preset-pick,
-.preset-del {
-  min-height: 38px;
-  font: inherit;
-  color: var(--text);
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.preset-pick {
-  flex: 1;
-  min-width: 0;
-  padding: 0 10px;
-  overflow: hidden;
-  text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.preset-del {
-  flex: none;
-  min-width: 44px;
-  padding: 0 8px;
-  color: var(--muted);
-}
-
-.preset-pick:hover,
-.preset-del:hover {
-  border-color: var(--accent);
-}
-
-.preset-pick.current {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-/* the second tap deletes — the button warns with colour */
-.preset-del.armed {
-  color: var(--on-accent);
-  background: var(--warn);
-  border-color: var(--warn);
-}
-
-#content {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-#panel {
-  width: var(--panel-w);
-  flex: none;
-  padding: 12px;
-  background: var(--panel);
-  overflow-y: auto;
-}
+/* Case Constructor's own pieces over maker-kit's design code (maker-kit/
+   styles/kit.css: the palette, the top bar, the panel and its sheet, cards,
+   rows, buttons, dialogs, the banner, the bar over the view, the message
+   list, the list cards). The kit's rules are in `@layer kit`, so any rule
+   here wins without a specificity fight. Mobile first; logical properties
+   only, so Hebrew's dir="rtl" mirrors everything — but the captions and
+   badges over the 3D view, placed by their pixels from the left. */
 
 .group-title {
   margin: 14px 2px 6px;
@@ -230,19 +19,25 @@
   border: 1px solid var(--accent);
   border-radius: 10px;
   padding: 0 6px 6px;
-  margin-bottom: 8px;
+  margin-block-end: 8px;
 }
 
-/* the switch heads the frame and stays in sight while its cards scroll */
+/* the switch heads the frame and stays in sight while its cards scroll (the panel's padding above it cancelled) */
 .half-bar {
   position: sticky;
-  top: -12px;
+  inset-block-start: calc(-1 * var(--space-1));
   z-index: 2;
   margin: 0 -6px 8px;
   padding: 6px 12px;
   border-radius: 10px 10px 0 0;
   background: var(--panel);
   box-shadow: 0 2px 6px rgb(0 0 0 / 25%);
+}
+
+@media (min-width: 1024px) {
+  .half-bar {
+    inset-block-start: calc(-1 * var(--space-3));
+  }
 }
 
 /* fields outside the kit's rows (the picker's search, the custom board's table): the kit's field */
@@ -254,11 +49,6 @@ input[type='text'] {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel);
-}
-
-#topbar select {
-  flex: none;
-  max-width: 190px;
 }
 
 #status {
@@ -279,80 +69,12 @@ input[type='text'] {
   cursor: not-allowed;
 }
 
-#warnings {
-  color: var(--warn);
-  font-size: 12px;
-  margin: 4px 2px 0;
-}
-
-.warn-line + .warn-line {
-  margin-top: 3px;
-}
-
-.warn-line.info {
-  color: var(--muted);
-}
-
-#viewWrap {
-  flex: 1;
-  min-width: 0;
-  position: relative;
-  overflow: hidden;
-}
-
-#progressWrap {
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-#progressBar {
-  flex: 1;
-  height: 6px;
-  background: rgba(148, 160, 173, 0.25);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-#progressFill {
-  height: 100%;
-  width: 0%;
-  background: var(--accent);
-  transition: width 0.12s linear;
-}
-
-/* A job without stages: a running stripe instead of a scale. */
-#progressWrap.indeterminate #progressFill {
-  width: 30%;
-  transition: none;
-  animation: progress-run 1.1s ease-in-out infinite;
-}
-
-@keyframes progress-run {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(340%);
-  }
-}
-
-#progressLabel {
-  color: var(--muted);
-  font-size: 11px;
-  min-width: 80px;
-}
-
 /* --- Export tabs --- */
 
 .tabs {
   display: flex;
   gap: 4px;
-  margin-bottom: 8px;
+  margin-block-end: 8px;
 }
 
 .tab {
@@ -370,7 +92,7 @@ input[type='text'] {
   align-self: center;
   color: var(--muted);
   font-size: 11.5px;
-  padding-right: 2px;
+  padding-inline-end: 2px;
 }
 
 .tab[aria-selected='true'] {
@@ -397,176 +119,23 @@ input[type='text'] {
 
 .part-list .part-name {
   flex: 1;
-  min-width: 0;
+  min-inline-size: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.blockers {
-  color: var(--bad);
-  font-size: 12px;
-  white-space: pre-line;
-  margin: 4px 2px 0;
-}
-
-#panelBtn {
-  display: none;
-}
-
-/*
- * Narrow screen: the panel is a bottom sheet over the canvas rather than a
- * neighbour that squeezes it. A tap on the open part of the canvas hides the
- * sheet, "⚙ Settings" at the bottom brings it back. On a desktop none of this
- * applies and the .open class of #panel does nothing.
- */
-@media (max-width: 760px) {
-  #topbar {
-    flex-wrap: wrap;
-    row-gap: 6px;
-    gap: 6px;
-  }
-
-  #topbar .tb-btn {
-    padding: 3px 5px;
-    font-size: 13px;
-  }
-
-  #presetBtn {
-    flex: 1;
-    max-width: none;
-  }
-
-  /*
-   * The top bar in two lines: brand, presets and language, then the buttons.
-   * The break is a full-width ::after — by order it lands right after the
-   * language picker; the negative margin cancels its empty row's gap.
-   */
-  #topbar .tb-spacer {
-    display: none;
-  }
-
-  #brand,
-  #presetBtn {
-    order: -2;
-  }
-
-  #langField {
-    order: -1;
-  }
-
-  /* the view toggles fit the second line with the buttons */
-  .tb-field {
-    gap: 3px;
-    font-size: 11px;
-  }
-
-  #langField span.lang-globe,
-  .tb-field > span[data-i18n='never'] {
-    display: none;
-  }
-
-  #topbar select {
-    max-width: 120px;
-    padding: 3px 4px;
-  }
-
-  #topbar::after {
-    content: '';
-    order: -1;
-    flex-basis: 100%;
-    margin-top: -6px;
-  }
-
-  #content {
-    /* anchor for the absolute sheet and the backdrop */
-    position: relative;
-  }
-
-  #viewWrap {
-    min-height: 0;
-  }
-
-  #panel {
-    position: absolute;
-    inset: auto 0 0 0;
-    width: 100%;
-    max-height: 58vh;
-    border-top: 1px solid var(--line);
-    border-radius: 14px 14px 0 0;
-    box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.55);
-    z-index: 20;
-    transform: translateY(100%);
-    transition: transform 0.25s ease;
-  }
-
-  #panel.open {
-    transform: translateY(0);
-  }
-
-  /* position: fixed — from the window, not the top bar where the button sits in the markup */
-  #panelBtn {
-    display: inline-flex;
-    position: fixed;
-    left: 50%;
-    bottom: 16px;
-    transform: translateX(-50%);
-    z-index: 25;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
-  }
-
-  /* the progress bar must not hide under the settings button */
-  #progressWrap {
-    bottom: 64px;
-  }
-}
-
-#view {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-/* After the narrow-screen rules: same selectors, so the order matters. */
-@media (max-width: 400px) {
-  /* the narrowest phones: the buttons must fit the second line */
-  #topbar .tb-btn {
-    padding: 4px 5px;
-  }
-}
-
-/* --- Top bar fields: lid view, x-ray, language --- */
-
-.tb-field {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.tb-field input[type='checkbox'] {
-  accent-color: var(--accent);
-}
-
-.lang-globe {
-  font-size: 13px;
-}
-
-.tb-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-/* an add button under a card's list */
+/* an add button under a card's list, a wide one under its rows */
+.add-button,
 .btn.wide {
   margin-block-start: var(--space-2);
 }
 
 /* --- segmented rows: the label's anchors and turns --- */
 
-/* the label's anchors: a 3 × 3 grid of arrows */
+/* the label's anchors: a 3 × 3 grid of arrows, a picture of the face — not mirrored in Hebrew */
 #label_anchor {
+  direction: ltr;
   display: grid;
   grid-template-columns: repeat(3, 2.6em);
   justify-content: start;
@@ -578,49 +147,12 @@ input[type='text'] {
   grid-template-columns: repeat(4, 1fr);
 }
 
-/*
- * Text-only RTL (plans/PLAN.md §6): the layout stays left-to-right, and every text
- * takes its direction from its own first strong character — the same as
- * dir="auto" on each element. Hebrew strings run right to left, numbers,
- * units and ids stay as they are.
- */
-#app :is(span, p, h2, h3, button, label, option, li, output, select) {
-  unicode-bidi: plaintext;
-}
-
 /* --- Boards --- */
 
-.board-box {
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  padding: 6px 8px;
-  margin: 6px 0;
-}
-
-.board-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-
-.board-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.board-del {
-  flex: none;
-  padding: 2px 8px;
-}
-
-.board-del:hover {
-  color: var(--bad);
-  border-color: var(--bad);
+/* an unverified board's ≈ after its name: the warn colour, its tooltip says why */
+#boardCards .item-hint {
+  color: var(--warn);
+  cursor: help;
 }
 
 .board-note {
@@ -635,24 +167,19 @@ input[type='text'] {
   cursor: help;
 }
 
-.modal-box h2 {
-  margin: 0 0 8px;
-  font-size: 16px;
-}
-
 #boardSearch {
   flex: none;
-  width: 100%;
-  margin-bottom: 8px;
+  inline-size: 100%;
+  margin-block-end: 8px;
 }
 
 .picker-row {
   display: flex;
-  width: 100%;
-  min-height: 34px;
+  inline-size: 100%;
+  min-block-size: 34px;
   align-items: center;
   gap: 6px;
-  margin-bottom: 4px;
+  margin-block-end: 4px;
   padding: 0 10px;
   font: inherit;
   color: var(--text);
@@ -660,7 +187,7 @@ input[type='text'] {
   border: 1px solid var(--line);
   border-radius: 6px;
   cursor: pointer;
-  text-align: left;
+  text-align: start;
 }
 
 .picker-row:hover {
@@ -668,7 +195,7 @@ input[type='text'] {
 }
 
 .picker-size {
-  margin-left: auto;
+  margin-inline-start: auto;
   color: var(--muted);
   font-size: 11.5px;
   font-variant-numeric: tabular-nums;
@@ -690,7 +217,7 @@ input[type='text'] {
 .button-row {
   display: flex;
   gap: 6px;
-  margin-top: 8px;
+  margin-block-start: 8px;
 }
 
 .button-row .btn {
@@ -725,15 +252,15 @@ input[type='text'] {
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-width: 0;
+  min-inline-size: 0;
   color: var(--muted);
   font-size: 11px;
 }
 
 input.num {
   flex: 1;
-  width: 100%;
-  min-width: 0;
+  inline-size: 100%;
+  min-inline-size: 0;
   background: var(--panel);
   color: var(--text);
   border: 1px solid var(--line);
@@ -743,7 +270,7 @@ input.num {
 }
 
 .table-row > input.num {
-  width: auto;
+  inline-size: auto;
 }
 
 .row-del {
@@ -752,9 +279,9 @@ input.num {
 }
 
 .port-edit {
-  border-top: 1px solid var(--line);
-  padding-top: 4px;
-  margin-top: 4px;
+  border-block-start: 1px solid var(--line);
+  padding-block-start: 4px;
+  margin-block-start: 4px;
 }
 
 /* --- View and export card --- */
@@ -801,7 +328,8 @@ input.num {
 }
 
 /* what the 3D view shows right now */
-/* port captions over the board ghosts: never in the way of the canvas's gestures */
+/* port captions over the board ghosts: never in the way of the canvas's gestures; placed by
+   their pixels from the view's top left (render/scene.ts), so physical, in Hebrew too */
 #portCaptions {
   position: absolute;
   inset: 0;
@@ -853,44 +381,33 @@ input.num {
 }
 
 .warn-badge.open {
-  max-width: 280px;
+  max-inline-size: 280px;
   white-space: normal;
   font-weight: 400;
   border-radius: 6px;
   z-index: 1;
 }
 
-.warn-line[data-warn] {
+/* the counts over the messages */
+.message-count {
+  margin: var(--space-2) 2px var(--space-1);
+  color: var(--muted);
+  font-size: var(--font-tiny);
+}
+
+/* a line with a badge over the model: a hover opens the badge, a tap picks it; the open one in its colour */
+.message[data-warn] {
   cursor: pointer;
 }
 
-.warn-line.hot {
-  color: #ff8a8d;
-}
-
-.warn-line.info.hot {
-  color: var(--text);
-}
-
-.warn-num {
-  display: inline-block;
-  margin-right: 4px;
-  padding: 0 5px;
-  border-radius: 8px;
-  background: #c8383d;
-  color: #fff;
-  font-size: 10.5px;
-  font-weight: 600;
-}
-
-.warn-num.info {
-  background: #3a4350;
+.message.hot > span {
+  color: inherit;
 }
 
 #viewCaption {
   position: absolute;
-  top: 10px;
-  left: 12px;
+  inset-block-start: 10px;
+  inset-inline-start: 12px;
   padding: 4px 10px;
   border-radius: 6px;
   background: rgba(21, 24, 28, 0.75);
