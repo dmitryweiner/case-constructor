@@ -38,7 +38,7 @@ walls at once are fine — a Raspberry Pi 4 against the front and the right has
 both its HDMI and its USB/Ethernet sides flush.
 
 - A side with no connectors, or with connectors shorter than the wall, puts
-  the board 0.3 mm from the inner wall; with connectors a note (grey, ℹ)
+  the board 0.3 mm from the inner wall; with connectors a note (in the accent colour, not a warning)
   names the board and the walls and says how much deeper their faces sit
   than asked — and, when they do stick out past the board's edge, which
   wall would bring them flush. Connectors that end at the board's edge

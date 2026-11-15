@@ -5,29 +5,31 @@ the tab or reload the page and it opens again where you left it, with the
 name of the preset you opened. A first visit opens the first built-in
 preset. Two tabs of the app share this one copy: the tab edited last wins.
 
-The presets button shows a preset's name, and the list marks it, only while
-the case is still that preset: change a parameter and it is a case of your
-own (undo back, and it is the preset again). The parts tab, the resolution
+The presets button shows a preset's name only while the case is still that
+preset: change a parameter and it is a case of your own (undo back, and it
+is the preset again); the list keeps it marked, with "changed". The parts tab, the resolution
 and the lid's place in the Both STL are how you look at it and export it,
 not the case, so they do not count.
 
 If the browser cannot keep your work (a private window, blocked site data,
-or the storage full), a red line under the top bar says so and stays until
+or the storage full), a line under the top bar says so and stays until
 saving works again: save the project to a file with ⬇️, or delete presets
 you no longer need to free the space. A preset that could not be saved or
-deleted is reported on the same line (✕ hides that note).
+deleted is reported there too (Dismiss hides that note).
 
-- **Presets…** opens the list: your presets and the built-in ones. 🗑 deletes
-  one of yours (tap twice).
+- **Presets** opens the list: your presets first, then the built-in ones.
+  Yours: type in a name to rename it, ↗ opens it, 🗑 deletes it (tap twice:
+  it asks "Delete?"). Esc or a tap beside the dialog closes it.
 - 💾 saves the current case as a preset in this browser.
 - ⬇️ saves the whole project to a JSON file; 📂 opens one (or drop the file
   onto the window). A file that is not a Case Constructor project, cannot
   be read or comes from a newer version of the app is refused with the
   reason, and nothing changes.
-- ↩️ / ↪️ undo and redo (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z).
+- ↶ / ↷ undo and redo: Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y, on any
+  keyboard layout and right after a slider; a text field keeps its own undo.
 
 Built-in presets (their names are the same in every language; the
-description in the tooltip is translated):
+description under the name is translated):
 
 | Preset | What it shows |
 |---|---|
