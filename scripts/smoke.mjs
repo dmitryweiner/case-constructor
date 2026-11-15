@@ -1171,7 +1171,7 @@ if (shown.button !== 'Pi 4 desktop case' || shown.current !== 'b:pi4-desktop')
 await setRange('case_wall', 2.5);
 await page.waitForTimeout(700);
 shown = await presetShown();
-if (shown.button !== 'Presets…' || shown.current !== 'b:pi4-desktop changed')
+if (shown.button !== 'Presets' || shown.current !== 'b:pi4-desktop changed')
   errors.push(`[preset-changed] changed, still shown as open: ${JSON.stringify(shown)}`);
 await page.click('#undoBtn');
 shown = await presetShown();
@@ -1284,12 +1284,15 @@ await page.click('#viewExploded');
 // languages: switch through all four, the choice is remembered
 label('lang');
 const expected = { en: 'Case', ru: 'Корпус', uk: 'Корпус', he: 'מארז' };
+// the fan is off in pi4-desktop, its card folded: unfolded by hand, it stays so through a switch
+await unfold('fan');
 for (const [code, title] of Object.entries(expected)) {
   await page.selectOption('.lang-field select', code);
   await page.waitForTimeout(80);
   const heading = (await page.locator('#panel h2').first().textContent()).trim();
   if (heading !== title) errors.push(`[lang:${code}] heading "${heading}"`);
   if ((await page.locator('html').getAttribute('lang')) !== code) errors.push(`[lang:${code}] html lang`);
+  if (await page.locator('#card_fan.collapsed').count()) errors.push(`[lang:${code}] the unfolded fan card folded`);
   // the open preset (pi4-desktop, from the view section) keeps its one name
   const presetText = (await page.locator('#presetBtn').textContent()).trim();
   if (presetText !== 'Pi 4 desktop case') errors.push(`[lang:${code}] the preset is called "${presetText}"`);
@@ -1299,20 +1302,24 @@ await page.waitForTimeout(200);
 if ((await page.locator('.lang-field select').inputValue()) !== 'he') errors.push('[lang] the choice was not remembered');
 await page.selectOption('.lang-field select', 'en');
 
-// a fresh Hebrew browser: Hebrew text, layout still left-to-right
+// a fresh Hebrew browser: Hebrew text, the page mirrored — the panel on the start side, the right
 label('lang:he-IL');
 const heApp = await openApp({ preview: flags.has('preview'), locale: 'he-IL' });
 const heading = (await heApp.page.locator('#panel h2').first().textContent()).trim();
 if (heading !== 'מארז') errors.push(`[he-IL] heading "${heading}"`);
 const panelBox = await heApp.page.locator('#panel').boundingBox();
 const viewBox = await heApp.page.locator('#viewWrap').boundingBox();
-if (!(panelBox.x < viewBox.x)) errors.push('[he-IL] the panel is not on the left');
-if ((await heApp.page.locator('html').getAttribute('dir')) !== 'ltr') errors.push('[he-IL] the page direction changed');
+if (!(panelBox.x > viewBox.x)) errors.push('[he-IL] the panel is not on the right');
+if ((await heApp.page.locator('html').getAttribute('dir')) !== 'rtl') errors.push('[he-IL] the page is not right to left');
 errors.push(...heApp.errors);
 await heApp.browser.close();
 
-// the mobile panel: a bottom sheet with a settings button
+// the mobile panel: a bottom sheet with a settings button, below 1024 px (a tablet's 900 too)
 label('mobile');
+await page.setViewportSize({ width: 900, height: 700 });
+await page.waitForTimeout(300);
+const tabletPanel = await page.locator('#panel').boundingBox();
+if (!(tabletPanel.width > 880)) errors.push(`[mobile] at 900 px the panel is not a sheet: ${JSON.stringify(tabletPanel)}`);
 await page.setViewportSize({ width: 390, height: 780 });
 await page.waitForTimeout(400);
 // the drawn parts' bounding box on screen: the sheet may move it, never scale or stretch it
@@ -1372,6 +1379,12 @@ const turnedAfter = await page.evaluate(() =>
 );
 if (JSON.stringify(turnedBefore) === JSON.stringify(turnedAfter)) errors.push('[mobile] a drag over the open sheet does not turn the case');
 if (!(await page.locator('#panel').evaluate((el) => el.classList.contains('open')))) errors.push('[mobile] a drag closed the sheet');
+// the handle closes it too
+await page.click('#sheetClose');
+await page.waitForTimeout(300);
+if (!(await page.locator('#panelBtn').isVisible())) errors.push('[mobile] the handle does not close the sheet');
+await page.click('#panelBtn');
+await page.waitForTimeout(300);
 if (shotsDir) await page.screenshot({ path: `${shotsDir}/mobile.png` });
 
 await app.close();
