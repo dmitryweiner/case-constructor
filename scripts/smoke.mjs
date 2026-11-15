@@ -189,7 +189,7 @@ const catalog = await page.evaluate(async () => {
 if (catalog.length < 4) errors.push(`[boards] picker lists ${catalog.length} boards`);
 for (const id of catalog) {
   label(`board:${id}`);
-  await page.click('#board0_remove');
+  await page.click('#board_0_remove');
   await page.click('#boardAdd');
   await page.click(`#boardList [data-board="${id}"]`);
   await expectWatertight(`board:${id}`);
@@ -207,7 +207,7 @@ for (const id of catalog) {
 }
 // pins soldered downwards: the board goes up with them, rails get a pin bed
 label('pins');
-await page.click('#board0_remove');
+await page.click('#board_0_remove');
 await page.click('#boardAdd');
 await page.click('#boardList [data-board="arduino-nano"]');
 if (!(await page.isChecked('#board0_pins'))) errors.push('[pins] the Nano ships with its pins soldered');
@@ -221,7 +221,7 @@ const pinZ = await page.evaluate(() => window.__case?.state().boards[0].z);
 if (bareZ !== undefined && !(pinZ > bareZ + 5)) errors.push(`[pins] z ${bareZ} → ${pinZ}: the board did not go up with its pins`);
 // a family entry: the model brings its own parts and their toggles
 label('variant');
-await page.click('#board0_remove');
+await page.click('#board_0_remove');
 await page.click('#boardAdd');
 await page.click('#boardList [data-board="seeed-xiao"]');
 await page.selectOption('#board0_variant', 'rp2040');
@@ -229,7 +229,7 @@ await expectWatertight('variant:rp2040');
 if (!(await page.locator('#board0_cut_rgb-led').count())) errors.push('[variant] the XIAO RP2040 has no RGB LED toggle');
 if (await page.locator('#board0_cut_shield').count()) errors.push('[variant] the XIAO RP2040 kept the S3 shield');
 label('ports');
-await page.click('#board0_remove');
+await page.click('#board_0_remove');
 await page.click('#boardAdd');
 await page.click('#boardList [data-board="raspberry-pi-4b"]');
 await page.uncheck('#board0_cut_ethernet');
@@ -299,7 +299,7 @@ await page.click('#boardAdd');
 await page.fill('#boardSearch', '18650');
 await page.click('#boardList [data-board="battery-18650"]');
 await expectWatertight('battery:2x18650');
-const cellsName = (await page.locator('#board1 .board-name').textContent()).trim();
+const cellsName = (await page.locator('#board_1 .item-title').textContent()).trim();
 if (!cellsName.includes('2 × 18650')) errors.push(`[battery] the card says "${cellsName}"`);
 if ((await page.evaluate(() => window.__case.ghosts().length)) < 3) errors.push('[battery] no ghost for the battery');
 if (!(await drawn()).includes('clamp')) errors.push(`[battery] the clamps are not drawn: ${await drawn()}`);
@@ -316,14 +316,14 @@ await page.selectOption('#board1_battery', 'pack');
 await setRange('board1_pack_h', 12);
 await expectWatertight('battery:pack');
 if (await page.locator('#board1_cells').isVisible()) errors.push('[battery] a pack offers a cell count');
-await page.click('#board1_remove');
+await page.click('#board_1_remove');
 // a ready-made holder: its own group in the picker, screwed down like a board
 await page.click('#boardAdd');
 await page.fill('#boardSearch', 'battery');
 if (!(await page.locator('#boardList [data-board="mpd-bh2aa-w"]').count())) errors.push('[holders] "battery" does not find the AA holder');
 await page.click('#boardList [data-board="mpd-bh2aa-w"]');
 await expectWatertight('holders:bh2aa');
-await page.click('#board1_remove');
+await page.click('#board_1_remove');
 // a display: found by "screen", in its own group, its glass drawn
 label('displays');
 await page.click('#boardAdd');
@@ -373,7 +373,7 @@ await page.click('#lid_face_top');
 await page.click('#board1_on_floor');
 if (!(await page.locator('#board1_z').isVisible())) errors.push('[hang] back on the floor without its standoff height');
 await expectWatertight('hang:floor');
-await page.click('#board1_remove');
+await page.click('#board_1_remove');
 // a keyboard: found by "keyboard", in its own group; it hangs, one window over its keys or a hole per key
 label('keyboards');
 await page.click('#boardAdd');
@@ -427,7 +427,7 @@ await page.click('#board1_keys_window');
 // held by clamp bars instead of rails: they print with the lid that holds it
 await page.click('#board1_hold_clamp');
 await expectWatertight('keys:cardkb-clamp');
-if ((await page.textContent('#board1'))?.includes('grooved rails'))
+if ((await page.textContent('#board_1'))?.includes('grooved rails'))
   errors.push('[keyboards] a clamped CardKB still says it is held by rails');
 // sunk under the lid, it lies between the bars and the pads; the socket's note names the gap that hides it
 // (on a 2 mm top: the slider extremes above left a 6 mm one, under which the socket hides anyway)
@@ -450,7 +450,7 @@ await page.click('#tabLid');
 await page.waitForTimeout(300);
 if (!(await drawn()).includes('clamp')) errors.push(`[keyboards] the Lid tab draws ${await drawn()}, no clamp bars`);
 await page.click('#tabBoth');
-await page.click('#board1_remove');
+await page.click('#board_1_remove');
 // the MacroPad's holes are among its switches: it stands on the floor, its keys through a hole each
 await page.click('#boardAdd');
 await page.fill('#boardSearch', 'macropad');
@@ -460,7 +460,7 @@ if (!(await page.locator('#board1_on_floor').getAttribute('class'))?.includes('a
   errors.push('[keyboards] the MacroPad is not on the floor');
 if (!(await page.locator('#board1_keys_holes').getAttribute('class'))?.includes('active'))
   errors.push('[keyboards] the MacroPad does not get a hole per key');
-await page.click('#board1_remove');
+await page.click('#board_1_remove');
 // the BBQ20KBD: on the floor, a rest under each free corner (the worker builds them; the case stays closed)
 await page.click('#boardAdd');
 await page.fill('#boardSearch', 'bbq20');
@@ -468,7 +468,7 @@ await page.click('#boardList [data-board="solderparty-bbq20kbd"]');
 await expectWatertight('keys:bbq20-rests');
 await page.click('#board1_on_ceiling');
 await expectWatertight('keys:bbq20-hung-rests');
-await page.click('#board1_remove');
+await page.click('#board_1_remove');
 // the KeebDeck: its keypad's flange pressed by the lid (gap 0, no gap warning), a hole per key
 await page.click('#boardAdd');
 await page.fill('#boardSearch', 'keebdeck');
@@ -476,7 +476,7 @@ await page.click('#boardList [data-board="solderparty-keebdeck-basic"]');
 await expectWatertight('keys:keebdeck');
 if (Number(await page.inputValue('#board1_gap')) !== 0) errors.push('[keyboards] the KeebDeck is not pressed on its flange');
 if ((await page.textContent('#messages'))?.includes('glass thicker')) errors.push('[keyboards] a pressed flange warns about the gap');
-await page.click('#board1_remove');
+await page.click('#board_1_remove');
 // a clamped panel: always hung, a clamp gap, its bars printed with the lid that holds it
 label('clamp');
 await page.click('#boardAdd');
@@ -520,7 +520,7 @@ if (backCaption) {
 }
 await page.selectOption('#board1_back', '');
 await expectWatertight('back:none');
-await page.click('#board1_remove');
+await page.click('#board_1_remove');
 label('openings');
 await page.click('#cutAdd');
 await page.click('#cut0_shape_round');
@@ -528,9 +528,9 @@ await setRange('cut0_d', 8);
 await expectWatertight('openings:round');
 await page.selectOption('#cut0_face', 'top');
 await expectWatertight('openings:top');
-await page.click('#cut0_remove');
+await page.click('#cut_0_remove');
 label('custom-board');
-await page.click('#board0_remove');
+await page.click('#board_0_remove');
 await page.click('#boardCustom');
 await expectWatertight('custom:new');
 await page.fill('#board0_custom_name', 'Smoke board');
@@ -563,7 +563,7 @@ await page.selectOption('#board0_custom_port1_type', 'keys');
 if (!(await page.locator('#board0_custom_port1_base').count())) errors.push('[custom] a key field has no base field');
 await page.fill('#board0_custom_port1_base', '1');
 await expectWatertight('custom:keys');
-await page.click('#board0_remove');
+await page.click('#board_0_remove');
 await page.click('#boardAdd');
 await page.click('#boardList [data-board="raspberry-pi-4b"]');
 label('boards:search');
@@ -602,9 +602,9 @@ if ((await page.locator('#messages').textContent()).includes('overlap')) errors.
 await page.click('#undoBtn');
 const [, [ux1]] = await boardXY();
 if (Math.abs(ux1 - ax1) < 1e-6) errors.push('[boards:align] undo does not take the alignment back');
-await page.click('#board1_remove');
+await page.click('#board_1_remove');
 if (await page.locator('#boardsArrange').isVisible()) errors.push('[boards:arrange] offered for a single board');
-await page.click('#board0_remove');
+await page.click('#board_0_remove');
 await expectWatertight('boards:none');
 
 // each lid face (the console has no lid on its slope, the cylinder only top and bottom)
@@ -695,7 +695,7 @@ await expectWatertight('hinged:cable-face');
 await page.click('#cable0_through_wall');
 if (!(await page.textContent('#messages'))?.includes('from slot to slot')) errors.push("[hinged] no word on the cable's length");
 await expectWatertight('hinged:cable');
-await page.click('#cable0_remove');
+await page.click('#cable_0_remove');
 // a printed hinge on screws: any lids, cones printed in place
 if (!(await page.locator('#hinge_axle_cones').isDisabled())) errors.push('[hinged] knuckles offer cones');
 await page.click('#hinge_kind_leaves');
@@ -738,7 +738,7 @@ if (!(await page.locator('#hinge_magnet').isVisible())) errors.push('[hinged] no
 await expectWatertight('hinged:magnets');
 await page.click('#hinge_magnets');
 await page.click('#hinge_gapAuto');
-if (await page.locator('#board0_remove').count()) errors.push("[hinged] the lower half shows the upper half's board");
+if (await page.locator('#board_0_remove').count()) errors.push("[hinged] the lower half shows the upper half's board");
 if ((await page.locator('#lid_face_top').getAttribute('class'))?.includes('active') !== true)
   errors.push("[hinged] the lower half shows the upper half's lid");
 // exploded lies open flat; the angle is the assembled view's
@@ -982,11 +982,11 @@ if (bodyAfter <= bodyBefore) errors.push('[label:front] the body did not change'
 await page.selectOption('#label1_face', 'top');
 await expectWatertight('label:overlap');
 if (!(await page.locator('#messages').textContent()).includes('Labels 1 and 2 overlap')) errors.push('[label:overlap] no overlap warning');
-await page.click('#label0_remove');
+await page.click('#label_0_remove');
 await expectWatertight('label:removed');
 const left = await page.evaluate(() => window.__case.state().labels);
 if (left.length !== 1 || left[0].text !== 'Front') errors.push(`[label:remove] the wrong label went: ${JSON.stringify(left)}`);
-await page.click('#label0_remove');
+await page.click('#label_0_remove');
 for (const face of ['left', 'right', 'bottom']) await page.click(`#vents_face_${face}`);
 if (await page.evaluate(() => window.__case.state().vents.on)) errors.push('[vents] every face off, the vents still on');
 await page.click('#fan_face_none');
