@@ -56,9 +56,15 @@ the fan or the label off the flat, …) gets a numbered red badge there and a
 faint red box over the place; the list numbers its lines the same way. A
 hover or a tap on a badge or a line lights its box and opens the whole
 message at the badge. Notes (ℹ) get a grey badge and show their box only
-when picked. On by default; not in the print layout (the parts are turned
+when picked. Badges are always shown, over each other if they must:
+connector names give way to them. On by default; not in the print layout (the parts are turned
 there) or for the lid alone; *X-ray* — see through the walls.
 
 On a phone the settings are a sheet over the lower part of the view; the
-case is centred in what the sheet leaves open, and hiding the sheet only
-moves it back to the middle — the scale and the proportions stay.
+case is fitted into what the sheet leaves open. Until you turn or zoom the
+view, opening or closing the sheet fits it again; after that the sheet only
+moves the picture — the scale and the proportions stay.
+
+The view draws only when something changes. Left alone for half a minute,
+it slowly turns the case (a turn in two minutes) until you move the mouse,
+touch the screen or press a key; not when the system asks for less motion.

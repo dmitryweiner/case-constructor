@@ -1,12 +1,18 @@
-// The Three.js layer: scene, lights, orbit camera, materials. Takes finished
-// buffers from the core and knows nothing about how they were made. The core
-// is z-up (printing convention); a group turns it y-up for display. Kept thin:
-// vitest never loads it, the smoke does.
+// The app's 3D view on maker-kit's viewer (its renderer, light, orbit
+// camera, grid, fit and the sheet's inset): the parts' roles and materials,
+// a lifted part's offset, the captions over the canvas that follow the
+// camera (placed after each frame, `onFrame`), the warnings' spots, x-ray,
+// the idle turn (idleTurn.ts), and the smoke's projection. Frames are drawn
+// on demand. Takes finished buffers from the core and knows nothing about
+// how they were made; the core is z-up, the viewer's `model` turns it y-up.
+// Kept thin: vitest never loads it, the smoke does.
 
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
-import type { SurfaceMesh } from 'maker-kit/3d/mesh';
+import type { IndexedMesh, SurfaceMesh } from 'maker-kit/3d/mesh';
+import { createViewer } from 'maker-kit/3d/viewer';
+import { placeCaptions } from './captions';
+import type { CaptionPoint, CaptionRect } from './captions';
+import { idleTurn } from './idleTurn';
 
 export type PartRole = 'body' | 'lid' | 'screw' | 'clamp' | 'cap' | 'hinge' | 'board' | 'port' | 'glass' | 'hardware';
 
@@ -36,7 +42,7 @@ export interface SceneSpot {
 
 export interface SceneHandle {
   setParts(parts: ScenePart[]): void;
-  /** Captions drawn over the canvas, following the camera; those that would overlap give way to the nearer ones. */
+  /** Captions drawn over the canvas, following the camera: port captions give way, warnings' badges never (captions.ts). */
   setCaptions(captions: SceneCaption[]): void;
   /** The warnings' places, drawn apart from the parts (a hover redraws only them). */
   setSpots(spots: SceneSpot[]): void;
@@ -47,17 +53,16 @@ export interface SceneHandle {
   setXray(on: boolean): void;
   /**
    * Pixels at the bottom of the canvas hidden by something on top (the
-   * mobile settings sheet): the picture is centred in what is left.
+   * mobile settings sheet): the model is fitted in what is left.
    */
   setBottomInset(px: number): void;
   /** Where model points (mm, z-up) land on the canvas, CSS pixels from its top-left — for the smoke. */
   project(points: readonly [number, number, number][]): [number, number][];
-  /** Puts the camera on a direction from the target (screen frame, y up), at the same distance — for scripts/snap.mjs --camera. */
+  /** Puts the camera on a direction from the model (screen frame, y up), fitted — for scripts/snap.mjs --camera. */
   lookFrom(direction: readonly [number, number, number]): void;
   dispose(): void;
 }
 
-const CLEAR_COLOR = 0x15181c;
 const COLORS: Record<PartRole, number> = {
   body: 0x8fa3b8,
   lid: 0xb8c6d4,
@@ -71,55 +76,11 @@ const COLORS: Record<PartRole, number> = {
   hardware: 0x9aa3ad,
 };
 const WARN_COLOR = 0xe5484d;
-/** Vertical field of view of the whole canvas, degrees. */
-const FOV = 40;
-/** How long the picture takes to follow the settings sheet, ms (the sheet's own transition). */
-const INSET_EASE_MS = 250;
-/** Faces meeting at a sharper angle than this get a hard edge; rounded corners stay smooth. */
-const CREASE_ANGLE = (35 * Math.PI) / 180;
-
-/** Room kept between two captions, and between a caption and its point, CSS px. */
-const CAPTION_GAP = 2;
-const CAPTION_LIFT = 4;
-
-/** With no mouse, touch or key for this long, the view starts turning on its own, ms. */
-const IDLE_MS = 30_000;
-/** One turn of the idle rotation, s: slow enough to read as a showcase, not a spin. */
-const IDLE_TURN_S = 120;
-/** The idle rotation gathers speed over this long, ms (it stops at once). */
-const IDLE_EASE_MS = 3000;
-/** Anything a person does that ends the idle rotation. */
-const ACTIVITY_EVENTS = ['pointermove', 'pointerdown', 'wheel', 'keydown', 'touchstart', 'input'] as const;
 
 export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement): SceneHandle {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor(CLEAR_COLOR);
-
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 8000);
-  // three-quarter view from the front-right, a little from above
-  camera.position.set(140, 110, 170);
-
-  scene.add(new THREE.HemisphereLight(0xe8eef5, 0x2a2f36, 1.0));
-  const key = new THREE.DirectionalLight(0xffffff, 1.5);
-  key.position.set(2, 3, 2);
-  scene.add(key);
-  const fill = new THREE.DirectionalLight(0xb0c0d0, 0.5);
-  fill.position.set(-2, 1, -1.5);
-  scene.add(fill);
-  const head = new THREE.DirectionalLight(0xffffff, 0.35);
-  head.position.set(0, 0, 1);
-  camera.add(head);
-  scene.add(camera);
-
-  // z-up (model) → y-up (screen)
-  const group = new THREE.Group();
-  group.rotation.x = -Math.PI / 2;
-  scene.add(group);
-
-  const grid = new THREE.GridHelper(400, 40, 0x3a424c, 0x262b31);
-  scene.add(grid);
+  // no WebGL: the app works on without its view (every call below is a no-op)
+  const viewer = createViewer(canvas);
+  const model = viewer?.model ?? new THREE.Group();
 
   const materials: Record<PartRole, THREE.MeshStandardMaterial> = {
     body: new THREE.MeshStandardMaterial({ color: COLORS.body, metalness: 0.05, roughness: 0.6, side: THREE.DoubleSide }),
@@ -179,204 +140,70 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
   const spotMaterials = { cold: spotMaterial(0.13), hot: spotMaterial(0.45) };
   const spotObjects: THREE.Mesh[] = [];
 
-  const controls = new OrbitControls(camera, canvas);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-
-  // the idle rotation: a person's last move, and none for people who asked for less motion
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  let lastActivity = performance.now();
-  const onActivity = (): void => {
-    lastActivity = performance.now();
-    controls.autoRotate = false;
-  };
-  for (const type of ACTIVITY_EVENTS) window.addEventListener(type, onActivity, { capture: true, passive: true });
-
-  /** Turns the view when nobody has touched anything for IDLE_MS, easing in. */
-  function stepIdle(now: number): void {
-    const idle = now - lastActivity - IDLE_MS;
-    controls.autoRotate = idle > 0 && !reducedMotion.matches;
-    // OrbitControls: autoRotateSpeed 1 is a turn per 60 s
-    if (controls.autoRotate) controls.autoRotateSpeed = (60 / IDLE_TURN_S) * Math.min(1, idle / IDLE_EASE_MS);
-  }
-
-  const objects: THREE.Mesh[] = [];
-  let disposed = false;
-  /** the inset applied now, and the one it eases towards */
-  let bottomInset = 0;
-  let inset = { from: 0, to: 0, start: 0 };
-  /** size of the model at the last camera fit — so a zoom set by the mouse survives edits */
-  let fittedRadius = 0;
-
-  function resize(): void {
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    if (w === 0 || h === 0) return;
-    const dpr = Math.min(window.devicePixelRatio, 2);
-    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
-      renderer.setSize(w, h, false);
-      applyInset(w, h);
-    }
-  }
-
-  /**
-   * A taller virtual frame whose lower part we show: its centre lands above
-   * the inset. The frame keeps the canvas's angle per pixel — its aspect is
-   * its own (w × (h + inset)) and its field of view grows with its height —
-   * so the sheet only moves the picture: the scale and the proportions stay.
-   * (With the canvas's aspect the picture was stretched by (h + inset) / h,
-   * and round holes came out as ellipses.)
-   */
-  function applyInset(w: number, h: number): void {
-    const px = Math.min(bottomInset, h * 0.8);
-    if (px > 0) {
-      const full = h + px;
-      camera.aspect = w / full;
-      camera.fov = (2 * Math.atan(Math.tan((FOV * Math.PI) / 360) * (full / h)) * 180) / Math.PI;
-      camera.setViewOffset(w, full, 0, px, w, h);
-    } else {
-      camera.aspect = w / h;
-      camera.fov = FOV;
-      camera.clearViewOffset();
-    }
-    camera.updateProjectionMatrix();
-  }
-
-  /** Eases the applied inset towards its target, in step with the sheet. */
-  function stepInset(now: number): void {
-    if (bottomInset === inset.to) return;
-    const k = Math.min(1, (now - inset.start) / INSET_EASE_MS);
-    const eased = 1 - (1 - k) ** 3;
-    bottomInset = k >= 1 ? inset.to : inset.from + (inset.to - inset.from) * eased;
-    applyInset(canvas.clientWidth, canvas.clientHeight);
-  }
+  /** The camera of the last frame drawn: the captions and the smoke's projection read it. */
+  let lastCamera: THREE.PerspectiveCamera | null = null;
 
   interface Shown {
     caption: SceneCaption;
     el: HTMLElement;
     w: number;
     h: number;
-    rect: [number, number, number, number] | null;
+    rect: CaptionRect | null;
   }
   let captions: Shown[] = [];
 
-  /** Places the captions for this frame: projected, nearest first, none over another. */
-  function placeCaptions(): void {
+  /** Places the captions for this frame: projected, then placed (captions.ts). */
+  function placeAll(camera: THREE.PerspectiveCamera): void {
     if (captions.length === 0) return;
-    group.updateMatrixWorld(true);
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
-    const eye = camera.position;
-    const placed = captions
-      .map((shown) => {
-        const world = new THREE.Vector3(...shown.caption.at).applyMatrix4(group.matrixWorld);
-        const v = world.clone().project(camera);
-        return { shown, x: ((v.x + 1) / 2) * w, y: ((1 - v.y) / 2) * h, depth: world.distanceTo(eye), behind: v.z > 1 };
-        // a warning's badge first, then the nearest captions
+    const points = captions.map((shown): CaptionPoint => {
+      const world = new THREE.Vector3(...shown.caption.at).applyMatrix4(model.matrixWorld);
+      const v = world.clone().project(camera);
+      return {
+        x: ((v.x + 1) / 2) * w,
+        y: ((1 - v.y) / 2) * h,
+        w: shown.w,
+        h: shown.h,
+        depth: world.distanceTo(camera.position),
+        behind: v.z > 1,
+        warn: Boolean(shown.caption.warn),
+      };
+    });
+    placeCaptions(points, w, h).forEach((rect, i) => {
+      const shown = captions[i];
+      if (!shown) return;
+      shown.rect = rect;
+      shown.el.hidden = rect === null;
+      if (rect) shown.el.style.transform = `translate(${rect[0].toFixed(1)}px, ${rect[1].toFixed(1)}px)`;
+    });
+  }
+
+  const stopFrames = viewer?.onFrame((camera) => {
+    lastCamera = camera;
+    placeAll(camera);
+  });
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const stopIdle = viewer
+    ? idleTurn({
+        turn: (radians) => viewer.turn(radians),
+        now: () => performance.now(),
+        requestFrame: (callback) => requestAnimationFrame(callback),
+        cancelFrame: (id) => cancelAnimationFrame(id),
+        setTimer: (callback, ms) => window.setTimeout(callback, ms),
+        clearTimer: (id) => window.clearTimeout(id),
+        target: window,
+        reducedMotion: () => reducedMotion.matches,
       })
-      .sort((a, b) => Number(Boolean(b.shown.caption.warn)) - Number(Boolean(a.shown.caption.warn)) || a.depth - b.depth);
-    const taken: [number, number, number, number][] = [];
-    for (const { shown, x, y, behind } of placed) {
-      const rect: [number, number, number, number] = [x - shown.w / 2, y - shown.h - CAPTION_LIFT, shown.w, shown.h];
-      const clash = taken.some(
-        (r) =>
-          rect[0] < r[0] + r[2] + CAPTION_GAP &&
-          r[0] < rect[0] + rect[2] + CAPTION_GAP &&
-          rect[1] < r[1] + r[3] + CAPTION_GAP &&
-          r[1] < rect[1] + rect[3] + CAPTION_GAP,
-      );
-      const off = behind || clash || x < 0 || x > w || y < 0 || y > h;
-      shown.rect = off ? null : rect;
-      shown.el.hidden = off;
-      if (!off) {
-        taken.push(rect);
-        shown.el.style.transform = `translate(${rect[0].toFixed(1)}px, ${rect[1].toFixed(1)}px)`;
-      }
-    }
-  }
-
-  let lastFrame = performance.now();
-  function frame(now: number): void {
-    if (disposed) return;
-    resize();
-    stepInset(now);
-    stepIdle(now);
-    // a long gap (a hidden tab) must not jump the rotation
-    controls.update(Math.min(0.1, (now - lastFrame) / 1000));
-    lastFrame = now;
-    renderer.render(scene, camera);
-    placeCaptions();
-    requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-
-  /** Camera distance at which a sphere fits the part of the canvas the sheet leaves open. */
-  function fitDistance(radius: number): number {
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    const open = h > 0 ? Math.max(0.2, 1 - Math.min(inset.to, h * 0.8) / h) : 1;
-    const tanHalf = Math.tan((FOV * Math.PI) / 360);
-    const vFov = 2 * Math.atan(tanHalf * open);
-    const hFov = 2 * Math.atan(tanHalf * (h > 0 ? w / h : 1));
-    return (radius / Math.sin(Math.min(vFov, hFov) / 2)) * 1.1;
-  }
-
-  function clearObjects(): void {
-    for (const obj of objects) {
-      group.remove(obj);
-      obj.geometry.dispose();
-    }
-    objects.length = 0;
-  }
+    : null;
 
   return {
     setParts(parts: ScenePart[]): void {
-      clearObjects();
-      const bounds = new THREE.Box3();
-      for (const part of parts) {
-        const indexed = new THREE.BufferGeometry();
-        indexed.setAttribute('position', new THREE.BufferAttribute(part.mesh.positions, 3));
-        indexed.setIndex(new THREE.BufferAttribute(part.mesh.indices, 1));
-        const geometry = toCreasedNormals(indexed, CREASE_ANGLE);
-        indexed.dispose();
-        geometry.computeBoundingBox();
-        const obj = new THREE.Mesh(geometry, materials[part.role]);
-        const [ox, oy, oz] = part.offset ?? [0, 0, 0];
-        obj.position.set(ox, oy, oz);
-        if (geometry.boundingBox) {
-          bounds.union(geometry.boundingBox.clone().translate(obj.position));
-        }
-        group.add(obj);
-        objects.push(obj);
-      }
-      if (bounds.isEmpty()) return;
-
-      // centre the composition over the origin in x, y; the bed (z = 0) stays on the grid
-      const center = new THREE.Vector3();
-      bounds.getCenter(center);
-      group.position.set(-center.x, 0, center.y);
-      controls.target.set(0, center.z, 0);
-
-      const size = new THREE.Vector3();
-      bounds.getSize(size);
-      const radius = size.length() / 2;
-      const distance = fitDistance(radius);
-      camera.near = Math.max(0.1, distance / 500);
-      camera.far = distance * 20;
-      camera.updateProjectionMatrix();
-      if (Math.abs(radius - fittedRadius) > fittedRadius * 0.15) {
-        const direction = camera.position.clone().sub(controls.target).normalize();
-        camera.position.copy(controls.target).addScaledVector(direction, distance);
-        fittedRadius = radius;
-      }
+      viewer?.setMeshes(parts.map((part) => ({ mesh: shifted(part.mesh, part.offset), material: materials[part.role] })));
     },
 
     lookFrom(direction: readonly [number, number, number]): void {
-      const dir = new THREE.Vector3(...direction).normalize();
-      const distance = camera.position.distanceTo(controls.target);
-      camera.position.copy(controls.target).addScaledVector(dir, distance);
-      camera.lookAt(controls.target);
-      controls.update();
+      viewer?.look(direction);
     },
 
     setCaptions(list: SceneCaption[]): void {
@@ -397,12 +224,18 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
         shown.w = shown.el.offsetWidth;
         shown.h = shown.el.offsetHeight;
       }
-      placeCaptions();
+      // placed now with the last frame's camera (a click or a read may come before the next frame), and again by that frame
+      if (lastCamera) {
+        model.updateMatrixWorld(true);
+        lastCamera.updateMatrixWorld();
+        placeAll(lastCamera);
+      }
+      viewer?.render();
     },
 
     setSpots(spots: SceneSpot[]): void {
       for (const obj of spotObjects) {
-        group.remove(obj);
+        model.remove(obj);
         obj.geometry.dispose();
       }
       spotObjects.length = 0;
@@ -413,9 +246,10 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
         const obj = new THREE.Mesh(geometry, spot.hot ? spotMaterials.hot : spotMaterials.cold);
         obj.position.set(...spot.offset);
         obj.renderOrder = 10;
-        group.add(obj);
+        model.add(obj);
         spotObjects.push(obj);
       }
+      viewer?.render();
     },
 
     captionAt(x: number, y: number): string | null {
@@ -436,33 +270,45 @@ export function createScene(canvas: HTMLCanvasElement, captionLayer: HTMLElement
         material.depthWrite = !on;
         material.needsUpdate = true;
       }
+      viewer?.render();
     },
 
     setBottomInset(px: number): void {
-      const to = Math.max(0, px);
-      if (to === inset.to) return;
-      inset = { from: bottomInset, to, start: performance.now() };
+      viewer?.setInset(px);
     },
 
     project(points: readonly [number, number, number][]): [number, number][] {
-      group.updateMatrixWorld(true);
+      if (!lastCamera) return [];
+      const camera = lastCamera;
+      model.updateMatrixWorld(true);
       camera.updateMatrixWorld(true);
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       return points.map(([x, y, z]) => {
-        const v = new THREE.Vector3(x, y, z).applyMatrix4(group.matrixWorld).project(camera);
+        const v = new THREE.Vector3(x, y, z).applyMatrix4(model.matrixWorld).project(camera);
         return [((v.x + 1) / 2) * w, ((1 - v.y) / 2) * h];
       });
     },
 
     dispose(): void {
-      disposed = true;
-      for (const type of ACTIVITY_EVENTS) window.removeEventListener(type, onActivity, { capture: true });
-      controls.dispose();
-      clearObjects();
+      stopIdle?.();
+      stopFrames?.();
       for (const obj of spotObjects) obj.geometry.dispose();
+      viewer?.dispose();
       for (const material of [...Object.values(materials), ...Object.values(spotMaterials)]) material.dispose();
-      renderer.dispose();
     },
   };
+}
+
+/** A part as the viewer takes it: lifted by its offset (a lid shown above its body). */
+function shifted(mesh: SurfaceMesh, offset: readonly [number, number, number] = [0, 0, 0]): IndexedMesh {
+  const [ox, oy, oz] = offset;
+  if (ox === 0 && oy === 0 && oz === 0) return mesh;
+  const positions = new Float32Array(mesh.positions.length);
+  for (let i = 0; i < positions.length; i += 3) {
+    positions[i] = mesh.positions[i] + ox;
+    positions[i + 1] = mesh.positions[i + 1] + oy;
+    positions[i + 2] = mesh.positions[i + 2] + oz;
+  }
+  return { positions, indices: mesh.indices };
 }

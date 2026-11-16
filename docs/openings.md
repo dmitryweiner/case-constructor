@@ -12,7 +12,8 @@ port of the board ghosts (a crossed-out one has no opening), so it is easy to
 tell which line of the list is which connector. A click on a caption turns
 its opening on or off, like its checkbox (undo brings it back); dragging over
 a caption turns the view as anywhere else. Captions that would cover each
-other give way to the nearer one — turn or zoom the view to see the rest.
+other give way to the nearer one, and all of them to the warnings' badges —
+turn or zoom the view to see the rest.
 
 - A connector on a board edge gets an opening where its plug goes in: the
   size of the connector plus a clearance per side that fits a common plug
