@@ -575,6 +575,7 @@ export const he: Record<Key, string> = {
     "מארז נפתח: למטה M5Stack CardKB עם כיפות מודפסות על מסילות מוברגות, למעלה TFT מגע בגודל 4 אינץ', כבל דרך הציר, ציר מודפס על צירי ברגים, שני המכסים מלמטה על ברגי M3",
   'preset.plain-box.name': 'Plain box',
   'preset.plain-box.note': 'קופסה מעוגלת ריקה עם מכסה שטוח על תפסים',
+  'preset.blank.name': 'New case',
   'show.what': 'חלקים — תצוגה וייצוא',
   'show.how': 'תצוגה',
   'view.exploded.title': 'המכסה מורם מעל הגוף',

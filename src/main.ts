@@ -102,7 +102,7 @@ import { validateMesh } from 'maker-kit/3d/validate';
 import { assessPart, STL_BRAND } from './geo/validate';
 import type { AppState, ExportMode } from './state/schema';
 import { sanitizeState, RESOLUTIONS } from './state/schema';
-import { PRESETS, presetById, presetSignature } from './state/presets';
+import { BLANK_PRESET, PRESETS, presetById, presetSignature } from './state/presets';
 import { encodePresetFile, decodePresetFile, presetFileName } from './state/presetFile';
 import type { PresetRef, UserPreset } from 'maker-kit/core/presets';
 import { nextPresetName, presetRef as refOf, presetStatus, removeUserPreset, renameUserPreset } from 'maker-kit/core/presets';
@@ -176,6 +176,7 @@ const presetBtn = el('presetBtn', HTMLButtonElement);
 /** The presets dialog: Esc, the backdrop and ✕ close it (maker-kit's ui/modal). */
 const presetsDialog = createModal(el('presets', HTMLDivElement), { close: el('presetsClose', HTMLButtonElement) });
 const presetList = el('presetList', HTMLDivElement);
+const newBtn = el('newBtn', HTMLButtonElement);
 const saveBtn = el('saveBtn', HTMLButtonElement);
 const fileOpenBtn = el('fileOpenBtn', HTMLButtonElement);
 const fileSaveBtn = el('fileSaveBtn', HTMLButtonElement);
@@ -1318,6 +1319,8 @@ function deletePreset(ref: PresetRef): void {
 }
 
 presetBtn.addEventListener('click', openPresets);
+// 📄 New: the blank preset (plain-box's state, "New case"), one undo step
+newBtn.addEventListener('click', () => openPreset(`b:${BLANK_PRESET.id}`));
 
 saveBtn.addEventListener('click', () => {
   const name = prompt(t('presets.prompt'), autoPresetName())?.trim();

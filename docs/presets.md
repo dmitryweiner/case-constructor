@@ -20,6 +20,9 @@ deleted is reported there too (Dismiss hides that note).
 - **Presets** opens the list: your presets first, then the built-in ones.
   Yours: type in a name to rename it, ↗ opens it, 🗑 deletes it (tap twice:
   it asks "Delete?"). Esc or a tap beside the dialog closes it.
+- 📄 starts a new case: an empty rounded box, 100 × 70 × 35 mm, with no
+  boards, called "New case" (the built-in *Plain box*). Undo brings back
+  the case you had.
 - 💾 saves the current case as a preset in this browser.
 - ⬇️ saves the whole project to a JSON file; 📂 opens one (or drop the file
   onto the window). A file that is not a Case Constructor project, cannot

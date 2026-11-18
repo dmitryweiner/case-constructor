@@ -613,6 +613,7 @@ export const en = {
     'A case that folds open: an M5Stack CardKB with printed caps on screwed rails below, a 4-inch touch TFT above, a cable through the hinge, a printed hinge on screw axles, both lids underneath on M3 screws',
   'preset.plain-box.name': 'Plain box',
   'preset.plain-box.note': 'An empty rounded box with a flat lid on snaps',
+  'preset.blank.name': 'New case',
   'show.what': 'Parts — shown and exported',
   'show.how': 'View',
   'view.exploded.title': 'The lid lifted off the case',
