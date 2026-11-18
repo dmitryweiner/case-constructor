@@ -28,6 +28,9 @@ jobs:
       # the main thread knows nothing about WASM (CLAUDE.md, invariants): the
       # main chunk must not mention manifold at all
       - run: '! grep -l manifold dist/assets/index-*.js'
+      - run: npx playwright install --with-deps chromium
+      # the browser smoke over a fresh production build (it rebuilds dist/ the same way)
+      - run: npm run smoke -- --preview
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         with:
