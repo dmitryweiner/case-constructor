@@ -239,6 +239,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   Its TypeScript sources: `optimizeDeps.exclude` and vitest's
   `server.deps.inline` in `vite.config.ts`. Its `kit.*` strings are spread
   into the four dictionaries. For joint work: `npm link ../maker-kit`.
+  **A change to a kit piece is made in the kit**, never here: a bug or a
+  missing piece found in this app is a maker-kit PR with its test there and
+  a patch tag (its `AGENTS.md`, "Releases"); this app then moves to the tag.
+  No copy of a kit piece, no patch in `node_modules`; what only this app
+  needs wraps the kit's piece here.
 - `src/geo/` is a pure geometry core and **never imports Three.js**.
 - The core works **in millimetres**, z-up, the outer bottom of the case at
   z = 0, the outer bounding box from the origin. The viewer turns it y-up.
