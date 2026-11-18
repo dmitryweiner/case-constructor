@@ -52,12 +52,15 @@ npm install
 npm run dev       # http://localhost:5173
 npm run check     # tsc + oxlint + prettier + vitest
 npm run format    # prettier
-npm run smoke     # browser smoke (Playwright)
+npm run smoke     # browser smoke (Playwright); -- --preview checks the build
 npm run build
 ```
 
 Stack: Vite, TypeScript 7, oxlint, Three.js, [manifold-3d](https://github.com/elalish/manifold)
-(WASM, in a worker), vitest, Playwright. A sibling of
+(WASM, in a worker), vitest, Playwright, and
+[maker-kit](https://github.com/dmitryweiner/maker-kit) — the shared
+controls, storage, presets, 3D view, worker queue and smoke harness of the
+3D-printing tools. A sibling of
 [ClayForm](https://github.com/dmitryweiner/clayform).
 
 ## License
