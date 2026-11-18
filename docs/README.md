@@ -11,4 +11,5 @@
 - [Ventilation, fan, wall mounting, labels](extras.md)
 - [Export and printing](export.md)
 - [Presets and project files](presets.md)
+- [Offline and installing the app](offline.md)
 - [What is not in v1](limitations.md)
