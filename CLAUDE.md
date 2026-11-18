@@ -4,7 +4,7 @@
 
 `plans/PLAN.md` — architecture and milestones M0…M8, decisions taken with the user
 at the top. Deviations from the plan are recorded at its end as they happen.
-`TODO.md` — small things not to forget (the `--preview` smoke).
+`TODO.md` — small things not to forget.
 `plans/PLAN-IMPROVEMENTS.md` — the improvements after the review (I1…I8), same
 rules.
 `plans/PLAN-IMPROVEMENTS-NEW-BOARDS.md` — what the Tier A boards left (B1…B9):
