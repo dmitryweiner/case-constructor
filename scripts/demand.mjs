@@ -19,7 +19,7 @@
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseArgs } from './lib/harness.mjs';
+import { parseArgs } from 'maker-kit/harness';
 
 const CACHE = join('drawings', 'demand');
 const VALUE_FLAGS = ['file', 'out', 'top'];

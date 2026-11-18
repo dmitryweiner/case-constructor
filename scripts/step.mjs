@@ -21,7 +21,7 @@
 // flip apply about the model origin, before the corner is found.
 
 import { readFileSync } from 'node:fs';
-import { parseArgs } from './lib/harness.mjs';
+import { parseArgs } from 'maker-kit/harness';
 import { readStep } from './lib/step.mjs';
 
 const file = process.argv[2];

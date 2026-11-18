@@ -63,8 +63,8 @@ takes jsdom by its first line, `// @vitest-environment jsdom`.
 ## Tools: permanent scripts instead of throw-away ones
 
 Do not write temporary Playwright/Node scripts with `cat > tmp.mjs <<EOF` —
-every cycle that is tokens thrown away. Reusable plumbing lives in
-`scripts/lib/harness.mjs`; a new check is **a flag on an existing script**.
+every cycle that is tokens thrown away. Reusable plumbing is maker-kit's
+`maker-kit/harness` and `scripts/lib/`; a new check is **a flag on an existing script**.
 3D helpers from the sibling project ClayForm (`../clayform`) may be borrowed
 freely; a temporary script that turns out useful becomes a permanent one.
 
@@ -195,9 +195,12 @@ freely; a temporary script that turns out useful becomes a permanent one.
   each after an anchor key (`[{ after, key, en, ru, uk, he }]`); a key
   already there is replaced in place. `--remove key,key` takes keys out of
   all four (the strings a maker-kit piece now says).
-- `scripts/lib/harness.mjs` — flags, a vite server on ports 5273 / 4273
-  (not ClayForm's), console error collection, CPU throttle, browser locale.
-  `CASE_BROWSER` overrides the chromium executable.
+- `maker-kit/harness` (the kit's `docs/harness.md`) — flags (`parseArgs`),
+  a vite server on the app's ports 5273 / 4273 (`--strictPort`; `--preview`
+  builds first), fresh pages with a browser locale that collect console
+  errors, the run that closes the browser and the server on any outcome,
+  CPU throttle. `PLAYWRIGHT_BROWSER` overrides the chromium executable
+  (also in `board.mjs` and `dxf.mjs`).
 
 ## Architectural invariants
 

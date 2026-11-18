@@ -14,7 +14,7 @@
 // apostrophe), like the rest of the files.
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { parseArgs } from './lib/harness.mjs';
+import { parseArgs } from 'maker-kit/harness';
 
 const LANGS = ['en', 'ru', 'uk', 'he'];
 const flags = parseArgs(process.argv.slice(2), ['file', 'remove']);

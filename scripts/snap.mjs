@@ -37,7 +37,7 @@
 
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { parseArgs, openApp } from './lib/harness.mjs';
+import { launch, parseArgs } from 'maker-kit/harness';
 
 const flags = parseArgs(
   process.argv.slice(2),
@@ -54,13 +54,12 @@ mkdirSync(dirname(out), { recursive: true });
 
 const LOCALES = { en: 'en-US', ru: 'ru-RU', uk: 'uk-UA', he: 'he-IL' };
 
-const app = await openApp({
-  preview: flags.has('preview'),
-  width: Number(flags.get('width') ?? 1280),
-  height: Number(flags.get('height') ?? 860),
+const app = await launch({ preview: flags.has('preview'), ports: { dev: 5273, preview: 4273 } });
+const { page } = await app.open({
+  viewport: { width: Number(flags.get('width') ?? 1280), height: Number(flags.get('height') ?? 860) },
   locale: LOCALES[flags.get('lang') ?? 'en'] ?? 'en-US',
 });
-const { page, errors, label } = app;
+const { errors, label } = app;
 
 const rawUrl = flags.get('url');
 if (rawUrl) {

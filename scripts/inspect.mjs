@@ -16,7 +16,7 @@
 // --set takes a dotted path into AppState; numbers and true/false are parsed.
 
 import { spawnSync } from 'node:child_process';
-import { parseArgs } from './lib/harness.mjs';
+import { parseArgs } from 'maker-kit/harness';
 
 const flags = parseArgs(process.argv.slice(2), ['state', 'file', 'preset', 'segments', 'stl', 'thread-test'], ['set']);
 const args = Object.fromEntries(flags);
