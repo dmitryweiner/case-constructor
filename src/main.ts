@@ -1508,8 +1508,11 @@ onLangChange(() => {
   syncPanel();
 });
 
-// Dev builds only: a handle for scripts/snap.mjs --eval to look at what is drawn.
-if (import.meta.env.DEV) {
+// A handle for the smoke and scripts/snap.mjs --eval to look at what is
+// drawn: on the dev server, and in a build when the page is opened with
+// `window.__caseHooks = true` set before its scripts (the harness's
+// `script`), so `smoke --preview` checks the build that goes to Pages.
+if (import.meta.env.DEV || Reflect.get(window, '__caseHooks') === true) {
   Reflect.set(window, '__case', {
     state: () => state,
     /** the last preview's parts: a single case's, or the lower half's (`cases` has both halves) */

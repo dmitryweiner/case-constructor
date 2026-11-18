@@ -25,7 +25,11 @@ const preview = flags.has('preview');
 /** Ports of its own (maker-kit's harness: each project has a pair), --strictPort. */
 const app = await launch({ preview, ports: { dev: 5273, preview: 4273 } });
 const { errors, label } = app;
-const { page } = await app.open();
+/** The page's handle (window.__case) in a build too: src/main.ts gives it when this is set first. */
+const hooks = () => {
+  window.__caseHooks = true;
+};
+const { page } = await app.open({ script: hooks });
 
 // one scenario on one page, its sections labelled; the harness closes the
 // browser and the server on any outcome and fails on any problem collected
@@ -76,7 +80,7 @@ await app.run(
         name,
       );
 
-    /** Roles drawn last (dev builds): 'body,board,…,lid'. */
+    /** Roles drawn last (the page's handle): 'body,board,…,lid'. */
     async function drawn() {
       await page.waitForTimeout(150);
       return (await page.evaluate(() => window.__case.drawn())).join(',');
@@ -1319,7 +1323,7 @@ await app.run(
 
     // a fresh Hebrew browser: Hebrew text, the page mirrored — the panel on the start side, the right
     label('lang:he-IL');
-    const heApp = await app.open({ locale: 'he-IL' });
+    const heApp = await app.open({ locale: 'he-IL', script: hooks });
     const heading = (await heApp.page.locator('#panel h2').first().textContent()).trim();
     if (heading !== 'מארז') errors.push(`[he-IL] heading "${heading}"`);
     const panelBox = await heApp.page.locator('#panel').boundingBox();
