@@ -51,6 +51,17 @@ does not mention `manifold`, the browser smoke over the production build
 (`npx playwright install --with-deps chromium`, `npm run smoke -- --preview`),
 and the upload of `dist/`. Pull requests run the same, without the upload.
 
+The app is a PWA (`_conventions/pwa.md`, the template's pieces):
+`src/sw-plugin.ts` writes `dist/sw.js` precaching the build and `public/`
+(the CSG worker, its `.wasm`, the label fonts; ~2 MB), its cache named
+`case-constructor-<hash>`; `skipWaiting` and `clients.claim`; `src/pwa.ts`
+registers it in builds only, asks for an update on every return to the
+page and reloads on `controllerchange` (the project is kept on every
+change, so nothing is lost). `public/manifest.webmanifest`,
+`public/icon.svg` is the only icon source (`npm run icons` renders the
+PNGs). The smoke's `--preview` checks it offline (a build, then a change,
+with no network) and that a new `sw.js` reloads an open page.
+
 ## Commands
 
 ```bash
@@ -194,6 +205,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   "which tool for which drawing"), also for the catalog review: drawings a
   person downloads, the review page's captions, the user's OK/BAD report. No new dependencies without the user's
   explicit approval, subagents included.
+- `scripts/icons.mjs` — `npm run icons`: the PWA's PNG icons (192, 512, a
+  maskable 512, the 180 apple-touch-icon) from `public/icon.svg` in
+  Chromium (the template's).
 - `scripts/i18n.mjs --file keys.json` — adds keys to all four dictionaries,
   each after an anchor key (`[{ after, key, en, ru, uk, he }]`); a key
   already there is replaced in place. `--remove key,key` takes keys out of

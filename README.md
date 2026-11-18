@@ -42,6 +42,7 @@ printing.
 - Built-in presets, your own presets in the browser, project files (JSON),
   undo/redo.
 - English, Russian, Ukrainian, Hebrew.
+- Works offline after the first visit and installs as an app (a PWA).
 
 User documentation: [docs/](docs/README.md).
 
@@ -54,6 +55,7 @@ npm run check     # tsc + oxlint + prettier + vitest
 npm run format    # prettier
 npm run smoke     # browser smoke (Playwright); -- --preview checks the build
 npm run build
+npm run icons     # the PNG icons from public/icon.svg
 ```
 
 Stack: Vite, TypeScript 7, oxlint, Three.js, [manifold-3d](https://github.com/elalish/manifold)

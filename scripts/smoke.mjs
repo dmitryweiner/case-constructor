@@ -12,10 +12,10 @@
 // Export times are always printed — that is how the export cost is measured.
 // Any console/page error → non-zero exit code (fit for CI).
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { launch, parseArgs } from 'maker-kit/harness';
+import { launch, offline, parseArgs } from 'maker-kit/harness';
 
 const flags = parseArgs(process.argv.slice(2), ['shots']);
 const shotsDir = flags.get('shots');
@@ -100,14 +100,14 @@ await app.run(
       console.log(`  export ${step}: ${download.suggestedFilename()} ${triangles} triangles, ${Date.now() - started} ms`);
     }
 
-    label('favicon');
-    const faviconStatus = await page.evaluate(() =>
-      fetch('./favicon.svg').then(
+    label('icon');
+    const iconStatus = await page.evaluate(() =>
+      fetch('./icon.svg').then(
         (r) => r.status,
         () => 0,
       ),
     );
-    if (faviconStatus !== 200) errors.push(`[favicon] favicon.svg → ${faviconStatus}`);
+    if (iconStatus !== 200) errors.push(`[icon] icon.svg → ${iconStatus}`);
 
     label('boot');
     await expectWatertight('boot');
@@ -1423,6 +1423,42 @@ await app.run(
     await page.click('#panelBtn');
     await page.waitForTimeout(300);
     if (shotsDir) await page.screenshot({ path: `${shotsDir}/mobile.png` });
+
+    // a build only: the dev server has no service worker (_conventions/pwa.md)
+    if (preview) {
+      // offline after a first visit: the page, the CSG worker and its WASM from the cache — a build is watertight, and
+      // a change builds again with no network
+      label('offline');
+      const audited = (p) =>
+        p.waitForFunction(() => (document.querySelector('#audit')?.textContent ?? '').includes('watertight ✓'), undefined, {
+          timeout: 30000,
+        });
+      const off = await offline(app, { script: hooks, ready: audited });
+      const wallBefore = await off.page.locator('#case_wall').inputValue();
+      await off.page.locator('#case_wall').fill(wallBefore === '3' ? '2.5' : '3');
+      await off.page.waitForFunction(() => window.__case?.built(), undefined, { timeout: 30000 });
+      await audited(off.page);
+      await off.context.close();
+
+      // a new deploy reaches a page already open: a changed sw.js is what a deploy looks like to the browser
+      label('update');
+      const open = await app.open({ script: hooks });
+      await open.page.evaluate(() => navigator.serviceWorker.ready);
+      await open.page.evaluate(() => (window.oldPage = true));
+      const worker = 'dist/sw.js';
+      const original = readFileSync(worker, 'utf8');
+      appendFileSync(worker, `\n// deploy ${Date.now()}\n`);
+      try {
+        const reloaded = open.page.waitForEvent('load', { timeout: 10_000 }).catch(() => null);
+        // what a phone does when the person returns to a suspended page
+        await open.page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+        if ((await reloaded) === null) errors.push('[update] the open page never switched to the new version');
+        else if ((await open.page.evaluate(() => window.oldPage)) !== undefined) errors.push('[update] the page was not reloaded');
+      } finally {
+        writeFileSync(worker, original);
+      }
+      await open.context.close();
+    }
   },
   `smoke: ok (${preview ? 'preview' : 'dev'})`,
 );

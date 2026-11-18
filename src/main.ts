@@ -117,6 +117,7 @@ import { casesOf, foldOfState, halfHinge, halfState, halfStrip, hingeNotes, isHi
 import type { CsgJob, JobPart } from './worker/protocol';
 import type { JobProgress } from 'maker-kit/core/progress';
 import { WorkerClient, moduleWorker } from 'maker-kit/worker/client';
+import { registerServiceWorker } from './pwa';
 
 /** Segments per quarter arc in the preview. */
 const PREVIEW_SEGMENTS = 12;
@@ -129,6 +130,9 @@ type ViewMode = 'exploded' | 'assembled' | 'print';
 
 // The language comes before any rendering: the panel is built in it.
 initLang();
+// offline after a first visit, and a new deploy reaches an open page (src/pwa.ts); the project is kept on
+// every change, so the reload a new version brings loses nothing
+if (import.meta.env.PROD) registerServiceWorker(navigator, window, document);
 applyStaticText(document);
 
 const view = el('view', HTMLCanvasElement);
