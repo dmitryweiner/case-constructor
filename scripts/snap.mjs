@@ -19,7 +19,7 @@
 //   --view                only the 3D view, without the panel
 //   --clip x,y,w,h        a piece of the frame — to look at a joint closely
 //   --camera <name>       iso (the default view), top, bottom, front, back, left, right,
-//                         under (iso from below); dev builds only, applied after the actions
+//                         under (iso from below); applied after the actions
 //   --orbit dx,dy         orbit the camera with the mouse (after --camera)
 //   --panel open|hidden   narrow screens: show or hide the settings sheet (after the actions)
 //   --wait <ms>           extra pause before the shot
@@ -27,7 +27,7 @@
 //   --preview             production build instead of the dev server
 //   --url <path>          shoot any server path (the icon, an asset)
 //   --eval <js>           evaluate an expression in the page after the shot and print it (a promise is awaited)
-//                         (dev builds expose window.__case: state(), parts(), ghosts(),
+//                         (the page exposes window.__case: state(), parts(), ghosts(),
 //                         drawn(), drawnParts(), project([[x, y, z], …]), built())
 //
 // On the dev server the snap waits for the app's first build before the
@@ -37,7 +37,7 @@
 
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { parseArgs, openApp } from './lib/harness.mjs';
+import { launch, parseArgs } from 'maker-kit/harness';
 
 const flags = parseArgs(
   process.argv.slice(2),
@@ -54,13 +54,16 @@ mkdirSync(dirname(out), { recursive: true });
 
 const LOCALES = { en: 'en-US', ru: 'ru-RU', uk: 'uk-UA', he: 'he-IL' };
 
-const app = await openApp({
-  preview: flags.has('preview'),
-  width: Number(flags.get('width') ?? 1280),
-  height: Number(flags.get('height') ?? 860),
+const app = await launch({ preview: flags.has('preview'), ports: { dev: 5273, preview: 4273 } });
+const { page } = await app.open({
+  // the page's handle (window.__case) in a build too: src/main.ts gives it when this is set first
+  script: () => {
+    window.__caseHooks = true;
+  },
+  viewport: { width: Number(flags.get('width') ?? 1280), height: Number(flags.get('height') ?? 860) },
   locale: LOCALES[flags.get('lang') ?? 'en'] ?? 'en-US',
 });
-const { page, errors, label } = app;
+const { errors, label } = app;
 
 const rawUrl = flags.get('url');
 if (rawUrl) {
@@ -77,8 +80,9 @@ if (rawUrl) {
 label('boot');
 await page.waitForFunction(() => (document.querySelector('#status')?.textContent ?? '').length > 0, { timeout: 20000 });
 
-// Dev builds report when the worker has answered for the current state; the
-// production build has no hook, and there the audit's text is all there is.
+// The page's handle reports when the worker has answered for the current
+// state (the dev server, or a build opened with the hooks flag above);
+// without it the audit's text is all there is.
 const dev = await page.evaluate(() => typeof window.__case?.built === 'function');
 async function settle() {
   if (dev) {

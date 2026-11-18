@@ -37,7 +37,7 @@
 import { readFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { chromium } from 'playwright';
-import { parseArgs } from './lib/harness.mjs';
+import { parseArgs } from 'maker-kit/harness';
 import { componentBoxes, extents, layerCounts, pdfToSvg, polylines, readDxf, readSvg, scaled, turned } from './lib/drawing.mjs';
 import { chainLoops, largestLoop, toOutline } from './lib/outline.mjs';
 import { inline } from './lib/boardJson.mjs';
@@ -203,7 +203,7 @@ if (png) {
   }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="100%" height="100%" fill="#fff"/><g fill="none" stroke="#000" stroke-width="1.2">${parts.join('')}</g></svg>`;
   mkdirSync(dirname(png), { recursive: true });
-  const browser = await chromium.launch({ executablePath: process.env.CASE_BROWSER || undefined });
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_BROWSER || undefined });
   const page = await browser.newPage({ viewport: { width: W, height: H } });
   await page.setContent(`<body style="margin:0">${svg}</body>`);
   await page.screenshot({ path: png });

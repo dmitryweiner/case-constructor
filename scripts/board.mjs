@@ -19,7 +19,7 @@
 import { spawn } from 'node:child_process';
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright';
-import { parseArgs } from './lib/harness.mjs';
+import { parseArgs } from 'maker-kit/harness';
 import { readBrd, readKicad, turnBoard } from './lib/pcb.mjs';
 import { formatBoard, inline } from './lib/boardJson.mjs';
 import { chainLoops, largestLoop, toOutline } from './lib/outline.mjs';
@@ -98,7 +98,7 @@ if (flags.has('png') && flags.has('svg') && result.status === 0) {
   const png = svg.replace(/\.svg$/, '.png');
   const text = readFileSync(svg, 'utf8');
   const [, w, h] = text.match(/width="([\d.]+)" height="([\d.]+)"/) ?? [];
-  const browser = await chromium.launch({ executablePath: process.env.CASE_BROWSER || undefined });
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_BROWSER || undefined });
   const page = await browser.newPage({ viewport: { width: Math.ceil(Number(w) || 800), height: Math.ceil(Number(h) || 600) } });
   await page.setContent(`<body style="margin:0">${text}</body>`);
   await page.screenshot({ path: png });

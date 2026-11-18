@@ -4,7 +4,7 @@
 
 `plans/PLAN.md` — architecture and milestones M0…M8, decisions taken with the user
 at the top. Deviations from the plan are recorded at its end as they happen.
-`TODO.md` — small things not to forget (the `--preview` smoke).
+`TODO.md` — small things not to forget.
 `plans/PLAN-IMPROVEMENTS.md` — the improvements after the review (I1…I8), same
 rules.
 `plans/PLAN-IMPROVEMENTS-NEW-BOARDS.md` — what the Tier A boards left (B1…B9):
@@ -64,8 +64,8 @@ takes jsdom by its first line, `// @vitest-environment jsdom`.
 ## Tools: permanent scripts instead of throw-away ones
 
 Do not write temporary Playwright/Node scripts with `cat > tmp.mjs <<EOF` —
-every cycle that is tokens thrown away. Reusable plumbing lives in
-`scripts/lib/harness.mjs`; a new check is **a flag on an existing script**.
+every cycle that is tokens thrown away. Reusable plumbing is maker-kit's
+`maker-kit/harness` and `scripts/lib/`; a new check is **a flag on an existing script**.
 3D helpers from the sibling project ClayForm (`../clayform`) may be borrowed
 freely; a temporary script that turns out useful becomes a permanent one.
 
@@ -107,9 +107,9 @@ freely; a temporary script that turns out useful becomes a permanent one.
   `--check <id>`, `--uncheck <id>`, `--click <selector>`, `--upload
   <id>=<path>` (in command-line order), `--panel open|hidden` (the mobile
   sheet), `--view`, `--clip x,y,w,h`, `--camera
-  iso|under|top|bottom|front|back|left|right` (dev builds; use it instead of
+  iso|under|top|bottom|front|back|left|right` (use it instead of
   guessing `--orbit` values), `--orbit dx,dy`, `--url <path>`, `--wait <ms>`, `--width/--height`, `--preview`,
-  `--eval '<js>'` (prints a page expression, a promise awaited; dev builds expose
+  `--eval '<js>'` (prints a page expression, a promise awaited; the page exposes
   `window.__case.state() / parts() / ghosts() / drawn() / drawnParts()` — the meshes and
   the roles actually drawn; `built()` — the worker has answered for the
   current state). On the dev server it waits for the first build and for the
@@ -196,9 +196,12 @@ freely; a temporary script that turns out useful becomes a permanent one.
   each after an anchor key (`[{ after, key, en, ru, uk, he }]`); a key
   already there is replaced in place. `--remove key,key` takes keys out of
   all four (the strings a maker-kit piece now says).
-- `scripts/lib/harness.mjs` — flags, a vite server on ports 5273 / 4273
-  (not ClayForm's), console error collection, CPU throttle, browser locale.
-  `CASE_BROWSER` overrides the chromium executable.
+- `maker-kit/harness` (the kit's `docs/harness.md`) — flags (`parseArgs`),
+  a vite server on the app's ports 5273 / 4273 (`--strictPort`; `--preview`
+  builds first), fresh pages with a browser locale that collect console
+  errors, the run that closes the browser and the server on any outcome,
+  CPU throttle. `PLAYWRIGHT_BROWSER` overrides the chromium executable
+  (also in `board.mjs` and `dxf.mjs`).
 
 ## Architectural invariants
 
@@ -666,7 +669,7 @@ View and export card (`#exportCard`): parts `#tabBoth` (first, default),
 `#tabBody`, `#tabLid`; view `#viewExploded` (default), `#viewAssembled`,
 `#viewPrint`; the lid's place in the Both STL (Both only) `#print_lid_auto|right|behind`, `#print_gap`; `#viewBoards`, `#viewPortNames` (connector names over the ghosts), `#viewWarnings` (badges and red boxes where the warnings point: `Message.spot`, `scene.setSpots`; list lines `#messages [data-warn="<n>"]`; `window.__case.warnings()`), `#viewXray`; `#resolution`, `#exportBtn`. The
 caption over the canvas `#viewCaption` says what is shown and scrolls to the
-card. Dev builds: `window.__case.drawn()` lists the roles drawn last,
+card. The page's handle: `window.__case.drawn()` lists the roles drawn last,
 `drawnParts()` the meshes with their offsets. Port captions (`#portCaptions`, an overlay over
 the canvas with no pointer events: `scene.setCaptions`, placed every frame,
 nearest first, overlapping ones hidden) show with the board ghosts; a tap on
