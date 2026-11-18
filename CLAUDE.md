@@ -47,14 +47,16 @@ Check with `node -v` once per session.
 
 GitHub Pages is published by `.github/workflows/deploy.yml` on every push to
 `main`: `npm ci`, `npm run check`, `npm run build`, a check that the main chunk
-does not mention `manifold`, and the upload of `dist/`.
+does not mention `manifold`, the browser smoke over the production build
+(`npx playwright install --with-deps chromium`, `npm run smoke -- --preview`),
+and the upload of `dist/`. Pull requests run the same, without the upload.
 
 ## Commands
 
 ```bash
 npm run check     # tsc (TypeScript 7) + oxlint --type-aware (no `as` casts) + prettier --check + vitest
 npm run format    # prettier --write (not *.md, the board catalog, golden, fixtures: .prettierignore)
-npm run smoke     # browser smoke; --preview for the production build
+npm run smoke     # browser smoke on the dev server; -- --preview builds and checks the build
 npm run build     # production build → ./dist
 ```
 
@@ -206,14 +208,26 @@ freely; a temporary script that turns out useful becomes a permanent one.
 ## Architectural invariants
 
 - **maker-kit** (`~/projects/maker-kit`, by git tag in `package.json`) is
-  the shared library of the 3D tools: what it has is used, not copied
-  (M3 moves the app onto it: maker-kit's `plans/PLAN.md`, "M3 in detail").
+  the shared library of the 3D tools: what it has is used, not copied, and
+  an option goes into it only when two apps need it (M3 moved the app onto
+  it: maker-kit's `plans/PLAN.md`, "M3 in detail", and its deviations).
+  From the kit: `core/*` (history, storage records, the project file,
+  presets, format, messages), `ui/*` (controls and stepper, cards and list
+  cards, the sheet, dialogs and the presets list, the banner, the progress
+  bar, the message list, the language button, undo keys, files),
+  `3d/mesh`, `3d/stl`, `3d/validate`, `3d/viewer`, `csg/manifold`,
+  `csg/thread`, `worker/client` and `worker/serve`, `styles/kit.css`, and
+  `maker-kit/harness` for the scripts. The app's own around them:
+  `geo/surface` (affine helpers), `geo/csg` (hull, planes, extrude, unions),
+  `geo/thread` (sizes, the screw, `perPoint`), `geo/validate` (`assessPart`:
+  the kit's gate plus `MAX_PART_MM`, `STL_BRAND`), `worker/protocol`
+  (`CsgJob`, `isCsgJob`), `render/*` (the scene over the viewer).
   Its TypeScript sources: `optimizeDeps.exclude` and vitest's
   `server.deps.inline` in `vite.config.ts`. Its `kit.*` strings are spread
   into the four dictionaries. For joint work: `npm link ../maker-kit`.
 - `src/geo/` is a pure geometry core and **never imports Three.js**.
 - The core works **in millimetres**, z-up, the outer bottom of the case at
-  z = 0, the outer bounding box from the origin. The renderer turns it y-up.
+  z = 0, the outer bounding box from the origin. The viewer turns it y-up.
 - Everything from outside (UI, localStorage, a JSON file, a worker message)
   passes `sanitizeState`. Sanitizers never throw and are idempotent
   (`tests/state.test.ts` fuzzes them). Cross-field limits that depend on the
@@ -221,10 +235,11 @@ freely; a temporary script that turns out useful becomes a permanent one.
   `effectiveLid`, and the panel warns about the clamp.
 - **The main thread does not know about WASM.** All CSG lives in
   `src/worker/` and the worker-only geo modules (`csg.ts`, `shell.ts`,
-  `parting.ts`, `build.ts`); `main.ts` must have no import path into them.
-  CI greps the main chunk for `manifold`.
-- Manifold objects are not garbage-collected: hold them in a `CsgScope` and
-  `dispose()`.
+  `parting.ts`, `build.ts`, and the kit's `csg/*` they import); `main.ts`
+  must have no import path into them. CI greps the main chunk for
+  `manifold`.
+- Manifold objects are not garbage-collected: hold them in maker-kit's
+  `CsgScope` and `dispose()`.
 - Shells are convex, so a loft is built as the **convex hull of its rings**
   (`loft.ts` points → `hullOf`): watertight by construction, no degenerate
   quads where a radius collapses to zero.
@@ -414,7 +429,8 @@ freely; a temporary script that turns out useful becomes a permanent one.
 - Printed screws (`thread.ts` pure, `screwSolids.ts` worker): a single-start
   thread has one horizontal section at every height, turned 360° per pitch,
   so a thread is `CrossSection.extrude` with a twist (one slice per point and
-  turn) — the screw and, grown by the fit, its hole. The worker returns one
+  turn, `perPoint`) — the screw and, grown by the fit, its hole: maker-kit's
+  `csg/thread` (`threadRod`, `threadHole`; its form is this app's). The worker returns one
   screw in its own frame (part `screw`); the main thread places the copies
   over the posts (`screwsInCase`) or in a row next to the lid
   (`screwsForPrint`, `lidWithScrews`), for the view and the STL alike.
@@ -568,6 +584,10 @@ the last edit; even the heaviest preset stays under the 300 ms the plan set
 as the limit, so the preview never drops vents or the label. Vent slots and
 round holes are the bulk of the triangles.
 
+Scripts: `npm run check` ~25 s (1238 tests); `npm run smoke` ~3.5 min
+on the dev server (export times printed); CI's `smoke --preview` ~4 min
+after its build.
+
 Golden tests pin volumes and triangle counts of a fixed set of states;
 regenerate knowingly: `UPDATE_GOLDEN=1 npx vitest run tests/golden.test.ts`
 prints which states changed, were added or removed — check that only the
@@ -671,21 +691,26 @@ View and export card (`#exportCard`): parts `#tabBoth` (first, default),
 caption over the canvas `#viewCaption` says what is shown and scrolls to the
 card. The page's handle: `window.__case.drawn()` lists the roles drawn last,
 `drawnParts()` the meshes with their offsets. Port captions (`#portCaptions`, an overlay over
-the canvas with no pointer events: `scene.setCaptions`, placed every frame,
-nearest first, overlapping ones hidden) show with the board ghosts; a tap on
+the canvas with no pointer events: `scene.setCaptions`, placed after each
+frame the viewer draws (`onFrame`) and at once when they change; nearest
+first, a caption overlapping another hidden, a warning's badge never:
+`render/captions.ts`) show with the board ghosts; a tap on
 one (the canvas's tap handler, `scene.captionAt`) toggles its port's
 opening. `window.__case.captions()` lists the shown ones with their canvas
 positions. `#viewPortNames` turns them off (on by default; disabled with
 the boards hidden or in the print layout).
-Mobile: on a narrow screen the view centres the case above the settings
-sheet (`scene.setBottomInset`): the canvas stays full size under the sheet,
-and the inset only moves the picture, eased like the sheet — the virtual
-frame keeps the canvas's angle per pixel (its own aspect, a wider fov).
-With the canvas's aspect the picture was stretched and round holes came
-out as ellipses; the smoke measures the case on screen in both states
-(`window.__case.project`).
-Idle rotation (`scene.ts`): after `IDLE_MS` (30 s) with no pointer, wheel,
-key, touch or input event the view turns around the case (a turn per
+The view is maker-kit's viewer (`render/scene.ts` keeps the app's handle
+over it): frames on demand, the kit's light and grid, the model fitted at
+1.7× its bounding sphere, `look` for `snap.mjs --camera`.
+Mobile: on a narrow screen the case is fitted above the settings sheet
+(`scene.setBottomInset` → the viewer's `setInset`): the canvas stays full
+size under the sheet and the picture slides without stretching. Until the
+person turns or zooms, the sheet fits it again (its scale changes); after
+that it only moves it. The smoke measures the case on screen in both
+states after a tap on the view (`window.__case.project`).
+Idle rotation (`render/idleTurn.ts`, tested with fake time): after
+`IDLE_MS` (30 s) with no pointer, wheel, key, touch or input event the
+view turns around the case, a loop of the viewer's `turn` (a turn per
 `IDLE_TURN_S`, easing in), and stops at the next one; none with
 `prefers-reduced-motion`.
 Below 1024 px the panel is maker-kit's bottom sheet (`ui/sheet`): `#panelBtn`
