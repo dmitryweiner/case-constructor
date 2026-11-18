@@ -2,9 +2,10 @@
 // boolean. The pipeline grows milestone by milestone (plans/PLAN.md §4); the order
 // matters and is commented where it does.
 
-import type { CsgApi } from './csg';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import type { Manifold } from 'manifold-3d';
-import { CsgScope, fromManifold, splitByPlane, transformSolid, unionAll } from './csg';
+import { splitByPlane, transformSolid, unionAll } from './csg';
+import { CsgScope, fromManifold } from 'maker-kit/csg/manifold';
 import type { Dims } from './face';
 import { faceFrame } from './face';
 import type { PlacedBoard } from './layout';
@@ -41,7 +42,7 @@ import { screwShape, threadPoints } from './thread';
 import type { LabelRaster } from './label';
 import { labelPlacement, labelSurface } from './label';
 import { applyAffine, composeAffine, invertRigid } from './surface';
-import type { SurfaceMesh } from './surface';
+import type { SurfaceMesh } from 'maker-kit/3d/mesh';
 import type { AppState } from '../state/schema';
 
 export interface CaseBuild {

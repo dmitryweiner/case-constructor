@@ -7,7 +7,7 @@
 // before the union would be filled again).
 
 import type { Manifold } from 'manifold-3d';
-import type { CsgApi, CsgScope } from './csg';
+import type { CsgApi, CsgScope } from 'maker-kit/csg/manifold';
 import { extrude, transformSolid } from './csg';
 import type { FastenerSpec } from './fasteners';
 import { NUT_CLEARANCE, SCREWS, THROUGH_CLEARANCE, bossDiameter } from './fasteners';

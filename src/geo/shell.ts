@@ -3,7 +3,7 @@
 // provably watertight. Worker only (imports csg.ts).
 
 import type { Manifold } from 'manifold-3d';
-import type { CsgApi, CsgScope } from './csg';
+import type { CsgApi, CsgScope } from 'maker-kit/csg/manifold';
 import { hullOf, trimByPlane } from './csg';
 import type { LoftSpec } from './loft';
 import { loftPoints, offsetLoft } from './loft';

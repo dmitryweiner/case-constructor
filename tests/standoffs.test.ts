@@ -2,15 +2,15 @@
 // is open from the top and closed at the bottom skin; a nut pocket and an
 // insert hole are where they should be; rails grip the board edge.
 
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, standoffColumns, PIN_SPACER, RAIL_GRIP } from '../src/geo/layout';
 import { SCREWS, SCREW_SIZES, LID_SCREW_SIZES, NUT_CLEARANCE } from '../src/geo/fasteners';
 import { sanitizeLid } from '../src/geo/lidSpec';
 import { HOLE_SKIN, NUT_LIFT } from '../src/geo/standoffs';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { defaultState, sanitizeState } from '../src/state/schema';
 import type { AppState } from '../src/state/schema';
 import { applyAffine } from '../src/geo/surface';
@@ -58,7 +58,7 @@ describe('standoffs', () => {
     const state = withMount(hole);
     const built = buildCase(csg, state, 8);
     expect(validateMesh(built.body).watertight).toBe(true);
-    const body = toManifold(csg, built.body);
+    const body = toManifold(csg, built.body, { merge: true });
     const layout = caseLayout(state);
     const [column] = standoffColumns(layout.boards[0]);
     const top = layout.boards[0].z0;
@@ -98,8 +98,8 @@ describe('standoffs', () => {
   it('with a bottom lid the standoffs stand on the lid', () => {
     const state = sanitizeState({ ...withMount('tap'), lid: { ...defaultState().lid, face: 'bottom' } });
     const built = buildCase(csg, state, 8);
-    const lid = toManifold(csg, built.lid);
-    const body = toManifold(csg, built.body);
+    const lid = toManifold(csg, built.lid, { merge: true });
+    const body = toManifold(csg, built.body, { merge: true });
     const [column] = standoffColumns(caseLayout(state).boards[0]);
     const z = caseLayout(state).boards[0].z0 - 1;
     expect(solidAt(lid, column.x + column.r - 0.3, column.y, z)).toBe(true);
@@ -114,7 +114,7 @@ describe('rails', () => {
     const state = sanitizeState({ ...defaultState(), boards: [{ board: 'heltec-wifi-lora-32-v3', z: 5 }] });
     const built = buildCase(csg, state, 8);
     expect(validateMesh(built.body).watertight).toBe(true);
-    const body = toManifold(csg, built.body);
+    const body = toManifold(csg, built.body, { merge: true });
     const board = caseLayout(state).boards[0];
     const { w, t } = board.def.size;
     // the middle of the front edge, inside the outline but within the grip
@@ -131,7 +131,7 @@ describe('rails', () => {
     const report = validateMesh(built.body);
     expect(report.watertight).toBe(true);
     expect(report.degenerateTriangles).toBe(0);
-    const body = toManifold(csg, built.body);
+    const body = toManifold(csg, built.body, { merge: true });
     const board = caseLayout(state).boards[0];
     const { w, t } = board.def.size;
     const pins = board.def.pins;

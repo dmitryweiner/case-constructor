@@ -4,7 +4,7 @@
 import type { CrossSection, Manifold } from 'manifold-3d';
 import type { Glass } from '../boards/schema';
 import { onFace } from '../boards/schema';
-import type { CsgApi, CsgScope } from './csg';
+import type { CsgApi, CsgScope } from 'maker-kit/csg/manifold';
 import { extrude, transformSolid, unionAll } from './csg';
 import type { PlacedBoard } from './layout';
 import { RIM_FIT, RIM_PART_GAP, RIM_W, rimsOf } from './rim';

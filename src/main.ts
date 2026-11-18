@@ -54,7 +54,7 @@ import type { Blocker, Notice } from './ui/messages';
 import { messageCounts, messageLines, numberNotices } from './ui/messages';
 import { renderPresetList } from 'maker-kit/ui/presetList';
 import { applyStaticText } from './ui/staticText';
-import { LANGS, initLang, lang, onLangChange, setLang, t, tDynamic, tm, autoPresetPrefixes } from './i18n';
+import { LANGS, hasKey, initLang, lang, onLangChange, setLang, t, tDynamic, tm, autoPresetPrefixes } from './i18n';
 import type { Key } from './i18n';
 import type { Message, MessageSpot } from './geo/message';
 import { faceFrame } from './geo/face';
@@ -92,12 +92,14 @@ import {
 } from './geo/print';
 import { capsInCase, capsWithLid, keyCaps, withCaps } from './geo/caps';
 import { restWarnings } from './geo/rests';
-import type { Affine, SurfaceMesh } from './geo/surface';
+import type { Affine } from './geo/surface';
+import type { SurfaceMesh } from 'maker-kit/3d/mesh';
 import { IDENTITY, applyAffine, composeAffine, meshBounds, mergeMeshes, rotateVec, transformMesh, translation } from './geo/surface';
 import type { HalfHinge } from './geo/hinge';
 import { ANGLE_DEFAULT, MAX_CABLES, upperPose } from './geo/hinge';
-import { encodeSTL } from './geo/stl';
-import { assessExport, validateMesh } from './geo/validate';
+import { encodeSTL, stlFileName } from 'maker-kit/3d/stl';
+import { validateMesh } from 'maker-kit/3d/validate';
+import { assessPart, STL_BRAND } from './geo/validate';
 import type { AppState, ExportMode } from './state/schema';
 import { sanitizeState, RESOLUTIONS } from './state/schema';
 import { PRESETS, presetById, presetSignature } from './state/presets';
@@ -112,8 +114,9 @@ import type { CurrentProject } from './state/currentProject';
 import { currentProjectRecord } from './state/currentProject';
 import type { Half } from './state/hinged';
 import { casesOf, foldOfState, halfHinge, halfState, halfStrip, hingeNotes, isHinged, withHalf } from './state/hinged';
-import type { JobPart } from './worker/protocol';
-import { CsgClient } from './worker/client';
+import type { CsgJob, JobPart } from './worker/protocol';
+import type { JobProgress } from 'maker-kit/core/progress';
+import { WorkerClient, moduleWorker } from 'maker-kit/worker/client';
 
 /** Segments per quarter arc in the preview. */
 const PREVIEW_SEGMENTS = 12;
@@ -201,7 +204,16 @@ const tabs: Record<ExportMode, HTMLButtonElement> = {
 const progress = createProgress(el('progressWrap', HTMLDivElement), { t });
 
 const scene = createScene(view, el('portCaptions', HTMLDivElement));
-const csg = new CsgClient();
+/** One lane: a waiting preview is replaced by a fresher one; an export, asked for with a button, is kept. */
+const csg = new WorkerClient<CsgJob, JobPart[]>(
+  moduleWorker(() => new Worker(new URL('./worker/csg.worker.ts', import.meta.url), { type: 'module' })),
+  { lane: () => 'csg', kept: (job) => job.kind === 'export' },
+);
+/** A worker's progress for the bar: its stage label is a code of the app's dictionary, or none. */
+function stage(progress: JobProgress): JobProgress<Key> {
+  const label = progress.label && hasKey(progress.label.code) ? { code: progress.label.code, params: progress.label.params } : undefined;
+  return { step: progress.step, total: progress.total, label };
+}
 /** The project the last visit left (kept on every change), or the first preset on a first visit. */
 const storage = browserStorage();
 let userPresets: UserPreset<AppState>[] = loadRecord(storage, userPresetsRecord) ?? [];
@@ -685,13 +697,13 @@ async function showPreview(stamp: number): Promise<void> {
             labels: currentLabels.a,
             labelsB: currentLabels.b,
           },
-          onProgress,
+          (p) => onProgress(stage(p)),
         ),
       { label: 'progress.preview' },
     );
     if (!result || stamp !== generation) return;
     settled = stamp;
-    const cases = builtCases(result.parts);
+    const cases = builtCases(result.result);
     lastParts = { state: requested, cases };
     drawParts();
     audit(cases.flatMap(caseMeshes), result.ms);
@@ -1043,15 +1055,15 @@ function syncView(): void {
 /** Verdict over both parts: closed, and nothing that would block the export. */
 function audit(meshes: SurfaceMesh[], ms: number): void {
   const reports = meshes.map((mesh) => validateMesh(mesh));
-  const assessments = reports.map((report) => assessExport(report, true));
+  const assessments = reports.map((report) => assessPart(report));
   const triangles = reports.reduce((sum, report) => sum + report.triangleCount, 0);
-  const blocking = assessments.flatMap((assessment) => assessment.blocking);
+  const blockers = assessments.flatMap((assessment) => assessment.blockers);
   auditEl.textContent = reports.every((report) => report.watertight)
     ? t('audit.watertight', { k: (triangles / 1000).toFixed(1), ms: Math.round(ms) })
     : t('audit.open');
   showWarnings(assessments.flatMap((assessment) => assessment.warnings).map(notice));
-  setBlockers(blocking.map(blocker));
-  exportBtn.disabled = blocking.length > 0;
+  setBlockers(blockers.map(blocker));
+  exportBtn.disabled = blockers.length > 0;
 }
 
 function renderPartList(): void {
@@ -1157,17 +1169,22 @@ async function runExport(): Promise<void> {
   exportBtn.textContent = t('export.busy');
   try {
     const result = await progress.track(
-      (onProgress) => csg.run({ kind: 'export', state: requested, labels: currentLabels.a, labelsB: currentLabels.b }, onProgress),
+      (onProgress) =>
+        csg.run({ kind: 'export', state: requested, labels: currentLabels.a, labelsB: currentLabels.b }, (p) => onProgress(stage(p))),
       { label: 'progress.export', delayMs: 0 },
     );
     if (!result) return;
-    const blocking = result.parts.flatMap((part) => part.blocking);
-    setBlockers(blocking.map(blocker));
-    if (blocking.length > 0) return;
+    const blockers = result.result.flatMap((part) => part.blockers);
+    setBlockers(blockers.map(blocker));
+    if (blockers.length > 0) return;
     // printed screws travel with the lid, battery clamps with the body: same print job, same material
-    const placed = printAll(requested, builtCases(result.parts));
+    const placed = printAll(requested, builtCases(result.result));
     const mesh = mergeMeshes(placed.map((part) => part.mesh));
-    download(`case-constructor-${requested.exportMode}.stl`, encodeSTL(mesh, { name: requested.exportMode }), 'model/stl');
+    download(
+      stlFileName(`case-constructor-${requested.exportMode}`),
+      encodeSTL(mesh, { brand: STL_BRAND, name: requested.exportMode }),
+      'model/stl',
+    );
   } catch (error) {
     setBlockers([{ text: t('error.export', { error: message(error) }), code: 'error.export' }]);
   } finally {

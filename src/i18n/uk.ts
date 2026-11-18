@@ -173,13 +173,6 @@ export const uk: Record<Key, string> = {
   'audit.open': 'меш не замкнено ✗',
   'warn.depthClamped': 'Глибину кришки обмежено розміром корпусу: {max} мм.',
 
-  'mesh.nonFinite': 'У меші є нечислові координати.',
-  'mesh.badIndices': 'У меші зіпсовано індекси трикутників.',
-  'mesh.empty': 'Деталь порожня.',
-  'mesh.flat': 'Деталь пласка.',
-  'mesh.open': 'Меш не замкнено — слайсер його не надрукує.',
-  'mesh.inverted': 'Меш вивернуто навиворіт.',
-  'mesh.degenerate': 'Вироджених трикутників: {count} ({pct} %).',
   'mesh.tooLarge': 'Деталь більша за {max} мм.',
 
   'progress.loading': 'Завантажую геометричне ядро…',

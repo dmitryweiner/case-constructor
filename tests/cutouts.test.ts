@@ -3,8 +3,8 @@
 // through the ceiling above it; a disabled port leaves the wall whole; a user
 // cut opens its face.
 
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import type { Manifold } from 'manifold-3d';
 import { buildCase } from '../src/geo/build';
 import { caseLayout, collisions } from '../src/geo/layout';
@@ -16,7 +16,7 @@ import type { AppState } from '../src/state/schema';
 import { applyAffine } from '../src/geo/surface';
 import { FACES, faceFrame } from '../src/geo/face';
 import { CATALOG } from '../src/boards/catalog';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 
 let csg: CsgApi;
 beforeAll(async () => {
@@ -37,7 +37,7 @@ function solidAt(parts: Manifold[], x: number, y: number, z: number): boolean {
 
 function built(state: AppState): Manifold[] {
   const parts = buildCase(csg, state, 8);
-  return [toManifold(csg, parts.body), toManifold(csg, parts.lid)];
+  return [toManifold(csg, parts.body, { merge: true }), toManifold(csg, parts.lid, { merge: true })];
 }
 
 /** For every enabled edge port, the point in the middle of the wall on its axis must be air. */
@@ -153,7 +153,7 @@ describe('port openings', () => {
         expect(report.watertight, face).toBe(true);
         expect(report.degenerateTriangles, face).toBe(0);
       }
-      const solids = [toManifold(csg, parts.body), toManifold(csg, parts.lid)];
+      const solids = [toManifold(csg, parts.body, { merge: true }), toManifold(csg, parts.lid, { merge: true })];
       const layout = caseLayout(state);
       const board = layout.boards[0];
       const reset = board.def.ports.find((port) => port.id === 'reset');

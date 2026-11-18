@@ -3,14 +3,14 @@
 // its hole and CAP_PROUD out of the plate — sized among the board's buttons,
 // printed with the part that has the top.
 
-import { initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import { buildCase } from '../src/geo/build';
 import { caseLayout } from '../src/geo/layout';
 import { keyNotes, portCutters } from '../src/geo/ports';
 import { CAP_FIT, CAP_GROW, CAP_LIP, CAP_PROUD } from '../src/geo/capSize';
 import { capsInCase, capsWithLid, keyCaps } from '../src/geo/caps';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { applyAffine } from '../src/geo/surface';
 import { buttonsOpen, capButtons, sanitizePlacement, topButtons } from '../src/boards/placement';
 import { catalogBoard } from '../src/boards/catalog';
@@ -127,9 +127,9 @@ describe('the build', () => {
     const caps = capsInCase(keyCaps(layout, { ...s.shape, console: layout.console }));
     if (!caps) throw new Error('caps');
     expect(validateMesh(caps).watertight).toBe(true);
-    const solid = toManifold(csg, caps);
+    const solid = toManifold(csg, caps, { merge: true });
     for (const mesh of [built.body, built.lid]) {
-      const part = toManifold(csg, mesh);
+      const part = toManifold(csg, mesh, { merge: true });
       const common = part.intersect(solid);
       expect(common.volume()).toBeLessThan(1e-3);
       part.delete();

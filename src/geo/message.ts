@@ -5,16 +5,11 @@
 // makes tsc check that. The shape is maker-kit's core/message.
 
 import type { Message as KitMessage } from 'maker-kit/core/message';
+import type { KitKey } from 'maker-kit/i18n/en';
 
 export type MessageCode =
-  // mesh checks before export (validate)
-  | 'mesh.nonFinite'
-  | 'mesh.badIndices'
-  | 'mesh.empty'
-  | 'mesh.flat'
-  | 'mesh.open'
-  | 'mesh.inverted'
-  | 'mesh.degenerate'
+  // the kit's messages (its export gate: kit.mesh.*) and the largest part (validate)
+  | KitKey
   | 'mesh.tooLarge'
   // a hinged case (hinge, ports)
   | 'warn.hingeUnprintable'

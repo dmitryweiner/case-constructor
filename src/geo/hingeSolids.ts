@@ -16,7 +16,7 @@
 // snap's bars and split rings, or cones printed in place in their sockets.
 
 import type { Manifold } from 'manifold-3d';
-import type { CsgApi, CsgScope } from './csg';
+import type { CsgApi, CsgScope } from 'maker-kit/csg/manifold';
 import { hullOf, transformSolid, unionAll } from './csg';
 import type { Dims } from './face';
 import type { HalfHinge, LeafLayout } from './hinge';

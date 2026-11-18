@@ -3,8 +3,8 @@
 // thread, and the tab does not freeze even on a fine export. No DOM and no
 // Three.js: the worker sees pure geometry only.
 
-import type { CsgApi } from '../geo/csg';
-import { initCSG } from '../geo/csg';
+import type { CsgApi } from 'maker-kit/csg/manifold';
+import { initCSG } from 'maker-kit/csg/manifold';
 import type { CaseBuild } from '../geo/build';
 import { BUILD_STAGES, buildCase } from '../geo/build';
 import type { LabelRaster } from '../geo/label';
@@ -13,12 +13,16 @@ import type { AppState } from '../state/schema';
 import type { Half } from '../state/hinged';
 import { casesOf, halfHinge } from '../state/hinged';
 import type { Message } from '../geo/message';
-import type { SurfaceMesh } from '../geo/surface';
+import type { SurfaceMesh } from 'maker-kit/3d/mesh';
 import { meshBounds } from '../geo/surface';
-import { assessExport, validateMesh } from '../geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
+import { assessPart } from '../geo/validate';
 import { sanitizeState } from '../state/schema';
 import { sanitizeLabelRasters } from '../geo/label';
-import type { CsgJob, JobPart, PartId, WorkerIn, WorkerOut } from './protocol';
+import type { JobProgress } from 'maker-kit/core/progress';
+import { serveJobs } from 'maker-kit/worker/serve';
+import type { CsgJob, JobPart, PartId } from './protocol';
+import { isCsgJob } from './protocol';
 
 /**
  * WASM starts loading as soon as the worker exists: the client creates it
@@ -31,36 +35,27 @@ void ready.then(() => {
   loaded = true;
 });
 
-addEventListener('message', (event) => {
-  if (isJobMessage(event.data)) void handle(event.data);
+serveJobs<CsgJob, JobPart[]>({
+  isJob: isCsgJob,
+  async handle(job, progress) {
+    if (!loaded) progress({ step: 0, total: 1, label: { code: 'progress.loading' } });
+    const csg = await ready;
+    const parts = run(csg, job, progress);
+    // buffers are transferred, not copied
+    return { result: parts, transfer: transferable(parts) };
+  },
 });
 
-async function handle(message: WorkerIn): Promise<void> {
-  const { jobId, job } = message;
-  try {
-    if (!loaded) send({ type: 'progress', jobId, step: 0, total: 1, label: { code: 'progress.loading' } });
-    const csg = await ready;
-    const started = performance.now();
-    const parts = run(csg, jobId, job);
-    const ms = performance.now() - started;
-    // Buffers are transferred, not copied.
-    send({ type: 'done', jobId, parts, ms }, transferable(parts));
-  } catch (error) {
-    send({ type: 'error', jobId, message: error instanceof Error ? error.message : String(error) });
-  }
-}
-
-function run(csg: CsgApi, jobId: number, job: CsgJob): JobPart[] {
+function run(csg: CsgApi, job: CsgJob, progress: (progress: JobProgress) => void): JobPart[] {
   // The worker boundary is an outer boundary, like a file or the UI.
   const state = sanitizeState(job.state);
   const exporting = job.kind === 'export';
-  if (!exporting && job.kind !== 'preview') throw new Error('the worker does not know this job');
   const segments = exporting ? state.resolution : previewSegments(job.segments);
   const cases = casesOf(state);
   const total = BUILD_STAGES.length * cases.length + (exporting ? 1 : 0);
   let step = 0;
   const stage = (label: Message): void => {
-    send({ type: 'progress', jobId, step: step++, total, label });
+    progress({ step: step++, total, label });
   };
   const builds = cases.map(({ half, state: one }) => {
     const labels = sanitizeLabelRasters(half === 'b' ? job.labelsB : job.labels);
@@ -149,17 +144,13 @@ function previewSegments(value: unknown): number {
 }
 
 function part(id: PartId, mesh: SurfaceMesh, check: boolean): JobPart {
-  const blocking = check ? assessExport(validateMesh(mesh), true).blocking : [];
-  return { id, note: sizeNote(mesh), positions: mesh.positions, indices: mesh.indices, normals: mesh.normals, blocking };
+  const blockers = check ? assessPart(validateMesh(mesh)).blockers : [];
+  return { id, note: sizeNote(mesh), positions: mesh.positions, indices: mesh.indices, normals: mesh.normals, blockers };
 }
 
 function sizeNote(mesh: SurfaceMesh): string {
   const { min, max } = meshBounds(mesh);
   return max.map((value, axis) => Math.round(value - min[axis])).join('×');
-}
-
-function send(message: WorkerOut, transfer: Transferable[] = []): void {
-  postMessage(message, { transfer });
 }
 
 function transferable(parts: JobPart[]): Transferable[] {
@@ -170,16 +161,4 @@ function transferable(parts: JobPart[]): Transferable[] {
     }
   }
   return list;
-}
-
-/**
- * Only the shape of the message is checked, not the list of job kinds: an
- * unknown kind is answered by `run` with an error. Silence is never an
- * answer — the client waits for exactly one reply per job.
- */
-function isJobMessage(data: unknown): data is WorkerIn {
-  if (typeof data !== 'object' || data === null) return false;
-  if (!('jobId' in data) || typeof data.jobId !== 'number') return false;
-  if (!('job' in data) || typeof data.job !== 'object' || data.job === null) return false;
-  return 'kind' in data.job && typeof data.job.kind === 'string';
 }

@@ -5,8 +5,8 @@
 import type { Manifold } from 'manifold-3d';
 import { BOLT_LENGTHS, throughBolt } from '../src/geo/bolts';
 import { buildCase } from '../src/geo/build';
-import type { CsgApi } from '../src/geo/csg';
-import { initCSG, toManifold } from '../src/geo/csg';
+import type { CsgApi } from 'maker-kit/csg/manifold';
+import { initCSG, toManifold } from 'maker-kit/csg/manifold';
 import { caseLayout, effectiveLid } from '../src/geo/layout';
 import { lidPosts, nutHeads, throughNotes } from '../src/geo/lidPosts';
 import { postCollisions, postsInOpenings, throughColumns } from '../src/geo/fastening';
@@ -17,7 +17,7 @@ import { labelWarnings } from '../src/geo/label';
 import { innerProtrusion } from '../src/state/hinged';
 import { applyAffine, meshBounds } from '../src/geo/surface';
 import { throughHardware } from '../src/geo/hardware';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import {
   NUT_AF_MAX,
   NUT_AF_MIN,
@@ -228,8 +228,8 @@ describe('the built case', () => {
     const { frame, plate, spots, lid } = lidPosts(state);
     expect(spots).toHaveLength(4);
     const built = buildCase(csg, state, 8);
-    const body = toManifold(csg, built.body);
-    const lidPart = toManifold(csg, built.lid);
+    const body = toManifold(csg, built.body, { merge: true });
+    const lidPart = toManifold(csg, built.lid, { merge: true });
     const bolt = throughBolt(lid, plate, frame.depth);
     const r = (SCREWS.M3.d + THROUGH_CLEARANCE) / 2;
     const af = nutSize(lid).af + NUT_CLEARANCE;

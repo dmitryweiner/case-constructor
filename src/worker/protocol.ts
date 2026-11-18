@@ -1,5 +1,6 @@
-// Protocol of the CSG worker. Types only: both sides of the boundary (main
-// and worker) must see one description of the messages.
+// The CSG worker's jobs and parts, and the guard of a job; the messages
+// around them are maker-kit's worker/protocol. Both sides of the boundary
+// (main and worker) see one description.
 //
 // What goes to the worker is the whole application state: the worker passes
 // it through sanitizeState itself and decides what to build. The worker
@@ -45,28 +46,21 @@ export interface JobPart {
   indices: Uint32Array;
   normals: Float32Array;
   /** what keeps the part out of the STL; always empty for a preview */
-  blocking: Message[];
+  blockers: Message[];
   /** a hinged case: the half the part belongs to, in that half's own frame */
   half?: Half;
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
+const isLabels = (value: unknown): boolean => value === undefined || Array.isArray(value);
+
 /**
- * Progress by stages. Manifold says nothing about itself inside one boolean,
- * and we will not pretend it does: the bar counts stages, the label names
- * the current one.
+ * The worker's guard (maker-kit's serveJobs answers a refused job with an
+ * error): the kind and the fields it needs. The state is sanitized and the
+ * rasters' shapes checked by the worker itself (`sanitizeState`,
+ * `sanitizeLabelRasters`).
  */
-export interface JobProgress {
-  step: number;
-  total: number;
-  label: Message;
+export function isCsgJob(job: unknown): job is CsgJob {
+  if (!isRecord(job) || !isRecord(job.state) || !isLabels(job.labels) || !isLabels(job.labelsB)) return false;
+  return job.kind === 'export' || (job.kind === 'preview' && typeof job.segments === 'number');
 }
-
-export interface WorkerIn {
-  jobId: number;
-  job: CsgJob;
-}
-
-export type WorkerOut =
-  | ({ type: 'progress'; jobId: number } & JobProgress)
-  | { type: 'done'; jobId: number; parts: JobPart[]; ms: number }
-  | { type: 'error'; jobId: number; message: string };

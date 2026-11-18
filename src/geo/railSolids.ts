@@ -8,7 +8,7 @@
 // rail turns with its posts and still prints the one way.
 
 import type { Manifold } from 'manifold-3d';
-import type { CsgApi, CsgScope } from './csg';
+import type { CsgApi, CsgScope } from 'maker-kit/csg/manifold';
 import { hullOf, transformSolid, unionAll } from './csg';
 import { SCREWS, THROUGH_CLEARANCE } from './fasteners';
 import type { PlacedBoard } from './layout';

@@ -2,14 +2,14 @@
 // seen through `halfState`, written back by `withHalf`; the upper half posed
 // about the hinge axis.
 
-import { CsgScope, fromManifold, initCSG, toManifold } from '../src/geo/csg';
-import type { CsgApi } from '../src/geo/csg';
+import { CsgScope, fromManifold, initCSG, toManifold } from 'maker-kit/csg/manifold';
+import type { CsgApi } from 'maker-kit/csg/manifold';
 import type { CaseBuild } from '../src/geo/build';
-import type { SurfaceMesh } from '../src/geo/surface';
+import type { SurfaceMesh } from 'maker-kit/3d/mesh';
 import { mergeMeshes, transformMesh } from '../src/geo/surface';
 import { sideCheeksForPrint } from '../src/geo/print';
 import { buildCase } from '../src/geo/build';
-import { validateMesh } from '../src/geo/validate';
+import { validateMesh } from 'maker-kit/3d/validate';
 import { caseDims } from '../src/geo/layout';
 import { lidFaces } from '../src/geo/lidSpec';
 import {
@@ -216,7 +216,9 @@ describe('the knuckles', () => {
   function shared(one: SurfaceMesh, other: SurfaceMesh): number {
     const scope = new CsgScope();
     try {
-      return scope.keep(scope.keep(toManifold(csg, one)).intersect(scope.keep(toManifold(csg, other)))).volume();
+      return scope
+        .keep(scope.keep(toManifold(csg, one, { merge: true })).intersect(scope.keep(toManifold(csg, other, { merge: true }))))
+        .volume();
     } finally {
       scope.dispose();
     }
@@ -512,7 +514,9 @@ describe('cables', () => {
   function shared(one: SurfaceMesh, other: SurfaceMesh): number {
     const scope = new CsgScope();
     try {
-      return scope.keep(scope.keep(toManifold(csg, one)).intersect(scope.keep(toManifold(csg, other)))).volume();
+      return scope
+        .keep(scope.keep(toManifold(csg, one, { merge: true })).intersect(scope.keep(toManifold(csg, other, { merge: true }))))
+        .volume();
     } finally {
       scope.dispose();
     }
@@ -528,7 +532,9 @@ describe('a printed hinge', () => {
   function shared(one: SurfaceMesh, other: SurfaceMesh): number {
     const scope = new CsgScope();
     try {
-      return scope.keep(scope.keep(toManifold(csg, one)).intersect(scope.keep(toManifold(csg, other)))).volume();
+      return scope
+        .keep(scope.keep(toManifold(csg, one, { merge: true })).intersect(scope.keep(toManifold(csg, other, { merge: true }))))
+        .volume();
     } finally {
       scope.dispose();
     }
@@ -615,7 +621,9 @@ describe('the gap and the magnets', () => {
     const shared = (one: SurfaceMesh, other: SurfaceMesh): number => {
       const scope = new CsgScope();
       try {
-        return scope.keep(scope.keep(toManifold(csg, one)).intersect(scope.keep(toManifold(csg, other)))).volume();
+        return scope
+          .keep(scope.keep(toManifold(csg, one, { merge: true })).intersect(scope.keep(toManifold(csg, other, { merge: true }))))
+          .volume();
       } finally {
         scope.dispose();
       }
@@ -660,7 +668,9 @@ describe('side pivots', () => {
   function shared(one: SurfaceMesh, other: SurfaceMesh): number {
     const scope = new CsgScope();
     try {
-      return scope.keep(scope.keep(toManifold(csg, one)).intersect(scope.keep(toManifold(csg, other)))).volume();
+      return scope
+        .keep(scope.keep(toManifold(csg, one, { merge: true })).intersect(scope.keep(toManifold(csg, other, { merge: true }))))
+        .volume();
     } finally {
       scope.dispose();
     }

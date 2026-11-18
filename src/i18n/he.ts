@@ -169,13 +169,6 @@ export const he: Record<Key, string> = {
   'audit.open': 'הרשת אינה סגורה ✗',
   'warn.depthClamped': 'עומק המכסה הוגבל ל־{max} מ״מ בגלל גודל המארז.',
 
-  'mesh.nonFinite': 'ברשת יש קואורדינטות לא תקינות.',
-  'mesh.badIndices': 'אינדקסי המשולשים ברשת פגומים.',
-  'mesh.empty': 'החלק ריק.',
-  'mesh.flat': 'החלק שטוח.',
-  'mesh.open': 'הרשת אינה סגורה — תוכנת ההדפסה לא תדפיס אותה.',
-  'mesh.inverted': 'הרשת הפוכה.',
-  'mesh.degenerate': '{count} משולשים מנוונים ({pct} %).',
   'mesh.tooLarge': 'החלק גדול מ־{max} מ״מ.',
 
   'progress.loading': 'טוען את מנוע הגאומטריה…',
