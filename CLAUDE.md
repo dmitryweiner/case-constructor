@@ -599,7 +599,10 @@ Add a state when a feature lands, never edit an old one.
 Built-in presets: one JSON file each in `src/state/presets/<id>.json`
 (`{ id, state }`; `state` is laid over the default (maker-kit's `overlay`) — objects
 merge, lists and values replace — and sanitized), imported in the menu's
-order by `src/state/presets.ts`. `tests/presetFile.test.ts` fails on a file
+order by `src/state/presets.ts`. 📄 New opens `BLANK_PRESET` (maker-kit's
+`{ id: 'blank', listed: false }`): plain-box's state as "New case" (one
+name in every language), not in the list, found by its ref, one undo step.
+`tests/presetFile.test.ts` fails on a file
 that is not imported, not named after its id, or has a key the sanitizer
 would drop (a typo). `pi4-desktop`, `esp32-sensor-box`,
 `esp32-18650-box`, `arduino-uno-box`, `klipperscreen-console`,
@@ -722,7 +725,7 @@ port, a badge opens, an empty tap closes the sheet.
 Top bar: `#presetBtn` (the dialog `#presets`, its list `#presetList
 [data-ref="b:<id>"|"u:<id>"]`: `.preset-pick` a built-in one, a user one's
 name field renamed on change, `.preset-open` ↗, `.preset-delete`),
-`#saveBtn`, `#fileOpenBtn`, `#fileSaveBtn`, `#fileInput`, `#undoBtn`,
+`#newBtn` (📄: the blank preset), `#saveBtn`, `#fileOpenBtn`, `#fileSaveBtn`, `#fileInput`, `#undoBtn`,
 `#redoBtn` (maker-kit's `ui/historyKeys`), the language `.lang-field select`.
 Under the top bar, the storage banner `#storageNote` (its `.link-button` dismisses a preset's note).
 The lists (boards, openings, labels, cables) are maker-kit's list cards

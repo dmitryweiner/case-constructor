@@ -50,6 +50,13 @@ export const PRESETS: Preset[] = [
 ].map(fromFile);
 
 /**
+ * What 📄 New opens (maker-kit's blank preset): plain-box's state, no boards
+ * and 100 × 70 × 35, under its own name ("New case"); not in the list, but
+ * known by its ref, so the project is still it after a reload.
+ */
+export const BLANK_PRESET: Preset = { ...fromFile({ ...plainBox, id: 'blank' }), listed: false };
+
+/**
  * What makes a project the preset it was opened from: everything but how it
  * is viewed and exported (the parts tab, the resolution, the print layout).
  * The presets button and list show a preset as open only while the project's
@@ -60,5 +67,5 @@ export function presetSignature(state: AppState): string {
 }
 
 export function presetById(id: string): Preset | undefined {
-  return PRESETS.find((preset) => preset.id === id);
+  return id === BLANK_PRESET.id ? BLANK_PRESET : PRESETS.find((preset) => preset.id === id);
 }

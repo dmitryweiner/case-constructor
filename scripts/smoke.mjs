@@ -1017,6 +1017,24 @@ await app.run(
       await exportStl(mode);
     }
 
+    // 📄 New: the blank preset, plain-box's state under "New case", one undo step back to the project
+    label('new');
+    const projectBefore = await page.evaluate(() => JSON.stringify(window.__case.state()));
+    await page.click('#newBtn');
+    await expectWatertight('new');
+    const fresh = await page.evaluate(() => {
+      const one = window.__case.state();
+      return { boards: one.boards.length, auto: one.shape.auto, size: one.shape.size };
+    });
+    if (fresh.boards !== 0 || fresh.auto || JSON.stringify(fresh.size) !== '{"w":100,"d":70,"h":35}')
+      errors.push(`[new] not plain-box's state: ${JSON.stringify(fresh)}`);
+    const newName = (await page.locator('#presetBtn').textContent()).trim();
+    if (newName !== 'New case') errors.push(`[new] the project is called "${newName}"`);
+    await page.click('#undoBtn');
+    await expectWatertight('new:undo');
+    if ((await page.evaluate(() => JSON.stringify(window.__case.state()))) !== projectBefore)
+      errors.push('[new] undo did not bring the project back');
+
     // undo / redo
     label('undo');
     const wall = () => page.locator('#case_wall').inputValue();
