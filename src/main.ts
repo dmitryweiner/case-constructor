@@ -226,7 +226,7 @@ const projectRecord = currentProjectRecord(userPresets);
 const opened: CurrentProject = loadRecord(storage, projectRecord) ?? firstPreset();
 const history = new History<AppState>(opened.state);
 let state: AppState = history.state;
-/** ↩️ ↪️ and Ctrl/⌘+Z, Shift+Ctrl/⌘+Z, Ctrl/⌘+Y on any layout, right after a slider too (maker-kit's ui/historyKeys). */
+/** ↩ ↪ and Ctrl/⌘+Z, Shift+Ctrl/⌘+Z, Ctrl/⌘+Y on any layout, right after a slider too (maker-kit's ui/historyKeys). */
 const historyKeys = bindHistory({
   undo: el('undoBtn', HTMLButtonElement),
   redo: el('redoBtn', HTMLButtonElement),
