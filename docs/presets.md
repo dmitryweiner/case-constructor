@@ -28,7 +28,7 @@ deleted is reported there too (Dismiss hides that note).
   onto the window). A file that is not a Case Constructor project, cannot
   be read or comes from a newer version of the app is refused with the
   reason, and nothing changes.
-- ↶ / ↷ undo and redo: Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y, on any
+- ↩ / ↪ undo and redo: Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y, on any
   keyboard layout and right after a slider; a text field keeps its own undo.
 
 Built-in presets (their names are the same in every language; the
