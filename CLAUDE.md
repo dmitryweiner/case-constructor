@@ -228,14 +228,19 @@ freely; a temporary script that turns out useful becomes a permanent one.
   From the kit: `core/*` (history, storage records, the project file,
   presets, format, messages), `ui/*` (controls and stepper, cards and list
   cards, the sheet, dialogs and the presets list, the banner, the progress
-  bar, the message list, the language button, undo keys, files),
+  bar, the message list, the language button, undo keys, files, the font
+  loader — `ui/fonts`, wrapped in `ui/fonts.ts` so that Oswald brings Rubik
+  along for Hebrew),
   `3d/mesh`, `3d/stl`, `3d/validate`, `3d/viewer`, `csg/manifold`,
   `csg/thread`, `worker/client` and `worker/serve`, `styles/kit.css`, and
   `maker-kit/harness` for the scripts. The app's own around them:
   `geo/surface` (affine helpers), `geo/csg` (hull, planes, extrude, unions),
   `geo/thread` (sizes, the screw, `perPoint`), `geo/validate` (`assessPart`:
   the kit's gate plus `MAX_PART_MM`, `STL_BRAND`), `worker/protocol`
-  (`CsgJob`, `isCsgJob`), `render/*` (the scene over the viewer).
+  (`CsgJob`, `isCsgJob`), `render/*` (the scene over the viewer),
+  `ui/labelRaster` (a label's one line drawn with the Rubik fallback in its
+  CSS font list — the kit's `ui/textRaster` takes one family — and as tight
+  to the ink as the labels are laid out).
   Its TypeScript sources: `optimizeDeps.exclude` and vitest's
   `server.deps.inline` in `vite.config.ts`. Its `kit.*` strings are spread
   into the four dictionaries. For joint work: `npm link ../maker-kit`.
